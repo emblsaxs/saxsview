@@ -1,0 +1,5 @@
+libsaxsdocument - read, handle and convert SAXS related files.
+
+The library is written in pure C. Language bindings for C++, Fortran
+and Python are planned.
+

@@ -1,0 +1,37 @@
+Libsaxsdocument: Unit Testing
+=============================
+
+How testing works
+-----------------
+
+    $> testapp infile.dat infile.exp
+
+    -> read -> verify
+
+Reads 'infile.dat', reads 'infile.exp' and verifies that the
+values read from the .dat-file match the expected one listed
+in the .exp-file.
+
+    $> testapp infile.dat outfile.dat infile.exp
+
+    -> read -> verify -> write -> read written -> verify
+
+Reads 'infile.dat', reads 'infile.exp' and verifies that the
+values read from the .dat-file match the expected one listed
+in the .exp-file. Writes outfile.dat and re-reads the values
+written. The newly read data is re-validated against the
+expected values.
+
+In both cases, file extensions determine formats.
+
+
+Adding new tests
+----------------
+TODO
+
+
+-- 8< --
+document; columns.dat; 1; 0;
+curve; data; 1; 20;
+-- 8< --
+

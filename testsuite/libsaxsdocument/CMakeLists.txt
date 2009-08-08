@@ -1,0 +1,59 @@
+
+include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR})
+
+add_executable (doctest doctest.c)
+target_link_libraries (doctest saxsdocument)
+
+# add_executable (fdoctest doctest.f90)
+# target_link_libraries (fdoctest fsaxsdocument)
+
+
+#
+# Tests
+#
+
+# a non-existant file should be flagged as such
+add_test (read-nosuchfile doctest nosuchfile)
+set_property (TEST read-nosuchfile PROPERTY WILL_FAIL TRUE)
+
+# read-only tests for .dat-files
+set (DATTESTS "empty;whitespace;columns;bsa;")
+foreach (test ${DATTESTS})
+  add_test (read-dat-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+endforeach (test)
+
+# read-write tests
+set (DATTESTS "columns;bsa;")
+foreach (test ${DATTESTS})
+  add_test (read-write-dat-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+                                           ${CMAKE_CURRENT_BINARY_DIR}/${test}.dat
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+endforeach (test)
+
+# read-only tests for .out-files
+set (OUTTESTS "lyzexp;")
+foreach (test ${OUTTESTS})
+  add_test (read-out-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.out
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+endforeach (test)
+
+
+#
+# Test Fortran bindings
+#
+# read-only tests for .dat-files
+# set (DATTESTS "empty;whitespace;columns;bsa;")
+# foreach (test ${DATTESTS})
+#   add_test (read-dat-${test}-fortran fdoctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+#                                               ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+# endforeach (test)
+# 
+# # read-write tests
+# set (DATTESTS "columns;bsa;")
+# foreach (test ${DATTESTS})
+#   add_test (read-write-dat-${test}-fortran fdoctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+#                                                     ${CMAKE_CURRENT_BINARY_DIR}/${test}.dat
+#                                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+# endforeach (test)
+

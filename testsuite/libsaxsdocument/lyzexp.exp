@@ -1,0 +1,16 @@
+document; lyzexp.out; 3; 12;
+curve; data; 1; 196;
+curve; fit; 1; 196;
+curve; distance distribution; 2; 101;
+property; creator; GNOM;
+property; creator-version; 4.5a;
+property; parent; LYZEXP.DAT;
+property; condition-r-min-zero; true;
+property; condition-r-max-zero; true;
+property; highest-alpha-theor; 0.315E+04;
+property; current-alpha; 0.107E+01;
+property; total-estimate; 0.882;
+property; reciprocal-space-rg; 15.41;
+property; reciprocal-space-I0; 0.6565E+01;
+property; real-space-rg; 15.42;
+property; real-space-I0; 0.6565E+01;
