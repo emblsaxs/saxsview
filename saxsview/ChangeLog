@@ -1,5 +1,9 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.cpp (about): Updated.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.h (setScale): New.
 	(subWindowActivated): New.
 	* saxsviewmainwindow.cpp (setupSignalMappers): New.

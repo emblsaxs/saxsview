@@ -349,11 +349,15 @@ void SaxsviewMainWindow::setScale(int scale) {
 void SaxsviewMainWindow::about() {
   QMessageBox::about(this, "About saxsview",
                      "Saxsview 0.1\n"
+                     "Written by Daniel Franke <dfranke@users.sourceforge.net>\n"
                      "\n"
-
+                     "This is free software: you are free to "
+                     "change and redistribute it. There is NO, "
+                     "WARRANTY to the extent permitted by law.\n"
+                     "\n"
                      // And complying to COPYING of qwt:
-                     "saxsview is based in part on the work of\n"
-                     "the Qwt project (http://qwt.sourceforge.net)\n");
+                     "saxsview is based in part on the work of"
+                     "the Qwt project (http://qwt.sourceforge.net).");
 }
 
 void SaxsviewMainWindow::prepareWindowMenu() {
