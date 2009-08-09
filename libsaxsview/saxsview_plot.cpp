@@ -35,7 +35,7 @@
 #include <qwt_plot_marker.h>
 #include <qwt_plot_panner.h>
 #include <qwt_plot_zoomer.h>
-// #include <qwt_scale_engine.h>
+#include <qwt_scale_engine.h>
 // #include <qwt_scale_widget.h>
 
 
@@ -45,7 +45,7 @@ namespace Saxsview {
 class Plot::PlotPrivate {
 public:
   PlotPrivate(Plot *p)
-   : plot(p), blockReplot(false),
+   : plot(p), scale(Log10Scale), blockReplot(false),
      legend(0L), marker(0L), panner(0L), zoomer(0L) {
   }
 
@@ -56,6 +56,7 @@ public:
   void setupZoomer();
 
   Plot *plot;
+  PlotScale scale;
 
   bool blockReplot;
 
@@ -131,6 +132,8 @@ Plot::Plot(QWidget *parent)
   p->setupMarker();
   p->setupPanner();
   p->setupZoomer();
+
+  setScale(Log10Scale);
 }
 
 Plot::~Plot() {
@@ -236,6 +239,24 @@ void Plot::setZoomEnabled(bool on) {
 
 void Plot::setMoveEnabled(bool on) {
   p->panner->setEnabled(on);
+}
+
+void Plot::setScale(PlotScale scale) {
+  switch(scale) {
+    case AbsoluteScale:
+      setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+      break;
+
+    case Log10Scale:
+      setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
+  }
+
+  p->scale = scale;
+  replot();
+}
+
+Plot::PlotScale Plot::scale() const {
+  return p->scale;
 }
 
 void Plot::zoom(QRectF rect) {

@@ -1,4 +1,13 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.h (enum PlotScale): New.
+	(scale): New.
+	(setScale): New.
+	* saxsview_plot.cpp (ctor): Set Log10-scaling as default.
+	(scale): New.
+	(setScale): New.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* Initial import.
 

@@ -21,6 +21,7 @@
 #define SAXSVIEW_MAINWINDOW_H
 
 #include <QMainWindow>
+class QMdiSubWindow;
 class QString;
 
 class SaxsviewSubWindow;
@@ -45,12 +46,14 @@ public slots:
   void zoomOut();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
+  void setScale(int);
 
   void about();
 
 private slots:
   void prepareWindowMenu();
   void setActiveSubWindow(QWidget*);
+  void subWindowActivated(QMdiSubWindow*);
 
 private:
   class SaxsviewMainWindowPrivate;

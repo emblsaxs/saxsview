@@ -58,6 +58,10 @@ SaxsviewSubWindow::~SaxsviewSubWindow() {
   delete p;
 }
 
+int SaxsviewSubWindow::scale() const {
+  return p->plot->scale();
+}
+
 void SaxsviewSubWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())
@@ -117,4 +121,8 @@ void SaxsviewSubWindow::setZoomEnabled(bool on) {
 
 void SaxsviewSubWindow::setMoveEnabled(bool on) {
   p->plot->setMoveEnabled(on);
+}
+
+void SaxsviewSubWindow::setScale(int scale) {
+  p->plot->setScale((Saxsview::Plot::PlotScale)scale);
 }

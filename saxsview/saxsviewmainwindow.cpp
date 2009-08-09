@@ -19,6 +19,7 @@
 
 #include "saxsviewmainwindow.h"
 #include "saxsviewsubwindow.h"
+#include "saxsview_plot.h"
 
 #include <QAction>
 #include <QApplication>
@@ -43,14 +44,18 @@ public:
   void setupUi();
   void setupMenus();
   void setupToolbars();
+  void setupSignalMappers();
 
   SaxsviewMainWindow *mw;
 
   // "File"-menu
   QAction *actionCreateSubWindow, *actionLoad, *actionQuit;
+  QAction *actionSaveAs, *actionPrint;
 
   // "Plot"-menu
-  QAction *actionSaveAs, *actionPrint;
+  QAction *actionAbsScale, *actionLogScale;
+  QActionGroup *actionGroupScale;
+
   QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoom;
 
@@ -65,10 +70,13 @@ public:
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
+  QSignalMapper *scaleMapper;
 };
 
 SaxsviewMainWindow::SaxsviewMainWindowPrivate::SaxsviewMainWindowPrivate(SaxsviewMainWindow *w)
- : mw(w), windowMapper(new QSignalMapper(mw)) {
+ : mw(w),
+   windowMapper(new QSignalMapper(mw)),
+   scaleMapper(new QSignalMapper(mw)) {
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
@@ -97,6 +105,24 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   //
   // "Plot"-menu
   //
+  actionAbsScale = new QAction("Absolute Scale", mw);
+  actionAbsScale->setCheckable(true);
+  actionAbsScale->setChecked(false);
+  connect(actionAbsScale, SIGNAL(toggled(bool)),
+          scaleMapper, SLOT(map()));
+  scaleMapper->setMapping(actionAbsScale, Saxsview::Plot::AbsoluteScale);
+
+  actionLogScale = new QAction("Logarithmic Scale", mw);
+  actionLogScale->setCheckable(true);
+  connect(actionLogScale, SIGNAL(toggled(bool)),
+          scaleMapper, SLOT(map()));
+  scaleMapper->setMapping(actionLogScale, Saxsview::Plot::Log10Scale);
+  actionLogScale->setChecked(true);
+
+  actionGroupScale = new QActionGroup(mw);
+  actionGroupScale->addAction(actionAbsScale);
+  actionGroupScale->addAction(actionLogScale);
+
   actionSaveAs = new QAction("&Export", mw);
   connect(actionSaveAs, SIGNAL(triggered()),
           mw, SLOT(saveAs()));
@@ -170,6 +196,9 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupUi() {
   mdiArea = new QMdiArea(mw);
   mw->setCentralWidget(mdiArea);
+
+  connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
+          mw, SLOT(subWindowActivated(QMdiSubWindow*)));
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
@@ -185,6 +214,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuBar->addMenu(menuFile);
 
   menuPlot = new QMenu("&Plot", mw);
+  menuPlot->addActions(actionGroupScale->actions());
+  menuPlot->addSeparator();
   menuPlot->addAction(actionZoomIn);
   menuPlot->addAction(actionZoomOut);
   menuPlot->addActions(actionGroupZoom->actions());
@@ -218,6 +249,21 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   toolBar->addActions(actionGroupZoom->actions());
 }
 
+void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
+  //
+  // Maps the selected Window in th menu activate the
+  // respective subwindow
+  //
+  connect(windowMapper, SIGNAL(mapped(QWidget*)),
+          mw, SLOT(setActiveSubWindow(QWidget*)));
+
+  //
+  // Maps scaling-actions (abs, log10) to the scaling slot of
+  // the respective plots
+  //
+  connect(scaleMapper, SIGNAL(mapped(int)),
+          mw, SLOT(setScale(int)));
+}
 
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
  : QMainWindow(parent), p(new SaxsviewMainWindowPrivate(this)) {
@@ -226,9 +272,7 @@ SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
   p->setupActions();
   p->setupMenus();
   p->setupToolbars();
-
-  connect(p->windowMapper, SIGNAL(mapped(QWidget*)),
-          this, SLOT(setActiveSubWindow(QWidget*)));
+  p->setupSignalMappers();
 }
 
 SaxsviewMainWindow::~SaxsviewMainWindow() {
@@ -297,6 +341,11 @@ void SaxsviewMainWindow::setMoveEnabled(bool on) {
     currentSubWindow()->setMoveEnabled(on);
 }
 
+void SaxsviewMainWindow::setScale(int scale) {
+  if (currentSubWindow())
+    currentSubWindow()->setScale(scale);
+}
+
 void SaxsviewMainWindow::about() {
   QMessageBox::about(this, "About saxsview",
                      "Saxsview 0.1\n"
@@ -345,4 +394,15 @@ void SaxsviewMainWindow::prepareWindowMenu() {
 void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
   if (w)
     p->mdiArea->setActiveSubWindow(qobject_cast<QMdiSubWindow*>(w));
+}
+
+void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
+  //
+  // Select the active scaling in p->actionGroupScale ...
+  //
+  if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(w)) {
+    QObject *sender = p->scaleMapper->mapping(subWindow->scale());
+    if (QAction *action = qobject_cast<QAction*>(sender))
+      action->setChecked(true);
+  }
 }

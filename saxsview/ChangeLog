@@ -1,4 +1,19 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.h (setScale): New.
+	(subWindowActivated): New.
+	* saxsviewmainwindow.cpp (setupSignalMappers): New.
+	(setupActions): Added actions for absolute and log10-scaling.
+	(setupUi): Connect subWindowActivated-signal.
+	(setupMenus): Added sclaing actions to Plot-menu.
+	(setScale): New.
+	(subWindowActivated): New.
+	* saxsviewsubwindow.h (setScale): New.
+	(subWindowActivated): New.
+	* saxsviewsubwindow.cpp (scale): New.
+	(setScale): New.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* Initial import.
 

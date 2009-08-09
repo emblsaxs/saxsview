@@ -29,6 +29,8 @@ public:
   SaxsviewSubWindow(QWidget *parent = 0L);
   ~SaxsviewSubWindow();
 
+  int scale() const;
+
 public slots:
   void load(const QString& fileName);
   void saveAs();
@@ -37,6 +39,7 @@ public slots:
   void zoomOut();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
+  void setScale(int);
 
 private:
   class SaxsviewSubWindowPrivate;

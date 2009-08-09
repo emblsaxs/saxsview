@@ -35,12 +35,19 @@ class Plot : public QwtPlot {
   Q_OBJECT
 
 public:
+  enum PlotScale {
+    AbsoluteScale = 1,
+    Log10Scale
+  };
+
   Plot(QWidget *parent = 0L);
   ~Plot();
 
   void addCurve(PlotCurve *);
   void removeCurve(PlotCurve *);
   QList<PlotCurve*> curves() const;
+
+  PlotScale scale() const;
 
 //   void updateScaling();
 
@@ -57,6 +64,7 @@ public slots:
   void configure();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
+  void setScale(PlotScale);
 
   void zoom(QRectF rect = QRectF());
 
