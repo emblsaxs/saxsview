@@ -1,0 +1,22 @@
+libsaxsdocument
+===============
+ * doxygen docs
+ * language bindings: Fortran, C++, Python(?)
+ * more formats
+ * more testcases
+
+
+libsaxsview
+===========
+ * doxygen docs
+
+
+saxsview
+========
+ * recent files menu
+ * drag'n'drop of files
+ * configurable plot layout
+ * watch files for changes
+ * allow for probability curves
+ * if a .pdb-file shall be openend, run crysol 
+   to display its scattering pattern
