@@ -24,9 +24,14 @@
 #include "saxsdocument.h"
 
 #include <QDebug>
+#include <QDragEnterEvent>
+#include <QDragMoveEvent>
+#include <QDropEvent>
+#include <QEvent>
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QString>
+#include <QUrl>
 
 class SaxsviewSubWindow::SaxsviewSubWindowPrivate {
 public:
@@ -43,6 +48,9 @@ void SaxsviewSubWindow::SaxsviewSubWindowPrivate::setupUi() {
 
   plot = new Saxsview::Plot(sw);
   sw->setWidget(plot);
+
+  plot->setAcceptDrops(true);
+  plot->installEventFilter(sw);
 }
 
 SaxsviewSubWindow::SaxsviewSubWindow(QWidget *parent)
@@ -82,7 +90,7 @@ void SaxsviewSubWindow::load(const QString& fileName) {
       const double y_err = saxs_data_y_err(data);
 
       points.push_back(QwtDoublePoint(x, y));
-      intervals.push_back(QwtIntervalSample(x, QwtDoubleInterval(y-y_err, y+y_err)));
+      intervals.push_back(QwtIntervalSample(x, QwtDoubleInterval(y - y_err, y + y_err)));
 
       data = saxs_data_next(data);
     }
@@ -125,4 +133,29 @@ void SaxsviewSubWindow::setMoveEnabled(bool on) {
 
 void SaxsviewSubWindow::setScale(int scale) {
   p->plot->setScale((Saxsview::Plot::PlotScale)scale);
+}
+
+bool SaxsviewSubWindow::eventFilter(QObject *watchedObj, QEvent *e) {
+  if (watchedObj != p->plot)
+    return QMdiSubWindow::eventFilter(watchedObj, e);
+
+  switch (e->type()) {
+    case QEvent::Drop:
+      if (QDropEvent *dropEvent = static_cast<QDropEvent*>(e)) {
+        if (dropEvent->mimeData()->hasUrls())
+          foreach (QUrl url, dropEvent->mimeData()->urls())
+            load(url.toLocalFile());
+
+        dropEvent->acceptProposedAction();
+      }
+      // fall through
+
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+      e->accept();
+      return true;
+
+    default:
+      return false;
+  }
 }

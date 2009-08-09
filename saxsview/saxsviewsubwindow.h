@@ -21,6 +21,7 @@
 #define SAXSVIEW_SUBWINDOW_H
 
 #include <QMdiSubWindow>
+class QEvent;
 
 class SaxsviewSubWindow : public QMdiSubWindow {
   Q_OBJECT
@@ -40,6 +41,9 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(int);
+
+protected:
+  bool eventFilter(QObject*, QEvent*);
 
 private:
   class SaxsviewSubWindowPrivate;

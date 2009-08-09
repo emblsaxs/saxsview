@@ -14,7 +14,7 @@ libsaxsview
 saxsview
 ========
  * recent files menu
- * drag'n'drop of files
+ * save/restore last working directory
  * configurable plot layout
  * watch files for changes
  * allow for probability curves

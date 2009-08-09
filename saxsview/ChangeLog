@@ -1,5 +1,11 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewsubwindow.h (eventFilter): New.
+	* saxsviewsubwindow.cpp (eventFilter): New.
+	(setupUi): Accept file-drops on plots.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.cpp (setupActions): Initially enable zoom
 	instead of move action.
 	(createSubWindow): First sub-window is maximized.
