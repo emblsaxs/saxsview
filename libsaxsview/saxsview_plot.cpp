@@ -81,9 +81,6 @@ void Plot::PlotPrivate::setupLegend() {
   legend->show();
   plot->insertLegend(legend, QwtPlot::RightLegend);
 
-  // align legend items in a single column
-//   qobject_cast<QwtDynGridLayout*>(legend->contentsWidget()->layout())->setMaxCols(1);
-
   connect(plot, SIGNAL(legendClicked(QwtPlotItem*)),
           plot, SLOT(itemClicked(QwtPlotItem*)));
 }
@@ -110,12 +107,20 @@ void Plot::PlotPrivate::setupPanner() {
   //
   panner = new QwtPlotPanner(plot->canvas());
   panner->setCursor(Qt::SizeAllCursor);
-  panner->setEnabled(true);
+  panner->setEnabled(false);
 }
 
 void Plot::PlotPrivate::setupZoomer() {
   zoomer = new QwtPlotZoomer(plot->canvas());
-  zoomer->setEnabled(false);
+  zoomer->setEnabled(true);
+
+  // RightButton: zoom out by 1
+  zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
+                          Qt::RightButton, Qt::ControlModifier);
+
+  // Ctrl+RightButton: zoom out to full size
+  zoomer->setMousePattern(QwtEventPattern::MouseSelect3,
+                          Qt::RightButton);
 }
 
 
@@ -211,7 +216,24 @@ void Plot::addCurve(PlotCurve *curve) {
   p->curves.push_back(curve);
   curve->attach(this);
 
-//   updateLayout();
+  //
+  // Compute the overall bounding rect, push
+  // that topmost on the stack.
+  //
+  QRect boundingRect;
+  foreach (PlotCurve *curve, p->curves)
+    boundingRect = boundingRect.united(curve->boundingRect());
+
+  //
+  // This seems to be wierd, but gives the best possible results.
+  // E.g. if zoomBase() is not set before the initial zoom, an all-negative
+  // curve will result in an initial zoom to an (0,0,0x0) rect.
+  //
+  p->zoomer->setZoomBase(boundingRect);
+  p->zoomer->zoom(boundingRect);
+  p->zoomer->setZoomBase(boundingRect);
+
+  replot();
 }
 
 void Plot::removeCurve(PlotCurve *curve) {
@@ -257,36 +279,6 @@ void Plot::setScale(PlotScale scale) {
 
 Plot::PlotScale Plot::scale() const {
   return p->scale;
-}
-
-void Plot::zoom(QRectF rect) {
-  if (rect.isNull())
-    for (int i = 0; i < p->curves.size(); ++i)
-      if (p->curves[i]->isVisible()) {
-        if (rect.isNull())
-          rect = p->curves[i]->boundingRect();
-        else
-          rect = rect.united(p->curves[i]->boundingRect());
-      }
-
-  //
-  // This seems to be wierd, but gives the best possible results.
-  // E.g. if zoomBase() is not set before the initial zoom, an all-negative
-  // curve will result in an initial zoom to an (0,0,0x0) rect.
-  //
-//   if (!rect.isNull() ) {
-    p->zoomer->setZoomBase(rect);
-//     p->zoomer->zoom(rect);
-//     p->zoomer->setZoomBase(rect);
-//   }
-
-  //
-  // Update the plot, required if a curve is added, removed and re-added
-  // again. Without, the plot is not updated on the second occasion?!
-  //
-  // Same for changes in ranges.
-  //
-  replot();
 }
 
 // void Plot::printLegend(QPainter *painter, const QRect &) const {

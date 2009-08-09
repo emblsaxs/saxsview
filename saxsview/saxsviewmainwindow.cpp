@@ -141,15 +141,15 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
 
   actionZoom = new QAction("&Zoom", mw);
   actionZoom->setCheckable(true);
-  actionZoom->setChecked(false);
   connect(actionZoom, SIGNAL(toggled(bool)),
           mw, SLOT(setZoomEnabled(bool)));
 
   actionMove = new QAction("&Move", mw);
   actionMove->setCheckable(true);
+  actionMove->setChecked(false);
   connect(actionMove, SIGNAL(toggled(bool)),
           mw, SLOT(setMoveEnabled(bool)));
-  actionMove->setChecked(true);
+  actionZoom->setChecked(true);
 
   actionGroupZoom = new QActionGroup(mw);
   actionGroupZoom->addAction(actionZoom);
@@ -287,7 +287,11 @@ SaxsviewSubWindow* SaxsviewMainWindow::currentSubWindow() const {
 void SaxsviewMainWindow::createSubWindow() {
   SaxsviewSubWindow *w = new SaxsviewSubWindow(this);
   p->mdiArea->addSubWindow(w);
-  w->show();
+
+  if (p->mdiArea->subWindowList().size() == 1)
+    w->showMaximized();
+  else
+    w->show();
 }
 
 void SaxsviewMainWindow::load() {

@@ -66,8 +66,6 @@ public slots:
   void setMoveEnabled(bool);
   void setScale(PlotScale);
 
-  void zoom(QRectF rect = QRectF());
-
 // protected:
 //   void printLegend(QPainter *, const QRect &) const;
 
