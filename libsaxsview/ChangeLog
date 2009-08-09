@@ -1,5 +1,21 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.h (itemClicked): Removed.
+	(eventFilter): New.
+	* libsaxsview/saxsview_plot.cpp (setupCanvas): Install event-filter
+	for canvas.
+	(setupLegend): Likewise for legend.
+	(setupZoomer): Reoder comments.
+	(itemClicked): Removed.
+	(eventFilter): New.
+	* saxsview_plotcurve.h (title): New.
+	* saxsview_plotcurve.cpp (ctor): Set default error-bar color to
+	light gray.
+	(setVisible): Update layout and replot if visibility changed.
+	(title): New.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plot.h (zoom): Removed.
 	* saxsview_plot.cpp (setupLegend): Removed duplicate(?) single-column
 	requirement.

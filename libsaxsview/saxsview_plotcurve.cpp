@@ -55,11 +55,10 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
   // error bars
   QwtIntervalSymbol errorBar(QwtIntervalSymbol::Bar);
   errorBar.setWidth(1);
-//   errorBar.setPen(Qt::black);
+  errorBar.setPen(QPen(Qt::lightGray));
 
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
-//  errorCurve->setPen();
   errorCurve->setSymbol(errorBar);
 }
 
@@ -107,12 +106,31 @@ bool PlotCurve::isVisible() const {
 void PlotCurve::setVisible(bool on) {
   p->curve->setVisible(on);
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
+
+ if (QwtPlot *plot = p->curve->plot()) {
+    qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve))->setVisible(on);
+
+    //
+    // UpdateLayout() is required to hide/show the
+    // legend on the last/first curve.
+    //
+    plot->updateLayout();
+
+    //
+    // Show the actual change.
+    //
+    plot->replot();
+  }
 }
 
 QRect PlotCurve::boundingRect() const {
   return p->errorBarsEnabled
                ? p->errorCurve->boundingRect().toRect()
                : p->curve->boundingRect().toRect();
+}
+
+QString PlotCurve::title() const {
+  return p->curve->title().text();
 }
 
 void PlotCurve::setTitle(const QString& title) {

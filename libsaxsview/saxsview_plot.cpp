@@ -20,8 +20,10 @@
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 
-// #include <QDebug>
+#include <QDebug>
 #include <QFileDialog>
+#include <QMenu>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QPrintDialog>
 #include <QPrinter>
@@ -73,16 +75,19 @@ void Plot::PlotPrivate::setupCanvas() {
   plot->setPalette(Qt::white);
   plot->canvas()->setPalette(Qt::white);
   plot->canvas()->setFrameStyle(QFrame::NoFrame);
+
+  // to intercept right-click events
+  plot->canvas()->installEventFilter(plot);
 }
 
 void Plot::PlotPrivate::setupLegend() {
   legend = new QwtLegend(plot->canvas());
-  legend->setItemMode(QwtLegend::ClickableItem);
   legend->show();
-  plot->insertLegend(legend, QwtPlot::RightLegend);
 
-  connect(plot, SIGNAL(legendClicked(QwtPlotItem*)),
-          plot, SLOT(itemClicked(QwtPlotItem*)));
+  // to intercept right-click events
+  legend->installEventFilter(plot);
+
+  plot->insertLegend(legend, QwtPlot::RightLegend);
 }
 
 void Plot::PlotPrivate::setupMarker() {
@@ -115,12 +120,12 @@ void Plot::PlotPrivate::setupZoomer() {
   zoomer->setEnabled(true);
 
   // RightButton: zoom out by 1
-  zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
-                          Qt::RightButton, Qt::ControlModifier);
-
-  // Ctrl+RightButton: zoom out to full size
   zoomer->setMousePattern(QwtEventPattern::MouseSelect3,
                           Qt::RightButton);
+
+  // Ctrl+RightButton: zoom out to full size
+  zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
+                          Qt::RightButton, Qt::ControlModifier);
 }
 
 
@@ -250,9 +255,36 @@ QList<PlotCurve*> Plot::curves() const {
   return p->curves;
 }
 
-void Plot::itemClicked(QwtPlotItem *item) {
-//   if (PlotCurve *curve = dynamic_cast<PlotCurve*>(item))
-//     curve->configure();
+bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
+  //
+  // Open a context menu on the legend to allow selection of curves.
+  //
+  // If no curves are visible, Qwt sets the legend's width to '0'.
+  // Thus, if all curves have been disabled, show the context menu
+  // on the canvas instead.
+  //
+  if (watchedObj == p->legend
+      || (watchedObj == canvas()
+          && !p->curves.isEmpty()
+          && p->legend && p->legend->width() == 0)) {
+
+    if (QMouseEvent *me = static_cast<QMouseEvent*>(e)) {
+      if (me->button() == Qt::RightButton) {
+        QMenu contextMenu(this);
+        foreach (PlotCurve *curve, p->curves) {
+          QAction *action = contextMenu.addAction(curve->title());
+          action->setCheckable(true);
+          action->setChecked(curve->isVisible());
+          connect(action, SIGNAL(toggled(bool)),
+                  curve, SLOT(setVisible(bool)));
+        }
+        contextMenu.exec(me->globalPos());
+        return true;
+      }
+    }
+  }
+
+  return QwtPlot::eventFilter(watchedObj, e);
 }
 
 void Plot::setZoomEnabled(bool on) {

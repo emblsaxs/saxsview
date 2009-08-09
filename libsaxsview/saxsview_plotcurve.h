@@ -53,6 +53,7 @@ public:
   void setData(const PlotPointData& points = PlotPointData(),
                const PlotIntervalData& intervals = PlotIntervalData());
 
+  QString title() const;
   bool isVisible() const;
   bool errorBarsEnabled() const;
 

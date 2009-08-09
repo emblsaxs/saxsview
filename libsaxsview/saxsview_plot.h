@@ -21,6 +21,7 @@
 #define SAXSVIEW_PLOT_H
 
 #include <QAction>
+class QEvent;
 class QPainter;
 class QRect;
 
@@ -69,8 +70,8 @@ public slots:
 // protected:
 //   void printLegend(QPainter *, const QRect &) const;
 
-private slots:
-  void itemClicked(QwtPlotItem*);
+protected:
+  bool eventFilter(QObject*, QEvent*);
 
 private:
   class PlotPrivate;
