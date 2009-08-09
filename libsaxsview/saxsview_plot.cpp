@@ -225,7 +225,7 @@ void Plot::addCurve(PlotCurve *curve) {
   // Compute the overall bounding rect, push
   // that topmost on the stack.
   //
-  QRect boundingRect;
+  QRectF boundingRect;
   foreach (PlotCurve *curve, p->curves)
     boundingRect = boundingRect.united(curve->boundingRect());
 

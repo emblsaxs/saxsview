@@ -123,10 +123,10 @@ void PlotCurve::setVisible(bool on) {
   }
 }
 
-QRect PlotCurve::boundingRect() const {
+QRectF PlotCurve::boundingRect() const {
   return p->errorBarsEnabled
-               ? p->errorCurve->boundingRect().toRect()
-               : p->curve->boundingRect().toRect();
+               ? p->errorCurve->boundingRect()
+               : p->curve->boundingRect();
 }
 
 QString PlotCurve::title() const {

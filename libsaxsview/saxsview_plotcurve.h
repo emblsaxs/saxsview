@@ -57,7 +57,7 @@ public:
   bool isVisible() const;
   bool errorBarsEnabled() const;
 
-  QRect boundingRect() const;
+  QRectF boundingRect() const;
 
 public slots:
   void setTitle(const QString& title);

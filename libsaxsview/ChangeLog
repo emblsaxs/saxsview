@@ -1,11 +1,19 @@
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotcurve.h (boundingRect): Bounding-rects are float
+	values, fixed return value.
+	(saxsview_plotcurve.cpp): Likewise.
+	* saxsview_plot.cpp (addCurve): Use float-based rect to compute
+	bounding rect.
+
+2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plot.h (itemClicked): Removed.
 	(eventFilter): New.
 	* libsaxsview/saxsview_plot.cpp (setupCanvas): Install event-filter
 	for canvas.
 	(setupLegend): Likewise for legend.
-	(setupZoomer): Reoder comments.
+	(setupZoomer): Reorder comments.
 	(itemClicked): Removed.
 	(eventFilter): New.
 	* saxsview_plotcurve.h (title): New.
