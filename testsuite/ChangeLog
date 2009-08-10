@@ -1,3 +1,9 @@
+2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsdocument/long-lines.dat: New.
+	* libsaxsdocument/long-lines.exp: New.
+	* libsaxsdocument/CMakeLists.txt: Added new test.
+
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Initial import.

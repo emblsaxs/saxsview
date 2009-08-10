@@ -69,7 +69,7 @@ int lines_read(struct line **lines, const char *filename) {
         tail = tail->next;
         tail->line_length = 80;
         tail->line_buffer = line_ptr = malloc(tail->line_length);
-        memset(tail->line_buffer, 0, head->line_length);
+        memset(tail->line_buffer, 0, tail->line_length);
         tail->next = NULL;
         break;
 
