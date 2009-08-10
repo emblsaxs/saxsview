@@ -268,7 +268,7 @@ bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
           && !p->curves.isEmpty()
           && p->legend && p->legend->width() == 0)) {
 
-    if (QMouseEvent *me = static_cast<QMouseEvent*>(e)) {
+    if (QMouseEvent *me = dynamic_cast<QMouseEvent*>(e)) {
       if (me->button() == Qt::RightButton) {
         QMenu contextMenu(this);
         foreach (PlotCurve *curve, p->curves) {

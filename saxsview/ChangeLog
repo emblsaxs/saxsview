@@ -1,3 +1,7 @@
+2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewsubwindow.cpp (eventFilter): Fixed cast.
+
 2009-08-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewsubwindow.h (eventFilter): New.

@@ -32,6 +32,7 @@ namespace Saxsview {
 class PlotCurve::PlotCurvePrivate {
 public:
   PlotCurvePrivate();
+  ~PlotCurvePrivate();
 
   QwtPlotCurve *curve;
   QwtPlotIntervalCurve *errorCurve;
@@ -60,6 +61,11 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
   errorCurve->setSymbol(errorBar);
+}
+
+PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
+  delete curve;
+  delete errorCurve;
 }
 
 

@@ -141,7 +141,7 @@ bool SaxsviewSubWindow::eventFilter(QObject *watchedObj, QEvent *e) {
 
   switch (e->type()) {
     case QEvent::Drop:
-      if (QDropEvent *dropEvent = static_cast<QDropEvent*>(e)) {
+      if (QDropEvent *dropEvent = dynamic_cast<QDropEvent*>(e)) {
         if (dropEvent->mimeData()->hasUrls())
           foreach (QUrl url, dropEvent->mimeData()->urls())
             load(url.toLocalFile());
