@@ -89,10 +89,12 @@ void SaxsviewSubWindow::load(const QString& fileName) {
       const double y     = saxs_data_y(data);
       const double y_err = saxs_data_y_err(data);
 
+      data = saxs_data_next(data);
+      if (y - y_err < 1e-6)
+        continue;
+
       points.push_back(QwtDoublePoint(x, y));
       intervals.push_back(QwtIntervalSample(x, QwtDoubleInterval(y - y_err, y + y_err)));
-
-      data = saxs_data_next(data);
     }
 
     Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;
