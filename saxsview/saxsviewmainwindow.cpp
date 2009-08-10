@@ -57,7 +57,7 @@ public:
   QActionGroup *actionGroupScale;
 
   QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
-  QActionGroup *actionGroupZoom;
+  QActionGroup *actionGroupZoomMove;
 
   // "Window"-menu
   QAction *actionPreviousPlot, *actionNextPlot, *actionCascadePlots;
@@ -151,9 +151,9 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
           mw, SLOT(setMoveEnabled(bool)));
   actionZoom->setChecked(true);
 
-  actionGroupZoom = new QActionGroup(mw);
-  actionGroupZoom->addAction(actionZoom);
-  actionGroupZoom->addAction(actionMove);
+  actionGroupZoomMove = new QActionGroup(mw);
+  actionGroupZoomMove->addAction(actionZoom);
+  actionGroupZoomMove->addAction(actionMove);
 
   //
   // "Window"-menu
@@ -218,7 +218,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuPlot->addSeparator();
   menuPlot->addAction(actionZoomIn);
   menuPlot->addAction(actionZoomOut);
-  menuPlot->addActions(actionGroupZoom->actions());
+  menuPlot->addActions(actionGroupZoomMove->actions());
   menuBar->addMenu(menuPlot);
 
   menuWindow = new QMenu("&Window", mw);
@@ -246,12 +246,12 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   toolBar->addAction(actionPrint);
   toolBar->addAction(actionZoomIn);
   toolBar->addAction(actionZoomOut);
-  toolBar->addActions(actionGroupZoom->actions());
+  toolBar->addActions(actionGroupZoomMove->actions());
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
   //
-  // Maps the selected Window in th menu activate the
+  // Maps the selected Window in the menu activate the
   // respective subwindow
   //
   connect(windowMapper, SIGNAL(mapped(QWidget*)),
@@ -405,12 +405,20 @@ void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
 }
 
 void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
-  //
-  // Select the active scaling in p->actionGroupScale ...
-  //
   if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(w)) {
+    //
+    // Synchronize the scale of the subwindow with the local
+    // actions (i.e. the scaling shown in the menu or toolbar).
+    //
     QObject *sender = p->scaleMapper->mapping(subWindow->scale());
     if (QAction *action = qobject_cast<QAction*>(sender))
       action->setChecked(true);
+
+    //
+    // Synchronize zoom and move actions beween subwindow
+    // and local actions.
+    //
+    p->actionZoom->setChecked(subWindow->zoomEnabled());
+    p->actionMove->setChecked(subWindow->moveEnabled());
   }
 }

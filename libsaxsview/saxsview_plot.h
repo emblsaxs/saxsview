@@ -49,8 +49,8 @@ public:
   QList<PlotCurve*> curves() const;
 
   PlotScale scale() const;
-
-//   void updateScaling();
+  bool zoomEnabled() const;
+  bool moveEnabled() const;
 
   bool replotBlocked() const;
 

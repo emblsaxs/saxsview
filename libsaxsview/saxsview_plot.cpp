@@ -73,7 +73,6 @@ void Plot::PlotPrivate::setupCanvas() {
   // initial background color
   plot->setAutoFillBackground(true);
   plot->setPalette(Qt::white);
-  plot->canvas()->setPalette(Qt::white);
   plot->canvas()->setFrameStyle(QFrame::NoFrame);
 
   // to intercept right-click events
@@ -202,8 +201,6 @@ void Plot::print() {
   // FIXME: The indicator of legend-items is not properly
   //        scaled
   //
-  // FIXME: error bars should become plotItems as well?!
-  //
   QPrinter printer(QPrinter::HighResolution);
   printer.setOrientation(QPrinter::Landscape);
 
@@ -291,8 +288,16 @@ void Plot::setZoomEnabled(bool on) {
   p->zoomer->setEnabled(on);
 }
 
+bool Plot::zoomEnabled() const {
+  return p->zoomer->isEnabled();
+}
+
 void Plot::setMoveEnabled(bool on) {
   p->panner->setEnabled(on);
+}
+
+bool Plot::moveEnabled() const {
+  return p->panner->isEnabled();
 }
 
 void Plot::setScale(PlotScale scale) {
@@ -312,6 +317,8 @@ void Plot::setScale(PlotScale scale) {
 Plot::PlotScale Plot::scale() const {
   return p->scale;
 }
+
+
 
 // void Plot::printLegend(QPainter *painter, const QRect &) const {
 //   //

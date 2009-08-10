@@ -1,5 +1,15 @@
 2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.h (updateScaling): Removed.
+	(zoomEnabled): New.
+	(moveEnabled): New.
+	* saxsview_plot.cpp (setupCanvas): Removed setting of canvas' palette.
+	(print): Removed FIXME which was implemented in Qwt.
+	(zoomEnabled): New.
+	(moveEnabled): New.
+
+2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plot.cpp (eventFilter): Fixed cast.
 	* saxsview_plotcurve.cpp (dtor): New.
 

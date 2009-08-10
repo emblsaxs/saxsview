@@ -31,6 +31,8 @@ public:
   ~SaxsviewSubWindow();
 
   int scale() const;
+  bool zoomEnabled() const;
+  bool moveEnabled() const;
 
 public slots:
   void load(const QString& fileName);

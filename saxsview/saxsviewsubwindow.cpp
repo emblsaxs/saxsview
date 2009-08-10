@@ -70,6 +70,14 @@ int SaxsviewSubWindow::scale() const {
   return p->plot->scale();
 }
 
+bool SaxsviewSubWindow::zoomEnabled() const {
+  return p->plot->zoomEnabled();
+}
+
+bool SaxsviewSubWindow::moveEnabled() const {
+  return p->plot->moveEnabled();
+}
+
 void SaxsviewSubWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())
