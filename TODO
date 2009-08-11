@@ -5,18 +5,64 @@ libsaxsdocument
  * more formats
  * more testcases
 
-
 libsaxsview
 ===========
  * doxygen docs
-
 
 saxsview
 ========
  * recent files menu
  * save/restore last working directory
- * configurable plot layout
  * watch files for changes
  * allow for probability curves
  * if a .pdb-file shall be openend, run crysol 
    to display its scattering pattern
+ * unified and simple way to export to .svg, .eps, .pdf, .jpg, etc
+ * allow for annotations, e.g. freely placeable labels,
+   on the plot area
+ * configurable plot layout (see below)
+
+
+Configurable Items in saxsview
+------------------------------
+All fonts shall individually be configurable in family, 
+size and style (bold, italic).
+
+Color selection should allow alpha channels.
+
+Plot
+ o palette
+ o plot title
+ o enable/disable (0/0) marker
+
+Curves
+ o lines (style, width, color)
+ o symbols (type, size, color, filled)
+ o error bars (style, width, color)
+ o legend label
+ o scaling factor (x-axis)
+ o offset (y-axis)
+
+For each axis
+ o enable/disable axis label
+ o axis label
+ o axis label font
+
+Ticks
+ o enable/disable ticks
+ o enable/disable tick labels
+ o tick values (at least: from, to, spacing)
+ o tick label font
+
+Legend
+ o enable/disable legend completely
+ o legend font
+ o legend position (?)
+
+Grid (?)
+ o enable/disable grid
+ o grid spacing
+ o grid line style
+
+Other
+ o save default settings for new plots/curves (?)
