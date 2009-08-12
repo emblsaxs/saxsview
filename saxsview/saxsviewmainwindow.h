@@ -52,6 +52,7 @@ public slots:
 
 private slots:
   void prepareWindowMenu();
+  void prepareRecentFilesMenu();
   void setActiveSubWindow(QWidget*);
   void subWindowActivated(QMdiSubWindow*);
 

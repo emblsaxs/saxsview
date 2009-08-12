@@ -11,7 +11,6 @@ libsaxsview
 
 saxsview
 ========
- * recent files menu
  * save/restore last working directory
  * watch files for changes
  * allow for probability curves
@@ -65,4 +64,5 @@ Grid (?)
  o grid line style
 
 Other
+ o annotation font
  o save default settings for new plots/curves (?)

@@ -1,3 +1,15 @@
+2009-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* main.cpp (main): Set application name for settings.
+	* saxsviewmainwindow.h (prepareRecentFilesMenu): New.
+	* saxsviewmainwindow.cpp (ctor): Moved initialization of mapper
+	objects to setupSignalMapper().
+	(setupMenus): Added "Recent Files" menu.
+	(setupSignalMappers): Initialize all signal mappers, added
+	recent-files mapper.
+	(load): Add currently loaded file to list of recent files.
+	(prepareRecentFilesMenu): New.
+
 2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewsubwindow.h (zoomEnabled): New.

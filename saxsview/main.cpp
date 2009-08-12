@@ -24,6 +24,7 @@
 
 int main(int argc, char **argv) {
   QApplication app(argc, argv);
+  app.setApplicationName("saxsview");
 
   SaxsviewMainWindow w;
   w.show();

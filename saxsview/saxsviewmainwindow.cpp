@@ -32,6 +32,7 @@
 #include <QMenu>
 #include <QMessageBox>
 #include <QMenuBar>
+#include <QSettings>
 #include <QSignalMapper>
 #include <QStyle>
 #include <QToolBar>
@@ -66,17 +67,16 @@ public:
   // "Help"-menu
   QAction *actionAbout;
 
-  QMenu *menuFile, *menuPlot, *menuWindow, *menuHelp;
+  QMenu *menuFile, *menuRecentFiles, *menuPlot, *menuWindow, *menuHelp;
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
   QSignalMapper *scaleMapper;
+  QSignalMapper *recentFileNameMapper;
 };
 
 SaxsviewMainWindow::SaxsviewMainWindowPrivate::SaxsviewMainWindowPrivate(SaxsviewMainWindow *w)
- : mw(w),
-   windowMapper(new QSignalMapper(mw)),
-   scaleMapper(new QSignalMapper(mw)) {
+ : mw(w) {
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
@@ -204,9 +204,14 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupUi() {
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   QMenuBar *menuBar = mw->menuBar();
 
+  menuRecentFiles = new QMenu("Open Recent", mw);
+  connect(menuRecentFiles, SIGNAL(aboutToShow()),
+          mw, SLOT(prepareRecentFilesMenu()));
+
   menuFile = new QMenu("&File", mw);
   menuFile->addAction(actionCreateSubWindow);
   menuFile->addAction(actionLoad);
+  menuFile->addMenu(menuRecentFiles);
   menuFile->addAction(actionSaveAs);
   menuFile->addAction(actionPrint);
   menuFile->addSeparator();
@@ -254,6 +259,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
   // Maps the selected Window in the menu activate the
   // respective subwindow
   //
+  windowMapper = new QSignalMapper(mw);
   connect(windowMapper, SIGNAL(mapped(QWidget*)),
           mw, SLOT(setActiveSubWindow(QWidget*)));
 
@@ -261,18 +267,26 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
   // Maps scaling-actions (abs, log10) to the scaling slot of
   // the respective plots
   //
+  scaleMapper = new QSignalMapper(mw);
   connect(scaleMapper, SIGNAL(mapped(int)),
           mw, SLOT(setScale(int)));
+
+  //
+  // Open a selected, recently opened file.
+  //
+  recentFileNameMapper = new QSignalMapper(mw);
+  connect(recentFileNameMapper, SIGNAL(mapped(const QString&)),
+          mw, SLOT(load(const QString&)));
 }
 
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
  : QMainWindow(parent), p(new SaxsviewMainWindowPrivate(this)) {
 
+  p->setupSignalMappers();
   p->setupUi();
   p->setupActions();
   p->setupMenus();
   p->setupToolbars();
-  p->setupSignalMappers();
 }
 
 SaxsviewMainWindow::~SaxsviewMainWindow() {
@@ -311,8 +325,24 @@ void SaxsviewMainWindow::load(const QString& fileName) {
   if (!currentSubWindow())
     createSubWindow();
 
-  if (currentSubWindow())
+  if (currentSubWindow()) {
     currentSubWindow()->load(fileName);
+
+    //
+    // Add to the list of recently opened files;
+    // remove duplicates (if any), prepend current
+    // filename and remove old ones (if any).
+    //
+    QSettings settings;
+    QStringList recentFiles = settings.value("saxsview/recentfiles").toStringList();
+
+    recentFiles.removeAll(fileName);
+    recentFiles.prepend(fileName);
+    while (recentFiles.size() > 10)
+      recentFiles.removeLast();
+
+    settings.setValue("saxsview/recentfiles", recentFiles);
+  }
 }
 
 void SaxsviewMainWindow::saveAs() {
@@ -397,6 +427,19 @@ void SaxsviewMainWindow::prepareWindowMenu() {
     p->windowMapper->setMapping(action, window);
   }
   p->menuWindow->addActions(windowGroup->actions());
+}
+
+void SaxsviewMainWindow::prepareRecentFilesMenu() {
+  QSettings settings;
+  QStringList recentFiles = settings.value("saxsview/recentfiles").toStringList();
+
+  p->menuRecentFiles->clear();
+  foreach (QString fileName, recentFiles) {
+    QAction *action = p->menuRecentFiles->addAction(fileName);
+    connect(action, SIGNAL(triggered()),
+            p->recentFileNameMapper, SLOT(map()));
+    p->recentFileNameMapper->setMapping(action, fileName);
+  }
 }
 
 void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
