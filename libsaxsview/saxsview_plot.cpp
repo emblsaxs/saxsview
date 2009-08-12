@@ -20,6 +20,7 @@
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 
+#include <QApplication>
 #include <QDebug>
 #include <QFileDialog>
 #include <QMenu>
@@ -28,6 +29,7 @@
 #include <QPainter>
 #include <QPrintDialog>
 #include <QPrinter>
+#include <QSettings>
 #include <QSvgGenerator>
 
 #include <qwt_dyngrid_layout.h>
@@ -232,12 +234,22 @@ void Plot::print() {
   // FIXME: The indicator of legend-items is not properly
   //        scaled
   //
+
+  QString valueName = QString("%1/printername").arg(qApp->applicationName());
+
+  QSettings settings;
+  QString printerName = settings.value(valueName, "").toString();
+
   QPrinter printer(QPrinter::HighResolution);
   printer.setOrientation(QPrinter::Landscape);
+  if (!printerName.isEmpty())
+    printer.setPrinterName(printerName);
 
   QPrintDialog dlg(&printer, this);
   if (dlg.exec() == QDialog::Accepted)
     QwtPlot::print(printer);
+
+  settings.setValue(valueName, printer.printerName());
 }
 
 void Plot::configure() {

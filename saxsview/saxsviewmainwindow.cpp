@@ -118,6 +118,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
           mw, SLOT(load()));
 
   actionPrint = new QAction("&Print", mw);
+  actionPrint->setShortcut(QKeySequence::Print);
   connect(actionPrint, SIGNAL(triggered()),
           mw, SLOT(print()));
 
