@@ -12,14 +12,15 @@ libsaxsview
 saxsview
 ========
  * save/restore last working directory
- * watch files for changes
+ * watch files for changes (?)
  * allow for probability curves
  * if a .pdb-file shall be openend, run crysol 
    to display its scattering pattern
- * unified and simple way to export to .svg, .eps, .pdf, .jpg, etc
  * allow for annotations, e.g. freely placeable labels,
    on the plot area
  * configurable plot layout (see below)
+ * save/restore a particular configuration into/from
+   plot-description files (based on QSettings, ini-format)
 
 
 Configurable Items in saxsview
