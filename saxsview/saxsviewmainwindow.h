@@ -40,7 +40,7 @@ public slots:
   void load();
   void load(const QString& fileName);
 
-  void saveAs();
+  void exportAs(const QString& format);
   void print();
   void zoomIn();
   void zoomOut();

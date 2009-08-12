@@ -120,8 +120,8 @@ void SaxsviewSubWindow::load(const QString& fileName) {
   saxs_document_free(doc);
 }
 
-void SaxsviewSubWindow::saveAs() {
-  p->plot->saveAs();
+void SaxsviewSubWindow::exportAs(const QString& fileName) {
+  p->plot->exportAs(fileName);
 }
 
 void SaxsviewSubWindow::print() {

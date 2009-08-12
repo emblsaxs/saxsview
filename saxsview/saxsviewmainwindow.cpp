@@ -23,8 +23,10 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QDebug>
 #include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QKeySequence>
 #include <QList>
 #include <QMdiArea>
@@ -51,7 +53,7 @@ public:
 
   // "File"-menu
   QAction *actionCreateSubWindow, *actionLoad, *actionQuit;
-  QAction *actionSaveAs, *actionPrint;
+  QAction *actionPrint;
 
   // "Plot"-menu
   QAction *actionAbsScale, *actionLogScale;
@@ -67,16 +69,34 @@ public:
   // "Help"-menu
   QAction *actionAbout;
 
-  QMenu *menuFile, *menuRecentFiles, *menuPlot, *menuWindow, *menuHelp;
+  QMenu *menuFile, *menuRecentFiles, *menuExportAs;
+  QMenu *menuPlot, *menuWindow, *menuHelp;
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
   QSignalMapper *scaleMapper;
   QSignalMapper *recentFileNameMapper;
+  QSignalMapper *exportAsFormatMapper;
+
+  typedef QMap<QString, QString> supportedFormatsMap;
+  supportedFormatsMap exportAsFormat;
 };
 
 SaxsviewMainWindow::SaxsviewMainWindowPrivate::SaxsviewMainWindowPrivate(SaxsviewMainWindow *w)
  : mw(w) {
+
+  exportAsFormat["pdf"] = "Portable Document Format";
+  exportAsFormat["ps"]  = "Postscript";
+#ifdef QT_SVG_LIB
+  exportAsFormat["svg"] = "Scalable Vector Graphics";
+#endif
+#ifdef QT_IMAGEFORMAT_PNG
+  exportAsFormat["png"] = "Portable Network Graphics";
+#endif
+#ifdef QT_IMAGEFORMAT_JPEG
+  exportAsFormat["jpg"] = "JPEG";
+#endif
+  exportAsFormat["bmp"] = "Windows Bitmap";
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
@@ -96,6 +116,10 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionLoad->setShortcut(QKeySequence::Open);
   connect(actionLoad, SIGNAL(triggered()),
           mw, SLOT(load()));
+
+  actionPrint = new QAction("&Print", mw);
+  connect(actionPrint, SIGNAL(triggered()),
+          mw, SLOT(print()));
 
   actionQuit = new QAction("&Quit", mw);
   actionQuit->setShortcut(QKeySequence("Ctrl+Q"));
@@ -122,14 +146,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupScale = new QActionGroup(mw);
   actionGroupScale->addAction(actionAbsScale);
   actionGroupScale->addAction(actionLogScale);
-
-  actionSaveAs = new QAction("&Export", mw);
-  connect(actionSaveAs, SIGNAL(triggered()),
-          mw, SLOT(saveAs()));
-
-  actionPrint = new QAction("&Print", mw);
-  connect(actionPrint, SIGNAL(triggered()),
-          mw, SLOT(print()));
 
   actionZoomIn = new QAction("Zoom &in", mw);
   connect(actionZoomIn, SIGNAL(triggered()),
@@ -202,17 +218,28 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupUi() {
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
-  QMenuBar *menuBar = mw->menuBar();
 
-  menuRecentFiles = new QMenu("Open Recent", mw);
+  menuExportAs = new QMenu("E&xport As", mw);
+
+  supportedFormatsMap::const_iterator i = exportAsFormat.constBegin();
+  for ( ; i != exportAsFormat.constEnd(); ++i) {
+    QAction *action = menuExportAs->addAction(QString("%1 (%2)").arg(i.value()).arg(i.key()));
+    connect(action, SIGNAL(triggered()),
+            exportAsFormatMapper, SLOT(map()));
+    exportAsFormatMapper->setMapping(action, i.key());
+  }
+
+  menuRecentFiles = new QMenu("Open &Recent", mw);
   connect(menuRecentFiles, SIGNAL(aboutToShow()),
           mw, SLOT(prepareRecentFilesMenu()));
+
+  QMenuBar *menuBar = mw->menuBar();
 
   menuFile = new QMenu("&File", mw);
   menuFile->addAction(actionCreateSubWindow);
   menuFile->addAction(actionLoad);
   menuFile->addMenu(menuRecentFiles);
-  menuFile->addAction(actionSaveAs);
+  menuFile->addMenu(menuExportAs);
   menuFile->addAction(actionPrint);
   menuFile->addSeparator();
   menuFile->addAction(actionQuit);
@@ -247,7 +274,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
 
   toolBar = mw->addToolBar("plot Toolbar");
   toolBar->addAction(actionLoad);
-  toolBar->addAction(actionSaveAs);
   toolBar->addAction(actionPrint);
   toolBar->addAction(actionZoomIn);
   toolBar->addAction(actionZoomOut);
@@ -277,6 +303,13 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
   recentFileNameMapper = new QSignalMapper(mw);
   connect(recentFileNameMapper, SIGNAL(mapped(const QString&)),
           mw, SLOT(load(const QString&)));
+
+  //
+  // Export a plot to a file of the selected format.
+  //
+  exportAsFormatMapper = new QSignalMapper(mw);
+  connect(exportAsFormatMapper, SIGNAL(mapped(const QString&)),
+          mw, SLOT(exportAs(const QString&)));
 }
 
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
@@ -345,9 +378,36 @@ void SaxsviewMainWindow::load(const QString& fileName) {
   }
 }
 
-void SaxsviewMainWindow::saveAs() {
-  if (currentSubWindow())
-    currentSubWindow()->saveAs();
+void SaxsviewMainWindow::exportAs(const QString& format) {
+  if (!currentSubWindow())
+    return;
+
+  QString filterFormat = "%1 (*.%2)";
+
+  QString filter = "All files (*.*)";
+  SaxsviewMainWindowPrivate::supportedFormatsMap::const_iterator i = p->exportAsFormat.constBegin();
+  for ( ; i != p->exportAsFormat.constEnd(); ++i)
+    filter += ";; " + filterFormat.arg(i.value()).arg(i.key());
+
+  QString selectedFilter = filterFormat.arg(p->exportAsFormat.value(format))
+                                       .arg(format);
+
+  QString fileName = QFileDialog::getSaveFileName(this, "Export As",
+                                                  QDir::currentPath(),
+                                                  filter,
+                                                  &selectedFilter);
+
+  if (fileName.isEmpty())
+    return;
+
+  // append selected extension if the user didn't enter one
+  QString ext = QFileInfo(fileName).completeSuffix();
+  if (ext.isEmpty()) {
+    fileName += "." + format;
+    ext = format;
+  }
+
+  currentSubWindow()->exportAs(fileName);
 }
 
 void SaxsviewMainWindow::print() {

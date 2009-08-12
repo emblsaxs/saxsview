@@ -23,10 +23,12 @@
 #include <QDebug>
 #include <QFileDialog>
 #include <QMenu>
+#include <QMessageBox>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPrintDialog>
 #include <QPrinter>
+#include <QSvgGenerator>
 
 #include <qwt_dyngrid_layout.h>
 #include <qwt_legend.h>
@@ -38,7 +40,6 @@
 #include <qwt_plot_panner.h>
 #include <qwt_plot_zoomer.h>
 #include <qwt_scale_engine.h>
-// #include <qwt_scale_widget.h>
 
 
 namespace Saxsview {
@@ -184,16 +185,46 @@ void Plot::clear() {
   replot();
 }
 
-void Plot::saveAs() {
-  QString fileName = QFileDialog::getSaveFileName(this, "Save plot as ...",
+void Plot::exportAs() {
+  QString fileName = QFileDialog::getSaveFileName(this, "Export As",
                                                   QDir::currentPath(),
-                                                  "Image files (*.bmp *.gif *.jpg *.png)");
-  saveAs(fileName);
+                                                  "All files (*.*)");
+  exportAs(fileName);
 }
 
-void Plot::saveAs(const QString& fileName) {
-  if (!fileName.isEmpty())
+void Plot::exportAs(const QString& fileName) {
+  if (fileName.isEmpty())
+    return;
+
+  QString ext = QFileInfo(fileName).completeSuffix();
+
+  bool bitmap = (ext == "bmp");
+#ifdef QT_IMAGEFORMAT_PNG
+  bitmap = bitmap || (ext == "png");
+#endif
+#ifdef QT_IMAGEFORMAT_JPEG
+  bitmap = bitmap || (ext == "jpg") || ext == "jpeg";
+#endif
+
+  if (bitmap) {
     QPixmap::grabWidget(this).save(fileName);
+
+#ifdef QT_SVG_LIB
+  } else if (ext == "svg") {
+    QSvgGenerator generator;
+    generator.setFileName(fileName);
+    generator.setSize(QSize(800, 600));
+    QwtPlot::print(generator);
+#endif
+  } else if (ext == "ps" || ext == "pdf") {
+    QPrinter printer(QPrinter::HighResolution);
+    printer.setOrientation(QPrinter::Landscape);
+    printer.setOutputFileName(fileName);
+    QwtPlot::print(printer);
+
+  } else
+    QMessageBox::warning(this, "Not supported",
+                         QString("File format \".%1\" is not supported").arg(ext));
 }
 
 void Plot::print() {

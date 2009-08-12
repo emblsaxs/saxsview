@@ -59,8 +59,8 @@ public slots:
   void blockReplot(bool);
 
   void clear();
-  void saveAs();
-  void saveAs(const QString&);
+  void exportAs();
+  void exportAs(const QString&);
   void print();
   void configure();
   void setZoomEnabled(bool);

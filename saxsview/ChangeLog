@@ -1,5 +1,21 @@
 2009-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.h (saveAs): Renamed to ...
+	(exportAs): ... this.
+	* saxsviewmainwindow.cpp (ctor): Fill list of supported file
+	formats to export to.
+	(setupActions): Removed export-as action, moved print action.
+	(setupMenus): Set up export-as menu with supported file formats.
+	(setupSignalMapper): Added export-as format mapper.
+	(saveAs): Renamed to ...
+	(exportAs): ... this. Provide file-selection dialog.
+	* saxsviewsubwindow.h (saveAs): Renamed to ...
+	(exportAs): ... this.
+	* saxsviewsubwindow.cpp (saveAs): Renamed to ...
+	(exportAs): ... this.
+
+2009-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewsubwindow.cpp (load): Drop curves whose bounding
 	rect is invalid.
 
