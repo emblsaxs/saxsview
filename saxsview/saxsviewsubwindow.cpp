@@ -107,9 +107,12 @@ void SaxsviewSubWindow::load(const QString& fileName) {
 
     Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;
     plotCurve->setData(points, intervals);
-    plotCurve->setTitle(fileInfo.fileName());
+    if (plotCurve->boundingRect().isValid()) {
+      plotCurve->setTitle(fileInfo.fileName());
+      p->plot->addCurve(plotCurve);
 
-    p->plot->addCurve(plotCurve);
+    } else
+      delete plotCurve;
 
     curve = saxs_curve_find_next(curve, SAXS_CURVE_SCATTERING_DATA);
   }
