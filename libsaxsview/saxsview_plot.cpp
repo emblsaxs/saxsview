@@ -261,24 +261,7 @@ void Plot::addCurve(PlotCurve *curve) {
   p->curves.push_back(curve);
   curve->attach(this);
 
-  //
-  // Compute the overall bounding rect, push
-  // that topmost on the stack.
-  //
-  QRectF boundingRect;
-  foreach (PlotCurve *curve, p->curves)
-    boundingRect = boundingRect.united(curve->boundingRect());
-
-  //
-  // This seems to be wierd, but gives the best possible results.
-  // E.g. if zoomBase() is not set before the initial zoom, an all-negative
-  // curve will result in an initial zoom to an (0,0,0x0) rect.
-  //
-  p->zoomer->setZoomBase(boundingRect);
-  p->zoomer->zoom(boundingRect);
-  p->zoomer->setZoomBase(boundingRect);
-
-  replot();
+  setZoomBase();
 }
 
 void Plot::removeCurve(PlotCurve *curve) {
@@ -325,6 +308,33 @@ bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
   }
 
   return QwtPlot::eventFilter(watchedObj, e);
+}
+
+
+void Plot::setZoomBase(const QRectF& rect) {
+  QRectF r = rect;
+
+  //
+  // If no rect is specified, compute the overall bounding
+  // rect of all visible curves.
+  //
+  if (!r.isValid())
+    foreach (PlotCurve *curve, p->curves)
+      if (curve->isVisible())
+        r = r.united(curve->boundingRect());
+
+  if (r.isValid()) {
+    //
+    // This seems to be wierd, but gives the best possible results.
+    // E.g. if zoomBase() is not set before the initial zoom, an all-negative
+    // curve will result in an initial zoom to an (0,0,0x0) rect.
+    //
+    p->zoomer->setZoomBase(r);
+    p->zoomer->zoom(r);
+    p->zoomer->setZoomBase(r);
+  }
+
+  replot();
 }
 
 void Plot::setZoomEnabled(bool on) {

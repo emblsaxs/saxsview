@@ -48,11 +48,13 @@ public:
   void removeCurve(PlotCurve *);
   QList<PlotCurve*> curves() const;
 
-  PlotScale scale() const;
+  QRectF zoomBase() const;
   bool zoomEnabled() const;
   bool moveEnabled() const;
+  PlotScale scale() const;
 
   bool replotBlocked() const;
+
 
 public slots:
   void replot();
@@ -63,6 +65,7 @@ public slots:
   void exportAs(const QString&);
   void print();
   void configure();
+  void setZoomBase(const QRectF& rect = QRectF());
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(PlotScale);

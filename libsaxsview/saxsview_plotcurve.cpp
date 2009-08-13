@@ -113,7 +113,7 @@ void PlotCurve::setVisible(bool on) {
   p->curve->setVisible(on);
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
 
- if (QwtPlot *plot = p->curve->plot()) {
+ if (Plot *plot = qobject_cast<Plot*>(p->curve->plot())) {
     qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve))->setVisible(on);
 
     //
@@ -123,9 +123,9 @@ void PlotCurve::setVisible(bool on) {
     plot->updateLayout();
 
     //
-    // Show the actual change.
+    // Update the bounding-rect and show the actual change.
     //
-    plot->replot();
+    plot->setZoomBase();
   }
 }
 
