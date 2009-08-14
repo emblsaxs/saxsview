@@ -20,6 +20,7 @@
 #include "saxsviewsubwindow.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
+#include "saxsview_plotconfigdialog.h"
 
 #include "saxsdocument.h"
 
@@ -146,6 +147,11 @@ void SaxsviewSubWindow::setMoveEnabled(bool on) {
 
 void SaxsviewSubWindow::setScale(int scale) {
   p->plot->setScale((Saxsview::Plot::PlotScale)scale);
+}
+
+void SaxsviewSubWindow::configure() {
+  Saxsview::PlotConfigDialog dlg(p->plot, this);
+  dlg.exec();
 }
 
 bool SaxsviewSubWindow::eventFilter(QObject *watchedObj, QEvent *e) {

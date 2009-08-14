@@ -62,6 +62,8 @@ public:
   QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoomMove;
 
+  QAction *actionConfigure;
+
   // "Window"-menu
   QAction *actionPreviousPlot, *actionNextPlot, *actionCascadePlots;
   QAction *actionTilePlots, *actionClosePlot, *actionCloseAllPlots;
@@ -172,6 +174,10 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupZoomMove->addAction(actionZoom);
   actionGroupZoomMove->addAction(actionMove);
 
+  actionConfigure = new QAction("&Configure", mw);
+  connect(actionConfigure, SIGNAL(triggered()),
+          mw, SLOT(configure()));
+
   //
   // "Window"-menu
   //
@@ -252,6 +258,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuPlot->addAction(actionZoomIn);
   menuPlot->addAction(actionZoomOut);
   menuPlot->addActions(actionGroupZoomMove->actions());
+  menuPlot->addSeparator();
+  menuPlot->addAction(actionConfigure);
   menuBar->addMenu(menuPlot);
 
   menuWindow = new QMenu("&Window", mw);
@@ -279,6 +287,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   toolBar->addAction(actionZoomIn);
   toolBar->addAction(actionZoomOut);
   toolBar->addActions(actionGroupZoomMove->actions());
+  toolBar->addSeparator();
+  toolBar->addAction(actionConfigure);
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
@@ -439,6 +449,11 @@ void SaxsviewMainWindow::setMoveEnabled(bool on) {
 void SaxsviewMainWindow::setScale(int scale) {
   if (currentSubWindow())
     currentSubWindow()->setScale(scale);
+}
+
+void SaxsviewMainWindow::configure() {
+  if (currentSubWindow())
+    currentSubWindow()->configure();
 }
 
 void SaxsviewMainWindow::about() {

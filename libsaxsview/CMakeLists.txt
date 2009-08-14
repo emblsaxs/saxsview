@@ -1,13 +1,16 @@
 project (LIBSAXSVIEW CXX)
 
 set (SOURCES saxsview_plot.cpp
-             saxsview_plotcurve.cpp)
+             saxsview_plotcurve.cpp
+             saxsview_plotconfigdialog.cpp)
 
 set (HEADERS saxsview_plot.h
-             saxsview_plotcurve.h)
+             saxsview_plotcurve.h
+             saxsview_plotconfigdialog.h)
 
 qt4_wrap_cpp (MOC saxsview_plot.h
-                  saxsview_plotcurve.h)
+                  saxsview_plotcurve.h
+                  saxsview_plotconfigdialog.h)
 
 
 # out-of-source builds need to include the ${CMAKE_CURRENT_*_DIR}

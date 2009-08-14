@@ -1,3 +1,9 @@
+2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plotconfigdialog.h: New.
+	* saxsview_plotconfigdialog.cpp: New.
+	* CMakeLists.txt: Added new files.
+
 2009-08-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.h (zoomBase): New.

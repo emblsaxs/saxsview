@@ -43,6 +43,7 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(int);
+  void configure();
 
 protected:
   bool eventFilter(QObject*, QEvent*);

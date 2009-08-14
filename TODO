@@ -33,12 +33,15 @@ Color selection should allow alpha channels.
 Plot
  o palette
  o plot title
+ o plot title font
  o enable/disable (0/0) marker
+ o zoombase
 
 Curves
  o lines (style, width, color)
  o symbols (type, size, color, filled)
  o error bars (style, width, color)
+   alternatively: no error bars but continuous "error tube"
  o legend label
  o scaling factor (x-axis)
  o offset (y-axis)
@@ -66,4 +69,5 @@ Grid (?)
 
 Other
  o annotation font
- o save default settings for new plots/curves (?)
+ o save default settings for new plots/curves
+ o anti-aliased plotting
