@@ -1,3 +1,15 @@
+2009-08-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plotcurve.h (PlotSymbol): New.
+	(pen, setPen): New.
+	(errorbarPen, setErrorBarPen): New.
+	(symbol, setSymbol): New.
+	* saxsview_plotcurve.h (pen, setPen): New.
+	(errorbarPen, setErrorBarPen): New.
+	(symbol, setSymbol): New.
+	* saxsview_plotconfigdialog.cpp (comboBoxSymbolStyle): Use PlotSymbol.
+	(apply, reset): Read/write line, symbol and error bar styles.
+
 2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* libsaxsview/saxsview_colorbutton.h: Added license.

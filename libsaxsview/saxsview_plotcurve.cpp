@@ -29,6 +29,57 @@
 
 namespace Saxsview {
 
+PlotSymbol::PlotSymbol() {
+  setStyle(NoSymbol);
+  setSize(0);
+  setColor(Qt::black);
+}
+
+PlotSymbol::PlotSymbol(Style style, int size, const QColor& color) {
+  setStyle(style);
+  setSize(size);
+  setColor(color);
+}
+
+QColor PlotSymbol::color() const {
+  return mSymbol.pen().color();
+}
+
+void PlotSymbol::setColor(const QColor& color) {
+  mSymbol.setPen(QPen(color));
+  if (mSymbol.brush() != Qt::NoBrush)
+    mSymbol.setBrush(QBrush(color));
+}
+
+int PlotSymbol::size() const {
+  return mSymbol.size().width();
+}
+
+void PlotSymbol::setSize(int size) {
+  mSymbol.setSize(size);
+}
+
+PlotSymbol::Style PlotSymbol::style() const {
+  return (Style)(mSymbol.style() + (mSymbol.brush() == Qt::NoBrush ? 0 : 100));
+}
+
+void PlotSymbol::setStyle(Style s) {
+  if (s >= 100) {
+    mSymbol.setStyle((QwtSymbol::Style)(s - 100));
+    mSymbol.setBrush(QBrush(color()));
+  } else {
+    mSymbol.setStyle((QwtSymbol::Style)(s));
+    mSymbol.setBrush(QBrush(Qt::NoBrush));
+  }
+}
+
+const QwtSymbol& PlotSymbol::qwtSymbol() const {
+  return mSymbol;
+}
+
+
+
+
 class PlotCurve::PlotCurvePrivate {
 public:
   PlotCurvePrivate();
@@ -38,6 +89,7 @@ public:
 
   QwtPlotCurve *curve;
   QwtPlotIntervalCurve *errorCurve;
+  PlotSymbol curveSymbol;
 
   PlotPointData *pointData;
   PlotIntervalData *intervalData;
@@ -51,15 +103,18 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
  : curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
    scaleX(1.0), scaleY(1.0), errorBarsEnabled(true) {
 
+  // TODO: Read default values
+
   // data points
   QwtSymbol symbol;
 //  symbol.setStyle(QwtSymbol::Cross);
-//  symbol.setPen(QPen(color));
-  symbol.setSize(2);
+//   symbol.setPen(QPen(Qt::black));
+//   symbol.setSize(2);
 
   curve = new QwtPlotCurve;
-  curve->setStyle(QwtPlotCurve::NoCurve);
+  curve->setStyle(QwtPlotCurve::Lines);
   curve->setSymbol(symbol);
+  curve->setPen(QPen(Qt::black));
 
   // error bars
   QwtIntervalSymbol errorBar(QwtIntervalSymbol::Bar);
@@ -203,6 +258,34 @@ double PlotCurve::scalingFactorY() const {
 void PlotCurve::setScalingFactorY(double scale) {
   p->scaleY = scale;
   p->scale();
+}
+
+QPen PlotCurve::pen() const {
+  return p->curve->pen();
+}
+
+void PlotCurve::setPen(const QPen& pen) {
+  p->curve->setPen(pen);
+}
+
+QPen PlotCurve::errorBarPen() const {
+  return p->errorCurve->symbol().pen();
+}
+
+void PlotCurve::setErrorBarPen(const QPen& pen) {
+  QwtIntervalSymbol symbol(QwtIntervalSymbol::Bar);
+  symbol.setWidth(1);  // cap width
+  symbol.setPen(pen);
+  p->errorCurve->setSymbol(symbol);
+}
+
+PlotSymbol PlotCurve::symbol() const {
+  return p->curveSymbol;
+}
+
+void PlotCurve::setSymbol(const PlotSymbol& symbol) {
+  p->curveSymbol = symbol;
+  p->curve->setSymbol(symbol.qwtSymbol());
 }
 
 } // end of namespace Saxsview

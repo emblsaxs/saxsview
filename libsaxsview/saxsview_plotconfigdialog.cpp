@@ -42,7 +42,6 @@
 #include <QStringList>
 #include <QWidget>
 
-#include <qwt_symbol.h>
 #include <qwt_text.h>
 
 
@@ -139,7 +138,7 @@ static QComboBox* comboBoxLineStyle(QWidget *parent) {
   return combo;
 }
 
-static QIcon symbolIcon(QwtSymbol::Style style, bool filled = false) {
+static QIcon symbolIcon(PlotSymbol::Style style) {
   QPixmap pixmap(16, 16);
 
   QPainter painter;
@@ -147,12 +146,11 @@ static QIcon symbolIcon(QwtSymbol::Style style, bool filled = false) {
   painter.setPen(QPen(Qt::NoPen));
   painter.fillRect(pixmap.rect(), QBrush(Qt::white));
 
-  QwtSymbol symbol;
-  symbol.setSize(10, 10);
-  symbol.setBrush(filled ? QBrush(Qt::black) : QBrush(Qt::NoBrush));
-  symbol.setPen(QPen(Qt::black));
+  PlotSymbol symbol;
+  symbol.setSize(10);
+  symbol.setColor(Qt::black);
   symbol.setStyle(style);
-  symbol.draw(&painter, 7, 7);
+  symbol.qwtSymbol().draw(&painter, 7, 7);
 
   painter.end();
 
@@ -161,33 +159,33 @@ static QIcon symbolIcon(QwtSymbol::Style style, bool filled = false) {
 
 static QComboBox* comboBoxSymbolStyle(QWidget *parent) {
   QComboBox *combo = new QComboBox(parent);
-  combo->addItem(symbolIcon(QwtSymbol::NoSymbol), "none", QwtSymbol::NoSymbol);
+  combo->addItem(symbolIcon(PlotSymbol::NoSymbol), "none", PlotSymbol::NoSymbol);
   combo->insertSeparator(1);
-  combo->addItem(symbolIcon(QwtSymbol::Ellipse), "circle", QwtSymbol::Ellipse);
-  combo->addItem(symbolIcon(QwtSymbol::Rect), "rectangle", QwtSymbol::Rect);
-  combo->addItem(symbolIcon(QwtSymbol::Diamond), "diamond", QwtSymbol::Diamond);
-  combo->addItem(symbolIcon(QwtSymbol::DTriangle), "triangle (down)", QwtSymbol::DTriangle);
-  combo->addItem(symbolIcon(QwtSymbol::UTriangle), "triangle (up)", QwtSymbol::UTriangle);
-  combo->addItem(symbolIcon(QwtSymbol::LTriangle), "triangle (left)", QwtSymbol::LTriangle);
-  combo->addItem(symbolIcon(QwtSymbol::RTriangle), "triangle (right)", QwtSymbol::RTriangle);
-  combo->addItem(symbolIcon(QwtSymbol::Star2), "star (outline)", QwtSymbol::Star2);
-  combo->addItem(symbolIcon(QwtSymbol::Hexagon), "hexagon", QwtSymbol::Hexagon);
+  combo->addItem(symbolIcon(PlotSymbol::Ellipse), "circle", PlotSymbol::Ellipse);
+  combo->addItem(symbolIcon(PlotSymbol::Rect), "rectangle", PlotSymbol::Rect);
+  combo->addItem(symbolIcon(PlotSymbol::Diamond), "diamond", PlotSymbol::Diamond);
+  combo->addItem(symbolIcon(PlotSymbol::DTriangle), "triangle (down)", PlotSymbol::DTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::UTriangle), "triangle (up)", PlotSymbol::UTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::LTriangle), "triangle (left)", PlotSymbol::LTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::RTriangle), "triangle (right)", PlotSymbol::RTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::Star2), "star (outline)", PlotSymbol::Star2);
+  combo->addItem(symbolIcon(PlotSymbol::Hexagon), "hexagon", PlotSymbol::Hexagon);
   combo->insertSeparator(12);
-  combo->addItem(symbolIcon(QwtSymbol::Cross), "cross", QwtSymbol::Cross);
-  combo->addItem(symbolIcon(QwtSymbol::XCross), "cross (diagonal)", QwtSymbol::XCross);
-  combo->addItem(symbolIcon(QwtSymbol::HLine), "line (horizontal)", QwtSymbol::HLine);
-  combo->addItem(symbolIcon(QwtSymbol::VLine), "line (vertical)", QwtSymbol::VLine);
-  combo->addItem(symbolIcon(QwtSymbol::Star1), "star", QwtSymbol::Star1);
+  combo->addItem(symbolIcon(PlotSymbol::Cross), "cross", PlotSymbol::Cross);
+  combo->addItem(symbolIcon(PlotSymbol::XCross), "cross (diagonal)", PlotSymbol::XCross);
+  combo->addItem(symbolIcon(PlotSymbol::HLine), "line (horizontal)", PlotSymbol::HLine);
+  combo->addItem(symbolIcon(PlotSymbol::VLine), "line (vertical)", PlotSymbol::VLine);
+  combo->addItem(symbolIcon(PlotSymbol::Star1), "star", PlotSymbol::Star1);
   combo->insertSeparator(18);
-  combo->addItem(symbolIcon(QwtSymbol::Ellipse, true), "circle", QwtSymbol::Ellipse + 100);
-  combo->addItem(symbolIcon(QwtSymbol::Rect, true), "rectangle", QwtSymbol::Rect + 100);
-  combo->addItem(symbolIcon(QwtSymbol::Diamond, true), "diamond", QwtSymbol::Diamond + 100);
-  combo->addItem(symbolIcon(QwtSymbol::DTriangle, true), "triangle (down)", QwtSymbol::DTriangle + 100);
-  combo->addItem(symbolIcon(QwtSymbol::UTriangle, true), "triangle (up)", QwtSymbol::UTriangle + 100);
-  combo->addItem(symbolIcon(QwtSymbol::LTriangle, true), "triangle (left)", QwtSymbol::LTriangle + 100);
-  combo->addItem(symbolIcon(QwtSymbol::RTriangle, true), "triangle (right)", QwtSymbol::RTriangle + 100);
-  combo->addItem(symbolIcon(QwtSymbol::Star2, true), "star (outline)", QwtSymbol::Star2 + 100);
-  combo->addItem(symbolIcon(QwtSymbol::Hexagon, true), "hexagon", QwtSymbol::Hexagon + 100);
+  combo->addItem(symbolIcon(PlotSymbol::FilledEllipse), "circle", PlotSymbol::FilledEllipse);
+  combo->addItem(symbolIcon(PlotSymbol::FilledRect), "rectangle", PlotSymbol::FilledRect);
+  combo->addItem(symbolIcon(PlotSymbol::FilledDiamond), "diamond", PlotSymbol::FilledDiamond);
+  combo->addItem(symbolIcon(PlotSymbol::FilledDTriangle), "triangle (down)", PlotSymbol::FilledDTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::FilledUTriangle), "triangle (up)", PlotSymbol::FilledUTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::FilledLTriangle), "triangle (left)", PlotSymbol::FilledLTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::FilledRTriangle), "triangle (right)", PlotSymbol::FilledRTriangle);
+  combo->addItem(symbolIcon(PlotSymbol::FilledStar2), "star (outline)", PlotSymbol::FilledStar2);
+  combo->addItem(symbolIcon(PlotSymbol::FilledHexagon), "hexagon", PlotSymbol::FilledHexagon);
   return combo;
 }
 
@@ -232,8 +230,11 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
    spinScaleY(new QDoubleSpinBox(this)) {
 
   spinLineWidth->setSuffix("pt");
+  spinLineWidth->setRange(1, 100);
   spinSymbolSize->setSuffix("pt");
+  spinSymbolSize->setRange(1, 100);
   spinErrorbarWidth->setSuffix("pt");
+  spinErrorbarWidth->setRange(1, 100);
 
   spinScaleX->setDecimals(1);
   spinScaleX->setRange(0.1, 10.0);
@@ -271,6 +272,29 @@ void CurveConfigWidget::apply(PlotCurve *curve) {
   curve->setVisible(group->isChecked());
   curve->setTitle(editLegendLabel->text());
 
+  // line style
+  QPen pen;
+  pen.setStyle((Qt::PenStyle)(comboLineStyle->currentIndex()));
+  pen.setWidth(spinLineWidth->value());
+  pen.setColor(buttonLineColor->color());
+  pen.setCapStyle(Qt::RoundCap);
+  curve->setPen(pen);
+
+  // symbol style
+  PlotSymbol symbol;
+  symbol.setSize(spinSymbolSize->value());
+  symbol.setColor(buttonSymbolColor->color());
+  symbol.setStyle((PlotSymbol::Style)(comboSymbolStyle->itemData(comboSymbolStyle->currentIndex()).toInt()));
+  curve->setSymbol(symbol);
+
+  // error bar style
+  QPen errorBarPen;
+  errorBarPen.setStyle((Qt::PenStyle)(comboErrorbarStyle->currentIndex()));
+  errorBarPen.setWidth(spinErrorbarWidth->value());
+  errorBarPen.setColor(buttonErrorbarColor->color());
+  errorBarPen.setCapStyle(Qt::RoundCap);
+  curve->setErrorBarPen(errorBarPen);
+
   curve->setScalingFactorX(spinScaleX->value());
   curve->setScalingFactorY(spinScaleY->value());
 }
@@ -279,6 +303,25 @@ void CurveConfigWidget::reset(PlotCurve *curve) {
   group->setTitle(curve->fileName());
   group->setChecked(curve->isVisible());
   editLegendLabel->setText(curve->title());
+
+  // line style
+  const QPen& pen = curve->pen();
+  comboLineStyle->setCurrentIndex(pen.style());
+  spinLineWidth->setValue(pen.width());
+  buttonLineColor->setColor(pen.color());
+
+  // symbol style
+  const PlotSymbol& symbol = curve->symbol();
+  comboSymbolStyle->setCurrentIndex(comboSymbolStyle->findData(symbol.style()));
+  spinSymbolSize->setValue(symbol.size());
+  buttonSymbolColor->setColor(symbol.color());
+
+  // error bar style
+  const QPen& errorBarPen = curve->errorBarPen();
+  comboErrorbarStyle->setCurrentIndex(errorBarPen.style());
+  spinErrorbarWidth->setValue(errorBarPen.width());
+  buttonErrorbarColor->setColor(errorBarPen.color());
+  
 
   spinScaleX->setValue(curve->scalingFactorX());
   spinScaleY->setValue(curve->scalingFactorY());
