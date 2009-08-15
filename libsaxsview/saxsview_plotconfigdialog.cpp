@@ -102,6 +102,13 @@ static QFrame* vLine(QWidget *parent) {
   return frame;
 }
 
+static QFrame* hLine(QWidget *parent) {
+  QFrame *frame = new QFrame(parent);
+  frame->setFrameShape(QFrame::HLine);
+  frame->setFrameShadow(QFrame::Sunken);
+  return frame;
+}
+
 static QIcon penStyleIcon(Qt::PenStyle style) {
   QPixmap pixmap(16, 16);
 
@@ -193,7 +200,7 @@ public:
   void apply(PlotCurve *curve);
   void reset(PlotCurve *curve);
 
-  QCheckBox *checkVisible;
+  QGroupBox *group;
   QLineEdit *editLegendLabel;
   QComboBox *comboLineStyle;
   QSpinBox *spinLineWidth;
@@ -204,13 +211,13 @@ public:
   QComboBox *comboErrorbarStyle;
   QSpinBox *spinErrorbarWidth;
   ColorButton *buttonErrorbarColor;
-  QDoubleSpinBox *spinScalingFactor;
-  QDoubleSpinBox *spinOffset;
+  QDoubleSpinBox *spinScaleX;
+  QDoubleSpinBox *spinScaleY;
 };
 
 CurveConfigWidget::CurveConfigWidget(QWidget *parent)
  : QWidget(parent),
-   checkVisible(new QCheckBox(this)),
+   group(new QGroupBox(this)),
    editLegendLabel(new QLineEdit(this)),
    comboLineStyle(comboBoxLineStyle(this)),
    spinLineWidth(new QSpinBox(this)),
@@ -221,22 +228,60 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
    comboErrorbarStyle(comboBoxLineStyle(this)),
    spinErrorbarWidth(new QSpinBox(this)),
    buttonErrorbarColor(new ColorButton(this)),
-   spinScalingFactor(new QDoubleSpinBox(this)),
-   spinOffset(new QDoubleSpinBox(this)) {
+   spinScaleX(new QDoubleSpinBox(this)),
+   spinScaleY(new QDoubleSpinBox(this)) {
 
   spinLineWidth->setSuffix("pt");
   spinSymbolSize->setSuffix("pt");
   spinErrorbarWidth->setSuffix("pt");
+
+  spinScaleX->setDecimals(1);
+  spinScaleX->setRange(0.1, 10.0);
+  spinScaleY->setDecimals(4);
+  spinScaleY->setRange(0.0001, 100000.0);
+
+  buttonLineColor->setMinimumWidth(60);
+
+  QGridLayout *groupLayout = new QGridLayout;
+  groupLayout->addWidget(new QLabel("Legend Label"), 0, 0);
+  groupLayout->addWidget(editLegendLabel, 0, 1, 1, 3);
+  groupLayout->addWidget(new QLabel("Line Style"), 1, 0);
+  groupLayout->addWidget(comboLineStyle, 1, 1);
+  groupLayout->addWidget(spinLineWidth, 1, 2);
+  groupLayout->addWidget(buttonLineColor, 1, 3);
+  groupLayout->addWidget(new QLabel("Symbol Style"), 2, 0);
+  groupLayout->addWidget(comboSymbolStyle, 2, 1);
+  groupLayout->addWidget(spinSymbolSize, 2, 2);
+  groupLayout->addWidget(buttonSymbolColor, 2, 3);
+  groupLayout->addWidget(new QLabel("Error Bar Style"), 3, 0);
+  groupLayout->addWidget(comboErrorbarStyle, 3, 1);
+  groupLayout->addWidget(spinErrorbarWidth, 3, 2);
+  groupLayout->addWidget(buttonErrorbarColor, 3, 3);
+  groupLayout->addWidget(hLine(group), 4, 0, 1, 4);
+  groupLayout->addWidget(new QLabel("Scale X"), 5, 0);
+  groupLayout->addWidget(spinScaleX, 5, 1);
+  groupLayout->addWidget(new QLabel("Scale Y"), 5, 2);
+  groupLayout->addWidget(spinScaleY, 5, 3);
+
+  group->setCheckable(true);
+  group->setLayout(groupLayout);
 }
 
 void CurveConfigWidget::apply(PlotCurve *curve) {
-  curve->setVisible(checkVisible->isChecked());
+  curve->setVisible(group->isChecked());
   curve->setTitle(editLegendLabel->text());
+
+  curve->setScalingFactorX(spinScaleX->value());
+  curve->setScalingFactorY(spinScaleY->value());
 }
 
 void CurveConfigWidget::reset(PlotCurve *curve) {
-  checkVisible->setChecked(curve->isVisible());
+  group->setTitle(curve->fileName());
+  group->setChecked(curve->isVisible());
   editLegendLabel->setText(curve->title());
+
+  spinScaleX->setValue(curve->scalingFactorX());
+  spinScaleY->setValue(curve->scalingFactorY());
 }
 
 //-------------------------------------------------------------------------
@@ -253,59 +298,23 @@ CurveConfigPage::CurveConfigPage(Plot *plot, QWidget *parent)
  : ConfigPage(parent) {
 
   QScrollArea *scrollArea = new QScrollArea(this);
-  scrollArea->setWidgetResizable(false);
+  scrollArea->setWidgetResizable(true);
 
   QWidget *w = new QWidget;
-  QGridLayout *layout = new QGridLayout;
-  layout->addWidget(new QLabel("Legend Label"), 0, 1, 1, 1, Qt::AlignHCenter);
-  // skip one column for vertical Line
-  layout->addWidget(new QLabel("Line Style"), 0, 3, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Width"), 0, 4, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Color"), 0, 5, 1, 1, Qt::AlignHCenter);
-  // skip one column for vertical Line
-  layout->addWidget(new QLabel("Symbol Style"), 0, 7, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Width"), 0, 8, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Color"), 0, 9, 1, 1, Qt::AlignHCenter);
-  // skip one column for vertical Line
-  layout->addWidget(new QLabel("Error Bar Style"), 0, 11, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Width"), 0, 12, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Color"), 0, 13, 1, 1, Qt::AlignHCenter);
-  // skip one column for vertical Line
-  layout->addWidget(new QLabel("Scale"), 0, 15, 1, 1, Qt::AlignHCenter);
-  layout->addWidget(new QLabel("Offset"), 0, 16, 1, 1, Qt::AlignHCenter);
+  QVBoxLayout *layout = new QVBoxLayout;
 
-  int row = 1;
   foreach (PlotCurve *curve, plot->curves()) {
     curveConfig[curve] = new CurveConfigWidget(w);
-
-    layout->addWidget(curveConfig[curve]->checkVisible, row, 0, 1, 1, Qt::AlignHCenter);
-    layout->addWidget(curveConfig[curve]->editLegendLabel, row, 1);
-    layout->addWidget(curveConfig[curve]->comboLineStyle, row, 3);
-    layout->addWidget(curveConfig[curve]->spinLineWidth, row, 4);
-    layout->addWidget(curveConfig[curve]->buttonLineColor, row, 5);
-    layout->addWidget(curveConfig[curve]->comboSymbolStyle, row, 7);
-    layout->addWidget(curveConfig[curve]->spinSymbolSize, row, 8);
-    layout->addWidget(curveConfig[curve]->buttonSymbolColor, row, 9);
-    layout->addWidget(curveConfig[curve]->comboErrorbarStyle, row, 11);
-    layout->addWidget(curveConfig[curve]->spinErrorbarWidth, row, 12);
-    layout->addWidget(curveConfig[curve]->buttonErrorbarColor, row, 13);
-    layout->addWidget(curveConfig[curve]->spinOffset, row, 15);
-    layout->addWidget(curveConfig[curve]->spinScalingFactor, row, 16);
-
-    row += 1;
+    layout->addWidget(curveConfig[curve]->group);
   }
-  layout->addWidget(vLine(w), 0, 2, layout->rowCount(), 1);
-  layout->addWidget(vLine(w), 0, 6, layout->rowCount(), 1);
-  layout->addWidget(vLine(w), 0, 10, layout->rowCount(), 1);
-  layout->addWidget(vLine(w), 0, 14, layout->rowCount(), 1);
+  layout->addStretch();
 
   w->setLayout(layout);
-
   scrollArea->setWidget(w);
 
-  QVBoxLayout *vBoxLayout = new QVBoxLayout;
-  vBoxLayout->addWidget(scrollArea);
-  setLayout(vBoxLayout);
+  layout = new QVBoxLayout;
+  layout->addWidget(scrollArea);
+  setLayout(layout);
 }
 
 void CurveConfigPage::apply(Plot *plot) {
@@ -410,7 +419,6 @@ void PlotConfigDialog::PlotConfigDialogPrivate::apply() {
   foreach(ConfigPage *page, configPages)
     page->apply(plot);
 
-  plot->updateLayout();
   plot->blockReplot(false);
 }
 

@@ -1,5 +1,9 @@
 2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewsubwindow.cpp (load): Set file name.
+
+2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.h (configure): New.
 	* saxsviewmainwindow.cpp (setupActions): Added configure-action.
 	(setupMenus): Likewise.

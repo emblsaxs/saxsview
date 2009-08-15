@@ -34,14 +34,22 @@ public:
   PlotCurvePrivate();
   ~PlotCurvePrivate();
 
+  void scale();
+
   QwtPlotCurve *curve;
   QwtPlotIntervalCurve *errorCurve;
 
+  PlotPointData *pointData;
+  PlotIntervalData *intervalData;
+  double scaleX, scaleY;
+
   bool errorBarsEnabled;
+  QString fileName;
 };
 
 PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
- : curve(0L), errorCurve(0L), errorBarsEnabled(true) {
+ : curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
+   scaleX(1.0), scaleY(1.0), errorBarsEnabled(true) {
 
   // data points
   QwtSymbol symbol;
@@ -66,8 +74,25 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
 PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
   delete curve;
   delete errorCurve;
+
+  delete pointData;
+  delete intervalData;
 }
 
+void PlotCurve::PlotCurvePrivate::scale() {
+  PlotPointData scaledPoints;
+  foreach (QwtDoublePoint point, *pointData)
+    scaledPoints.push_back(QwtDoublePoint(point.x() * scaleX,
+                                          point.y() * scaleY));
+  curve->setData(scaledPoints);
+
+  PlotIntervalData scaledIntervals;
+  foreach (QwtIntervalSample is, *intervalData)
+    scaledIntervals.push_back(QwtIntervalSample(is.value * scaleX,
+                                                QwtDoubleInterval(is.interval.minValue() * scaleY,
+                                                                  is.interval.maxValue() * scaleY)));
+  errorCurve->setData(scaledIntervals);
+}
 
 PlotCurve::PlotCurve(QObject *parent)
  : QObject(parent), p(new PlotCurvePrivate) {
@@ -92,6 +117,15 @@ void PlotCurve::detach() {
 
 void PlotCurve::setData(const PlotPointData& points,
                         const PlotIntervalData& intervals) {
+  delete p->pointData;
+  p->pointData = new PlotPointData(points);
+
+  delete p->intervalData;
+  p->intervalData = new PlotIntervalData(intervals);
+
+  p->scaleX = 1.0;
+  p->scaleY = 1.0;
+
   p->curve->setData(points);
   p->errorCurve->setData(intervals);
 }
@@ -135,12 +169,40 @@ QRectF PlotCurve::boundingRect() const {
                : p->curve->boundingRect();
 }
 
+
+QString PlotCurve::fileName() const {
+  return p->fileName;
+}
+
+void PlotCurve::setFileName(const QString& fileName) {
+  p->fileName = fileName;
+}
+
 QString PlotCurve::title() const {
   return p->curve->title().text();
 }
 
 void PlotCurve::setTitle(const QString& title) {
   p->curve->setTitle(title);
+}
+
+
+double PlotCurve::scalingFactorX() const {
+  return p->scaleX;
+}
+
+void PlotCurve::setScalingFactorX(double scale) {
+  p->scaleX = scale;
+  p->scale();
+}
+
+double PlotCurve::scalingFactorY() const {
+  return p->scaleY;
+}
+
+void PlotCurve::setScalingFactorY(double scale) {
+  p->scaleY = scale;
+  p->scale();
 }
 
 } // end of namespace Saxsview

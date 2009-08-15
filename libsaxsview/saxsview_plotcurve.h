@@ -28,11 +28,9 @@
 namespace Saxsview {
 
 class Plot;
-class PlotData;
 
 typedef QwtArray<QwtDoublePoint> PlotPointData;
 typedef QwtArray<QwtIntervalSample> PlotIntervalData;
-
 
 /**
  *
@@ -53,16 +51,24 @@ public:
   void setData(const PlotPointData& points = PlotPointData(),
                const PlotIntervalData& intervals = PlotIntervalData());
 
+  QString fileName() const;
   QString title() const;
   bool isVisible() const;
   bool errorBarsEnabled() const;
 
   QRectF boundingRect() const;
 
+  double scalingFactorX() const;
+  double scalingFactorY() const;
+
 public slots:
+  void setFileName(const QString&);
   void setTitle(const QString& title);
   void setVisible(bool on);
   void setErrorBarsEnabled(bool on);
+
+  void setScalingFactorX(double);
+  void setScalingFactorY(double);
 
 private:
   class PlotCurvePrivate;

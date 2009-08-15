@@ -1,5 +1,26 @@
 2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* libsaxsview/saxsview_colorbutton.h: Added license.
+	* libsaxsview/saxsview_colorbutton.cpp: Added license.
+	* libsaxsview/saxsview_plotcurve.h (fileName): New.
+	(setFileName): New.
+	(scalingFactorX, scalingFactorY): New.
+	(setScalingFactorX, setScalingFactorY): New.
+	* libsaxsview/saxsview_plotcurve.cpp (scale): New.
+	(setData): Copy data for later scaling, reset scaling factors.
+	(fileName): New.
+	(setFileName): New.
+	(scalingFactorX, scalingFactorY): New.
+	(setScalingFactorX, setScalingFactorY): New.
+	* libsaxsview/saxsview_plot.cpp (blockReplot): Update
+	layout before replot.
+	* libsaxsview/saxsview_plotconfigdialog.cpp (hLine): New.
+	(CurveConfigWidget): Re-done placing of widgets in layout.
+	(apply, reset): Read/write curve titles and scaling parameters.
+	(CurveConfigPage): Removed placing of controls.
+
+2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_colorbutton.h: New.
 	* saxsview_colorbutton.cpp: New.
 	* CMakeLists.txt: Added new files.

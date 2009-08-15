@@ -169,8 +169,10 @@ void Plot::blockReplot(bool blocked) {
 
   p->blockReplot = blocked;
 
-  if (replotNow)
+  if (replotNow) {
+    updateLayout();
     replot();
+  }
 }
 
 bool Plot::replotBlocked() const {

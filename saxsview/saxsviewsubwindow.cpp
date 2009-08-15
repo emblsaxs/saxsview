@@ -109,6 +109,7 @@ void SaxsviewSubWindow::load(const QString& fileName) {
     Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;
     plotCurve->setData(points, intervals);
     if (plotCurve->boundingRect().isValid()) {
+      plotCurve->setFileName(fileInfo.absoluteFilePath());
       plotCurve->setTitle(fileInfo.fileName());
       p->plot->addCurve(plotCurve);
 
