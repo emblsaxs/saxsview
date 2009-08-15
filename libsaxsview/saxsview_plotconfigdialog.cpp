@@ -20,6 +20,7 @@
 #include "saxsview_plotconfigdialog.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
+#include "saxsview_colorbutton.h"
 
 #include <QCheckBox>
 #include <QDebug>
@@ -32,6 +33,8 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMap>
+#include <QPainter>
+#include <QPen>
 #include <QPushButton>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -39,6 +42,7 @@
 #include <QStringList>
 #include <QWidget>
 
+#include <qwt_symbol.h>
 #include <qwt_text.h>
 
 
@@ -98,6 +102,89 @@ static QFrame* vLine(QWidget *parent) {
   return frame;
 }
 
+static QIcon penStyleIcon(Qt::PenStyle style) {
+  QPixmap pixmap(16, 16);
+
+  QPen pen;
+  pen.setColor(Qt::black);
+  pen.setStyle(style);
+  pen.setWidth(1);
+
+  QPainter painter;
+  painter.begin(&pixmap);
+  painter.setPen(QPen(Qt::NoPen));
+  painter.fillRect(pixmap.rect(), QBrush(Qt::white));
+  painter.setPen(pen);
+  painter.drawLine(0, 16, 16, 0);
+  painter.end();
+
+  return QIcon(pixmap);
+}
+
+static QComboBox* comboBoxLineStyle(QWidget *parent) {
+  QComboBox *combo = new QComboBox(parent);
+  combo->addItem(penStyleIcon(Qt::NoPen), "none");
+  combo->addItem(penStyleIcon(Qt::SolidLine), "solid");
+  combo->addItem(penStyleIcon(Qt::DashLine), "dashed");
+  combo->addItem(penStyleIcon(Qt::DotLine), "dotted");
+  combo->addItem(penStyleIcon(Qt::DashDotLine), "dash-dot");
+  combo->addItem(penStyleIcon(Qt::DashDotDotLine), "dash-dot-dot");
+  return combo;
+}
+
+static QIcon symbolIcon(QwtSymbol::Style style, bool filled = false) {
+  QPixmap pixmap(16, 16);
+
+  QPainter painter;
+  painter.begin(&pixmap);
+  painter.setPen(QPen(Qt::NoPen));
+  painter.fillRect(pixmap.rect(), QBrush(Qt::white));
+
+  QwtSymbol symbol;
+  symbol.setSize(10, 10);
+  symbol.setBrush(filled ? QBrush(Qt::black) : QBrush(Qt::NoBrush));
+  symbol.setPen(QPen(Qt::black));
+  symbol.setStyle(style);
+  symbol.draw(&painter, 7, 7);
+
+  painter.end();
+
+  return QIcon(pixmap);
+}
+
+static QComboBox* comboBoxSymbolStyle(QWidget *parent) {
+  QComboBox *combo = new QComboBox(parent);
+  combo->addItem(symbolIcon(QwtSymbol::NoSymbol), "none", QwtSymbol::NoSymbol);
+  combo->insertSeparator(1);
+  combo->addItem(symbolIcon(QwtSymbol::Ellipse), "circle", QwtSymbol::Ellipse);
+  combo->addItem(symbolIcon(QwtSymbol::Rect), "rectangle", QwtSymbol::Rect);
+  combo->addItem(symbolIcon(QwtSymbol::Diamond), "diamond", QwtSymbol::Diamond);
+  combo->addItem(symbolIcon(QwtSymbol::DTriangle), "triangle (down)", QwtSymbol::DTriangle);
+  combo->addItem(symbolIcon(QwtSymbol::UTriangle), "triangle (up)", QwtSymbol::UTriangle);
+  combo->addItem(symbolIcon(QwtSymbol::LTriangle), "triangle (left)", QwtSymbol::LTriangle);
+  combo->addItem(symbolIcon(QwtSymbol::RTriangle), "triangle (right)", QwtSymbol::RTriangle);
+  combo->addItem(symbolIcon(QwtSymbol::Star2), "star (outline)", QwtSymbol::Star2);
+  combo->addItem(symbolIcon(QwtSymbol::Hexagon), "hexagon", QwtSymbol::Hexagon);
+  combo->insertSeparator(12);
+  combo->addItem(symbolIcon(QwtSymbol::Cross), "cross", QwtSymbol::Cross);
+  combo->addItem(symbolIcon(QwtSymbol::XCross), "cross (diagonal)", QwtSymbol::XCross);
+  combo->addItem(symbolIcon(QwtSymbol::HLine), "line (horizontal)", QwtSymbol::HLine);
+  combo->addItem(symbolIcon(QwtSymbol::VLine), "line (vertical)", QwtSymbol::VLine);
+  combo->addItem(symbolIcon(QwtSymbol::Star1), "star", QwtSymbol::Star1);
+  combo->insertSeparator(18);
+  combo->addItem(symbolIcon(QwtSymbol::Ellipse, true), "circle", QwtSymbol::Ellipse + 100);
+  combo->addItem(symbolIcon(QwtSymbol::Rect, true), "rectangle", QwtSymbol::Rect + 100);
+  combo->addItem(symbolIcon(QwtSymbol::Diamond, true), "diamond", QwtSymbol::Diamond + 100);
+  combo->addItem(symbolIcon(QwtSymbol::DTriangle, true), "triangle (down)", QwtSymbol::DTriangle + 100);
+  combo->addItem(symbolIcon(QwtSymbol::UTriangle, true), "triangle (up)", QwtSymbol::UTriangle + 100);
+  combo->addItem(symbolIcon(QwtSymbol::LTriangle, true), "triangle (left)", QwtSymbol::LTriangle + 100);
+  combo->addItem(symbolIcon(QwtSymbol::RTriangle, true), "triangle (right)", QwtSymbol::RTriangle + 100);
+  combo->addItem(symbolIcon(QwtSymbol::Star2, true), "star (outline)", QwtSymbol::Star2 + 100);
+  combo->addItem(symbolIcon(QwtSymbol::Hexagon, true), "hexagon", QwtSymbol::Hexagon + 100);
+  return combo;
+}
+
+
 
 class CurveConfigWidget : public QWidget {
 public:
@@ -110,14 +197,13 @@ public:
   QLineEdit *editLegendLabel;
   QComboBox *comboLineStyle;
   QSpinBox *spinLineWidth;
-  QPushButton *buttonLineColor;
+  ColorButton *buttonLineColor;
   QComboBox *comboSymbolStyle;
   QSpinBox *spinSymbolSize;
-  QPushButton *buttonSymbolColor;
-  QCheckBox *checkSymbolFilled;
+  ColorButton *buttonSymbolColor;
   QComboBox *comboErrorbarStyle;
   QSpinBox *spinErrorbarWidth;
-  QPushButton *buttonErrorbarColor;
+  ColorButton *buttonErrorbarColor;
   QDoubleSpinBox *spinScalingFactor;
   QDoubleSpinBox *spinOffset;
 };
@@ -126,42 +212,21 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
  : QWidget(parent),
    checkVisible(new QCheckBox(this)),
    editLegendLabel(new QLineEdit(this)),
-   comboLineStyle(new QComboBox(this)),
+   comboLineStyle(comboBoxLineStyle(this)),
    spinLineWidth(new QSpinBox(this)),
-   buttonLineColor(new QPushButton(this)),
-   comboSymbolStyle(new QComboBox(this)),
+   buttonLineColor(new ColorButton(this)),
+   comboSymbolStyle(comboBoxSymbolStyle(this)),
    spinSymbolSize(new QSpinBox(this)),
-   buttonSymbolColor(new QPushButton(this)),
-   checkSymbolFilled(new QCheckBox(this)),
-   comboErrorbarStyle(new QComboBox(this)),
+   buttonSymbolColor(new ColorButton(this)),
+   comboErrorbarStyle(comboBoxLineStyle(this)),
    spinErrorbarWidth(new QSpinBox(this)),
-   buttonErrorbarColor(new QPushButton(this)),
+   buttonErrorbarColor(new ColorButton(this)),
    spinScalingFactor(new QDoubleSpinBox(this)),
    spinOffset(new QDoubleSpinBox(this)) {
 
-  QHBoxLayout *layout = new QHBoxLayout;
-  layout->setSpacing(0);
-  layout->setContentsMargins(0,0,0,0);
-
-  layout->addWidget(checkVisible);
-  layout->addWidget(editLegendLabel);
-  layout->addWidget(vLine(this));
-  layout->addWidget(comboLineStyle);
-  layout->addWidget(spinLineWidth);
-  layout->addWidget(buttonLineColor);
-  layout->addWidget(vLine(this));
-  layout->addWidget(comboSymbolStyle);
-  layout->addWidget(spinSymbolSize);
-  layout->addWidget(checkSymbolFilled);
-  layout->addWidget(buttonSymbolColor);
-  layout->addWidget(vLine(this));
-  layout->addWidget(comboErrorbarStyle);
-  layout->addWidget(spinErrorbarWidth);
-  layout->addWidget(buttonErrorbarColor);
-  layout->addWidget(vLine(this));
-  layout->addWidget(spinScalingFactor);
-  layout->addWidget(spinOffset);
-  setLayout(layout);
+  spinLineWidth->setSuffix("pt");
+  spinSymbolSize->setSuffix("pt");
+  spinErrorbarWidth->setSuffix("pt");
 }
 
 void CurveConfigWidget::apply(PlotCurve *curve) {
@@ -191,19 +256,56 @@ CurveConfigPage::CurveConfigPage(Plot *plot, QWidget *parent)
   scrollArea->setWidgetResizable(false);
 
   QWidget *w = new QWidget;
-  QVBoxLayout *layout = new QVBoxLayout;
+  QGridLayout *layout = new QGridLayout;
+  layout->addWidget(new QLabel("Legend Label"), 0, 1, 1, 1, Qt::AlignHCenter);
+  // skip one column for vertical Line
+  layout->addWidget(new QLabel("Line Style"), 0, 3, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Width"), 0, 4, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Color"), 0, 5, 1, 1, Qt::AlignHCenter);
+  // skip one column for vertical Line
+  layout->addWidget(new QLabel("Symbol Style"), 0, 7, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Width"), 0, 8, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Color"), 0, 9, 1, 1, Qt::AlignHCenter);
+  // skip one column for vertical Line
+  layout->addWidget(new QLabel("Error Bar Style"), 0, 11, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Width"), 0, 12, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Color"), 0, 13, 1, 1, Qt::AlignHCenter);
+  // skip one column for vertical Line
+  layout->addWidget(new QLabel("Scale"), 0, 15, 1, 1, Qt::AlignHCenter);
+  layout->addWidget(new QLabel("Offset"), 0, 16, 1, 1, Qt::AlignHCenter);
+
+  int row = 1;
   foreach (PlotCurve *curve, plot->curves()) {
     curveConfig[curve] = new CurveConfigWidget(w);
-    layout->addWidget(curveConfig[curve]);
+
+    layout->addWidget(curveConfig[curve]->checkVisible, row, 0, 1, 1, Qt::AlignHCenter);
+    layout->addWidget(curveConfig[curve]->editLegendLabel, row, 1);
+    layout->addWidget(curveConfig[curve]->comboLineStyle, row, 3);
+    layout->addWidget(curveConfig[curve]->spinLineWidth, row, 4);
+    layout->addWidget(curveConfig[curve]->buttonLineColor, row, 5);
+    layout->addWidget(curveConfig[curve]->comboSymbolStyle, row, 7);
+    layout->addWidget(curveConfig[curve]->spinSymbolSize, row, 8);
+    layout->addWidget(curveConfig[curve]->buttonSymbolColor, row, 9);
+    layout->addWidget(curveConfig[curve]->comboErrorbarStyle, row, 11);
+    layout->addWidget(curveConfig[curve]->spinErrorbarWidth, row, 12);
+    layout->addWidget(curveConfig[curve]->buttonErrorbarColor, row, 13);
+    layout->addWidget(curveConfig[curve]->spinOffset, row, 15);
+    layout->addWidget(curveConfig[curve]->spinScalingFactor, row, 16);
+
+    row += 1;
   }
-  layout->addStretch();
+  layout->addWidget(vLine(w), 0, 2, layout->rowCount(), 1);
+  layout->addWidget(vLine(w), 0, 6, layout->rowCount(), 1);
+  layout->addWidget(vLine(w), 0, 10, layout->rowCount(), 1);
+  layout->addWidget(vLine(w), 0, 14, layout->rowCount(), 1);
+
   w->setLayout(layout);
 
   scrollArea->setWidget(w);
 
-  layout = new QVBoxLayout;
-  layout->addWidget(scrollArea);
-  setLayout(layout);
+  QVBoxLayout *vBoxLayout = new QVBoxLayout;
+  vBoxLayout->addWidget(scrollArea);
+  setLayout(vBoxLayout);
 }
 
 void CurveConfigPage::apply(Plot *plot) {

@@ -1,5 +1,18 @@
 2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_colorbutton.h: New.
+	* saxsview_colorbutton.cpp: New.
+	* CMakeLists.txt: Added new files.
+	* saxsview_plotconfigdialog.cpp (penStyleIcon): New.
+	(comboBoxLineStyle): New.
+	(symbolIcon): New.
+	(comboBoxSymbolStyle): New.
+	(CurveConfigWidget): Replaced placeholder PushButtons with
+	ColorButtons; do not add widgets to local layout.
+	(CurveConfigPage): Place curve-config widgets in grid-layout.
+
+2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotconfigdialog.h: New.
 	* saxsview_plotconfigdialog.cpp: New.
 	* CMakeLists.txt: Added new files.
