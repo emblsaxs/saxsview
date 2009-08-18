@@ -1,3 +1,8 @@
+2009-08-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.h: Added some doxygen-style documentation.
+
+
 2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* columns_reader.c (lines_read): Fixed invalid read

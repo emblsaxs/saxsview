@@ -48,53 +48,200 @@ struct saxs_data;
 typedef struct saxs_data saxs_data;
 
 
-/*
- * Creating and destroying a saxs_document
+/**
+ * @brief Create a new document.
+ *
+ * A document is a collection of key-value pairs (information about
+ * document properties) and a collection of scattering- and probability
+ * curves. Any of these curves may be empty, non-empty curves may be
+ * traversed using the corresponding iterator functions.
+ *
+ * A document is either populated by reading a file in a specified format
+ * (@ref saxs_document_read), or by adding properties pairs
+ * (@ref saxs_document_add_property) and curves (@ref saxs_document_add_curve)
+ * manually. Modified documents may be written in a specfied format by 
+ * @ref saxs_document_write.
+ *
+ * @returns An opaque pointer to a newly allocated document. The pointer
+ *          must be free'd with @ref saxs_document_free.
  */
 saxs_document*
 saxs_document_create();
 
+/**
+ * @brief Read data from a file or stdin.
+ * 
+ * Reads data from a named file or stdin into the specified document.
+ *
+ * @param doc     A non-NULL document-pointer created by @ref saxs_document_create.
+ * @param infile  Input-filename; reads from stdin if @c -.
+ * @param format  A known format (e.g. "dat"). An attempt is made to deduce
+ *                the format from the input filename if NULL.
+ *
+ * @returns -1 on error, 0 otherwise.
+ */
 int
 saxs_document_read(saxs_document *doc, const char *infile,
                    const char *format);
 
+/**
+ * @brief Write data to a file or stdout.
+ * 
+ * Writes the specfied document to a named file or stdout.
+ *
+ * @param doc      A non-NULL document-pointer created by @ref saxs_document_create.
+ * @param outfile  Output-filename; writes to stdout if @c -.
+ * @param format   A known format (e.g. "dat"). An attempt is made to deduce the
+ *                 format from the output filename if NULL.
+ *
+ * @returns -1 on error, 0 otherwise.
+ */
 int
 saxs_document_write(saxs_document *doc, const char *outfile,
                     const char *format);
 
+/**
+ * @brief Free's allocated memory.
+ * Free's memory allocated by @ref saxs_document_create.
+ */
 void
 saxs_document_free(saxs_document *doc);
 
+/**
+ * @brief The document's file name.
+ * 
+ * @param doc A non-NULL document-pointer created by @ref saxs_document_create.
+ *
+ * @returns NULL if no file was read with @ref saxs_document_read or written with
+ *          @ref saxs_document_write, the corresponding filename otherwise.
+ */
 const char*
 saxs_document_filename(saxs_document *doc);
 
 
-/*
- * Adding and retrieving properties
+/**
+ * @brief Add a new property to a document.
+ *
+ * Properties are name-value pairs stored together with the document.
+ * The names are not necessarily unique and may appear multiple times.
+ *
+ * Available properties may be traversed by @ref saxs_document_property
+ * and @ref saxs_property_next, properties with a particular key may be
+ * traversed by @ref saxs_document_property_find and
+ * @ref saxs_property_find_next. The number of overall properties is
+ * available via @ref saxs_document_property_count.
+ *
+ * To access the properties fields, use @ref saxs_property_name and
+ * @ref saxs_property_value.
+ *
+ * Depending on the output format, properties may be written into a 
+ * file with @ref saxs_document_write.
+ *
+ * @param doc    A non-NULL document-pointer created by @ref saxs_document_create.
+ * @param name   The name of the property, shall not be NULL.
+ * @param value  The value of the property, may be NULL.
+ *
+ * @returns A pointer to the newly created property if succesfull,
+ *          NULL otherwise.
  */
 saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value);
 
+/**
+ * @brief The number of properties of a document.
+ *
+ * @param doc A non-NULL document-pointer created by @ref saxs_document_create.
+ *
+ * @returns The number of properties in the current document.
+ */
 int
 saxs_document_property_count(saxs_document *doc);
 
+/**
+ * @brief Traverse all properties of a document.
+ *
+@verbatim
+  saxs_property *property = saxs_document_property(doc);
+  while (property) {
+    // use property
+    property = saxs_property_next(property);
+  }
+@endverbatim
+ *
+ * @param doc A non-NULL document-pointer created by @ref saxs_document_create.
+ *
+ * @returns The property, or NULL if there is none.
+ *
+ * @see @ref saxs_property_next,
+ *      @ref saxs_document_property_find
+ */
 saxs_property*
 saxs_document_property(saxs_document *doc);
 
+/**
+ * @brief Traverse named properties of a document.
+ *
+ * To find all properties with a specific name of a document:
+@verbatim
+  saxs_property *parent = saxs_document_property_find(doc, "parent");
+  while (parent) {
+    // use parents
+    parent = saxs_property_find_next(property, "parent");
+  }
+@endverbatim
+ *
+ * @param doc  A non-NULL document-pointer created by @ref saxs_document_create.
+ * @param name The name of the property to find.
+ *
+ * @returns The first property whose name matches the specified name,
+ *          or NULL if there is none.
+ *
+ * @see @ref saxs_document_property,
+ *      @ref saxs_property_next
+ */
 saxs_property*
 saxs_document_property_find(saxs_document *doc, const char *name);
 
-
+/**
+ * @brief Advance to next property.
+ *
+ * @param property  A pointer to a previously allocated property, may be NULL.
+ *
+ * @returns The next property, or NULL if there is none.
+ *
+ * @see @ref saxs_document_property,
+ *      @ref saxs_document_property_find
+ */
 saxs_property*
 saxs_property_next(saxs_property *property);
 
+/**
+ * @brief Advance to next named property.
+ *
+ * @param property  A pointer to a previously allocated property, may be NULL.
+ *
+ * @returns The next named property, or NULL if there is none.
+ *
+ * @see @ref saxs_document_property,
+ *      @ref saxs_document_property_find
+ */
 saxs_property*
 saxs_property_find_next(saxs_property *property, const char *name);
 
+/**
+ * @brief The name of a property.
+ * @param property  A pointer to a previously allocated property, may be NULL.
+ * @returns The name of a property, NULL if the property pointer is NULL.
+ */
 const char*
 saxs_property_name(saxs_property *property);
 
+/**
+ * @brief The value of a property.
+ * @param property  A pointer to a previously allocated property, may be NULL.
+ * @returns The value of a property, NULL if the property pointer is NULL.
+ */
 const char*
 saxs_property_value(saxs_property *property);
 
@@ -105,6 +252,13 @@ saxs_property_value(saxs_property *property);
 saxs_curve*
 saxs_document_add_curve(saxs_document *doc, const char *title, int type);
 
+/**
+ * @brief The number of curves in a document.
+ *
+ * @param doc  A non-NULL document-pointer created by @ref saxs_document_create.
+ *
+ * @returns The number of curves in the document.
+ */
 int
 saxs_document_curve_count(saxs_document *doc);
 
