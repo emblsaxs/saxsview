@@ -1,5 +1,6 @@
 project (LIBSAXSDOCUMENT C CXX Fortran)
-set (SOURCES saxsdocument.c
+set (SOURCES saxsproperty.c
+             saxsdocument.c
              formats.c
              columns_reader.c
              dat_reader.c
@@ -8,7 +9,8 @@ set (SOURCES saxsdocument.c
              out_reader.c
              dat_writer.c)
 
-set (HEADERS saxsdocument.h
+set (HEADERS saxsproperty.h
+             saxsdocument.h
              formats.h
              columns.h)
 

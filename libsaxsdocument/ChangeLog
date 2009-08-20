@@ -1,7 +1,31 @@
+2009-08-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsproperty.h: New.
+	* saxsproperty.c: New.
+	* saxsdocument.h (struct saxsproperty): Removed.
+	(saxs_document_property): Renamed to ...
+	(saxs_document_property_first): ... this.
+	(saxs_document_property_find): Renamed to ...
+	(saxs_document_property_find_first): ... this.
+	(saxs_property_next): Removed.
+	(saxs_property_find_next): Removed.
+	(saxs_property_name): Removed.
+	(saxs_property_name): Removed.
+	* saxsdocument.c (saxs_document_create): Use property list API
+	instead of rolling own version.
+	(saxs_document_property_first): Likewise.
+	(saxs_document_property_find_first): Likewise.
+	(saxs_document_add_property): Likewise.
+	(saxs_property_next): Removed.
+	(saxs_property_find_next): Removed.
+	(saxs_property_name): Removed.
+	(saxs_property_name): Removed.
+	* dat_writer.c (write_header): Adjusted to changed interface.
+	* CMakeLists.txt: Added new files.
+
 2009-08-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument.h: Added some doxygen-style documentation.
-
 
 2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 

@@ -31,18 +31,11 @@
 struct saxs_document {
   char *doc_filename;
 
-  int doc_property_count;
-  saxs_property* doc_properties_head;
-  saxs_property* doc_properties_tail;
+  saxs_property_list *doc_properties;
 
   int doc_curve_count;
   saxs_curve *doc_curves_head;
   saxs_curve *doc_curves_tail;
-};
-
-struct saxs_property {
-  char *name, *value;
-  struct saxs_property *next;
 };
 
 struct saxs_curve {
@@ -69,11 +62,7 @@ saxs_document* saxs_document_create() {
   saxs_document *doc = malloc(sizeof(saxs_document));
 
   doc->doc_filename = NULL;
-
-  doc->doc_property_count  = 0;
-  doc->doc_properties_head = NULL;
-  doc->doc_properties_tail = NULL;
-
+  doc->doc_properties  = saxs_property_list_create();
   doc->doc_curve_count = 0;
   doc->doc_curves_head = NULL;
   doc->doc_curves_tail = NULL;
@@ -98,18 +87,7 @@ void saxs_document_free(saxs_document *doc) {
   if (doc->doc_filename)
     free(doc->doc_filename);
 
-  while (doc->doc_properties_head) {
-    saxs_property *prop = doc->doc_properties_head;
-    doc->doc_properties_head = doc->doc_properties_head->next;
-
-    if (prop->name)
-      free(prop->name);
-
-    if (prop->value)
-      free(prop->value);
-
-    free(prop);
-  }
+  saxs_property_list_free(doc->doc_properties);
 
   while (doc->doc_curves_head) {
     saxs_curve *curve = doc->doc_curves_head;
@@ -129,52 +107,25 @@ void saxs_document_free(saxs_document *doc) {
   free(doc);
 }
 
+
+saxs_property*
+saxs_document_property_first(saxs_document *doc) {
+  return doc ? saxs_property_list_first(doc->doc_properties) : NULL;
+}
+
+saxs_property*
+saxs_document_property_find_first(saxs_document *doc, const char *name) {
+  return doc ? saxs_property_list_find_first(doc->doc_properties, name) : NULL;
+}
+
 int
 saxs_document_property_count(saxs_document *doc) {
-  return doc ? doc->doc_property_count : 0;
+  return doc ? saxs_property_list_count(doc->doc_properties) : 0;
 }
 
 const char *
 saxs_document_filename(saxs_document *doc) {
   return doc ? doc->doc_filename : NULL;
-}
-
-saxs_property*
-saxs_document_property(saxs_document *doc) {
-  return doc ? doc->doc_properties_head : NULL;
-}
-
-saxs_property*
-saxs_document_property_find(saxs_document *doc, const char *name) {
-  saxs_property *prop = doc ? doc->doc_properties_head : NULL;
-
-  while (prop && (strcmp(prop->name, name) != 0))
-    prop = prop->next;
-
-  return prop;
-}
-
-saxs_property*
-saxs_property_next(saxs_property *prop) {
-  return prop ? prop->next : NULL;
-}
-
-saxs_property*
-saxs_property_find_next(saxs_property *prop, const char *name) {
-  while (prop && (strcmp(prop->name, name) != 0))
-    prop = prop->next;
-
-  return prop;
-}
-
-const char*
-saxs_property_name(saxs_property *prop) {
-  return prop ? prop->name : NULL;
-}
-
-const char*
-saxs_property_value(saxs_property *prop) {
-  return prop ? prop->value : NULL;
 }
 
 int
@@ -259,21 +210,15 @@ double saxs_data_y_err(saxs_data *data) {
 saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value) {
+  if (!doc)
+    return NULL;
 
-  saxs_property *prop =  malloc(sizeof(saxs_property));
-  prop->name  = strdup(name);
-  prop->value = strdup(value);
-  prop->next = NULL;
+  saxs_property *property = saxs_property_create(name, value);
+  if (!property)
+    return NULL;
 
-  if (doc->doc_property_count == 0)
-    doc->doc_properties_head = prop;
-  else
-    doc->doc_properties_tail->next = prop;
-
-  doc->doc_properties_tail = prop;
-  doc->doc_property_count += 1;
-
-  return prop;
+  saxs_property_list_insert(doc->doc_properties, property);
+  return property;
 }
 
 saxs_curve*

@@ -287,7 +287,7 @@ static int verify(saxs_document *doc, struct expect *exp) {
 
   cnt = 0;
   p = exp->exp_properties;
-  sp = saxs_document_property(doc);
+  sp = saxs_document_property_first(doc);
   while (p && sp) {
     VERIFY(strcmp(saxs_property_name(sp), p->exp_property_name) == 0);
     VERIFY(strstr(saxs_property_value(sp), p->exp_property_value) != NULL);

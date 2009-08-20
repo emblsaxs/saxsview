@@ -28,6 +28,8 @@
 extern "C" {
 #endif
 
+#include "saxsproperty.h"
+
 enum {
   SAXS_CURVE_SCATTERING_DATA = 1,
   SAXS_CURVE_PROBABILITY_DATA,
@@ -37,9 +39,6 @@ enum {
 
 struct saxs_document;
 typedef struct saxs_document saxs_document;
-
-struct saxs_property;
-typedef struct saxs_property saxs_property;
 
 struct saxs_curve;
 typedef struct saxs_curve saxs_curve;
@@ -162,7 +161,7 @@ saxs_document_property_count(saxs_document *doc);
  * @brief Traverse all properties of a document.
  *
 @verbatim
-  saxs_property *property = saxs_document_property(doc);
+  saxs_property *property = saxs_document_property_first(doc);
   while (property) {
     // use property
     property = saxs_property_next(property);
@@ -173,11 +172,12 @@ saxs_document_property_count(saxs_document *doc);
  *
  * @returns The property, or NULL if there is none.
  *
- * @see @ref saxs_property_next,
- *      @ref saxs_document_property_find
+ * @see @ref saxs_document_property_find_first
+ *      @ref saxs_property_next
  */
 saxs_property*
-saxs_document_property(saxs_document *doc);
+saxs_document_property_first(saxs_document *doc);
+
 
 /**
  * @brief Traverse named properties of a document.
@@ -201,49 +201,9 @@ saxs_document_property(saxs_document *doc);
  *      @ref saxs_property_next
  */
 saxs_property*
-saxs_document_property_find(saxs_document *doc, const char *name);
+saxs_document_property_find_first(saxs_document *doc, const char *name);
 
-/**
- * @brief Advance to next property.
- *
- * @param property  A pointer to a previously allocated property, may be NULL.
- *
- * @returns The next property, or NULL if there is none.
- *
- * @see @ref saxs_document_property,
- *      @ref saxs_document_property_find
- */
-saxs_property*
-saxs_property_next(saxs_property *property);
 
-/**
- * @brief Advance to next named property.
- *
- * @param property  A pointer to a previously allocated property, may be NULL.
- *
- * @returns The next named property, or NULL if there is none.
- *
- * @see @ref saxs_document_property,
- *      @ref saxs_document_property_find
- */
-saxs_property*
-saxs_property_find_next(saxs_property *property, const char *name);
-
-/**
- * @brief The name of a property.
- * @param property  A pointer to a previously allocated property, may be NULL.
- * @returns The name of a property, NULL if the property pointer is NULL.
- */
-const char*
-saxs_property_name(saxs_property *property);
-
-/**
- * @brief The value of a property.
- * @param property  A pointer to a previously allocated property, may be NULL.
- * @returns The value of a property, NULL if the property pointer is NULL.
- */
-const char*
-saxs_property_value(saxs_property *property);
 
 
 /*
@@ -305,7 +265,6 @@ saxs_data_y(saxs_data *data);
 
 double
 saxs_data_y_err(saxs_data *data);
-
 
 #ifdef __cplusplus
 }

@@ -22,16 +22,17 @@
  */
 
 #include "saxsdocument.h"
+#include "saxsproperty.h"
 
 #include <stdio.h>
 #include <string.h>
 
 
 static void write_header(FILE *fd, saxs_document *doc) {
-  saxs_property *title = saxs_document_property_find(doc, "title");
-  saxs_property *desc = saxs_document_property_find(doc, "sample-description");
-  saxs_property *code = saxs_document_property_find(doc, "sample-code");
-  saxs_property *conc = saxs_document_property_find(doc, "sample-concentration");
+  saxs_property *title = saxs_document_property_find_first(doc, "title");
+  saxs_property *desc = saxs_document_property_find_first(doc, "sample-description");
+  saxs_property *code = saxs_document_property_find_first(doc, "sample-code");
+  saxs_property *conc = saxs_document_property_find_first(doc, "sample-concentration");
 
   if (title && saxs_property_value(title))
     fprintf(fd, "%s", saxs_property_value(title));

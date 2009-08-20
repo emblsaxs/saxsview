@@ -1,3 +1,7 @@
+2009-08-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsdocument/doctest.c (verify): Adjusted to API change.
+
 2009-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* libsaxsdocument/long-lines.dat: New.
