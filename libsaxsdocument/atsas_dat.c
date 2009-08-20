@@ -31,6 +31,7 @@
   #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+/**************************************************************************/
 static int parse_header(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
 
@@ -157,5 +158,55 @@ int saxs_reader_dat(struct saxs_document *doc, const char *filename) {
   parse_footer(doc, footer, NULL);
 
   lines_free(lines);
+  return 0;
+}
+
+
+/**************************************************************************/
+static void write_header(FILE *fd, saxs_document *doc) {
+  saxs_property *title = saxs_document_property_find_first(doc, "title");
+  saxs_property *desc = saxs_document_property_find_first(doc, "sample-description");
+  saxs_property *code = saxs_document_property_find_first(doc, "sample-code");
+  saxs_property *conc = saxs_document_property_find_first(doc, "sample-concentration");
+
+  if (title && saxs_property_value(title))
+    fprintf(fd, "%s", saxs_property_value(title));
+  fprintf(fd, "\n");
+
+  if (desc && saxs_property_value(desc)
+      && code && saxs_property_value(code)
+      && conc && saxs_property_value(conc))
+    fprintf(fd, "Sample: %15s c= %s mg/ml code: %s\n",
+            saxs_property_value(desc), saxs_property_value(conc),
+            saxs_property_value(code));
+}
+
+static void write_data(FILE* fd, saxs_document *doc) {
+  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+
+  saxs_data *data = saxs_curve_data(curve);
+  while (data) {
+    fprintf(fd, "%14e %14e %14e\n",
+            saxs_data_x(data), saxs_data_y(data), saxs_data_y_err(data));
+    data = saxs_data_next(data);
+  }
+}
+
+static void write_footer(FILE *fd, saxs_document *doc) {
+}
+
+int saxs_writer_dat(struct saxs_document *doc, const char *filename) {
+  FILE *fd;
+  fd = !strcmp(filename, "-") ? stdout : fopen(filename, "w");
+  if (!fd)
+    return -1;
+
+  write_header(fd, doc);
+  write_data(fd, doc);
+  write_footer(fd, doc);
+
+  if (fd != stdout)
+    fclose(fd);
+
   return 0;
 }

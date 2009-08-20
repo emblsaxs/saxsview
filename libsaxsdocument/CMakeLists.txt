@@ -3,11 +3,10 @@ set (SOURCES saxsproperty.c
              saxsdocument.c
              formats.c
              columns_reader.c
-             dat_reader.c
-             fir_fit_reader.c
-             int_reader.c
-             out_reader.c
-             dat_writer.c)
+             atsas_dat.c
+             atsas_fir_fit.c
+             atsas_int.c
+             atsas_out.c)
 
 set (HEADERS saxsproperty.h
              saxsdocument.h
