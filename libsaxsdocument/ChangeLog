@@ -1,5 +1,9 @@
 2009-08-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsproperty.c (saxs_property_append): Removed.
+
+2009-08-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsproperty.h: New.
 	* saxsproperty.c: New.
 	* saxsdocument.h (struct saxsproperty): Removed.

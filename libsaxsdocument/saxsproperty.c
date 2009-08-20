@@ -52,12 +52,6 @@ saxs_property_create(const char *name, const char *value) {
   return property;
 }
 
-void
-saxs_property_append(saxs_property *prev, saxs_property *next) {
-  if (prev)
-    prev->next = next;
-}
-
 saxs_property*
 saxs_property_next(saxs_property *property) {
   return property ? property->next : NULL;
