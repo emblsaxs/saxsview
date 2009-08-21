@@ -1,5 +1,9 @@
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsdocument_format.c: Add missing include file.
+
+2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsdocument_format.h: Add license.
 
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>

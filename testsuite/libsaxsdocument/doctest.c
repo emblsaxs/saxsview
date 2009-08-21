@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #define VERIFY(cond)                              \
   if (!(cond)) {                                  \
@@ -197,8 +198,6 @@ static void expect_read_property_fields(struct expect *exp, FILE *fd) {
 
 
 int expect_read(struct expect *exp, const char *filename) {
-  char buffer[1024], *buf;
-
   FILE *fd = fopen(filename, "r");
   VERIFY(fd != NULL);
 
