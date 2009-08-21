@@ -230,7 +230,7 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 
-int saxs_reader_out(struct saxs_document *doc, const char *filename) {
+int atsas_out_read(struct saxs_document *doc, const char *filename) {
   struct line *lines, *current;
   struct line *header, *scattering_begin, *probability_begin, *footer;
 
@@ -288,4 +288,19 @@ int saxs_reader_out(struct saxs_document *doc, const char *filename) {
 
   lines_free(lines);
   return 0;
+}
+
+
+/**************************************************************************/
+#include "saxsdocument_format.h"
+
+saxs_document_format*
+saxs_document_format_atsas_out(const char *filename, const char *format) {
+  static saxs_document_format atsas_out = { atsas_out_read, NULL };
+
+  if (!compare_format(format, "out")
+      || !compare_format(suffix(filename), "out"))
+    return &atsas_out;
+
+  return NULL;
 }

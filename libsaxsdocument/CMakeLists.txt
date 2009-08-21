@@ -1,7 +1,7 @@
 project (LIBSAXSDOCUMENT C CXX Fortran)
 set (SOURCES saxsproperty.c
              saxsdocument.c
-             formats.c
+             saxsdocument_format.c
              columns_reader.c
              atsas_dat.c
              atsas_fir_fit.c
@@ -10,7 +10,7 @@ set (SOURCES saxsproperty.c
 
 set (HEADERS saxsproperty.h
              saxsdocument.h
-             formats.h
+             saxsdocument_format.h
              columns.h)
 
 add_library (saxsdocument SHARED ${SOURCES} ${HEADERS})

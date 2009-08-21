@@ -22,7 +22,7 @@
  */
 
 #include "saxsdocument.h"
-#include "formats.h"
+#include "saxsdocument_format.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -72,15 +72,16 @@ saxs_document* saxs_document_create() {
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
-  saxs_format_callback reader = saxs_reader_find(filename, format);
+  saxs_document_format* handler = saxs_document_format_find(filename, format);
+
   doc->doc_filename = strdup(filename);
-  return reader ? reader(doc, filename) : -1;
+  return handler && handler->read ? handler->read(doc, filename) : -1;
 }
 
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
-  saxs_format_callback writer = saxs_writer_find(filename, format);
-  return writer ? writer(doc, filename) : -1;
+  saxs_document_format* handler = saxs_document_format_find(filename, format);
+  return handler && handler->write ? handler->write(doc, filename) : -1;
 }
 
 void saxs_document_free(saxs_document *doc) {

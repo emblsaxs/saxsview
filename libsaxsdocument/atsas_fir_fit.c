@@ -105,7 +105,7 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 
-int saxs_reader_fir_fit(struct saxs_document *doc, const char *filename) {
+int atsas_fir_fit_read(struct saxs_document *doc, const char *filename) {
   struct line *lines, *header, *data, *footer;
 
   if (lines_read(&lines, filename) != 0)
@@ -120,4 +120,21 @@ int saxs_reader_fir_fit(struct saxs_document *doc, const char *filename) {
 
   lines_free(lines);
   return 0;
+}
+
+
+/**************************************************************************/
+#include "saxsdocument_format.h"
+
+saxs_document_format*
+saxs_document_format_atsas_fir_fit(const char *filename, const char *format) {
+  static saxs_document_format atsas_fir_fit = { atsas_fir_fit_read, NULL };
+
+  if (!compare_format(format, "fir")
+      || !compare_format(suffix(filename), "fir")
+      || !compare_format(format, "fit")
+      || !compare_format(suffix(filename), "fit"))
+    return &atsas_fir_fit;
+
+  return NULL;
 }

@@ -144,7 +144,7 @@ static int parse_footer(struct saxs_document *doc,
   return 0;
 }
 
-int saxs_reader_dat(struct saxs_document *doc, const char *filename) {
+int atsas_dat_read(struct saxs_document *doc, const char *filename) {
   struct line *lines, *header, *data, *footer;
 
   if (lines_read(&lines, filename) != 0)
@@ -195,7 +195,7 @@ static void write_data(FILE* fd, saxs_document *doc) {
 static void write_footer(FILE *fd, saxs_document *doc) {
 }
 
-int saxs_writer_dat(struct saxs_document *doc, const char *filename) {
+int atsas_dat_write(struct saxs_document *doc, const char *filename) {
   FILE *fd;
   fd = !strcmp(filename, "-") ? stdout : fopen(filename, "w");
   if (!fd)
@@ -209,4 +209,19 @@ int saxs_writer_dat(struct saxs_document *doc, const char *filename) {
     fclose(fd);
 
   return 0;
+}
+
+
+/**************************************************************************/
+#include "saxsdocument_format.h"
+
+saxs_document_format*
+saxs_document_format_atsas_dat(const char *filename, const char *format) {
+  static saxs_document_format atsas_dat = { atsas_dat_read, atsas_dat_write };
+
+  if (!compare_format(format, "dat")
+      || !compare_format(suffix(filename), "dat"))
+    return &atsas_dat;
+
+  return NULL;
 }

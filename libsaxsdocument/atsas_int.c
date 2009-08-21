@@ -83,7 +83,7 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 
-int saxs_reader_int(struct saxs_document *doc, const char *filename) {
+int atsas_int_read(struct saxs_document *doc, const char *filename) {
   struct line *lines, *header, *data, *footer;
 
   if (lines_read(&lines, filename) != 0)
@@ -99,3 +99,18 @@ int saxs_reader_int(struct saxs_document *doc, const char *filename) {
   lines_free(lines);
   return 0;
 }
+
+/**************************************************************************/
+#include "saxsdocument_format.h"
+
+saxs_document_format*
+saxs_document_format_atsas_int(const char *filename, const char *format) {
+  static saxs_document_format atsas_int = { atsas_int_read, NULL };
+
+  if (!compare_format(format, "int")
+      || !compare_format(suffix(filename), "int"))
+    return &atsas_int;
+
+  return NULL;
+}
+
