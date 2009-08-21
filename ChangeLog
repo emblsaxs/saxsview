@@ -1,3 +1,9 @@
+2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* COPYING.cbflib: New.
+	* external/cbflib/: New.
+	* CMakeLists.txt: Added subdirectory external/cbflib/.
+
 2009-08-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* COPYING.qwt: Moved here from external/qwt/COPYING.

@@ -9,6 +9,7 @@ set (QT_USE_QTSVG TRUE)
 include (${QT_USE_FILE})
 
 add_subdirectory (external/qwt)
+add_subdirectory (external/cbflib)
 add_subdirectory (libsaxsdocument)
 add_subdirectory (libsaxsview)
 add_subdirectory (saxsview)

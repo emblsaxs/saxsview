@@ -1,5 +1,14 @@
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsimage.h: New.
+	* saxsimage.c: New.
+	* saxsimage_format.h: New.
+	* saxsimage_format.c: New.
+	* image_cbf.c: New.
+	* CMakeLists.txt: Added new files, link with libcbf.
+
+2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsdocument_format.c: Add missing include file.
 
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
