@@ -1,5 +1,9 @@
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsdocument_format.h: Add license.
+
+2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* formats.h: Removed.
 	* formats.c: Removed.
 	* saxsdocument_format.h: New.
