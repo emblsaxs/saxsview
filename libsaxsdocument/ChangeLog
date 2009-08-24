@@ -1,5 +1,12 @@
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsdocument_format.h: Added "extern C" include guards.
+	* saxsimage_format.h: Likewise.
+	* saxsimage.c (saxs_image_create): Fixed initialization of members.
+	(saxs_image_free): only close if format-callbacks are set.
+
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsimage_format.h (struct saxs_image_format): Redefined
 	callback arguments. Fixed all callers.
 	* saxsimage.c (struct saxs_image): Added private data member.

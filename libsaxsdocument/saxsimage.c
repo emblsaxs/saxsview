@@ -47,6 +47,7 @@ saxs_image_create() {
   saxs_image *image = malloc(sizeof(saxs_image));
 
   image->image_properties = saxs_property_list_create();
+  image->image_filename = NULL;
   image->image_format = NULL;
   image->image_private_data = NULL;
 
@@ -76,7 +77,8 @@ saxs_image_write(saxs_image *image, const char *filename, const char *format) {
 void
 saxs_image_free(saxs_image *image) {
   if (image) {
-    image->image_format->close(image->image_private_data);
+    if (image->image_format)
+      image->image_format->close(image->image_private_data);
 
     if (image->image_filename)
       free(image->image_filename);

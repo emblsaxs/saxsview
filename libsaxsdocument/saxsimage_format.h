@@ -26,6 +26,10 @@
 
 #include <sys/types.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct saxs_image;
 
 struct saxs_image_format {
@@ -56,5 +60,9 @@ int compare_format(const char *a, const char *b);
 
 /** Extract the suffix of a filename, e.g. 'bsa.dat' has suffix 'dat'. */
 const char* suffix(const char *filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !LIBSAXSDOCUMENT_SAXSIMAGE_FORMAT_H */

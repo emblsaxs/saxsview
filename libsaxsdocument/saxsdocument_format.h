@@ -24,6 +24,10 @@
 #ifndef LIBSAXSDOCUMENT_SAXSDOCUMENT_FORMAT_H
 #define LIBSAXSDOCUMENT_SAXSDOCUMENT_FORMAT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct saxs_document;
 
 struct saxs_document_format {
@@ -42,5 +46,9 @@ int compare_format(const char *a, const char *b);
 
 /** Extract the suffix of a filename, e.g. 'bsa.dat' has suffix 'dat'. */
 const char* suffix(const char *filename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !LIBSAXSDOCUMENT_SAXSDOCUMENT_FORMAT_H */
