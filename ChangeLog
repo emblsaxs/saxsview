@@ -1,3 +1,7 @@
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Added Win32-specific linker flags.
+
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* COPYING.cbflib: New.
