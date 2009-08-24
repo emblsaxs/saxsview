@@ -1,5 +1,9 @@
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Removed debug message, added .zip support.
+
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Added basic packaging support.
 
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>

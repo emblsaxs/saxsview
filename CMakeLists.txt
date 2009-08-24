@@ -26,11 +26,10 @@ set (CPACK_PACKAGE_VERSION_MINOR       "1")
 set (CPACK_PACKAGE_VERSION_PATCH       "0")
 set (CPACK_PACKAGE_FILE_NAME           "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
 set (CPACK_SOURCE_PACKAGE_FILE_NAME    "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}")
+set (CPACK_SOURCE_GENERATOR            "TGZ" "ZIP")
 set (CPACK_SOURCE_IGNORE_FILES         "/.svn/;/build/;")
 set (CPACK_RESOURCE_FILE_LICENSE       "${SAXSVIEW_SOURCE_DIR}/COPYING")
 INCLUDE (CPack)
-
-Message(${CPACK_SOURCE_IGNORE_FILES})
 
 add_subdirectory (external/qwt)
 add_subdirectory (external/cbflib)
