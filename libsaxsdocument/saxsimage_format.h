@@ -29,19 +29,16 @@
 struct saxs_image;
 
 struct saxs_image_format {
-  int (*open)(struct saxs_image_format *format);
-  int (*read)(struct saxs_image_format *format, const char *filename);
-  int (*write)(struct saxs_image_format *format, const char *filename);
-  int (*close)(struct saxs_image_format *format);
+  int (*open)(void **private_data);
+  int (*read)(void *private_data, const char *filename);
+  int (*write)(void *private_data, const char *filename);
+  int (*close)(void *private_data);
 
-  size_t (*value)(struct saxs_image_format *format, int x, int y);
-  size_t (*width)(struct saxs_image_format *format);
-  size_t (*height)(struct saxs_image_format *format);
-  size_t (*value_min)(struct saxs_image_format *format);
-  size_t (*value_max)(struct saxs_image_format *format);
-
-  /* private data storage for image handlers */
-  void *private_data;
+  size_t (*value)(void *private_data, int x, int y);
+  size_t (*width)(void *private_data);
+  size_t (*height)(void *private_data);
+  size_t (*value_min)(void *private_data);
+  size_t (*value_max)(void *private_data);
 };
 typedef struct saxs_image_format saxs_image_format;
 

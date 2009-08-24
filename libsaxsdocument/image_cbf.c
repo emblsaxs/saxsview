@@ -27,12 +27,13 @@
 #include "cbf.h"
 #include "cbf_simple.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct image_cbf_private {
-  cbf_handle *cbf_libhandle;
+  cbf_handle cbf;
 
   size_t width;
   size_t height;
@@ -41,38 +42,28 @@ typedef struct image_cbf_private {
 
 } image_cbf_private;
 
-image_cbf_private*
-private_data(struct saxs_image_format *format) {
-  if (!format->private_data) {
-    image_cbf_private *private_data = malloc(sizeof(image_cbf_private));
-    printf("CBF: init private data\n");
-    private_data->cbf_libhandle = NULL;
-    private_data->data = NULL;
+#define PRIVATE_DATA(p) ((image_cbf_private*)(p))
 
-    format->private_data = private_data;
-  }
-
-  return (image_cbf_private*)format->private_data;
-}
 
 /**************************************************************************/
-int saxs_image_cbf_open(struct saxs_image_format *format) {
-  cbf_handle *cbf = malloc(sizeof(cbf_handle));
+int saxs_image_cbf_open(void **data) {
+  image_cbf_private *private_data;
 
-  if (cbf_make_handle(cbf))
+  assert(!*data);     /* Private data must not be allocated yet. */
+
+  private_data       = malloc(sizeof(image_cbf_private));
+  private_data->data = NULL;
+
+  if (cbf_make_handle(&private_data->cbf))
     return -1;
 
-  printf("CBF: open\n");
-  private_data(format)->cbf_libhandle = cbf;
+  *data = private_data;
   return 0;
 }
 
 static int
-saxs_image_cbf_read_high_level(struct saxs_image_format *format) {
-  image_cbf_private* p = private_data(format);
-
-  printf("CBF: high level api, get size: %d\n", cbf_get_image_size(*p->cbf_libhandle, 0, 0, &p->height, &p->width));
-  if (cbf_get_image_size(*p->cbf_libhandle, 0, 0, &p->height, &p->width) != 0)
+saxs_image_cbf_read_high_level(image_cbf_private *p) {
+  if (cbf_get_image_size(p->cbf, 0, 0, &p->height, &p->width) != 0)
     return -1;
 
   if (p->data)
@@ -81,8 +72,7 @@ saxs_image_cbf_read_high_level(struct saxs_image_format *format) {
   p->data = malloc(p->width * p->height * sizeof(int));
   p->bpp = 32;
 
-  printf("CBF: high level api, get image (%d, %d)\n", p->width, p->height);
-  return cbf_get_image(*p->cbf_libhandle, 0, 0,
+  return cbf_get_image(p->cbf, 0, 0,
                        p->data,
                        sizeof(int),
                        0,
@@ -91,31 +81,29 @@ saxs_image_cbf_read_high_level(struct saxs_image_format *format) {
 }
 
 static int
-saxs_image_cbf_read_low_level(struct saxs_image_format *format) {
-  image_cbf_private* p = private_data(format);
-
+saxs_image_cbf_read_low_level(image_cbf_private *p) {
   unsigned int compression;
   int is_signed, is_unsigned, is_real;
   size_t size, n, nread;
 
-  cbf_select_datablock(*p->cbf_libhandle, 0);
+  cbf_select_datablock(p->cbf, 0);
 
-  cbf_find_category(*p->cbf_libhandle, "array_data");
-  cbf_find_column(*p->cbf_libhandle, "data");
+  cbf_find_category(p->cbf, "array_data");
+  cbf_find_column(p->cbf, "data");
 
-  cbf_get_arrayparameters_wdims(*p->cbf_libhandle, &compression, NULL, &size, &is_signed,
+  cbf_get_arrayparameters_wdims(p->cbf, &compression, NULL, &size, &is_signed,
                                 &is_unsigned, &n, NULL, NULL, &is_real, NULL,
                                 &p->width, &p->height, NULL, NULL);
 
   if (p->height == 0 || p->width == 0){
-    cbf_get_image_size(*p->cbf_libhandle, 0, 0, &p->width, &p->height);
+    cbf_get_image_size(p->cbf, 0, 0, &p->width, &p->height);
 
     if (p->height == 0 || p->width == 0)
       return -1;
 
     /* find the previous category and column */
-    cbf_find_category(*p->cbf_libhandle, "array_data");
-    cbf_find_column(*p->cbf_libhandle, "data");
+    cbf_find_category(p->cbf, "array_data");
+    cbf_find_column(p->cbf, "data");
   }
 
   p->bpp = size * 8;
@@ -125,14 +113,14 @@ saxs_image_cbf_read_low_level(struct saxs_image_format *format) {
     return -1;
 
   if (is_real) {
-    cbf_get_realarray(*p->cbf_libhandle,
+    cbf_get_realarray(p->cbf,
                       0L,
                       p->data,
                       sizeof(int),
                       n,
                       &nread);
   } else {
-    cbf_get_integerarray(*p->cbf_libhandle,
+    cbf_get_integerarray(p->cbf,
                          0L,
                          p->data,
                          sizeof(int),
@@ -144,50 +132,53 @@ saxs_image_cbf_read_low_level(struct saxs_image_format *format) {
   return (n == nread) ? 0 : -1;
 }
 
-int saxs_image_cbf_read(struct saxs_image_format *format, const char *filename) {
+int saxs_image_cbf_read(void *data, const char *filename) {
+  image_cbf_private *p = PRIVATE_DATA(data);
+
+  /* open() should have allocated memory already ... */
+  assert(p);
+
+  /* The 'b' is required for windows, overwise reading fails. */
   FILE *fd = fopen(filename, "rb");
   if (!fd)
     return -1;
 
-  cbf_read_file(*private_data(format)->cbf_libhandle, fd, MSG_DIGEST);
+  cbf_read_file(p->cbf, fd, MSG_DIGEST);
 
-  if (saxs_image_cbf_read_high_level(format) == 0)
+  if (saxs_image_cbf_read_high_level(p) == 0)
     return 0;
-  else if (saxs_image_cbf_read_low_level(format) == 0)
+  else if (saxs_image_cbf_read_low_level(p) == 0)
     return 0;
   else
     return -1;
 }
 
-int saxs_image_cbf_close(struct saxs_image_format *format) {
-  image_cbf_private* p = private_data(format);
+int saxs_image_cbf_close(void *data) {
+  image_cbf_private *p = PRIVATE_DATA(data);
+  assert(p);
 
-  cbf_free_handle(*p->cbf_libhandle);
-
-  free(p->cbf_libhandle);
+  cbf_free_handle(p->cbf);
   free(p->data);
+  free(p);
 
-  printf("CBF: close\n");
   return 0;
 }
 
-size_t saxs_image_cbf_width(struct saxs_image_format *format) {
-  return private_data(format)->width;
+size_t saxs_image_cbf_width(void *data) {
+  return PRIVATE_DATA(data)->width;
 }
 
-size_t saxs_image_cbf_height(struct saxs_image_format *format) {
-  return private_data(format)->height;
+size_t saxs_image_cbf_height(void *data) {
+  return PRIVATE_DATA(data)->height;
 }
 
-size_t saxs_image_cbf_value(struct saxs_image_format *format, int x, int y) {
-  const image_cbf_private* p = private_data(format);
-    if (x >= p->width)
-      printf("X too big (%d/%d)\n", x, p->width);
-    if (y >= p->height)
-      printf("Y too big (%d/%d)\n", y, p->height);
+size_t saxs_image_cbf_value(void *data, int x, int y) {
+  image_cbf_private *p = PRIVATE_DATA(data);
 
+  if (x < 0 || x >= p->width
+      || y < 0 || y > p->height)
+    return 0;
 
-/* printf("value(%d,%d) = %ud\n", x, y, *(p->data + x * p->width + y * p->height)); */
   return *(p->data + y * p->width + x);
 }
 
@@ -204,8 +195,7 @@ saxs_image_format_cbf(const char *filename, const char *format) {
                                          saxs_image_cbf_width,
                                          saxs_image_cbf_height,
                                          NULL, /* value_min */
-                                         NULL, /* value_max */
-                                         NULL /* private data */ };
+                                         NULL  /* value_max */ };
 
   if (!compare_format(format, "cbf")
       || !compare_format(suffix(filename), "cbf")

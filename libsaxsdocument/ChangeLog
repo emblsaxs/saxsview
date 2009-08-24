@@ -1,3 +1,15 @@
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage_format.h (struct saxs_image_format): Redefined
+	callback arguments. Fixed all callers.
+	* saxsimage.c (struct saxs_image): Added private data member.
+	(saxs_image_create): Initialize private data.
+	(saxs_image_free): Plugged memory leak.
+	(image_value_min): Performance improvement.
+	(image_value_max): Likewise.
+	* image_cbf.c: Cleaned out debug messages, updated callback
+	prototypes, fixed calls.
+
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage.h: New.
