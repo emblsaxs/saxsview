@@ -1,3 +1,27 @@
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewsubwindow.h: Revamped to define a common interface for
+	subwindows in saxsview.
+	* saxsviewsubwindow.cpp: Moved most code to saxsviewplotwindow.cpp.
+	* saxsviewplotwindow.h: New subwindow for 1D-plots.
+	* saxsviewplotwindow.cpp: New.
+	* saxsviewimagewindow.h: New subwindow for 2D-images.
+	* saxsviewimagewindow.cpp: New.
+	* saxsviewmainwindow.h (createSubWindow): Removed.
+	(createPlotWindow): New.
+	(createImageWindow): New.
+	* saxsviewmainwindow.cpp (setupAction): Separate actions for plot
+	and image subwindows.
+	(setupMenus): New submenu.
+	(setupToolbars): Added dropdown to New button.
+	(addSubwindow): New.
+	(createSubWindow): Removed.
+	(createPlotWindow): New.
+	(createImageWindow): New.
+	(load): Forward call to subwindow.
+	(load(fileName)): 
+	* CMakeLists.txt: Added new files.
+
 2009-08-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewsubwindow.cpp (load): Set file name.

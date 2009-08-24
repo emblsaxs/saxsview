@@ -3,16 +3,19 @@ project (LIBSAXSVIEW CXX)
 set (SOURCES saxsview_plot.cpp
              saxsview_plotcurve.cpp
              saxsview_plotconfigdialog.cpp
+             saxsview_image.cpp
 	     saxsview_colorbutton.cpp)
 
 set (HEADERS saxsview_plot.h
              saxsview_plotcurve.h
              saxsview_plotconfigdialog.h
+             saxsview_image.h
 	     saxsview_colorbutton.h)
 
 qt4_wrap_cpp (MOC saxsview_plot.h
                   saxsview_plotcurve.h
                   saxsview_plotconfigdialog.h
+                  saxsview_image.h
 	          saxsview_colorbutton.h)
 
 

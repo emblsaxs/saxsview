@@ -18,7 +18,8 @@
  */
 
 #include "saxsviewmainwindow.h"
-#include "saxsviewsubwindow.h"
+#include "saxsviewplotwindow.h"
+#include "saxsviewimagewindow.h"
 #include "saxsview_plot.h"
 
 #include <QAction>
@@ -49,11 +50,13 @@ public:
   void setupToolbars();
   void setupSignalMappers();
 
+  void addSubWindow(SaxsviewSubWindow *w);
+
   SaxsviewMainWindow *mw;
 
   // "File"-menu
-  QAction *actionCreateSubWindow, *actionLoad, *actionQuit;
-  QAction *actionPrint;
+  QAction *actionCreatePlotWindow, *actionCreateImageWindow;
+  QAction *actionLoad, *actionQuit, *actionPrint;
 
   // "Plot"-menu
   QAction *actionAbsScale, *actionLogScale;
@@ -71,7 +74,7 @@ public:
   // "Help"-menu
   QAction *actionAbout;
 
-  QMenu *menuFile, *menuRecentFiles, *menuExportAs;
+  QMenu *menuFile, *menuCreateSubWindow, *menuRecentFiles, *menuExportAs;
   QMenu *menuPlot, *menuWindow, *menuHelp;
 
   QMdiArea *mdiArea;
@@ -107,11 +110,15 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   //
   // "File"-menu
   //
-  actionCreateSubWindow = new QAction("&New Plot", mw);
-  actionCreateSubWindow->setIcon(style->standardIcon(QStyle::SP_FileIcon));
-  actionCreateSubWindow->setShortcut(QKeySequence::New);
-  connect(actionCreateSubWindow, SIGNAL(triggered()),
-          mw, SLOT(createSubWindow()));
+  actionCreatePlotWindow = new QAction("&New Plot", mw);
+  actionCreatePlotWindow->setIcon(style->standardIcon(QStyle::SP_FileIcon));
+  connect(actionCreatePlotWindow, SIGNAL(triggered()),
+          mw, SLOT(createPlotWindow()));
+
+  actionCreateImageWindow = new QAction("&New Image", mw);
+  actionCreateImageWindow->setIcon(style->standardIcon(QStyle::SP_FileIcon));
+  connect(actionCreateImageWindow, SIGNAL(triggered()),
+          mw, SLOT(createImageWindow()));
 
   actionLoad = new QAction("&Open", mw);
   actionLoad->setIcon(style->standardIcon(QStyle::SP_DirIcon));
@@ -226,6 +233,14 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupUi() {
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
 
+  menuCreateSubWindow = new QMenu("New", mw);
+  menuCreateSubWindow->addAction(actionCreatePlotWindow);
+  menuCreateSubWindow->addAction(actionCreateImageWindow);
+
+  menuRecentFiles = new QMenu("Open &Recent", mw);
+  connect(menuRecentFiles, SIGNAL(aboutToShow()),
+          mw, SLOT(prepareRecentFilesMenu()));
+
   menuExportAs = new QMenu("E&xport As", mw);
 
   supportedFormatsMap::const_iterator i = exportAsFormat.constBegin();
@@ -236,14 +251,10 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
     exportAsFormatMapper->setMapping(action, i.key());
   }
 
-  menuRecentFiles = new QMenu("Open &Recent", mw);
-  connect(menuRecentFiles, SIGNAL(aboutToShow()),
-          mw, SLOT(prepareRecentFilesMenu()));
-
   QMenuBar *menuBar = mw->menuBar();
 
   menuFile = new QMenu("&File", mw);
-  menuFile->addAction(actionCreateSubWindow);
+  menuFile->addMenu(menuCreateSubWindow);
   menuFile->addAction(actionLoad);
   menuFile->addMenu(menuRecentFiles);
   menuFile->addMenu(menuExportAs);
@@ -279,7 +290,10 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   QToolBar *toolBar;
 
   toolBar = mw->addToolBar("saxsview Toolbar");
-  toolBar->addAction(actionCreateSubWindow);
+  QAction *action = toolBar->addAction(qApp->style()->standardIcon(QStyle::SP_FileIcon), "New");
+  connect(action, SIGNAL(triggered()),
+          mw, SLOT(createPlotWindow()));
+  action->setMenu(menuCreateSubWindow);
 
   toolBar = mw->addToolBar("plot Toolbar");
   toolBar->addAction(actionLoad);
@@ -323,6 +337,16 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
           mw, SLOT(exportAs(const QString&)));
 }
 
+void SaxsviewMainWindow::SaxsviewMainWindowPrivate::addSubWindow(SaxsviewSubWindow *w) {
+  mdiArea->addSubWindow(w);
+
+  if (mdiArea->subWindowList().size() == 1)
+    w->showMaximized();
+  else
+    w->show();
+}
+
+
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
  : QMainWindow(parent), p(new SaxsviewMainWindowPrivate(this)) {
 
@@ -342,32 +366,45 @@ SaxsviewSubWindow* SaxsviewMainWindow::currentSubWindow() const {
   return subWindow ? qobject_cast<SaxsviewSubWindow*>(subWindow) : 0L;
 }
 
-void SaxsviewMainWindow::createSubWindow() {
-  SaxsviewSubWindow *w = new SaxsviewSubWindow(this);
-  p->mdiArea->addSubWindow(w);
+void SaxsviewMainWindow::createPlotWindow() {
+  p->addSubWindow(new SaxsviewPlotWindow(this));
+}
 
-  if (p->mdiArea->subWindowList().size() == 1)
-    w->showMaximized();
-  else
-    w->show();
+void SaxsviewMainWindow::createImageWindow() {
+  p->addSubWindow(new SaxsviewImageWindow(this));
 }
 
 void SaxsviewMainWindow::load() {
-  QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...");
-
-  foreach (QString fileName, fileNames)
-    load(fileName);
+  if (currentSubWindow())
+    currentSubWindow()->load();
 }
 
 void SaxsviewMainWindow::load(const QString& fileName) {
-//   if (!QFile::exists(fileName)) {
-//     QMessageBox::critical(this, "No such file",
-//                           QString("File not found: %1").arg(fileName));
-//     return;
-//   }
+  //
+  // 1. If there is no subwindow at all, create an 
+  //    appropriate one and load the file. If the
+  //    file type is unknown, reject it and inform user.
+  //
+  // 2. If a subwindow exists and can load the file, load it
+  //
+  // 3. If a subwindow exists and it can not load the file,
+  //    reject it and inform user.
+  //    (is done by loading it anyway, the subwindows reject
+  //     anything they don't like)
+  //
 
-  if (!currentSubWindow())
-    createSubWindow();
+  if (!currentSubWindow()) {
+    if (SaxsviewPlotWindow::canShow(fileName))
+      createPlotWindow();
+    else if (SaxsviewImageWindow::canShow(fileName))
+      createImageWindow();
+    else {
+      QMessageBox::critical(this,
+                            "Filetype not recognized",
+                            QString("Could not load '%1'.").arg(fileName));
+      return;
+    }
+  }
 
   if (currentSubWindow()) {
     currentSubWindow()->load(fileName);

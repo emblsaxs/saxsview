@@ -1,4 +1,5 @@
 /*
+ * Implementation of 1D-plot subwindows.
  * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
@@ -17,31 +18,29 @@
  * along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_MAINWINDOW_H
-#define SAXSVIEW_MAINWINDOW_H
+#ifndef SAXSVIEW_PLOTWINDOW_H
+#define SAXSVIEW_PLOTWINDOW_H
 
-#include <QMainWindow>
-class QMdiSubWindow;
-class QString;
+#include "saxsviewsubwindow.h"
+class QEvent;
 
-class SaxsviewSubWindow;
-
-class SaxsviewMainWindow : public QMainWindow {
+class SaxsviewPlotWindow : public SaxsviewSubWindow {
   Q_OBJECT
 
 public:
-  SaxsviewMainWindow(QWidget *parent = 0L);
-  ~SaxsviewMainWindow();
+  SaxsviewPlotWindow(QWidget *parent = 0L);
+  ~SaxsviewPlotWindow();
 
-  SaxsviewSubWindow* currentSubWindow() const;
+  static bool canShow(const QString& fileName);
+
+  int scale() const;
+  bool zoomEnabled() const;
+  bool moveEnabled() const;
 
 public slots:
-  void createPlotWindow();
-  void createImageWindow();
   void load();
   void load(const QString& fileName);
-
-  void exportAs(const QString& format);
+  void exportAs(const QString& fileName);
   void print();
   void zoomIn();
   void zoomOut();
@@ -50,17 +49,12 @@ public slots:
   void setScale(int);
   void configure();
 
-  void about();
-
-private slots:
-  void prepareWindowMenu();
-  void prepareRecentFilesMenu();
-  void setActiveSubWindow(QWidget*);
-  void subWindowActivated(QMdiSubWindow*);
+protected:
+  bool eventFilter(QObject*, QEvent*);
 
 private:
-  class SaxsviewMainWindowPrivate;
-  SaxsviewMainWindowPrivate *p;
+  class SaxsviewPlotWindowPrivate;
+  SaxsviewPlotWindowPrivate *p;
 };
 
-#endif // !SAXSVIEW_MAINWINDOW_H
+#endif // !SAXSVIEW_PLOTWINDOW_H

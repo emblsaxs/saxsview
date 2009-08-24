@@ -1,3 +1,11 @@
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_image.h: New.
+	* saxsview_image.cpp: New.
+	* saxsview_plot.cpp (ctor): Do not set scale.
+	(setZoomBase): Take all plot-items into account, not only curves.
+	* CMakeLists.txt: Added new files.
+
 2009-08-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plotcurve.h (PlotSymbol): New.

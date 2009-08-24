@@ -144,8 +144,6 @@ Plot::Plot(QWidget *parent)
   p->setupMarker();
   p->setupPanner();
   p->setupZoomer();
-
-  setScale(Log10Scale);
 }
 
 Plot::~Plot() {
@@ -180,6 +178,8 @@ bool Plot::replotBlocked() const {
 }
 
 void Plot::clear() {
+  // FIXME: is this equivalent to QwtPlotDict::detachItems() ?
+
   foreach (PlotCurve *curve, p->curves) {
     curve->detach();
     delete curve;
@@ -321,9 +321,9 @@ void Plot::setZoomBase(const QRectF& rect) {
   // rect of all visible curves.
   //
   if (!r.isValid())
-    foreach (PlotCurve *curve, p->curves)
-      if (curve->isVisible())
-        r = r.united(curve->boundingRect());
+    foreach (QwtPlotItem *item, itemList())
+      if (item->isVisible())
+        r = r.united(item->boundingRect());
 
   if (r.isValid()) {
     //
@@ -372,31 +372,5 @@ void Plot::setScale(PlotScale scale) {
 Plot::PlotScale Plot::scale() const {
   return p->scale;
 }
-
-
-
-// void Plot::printLegend(QPainter *painter, const QRect &) const {
-//   //
-//   // Positioning of legend on print.
-//   //
-//   // Computations are done in device coordinates, converted to layout
-//   // coordinates (to be converted to device coordinates).
-//   //
-//   //  -> makes sure that the legend is positioned properly on the
-//   //     right hand side.
-//   //
-//   const QwtMetricsMap &metricsMap = QwtPainter::metricsMap();
-// 
-//   QSize mappedSizeHint = metricsMap.layoutToDevice(p->legend->sizeHint());
-//   const int mappedMargin = metricsMap.layoutToDeviceY(plotLayout()->margin());
-//   const int mappedTitleHeight = metricsMap.layoutToDeviceY(plotLayout()->titleRect().height());
-// 
-//   QRect rect(painter->device()->width() - mappedMargin - mappedSizeHint.width(),
-//              mappedMargin + mappedTitleHeight,
-//              mappedSizeHint.width(), mappedSizeHint.height());
-//   rect = metricsMap.deviceToLayout(rect);
-// 
-//   QwtPlot::printLegend(painter, rect);
-// }
 
 } // end of namespace Saxsview

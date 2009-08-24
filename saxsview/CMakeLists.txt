@@ -6,13 +6,17 @@ include_directories (${QWT_SOURCE_DIR}
 
 # run moc
 qt4_wrap_cpp (saxsview_moc saxsviewmainwindow.h
-                           saxsviewsubwindow.h)
+                           saxsviewsubwindow.h
+                           saxsviewimagewindow.h
+                           saxsviewplotwindow.h)
 
 add_executable (saxsviewapp
                 main.cpp
                 ${saxsview_moc}
                 saxsviewmainwindow.cpp saxsviewmainwindow.h
-                saxsviewsubwindow.cpp saxsviewsubwindow.h)
+                saxsviewsubwindow.cpp saxsviewsubwindow.h
+                saxsviewplotwindow.cpp saxsviewplotwindow.h
+                saxsviewimagewindow.cpp saxsviewimagewindow.h)
 
 link_directories (${LIBSAXSDOCUMENT_BINARY_DIR}
                   ${LIBSAXSVIEW_BINARY_DIR})

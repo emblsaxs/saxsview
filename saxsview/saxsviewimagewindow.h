@@ -1,5 +1,5 @@
 /*
- * Interface for view subwindows.
+ * Implementation of 2D-images subwindows.
  * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
@@ -18,33 +18,39 @@
  * along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_SUBWINDOW_H
-#define SAXSVIEW_SUBWINDOW_H
+#ifndef SAXSVIEW_IMAGEWINDOW_H
+#define SAXSVIEW_IMAGEWINDOW_H
 
-#include <QMdiSubWindow>
+#include "saxsviewsubwindow.h"
+class QEvent;
 
-class SaxsviewSubWindow : public QMdiSubWindow {
+class SaxsviewImageWindow : public SaxsviewSubWindow {
   Q_OBJECT
 
 public:
-  SaxsviewSubWindow(QWidget *parent = 0L);
-  virtual ~SaxsviewSubWindow();
+  SaxsviewImageWindow(QWidget *parent = 0L);
+  ~SaxsviewImageWindow();
 
-  virtual int scale() const = 0;
-  virtual bool zoomEnabled() const = 0;
-  virtual bool moveEnabled() const = 0;
+  static bool canShow(const QString& fileName);
+
+  int scale() const;
+  bool zoomEnabled() const;
+  bool moveEnabled() const;
 
 public slots:
-  virtual void load() = 0;
-  virtual void load(const QString& fileName) = 0;
-  virtual void exportAs(const QString& fileName) = 0;
-  virtual void print() = 0;
-  virtual void zoomIn() = 0;
-  virtual void zoomOut() = 0;
-  virtual void setZoomEnabled(bool) = 0;
-  virtual void setMoveEnabled(bool) = 0;
-  virtual void setScale(int) = 0;
-  virtual void configure();
+  void load();
+  void load(const QString& fileName);
+  void exportAs(const QString& fileName);
+  void print();
+  void zoomIn();
+  void zoomOut();
+  void setZoomEnabled(bool);
+  void setMoveEnabled(bool);
+  void setScale(int);
+
+private:
+  class SaxsviewImageWindowPrivate;
+  SaxsviewImageWindowPrivate *p;
 };
 
-#endif // !SAXSVIEW_SUBWINDOW_H
+#endif // !SAXSVIEW_IMAGEWINDOW_H
