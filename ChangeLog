@@ -1,5 +1,9 @@
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* htdocs/: New; files shown at saxsview.sourceforge.net.
+
+2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Removed debug message, added .zip support.
 
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
