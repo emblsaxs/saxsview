@@ -8,17 +8,21 @@
 
 <img src="http://sourceforge.net/dbimage.php?id=228762" alt="screenshot of saxsview-0.1.0">
 
-<h1><a href="http://sourceforge.net/projects/saxsview/">saxsview</a></h1>
+<p>
+<a href="http://sourceforge.net/projects/saxsview/">Project Summary</a>
+ | <a href="http://sourceforge.net/projects/saxsview/files/">Download</a>
+</p>
+
+<h1>saxsview</h1>
 <p><i>libsaxsdocument</i> and <i>saxsview</i>; read, convert and view
 1D and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
-
 
 <h2>saxsview</h2>
 <p><i>saxsview</i> is intended as an day-to-day plotting facility for SAXS-data,
 as well as a convenient tool to quickly generate plots ready for publication.</p>
 
-<p>Basic plotting of 1D-curves is available (.dat, .int, .fit/.fir formats of the
- <a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">ATSAS
+<p>Basic plotting of 1D-curves is available (.dat, .int, .fit and .fir formats of the
+<a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">ATSAS
 package</a>), so is the display of 2D scattering images in Crystallographic Binary
 Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">CBFlib</a>).</p>
 
@@ -26,27 +30,68 @@ Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">CB
 application and UI framework</a> and <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting
 Widgets for Technical Applications</a>.</p>
 
-<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
-Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
+<p>Suggestions, bug reports and code contributions are highly welcome!</p>
 
 
 <h2>libsaxsdocument</h2>
-<p><i>libsaxsdocument</i> is the reading and writing workhorse of saxsview. It meant
-to allow for easy integration of new 1D and 2D-file formats. Further, if formats that
-hold similar information implement reading and writing hooks, it becomes very easy
-to convert between these respective formats. Eventually simplifying data-transfer
-between programs.</p>
+<p><i>libsaxsdocument</i> is the reading and writing workhorse of <i>saxsview</i>.
+It is meant to allow for easy integration of new 1D and 2D-file formats. Further,
+if formats that hold similar information implement reading and writing hooks,
+it becomes very easy to convert between these respective formats, eventually
+simplifying data-transfer between programs.</p>
 
 <p>For later releases, support for TIFF32 (as written by PILATUS detectors) and 
 the MAR345 file formats are planned.</p>
 
 
-<h2>Releases</h2>
+<h2>Building saxsview</h2>
+<h3>External Dependencies</h3>
+<p>External dependencies so far; version numbers indicate minimum requirements,
+earlier versions may work, but are not guaranteed to work. Later version are
+generally assumed to work:
 <ul>
-  <li>2009/08/24 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.1.0</a> was released
+  <li>CMake-2.6 (build system)</li>
+  <li>Qt-4.4 (UI framework)</li>
+  <li>gcc-4.3 (C, C++ and Fortran compilers)</li>
 </ul>
+</p>
+<p>Less common dependecies (Qwt, CBFlib) are included in the <i>saxsview</i>
+sources.</p>
 
-<p>Suggestions, bug reports and code contributions are highly welcome!</p>
+<h3>Building saxsview</h3>
+<p>The commands listed here are for a bash-shell on Linux. Similar commands
+apply for Windows or MacOSX builds:
+<pre>
+  $> tar xfz saxsview-0.1.0.tar.gz
+  $> cd saxsview-0.1.0
+  $> mkdir build && build
+  $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
+  $> make
+  $> make test      # optional, check that libsaxsdocument works
+  $> make install
+</pre>
+</p>
+<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
+Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
 
+
+<h2>Licenses</h2>
+<p>The code of the <i>saxsview</i> application is licensed under 
+<a href="http://www.fsf.org/licensing/licenses/gpl.html">GPLv3</a> while the
+libraries, <i>libsaxsview</i> and <i>libsaxsdocument</i> are licensed under the
+<a href="http://www.fsf.org/licensing/licenses/lgpl.html">Lesser GPLv3</a>.</p>
+
+<p>The included and redistributed libraries, <a href="http://qwt.sourceforge.net">Qwt</a>
+and <a href="http://www.bernstein-plus-sons.com/software/CBF/">CBFlib</a> are both
+available under the <a href="http://www.gnu.org/licenses/old-licenses/lgpl-2.1.html">
+LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
+
+
+<h2>Releases</h2>
+<p><ul>
+  <li>2009/08/24 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.1.0</a> was released
+</ul></p>
+
+<p align="center">Last updated 2009-08-26</p>
 </body>
 </html>
