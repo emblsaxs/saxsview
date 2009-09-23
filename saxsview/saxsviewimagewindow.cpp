@@ -154,7 +154,15 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupImage() {
   image = new Saxsview::Image(sw);
   image->setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
 
-  // A color bar on the right axis
+  //
+  // Invert the left-hand axis to bring origin of images
+  // to the upper-left corner.
+  // 
+  plot->axisScaleDiv(QwtPlot::yLeft)->invert();
+
+  //
+  // A color bar on the right axis.
+  //
   QwtScaleWidget *rightAxis = plot->axisWidget(QwtPlot::yRight);
   rightAxis->setTitle("Counts");
   rightAxis->setColorBarEnabled(true);

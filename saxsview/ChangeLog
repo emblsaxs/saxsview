@@ -1,3 +1,7 @@
+2009-09-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewimagewindow.cpp (setupImage): Invert left-hand y-axis.
+
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewsubwindow.h: Revamped to define a common interface for
