@@ -1,3 +1,11 @@
+2009-09-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* image_tiff.c: New.
+	* libsaxsdocument/saxsimage_format.c (saxs_image_format_find): Conditionally
+	register image format TIFF.
+	* CMakeLists.txt: Added dependency on TIFF-library, conditionally compile
+	TIFF-support if found.
+
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument_format.h: Added "extern C" include guards.

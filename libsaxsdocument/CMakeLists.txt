@@ -1,4 +1,7 @@
 project (LIBSAXSDOCUMENT C CXX Fortran)
+
+find_package (TIFF)
+
 set (SOURCES saxsproperty.c
              saxsdocument.c
              saxsdocument_format.c
@@ -18,10 +21,23 @@ set (HEADERS saxsproperty.h
              saxsimage_format.h
              columns.h)
 
-include_directories(${CBFLIB_SOURCE_DIR})
+# conditional sources
+IF (TIFF_FOUND)
+  add_definitions (-DHAVE_TIFF)
+  set (SOURCES ${SOURCES} image_tiff.c)
+ENDIF (TIFF_FOUND)
 
 add_library (saxsdocument SHARED ${SOURCES} ${HEADERS})
+
+include_directories(${CBFLIB_SOURCE_DIR})
 target_link_libraries (saxsdocument cbf)
+
+# conditional include directories and libraries
+IF (TIFF_FOUND)
+  include_directories (${TIFF_INCLUDE_DIR})
+  target_link_libraries (saxsdocument ${TIFF_LIBRARIES})
+ENDIF (TIFF_FOUND)
+
 
 install (TARGETS saxsdocument
          LIBRARY DESTINATION lib
