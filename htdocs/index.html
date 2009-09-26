@@ -1,7 +1,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
 <html>
 <head>
-  <title>saxsview 0.1</title>
+  <title>saxsview</title>
   <meta http-equiv="Content-type" content="text/html;charset=ISO-8859-1">
 </head>
 <body>
@@ -21,10 +21,13 @@
 <p><i>saxsview</i> is intended as an day-to-day plotting facility for SAXS-data,
 as well as a convenient tool to quickly generate plots ready for publication.</p>
 
-<p>Basic plotting of 1D-curves is available (.dat, .int, .fit and .fir formats of the
-<a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">ATSAS
-package</a>), so is the display of 2D scattering images in Crystallographic Binary
-Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">CBFlib</a>).</p>
+<p>Basic plotting of 1D-curves is available (.dat, .int, .fit and .fir formats 
+of the <a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">
+ATSAS package</a>, as well as the 
+<a href="http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation">cansas
+XML format v1.0</a>), so is the display of 2D scattering images in Crystallographic
+Binary Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">
+CBFlib</a>) and the display of 32-bit TIFFs as written by PILATUS detectors.</p>
 
 <p>The program is based on <a href="http://qt.nokia.com/">Qt - A cross-platform
 application and UI framework</a> and <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting
@@ -40,8 +43,7 @@ if formats that hold similar information implement reading and writing hooks,
 it becomes very easy to convert between these respective formats, eventually
 simplifying data-transfer between programs.</p>
 
-<p>For later releases, support for TIFF32 (as written by PILATUS detectors) and 
-the MAR345 file formats are planned.</p>
+<p>For later releases, support for the MAR345 file format is planned.</p>
 
 
 <h2>Building saxsview</h2>
@@ -54,9 +56,14 @@ generally assumed to work:
   <li>Qt-4.4 (UI framework)</li>
   <li>gcc-4.3 (C, C++ and Fortran compilers)</li>
 </ul>
+Optional dependencies which are used if found on the build system:
+<ul>
+  <li><a href="http://www.libtiff.org">LibTIFF</a> (support for 32-bit TIFF images)</li>
+  <li><a href="http://www.xmlsoft.org">LibXml2</a> (support for cansas XML file format)</li>
+</ul>
 </p>
-<p>Less common dependecies (Qwt, CBFlib) are included in the <i>saxsview</i>
-sources.</p>
+<p>Dependecies less commonly found (Qwt, CBFlib) on average systems come 
+together with the <i>saxsview</i> sources.</p>
 
 <h3>Building saxsview</h3>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
@@ -87,11 +94,13 @@ available under the <a href="http://www.gnu.org/licenses/old-licenses/lgpl-2.1.h
 LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
 
 
-<h2>Releases</h2>
+<h2>Releases and Milestones</h2>
 <p><ul>
-  <li>2009/08/24 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.1.0</a> was released
+  <li>2009/09/27 - initial support for the cansas-XML file format added</li>
+  <li>2009/09/23 - support for 32-bit TIFF-files as written by PILATUS detectors added</li>
+  <li>2009/08/24 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.1.0</a> released</li>
 </ul></p>
 
-<p align="center">Last updated 2009-08-26</p>
+<p align="center">Last updated 2009-09-27</p>
 </body>
 </html>
