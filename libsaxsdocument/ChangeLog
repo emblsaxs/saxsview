@@ -1,3 +1,11 @@
+2009-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* cansas_xml.c: New.
+	* saxsdocument_format.c (saxs_document_format_find): Conditionally
+	register cansas-XML format.
+	* CMakeLists.txt: Added dependency on libxml2, conditionally compile
+	cansas-support if found.
+
 2009-09-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* image_tiff.c: New.

@@ -1,6 +1,7 @@
 project (LIBSAXSDOCUMENT C CXX Fortran)
 
 find_package (TIFF)
+find_package (LibXml2)
 
 set (SOURCES saxsproperty.c
              saxsdocument.c
@@ -22,10 +23,15 @@ set (HEADERS saxsproperty.h
              columns.h)
 
 # conditional sources
-IF (TIFF_FOUND)
+if (TIFF_FOUND)
   add_definitions (-DHAVE_TIFF)
   set (SOURCES ${SOURCES} image_tiff.c)
-ENDIF (TIFF_FOUND)
+endif (TIFF_FOUND)
+
+if (LIBXML2_FOUND)
+  add_definitions (-DHAVE_LIBXML2 ${LIBXML2_DEFINITIONS})
+  set (SOURCES ${SOURCES} cansas_xml.c)
+endif (LIBXML2_FOUND)
 
 add_library (saxsdocument SHARED ${SOURCES} ${HEADERS})
 
@@ -33,10 +39,15 @@ include_directories(${CBFLIB_SOURCE_DIR})
 target_link_libraries (saxsdocument cbf)
 
 # conditional include directories and libraries
-IF (TIFF_FOUND)
+if (TIFF_FOUND)
   include_directories (${TIFF_INCLUDE_DIR})
   target_link_libraries (saxsdocument ${TIFF_LIBRARIES})
-ENDIF (TIFF_FOUND)
+endif (TIFF_FOUND)
+
+if (LIBXML2_FOUND)
+  include_directories(${LIBXML2_INCLUDE_DIR})
+  target_link_libraries (saxsdocument ${LIBXML2_LIBRARIES})
+endif (LIBXML2_FOUND)
 
 
 install (TARGETS saxsdocument

@@ -36,8 +36,14 @@ saxs_document_format_atsas_dat(const char *, const char*);
 saxs_document_format*
 saxs_document_format_atsas_fir_fit(const char *, const char*);
 saxs_document_format*
+saxs_document_format_atsas_int(const char *, const char*);
+saxs_document_format*
 saxs_document_format_atsas_out(const char *, const char*);
 
+#ifdef HAVE_LIBXML2
+saxs_document_format*
+saxs_document_format_cansas_xml(const char *, const char*);
+#endif
 
 saxs_document_format*
 saxs_document_format_find(const char *filename,
@@ -46,7 +52,11 @@ saxs_document_format_find(const char *filename,
   format_handler known_formats[] = {
     saxs_document_format_atsas_dat,
     saxs_document_format_atsas_fir_fit,
+    saxs_document_format_atsas_int,
     saxs_document_format_atsas_out,
+#ifdef HAVE_LIBXML2
+    saxs_document_format_cansas_xml,
+#endif
     NULL
   };
 
