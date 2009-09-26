@@ -134,8 +134,13 @@ void SaxsviewPlotWindow::load(const QString& fileName) {
     Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;
     plotCurve->setData(points, intervals);
     if (plotCurve->boundingRect().isValid()) {
+      QString curveTitle = fileInfo.fileName();
+      if (saxs_curve_title(curve))
+        curveTitle += QString(" (%1)").arg(saxs_curve_title(curve));
+
+      plotCurve->setTitle(curveTitle);
       plotCurve->setFileName(fileInfo.absoluteFilePath());
-      plotCurve->setTitle(fileInfo.fileName());
+
       p->plot->addCurve(plotCurve);
 
     } else
