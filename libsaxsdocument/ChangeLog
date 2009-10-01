@@ -1,3 +1,10 @@
+2009-10-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* cansas_xml.c: (cansas_xml_1_0_process_node): Adjusted version number in
+	conditional inclusion of libxml2-workaround.
+	(cansas_xml_1_0_read): Likewise.
+	(saxs_document_format_cansas_xml): Likewise.
+
 2009-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* cansas_xml.c: New.

@@ -29,14 +29,6 @@
 #include <stdlib.h>
 
 #include <libxml/xmlreader.h>
-/*
-int xmlStrCompareAndFree(xmlChar *a, const char *b) {
-  int res = xmlStrEqual(a, BAD_CAST(b));
-  xmlFree(a);
-
-  return res;
-}*/
-
 
 /**************************************************************************/
 /*
@@ -44,9 +36,11 @@ int xmlStrCompareAndFree(xmlChar *a, const char *b) {
  *   http://svn.smallangles.net/trac/canSAS/browser/1dwg/trunk/cansas1d.xsd
  */
 static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr reader) {
-  static xmlChar *text, *name;
+  static xmlChar *text;
   static saxs_curve *curve = NULL;
   static double x = 0.0, dx = 0.0, y = 0.0, dy = 0.0;
+
+  xmlChar *name;
 
   switch (xmlTextReaderNodeType(reader)) {
     case XML_READER_TYPE_ELEMENT:
@@ -109,7 +103,7 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
    */
   xmlTextReaderPtr reader;
 
-#if LIBXML_VERSION <= 20705
+#if LIBXML_VERSION <= 20703
   xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
   if (!xmldoc)
     return -1;
@@ -126,7 +120,7 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
     cansas_xml_1_0_process_node(doc, reader);
 
   xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20705
+#if LIBXML_VERSION <= 20703
   xmlFreeDoc(xmldoc);
 #endif
 
@@ -149,7 +143,7 @@ saxs_document_format_cansas_xml(const char *filename, const char *format) {
   xmlTextReaderPtr reader;
 
   /* See cansas_xml_1_0_read() for an explanation. */
-#if LIBXML_VERSION <= 20705
+#if LIBXML_VERSION <= 20703
   xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
   if (!xmldoc)
     return NULL;
@@ -180,7 +174,7 @@ saxs_document_format_cansas_xml(const char *filename, const char *format) {
       if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
         xmlFree(attr);
         xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20705
+#if LIBXML_VERSION <= 20703
         xmlFreeDoc(xmldoc);
 #endif
         return &cansas_xml_1_0;
@@ -191,7 +185,7 @@ saxs_document_format_cansas_xml(const char *filename, const char *format) {
     }
   }
 
-#if LIBXML_VERSION <= 20705
+#if LIBXML_VERSION <= 20703
   xmlFreeDoc(xmldoc);
 #endif
   xmlFreeTextReader(reader);
