@@ -1,5 +1,9 @@
 2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CmakeLists.txt: Fixed source file names.
+
+2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsimage_format.h: Moved here from ../libsaxsdocument.
 	* saxsimage_format.c: Likewise.
 	* saxsimage.h: Likewise.

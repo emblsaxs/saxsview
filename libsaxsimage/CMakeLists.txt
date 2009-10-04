@@ -4,7 +4,7 @@ find_package (TIFF)
 
 set (SOURCES saxsimage.c
              saxsimage_format.c
-             image_cbf.c)
+             cbf.c)
 
 set (HEADERS saxsimage.h
              saxsimage_format.h)
@@ -12,7 +12,7 @@ set (HEADERS saxsimage.h
 # conditional sources
 if (TIFF_FOUND)
   add_definitions (-DHAVE_TIFF)
-  set (SOURCES ${SOURCES} image_tiff.c)
+  set (SOURCES ${SOURCES} tiff.c)
 endif (TIFF_FOUND)
 
 add_library (saxsimage SHARED ${SOURCES} ${HEADERS})
