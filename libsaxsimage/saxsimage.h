@@ -28,9 +28,9 @@
 extern "C" {
 #endif
 
-#include "saxsproperty.h"
-
 #include <sys/types.h>
+
+struct saxs_property;
 
 struct saxs_image;
 typedef struct saxs_image saxs_image;
@@ -63,16 +63,16 @@ size_t
 saxs_image_value_max(saxs_image *image);
 
 
-saxs_property*
+struct saxs_property*
 saxs_image_add_property(saxs_image *image, const char *name, const char *value);
 
 int
 saxs_image_property_count(saxs_image *image);
 
-saxs_property*
+struct saxs_property*
 saxs_image_property_first(saxs_image *image);
 
-saxs_property*
+struct saxs_property*
 saxs_image_property_find_first(saxs_image *image, const char *name);
 
 

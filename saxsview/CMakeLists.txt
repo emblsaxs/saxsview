@@ -28,7 +28,8 @@ endif (WIN32)
 
 target_link_libraries (saxsviewapp
                        saxsview
-                       saxsdocument)
+                       saxsdocument
+                       saxsimage)
 
 install (TARGETS saxsviewapp
          RUNTIME DESTINATION bin

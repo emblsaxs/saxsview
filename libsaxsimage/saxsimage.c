@@ -23,7 +23,7 @@
 
 #include "saxsimage.h"
 #include "saxsimage_format.h"
-#include "saxsproperty.h"
+#include "../libsaxsdocument/saxsproperty.h"
 
 #include <stdio.h>
 #include <stdlib.h>

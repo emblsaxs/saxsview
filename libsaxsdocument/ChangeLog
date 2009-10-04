@@ -1,3 +1,15 @@
+2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* columns_reader.c: Renamed to ...
+	* columns.c: ... this.
+	* saxsimage_format.h: Moved to ../libsaximage.
+	* saxsimage_format.c: Likewise.
+	* saxsimage.h: Likewise.
+	* saxsimage.c: Likewise.
+	* image_cbf.c: Likewise.
+	* image_tiff.c: Likewise.
+	* CMakeLists.txt: Removed image-related sections.
+
 2009-10-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* cansas_xml.c: (cansas_xml_1_0_process_node): Adjusted version number in

@@ -34,6 +34,7 @@ INCLUDE (CPack)
 add_subdirectory (external/qwt)
 add_subdirectory (external/cbflib)
 add_subdirectory (libsaxsdocument)
+add_subdirectory (libsaxsimage)
 add_subdirectory (libsaxsview)
 add_subdirectory (saxsview)
 

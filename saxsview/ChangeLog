@@ -1,3 +1,7 @@
+2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Also link libsaxsimage.
+
 2009-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewplotwindow.cpp (load): Show curve title if available.
