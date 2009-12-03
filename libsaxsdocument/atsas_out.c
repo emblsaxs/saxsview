@@ -153,24 +153,34 @@ static int parse_scattering_data(struct saxs_document *doc,
                                  struct line *firstline,
                                  struct line *lastline) {
 
+  saxs_curve *curve_exp, *curve_reg;
+  curve_exp = saxs_document_add_curve(doc, "data", SAXS_CURVE_SCATTERING_DATA);
+  curve_reg = saxs_document_add_curve(doc, "fit", SAXS_CURVE_SCATTERING_DATA);
+
   /*
-   * Skip empty and header lines until non-extrapolated 
-   * data is found ...
+   * Skip empty and header lines until extrapolated data is
+   * found. The data block generally is 5 columns wide, but
+   * at the beginning, the extrapolated part is 2 columns only.
    */
-  while (saxs_reader_columns_count(firstline) != 5)
+  while (firstline != lastline) {
+    double s, jexp, err, jreg, ireg;
+
     firstline = firstline->next;
 
-  /* experimental data (S vs. J EXP) */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
-                                0, 1.0, 1, 1.0, 2, "data",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
-    return -1;
+    if (sscanf(firstline->line_buffer, "%lf %lf %lf %lf %lf",
+               &s, &jexp, &err, &jreg, &ireg) == 5) {
+      saxs_curve_add_data(curve_exp, s, 0.0, jexp, err);
+      saxs_curve_add_data(curve_reg, s, 0.0, ireg, 0.0);
 
-  /* fit (S vs I REG) */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
-                                0, 1.0, 4, 1.0, -1, "fit",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
-    return -1;
+    } else if (sscanf(firstline->line_buffer, "%lf %lf",
+                      &s, &ireg) == 2) {
+      saxs_curve_add_data(curve_reg, s, 0.0, ireg, 0.0);
+
+    }  else
+      return -1;
+
+    firstline = firstline->next;
+  }
 
   return 0;
 }
