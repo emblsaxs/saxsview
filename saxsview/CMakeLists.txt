@@ -1,6 +1,7 @@
 include_directories (${QWT_SOURCE_DIR}
                      ${LIBSAXSDOCUMENT_SOURCE_DIR}
                      ${LIBSAXSVIEW_SOURCE_DIR}
+                     ${LIBSAXSIMAGE_SOURCE_DIR}
                      ${CMAKE_CURRENT_SOURCE_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR})
 

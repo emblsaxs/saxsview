@@ -88,14 +88,6 @@ bool SaxsviewPlotWindow::moveEnabled() const {
   return p->plot->moveEnabled();
 }
 
-void SaxsviewPlotWindow::load() {
-  // TODO: add file filter
-  QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...");
-
-  foreach (QString fileName, fileNames)
-    load(fileName);
-}
-
 void SaxsviewPlotWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())

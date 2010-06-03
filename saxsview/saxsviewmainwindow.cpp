@@ -375,13 +375,15 @@ void SaxsviewMainWindow::createImageWindow() {
 }
 
 void SaxsviewMainWindow::load() {
-  if (currentSubWindow())
-    currentSubWindow()->load();
+  QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...");
+
+  foreach (QString fileName, fileNames)
+    load(fileName);
 }
 
 void SaxsviewMainWindow::load(const QString& fileName) {
   //
-  // 1. If there is no subwindow at all, create an 
+  // 1. If there is no subwindow at all, create an
   //    appropriate one and load the file. If the
   //    file type is unknown, reject it and inform user.
   //

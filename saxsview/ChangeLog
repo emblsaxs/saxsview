@@ -1,3 +1,14 @@
+2010-06-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview/saxsviewmainwindow.cpp (load): Fixed loading of
+	files if no subwindow is available.
+	* saxsview/saxsviewsubwindow.h (load): Removed.
+	* saxsview/saxsviewimagewindow.h (load): Removed.
+	* saxsview/saxsviewimagewindow.cpp (load): Removed.
+	* saxsview/saxsviewplotwindow.h (load): Removed.
+	* saxsview/saxsviewplotwindow.cpp (load): Removed.
+	* CMakeLists.txt: Also include saxsimage headers.
+
 2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Also link libsaxsimage.

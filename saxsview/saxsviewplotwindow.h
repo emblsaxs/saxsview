@@ -38,7 +38,6 @@ public:
   bool moveEnabled() const;
 
 public slots:
-  void load();
   void load(const QString& fileName);
   void exportAs(const QString& fileName);
   void print();

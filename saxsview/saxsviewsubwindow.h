@@ -35,7 +35,6 @@ public:
   virtual bool moveEnabled() const = 0;
 
 public slots:
-  virtual void load() = 0;
   virtual void load(const QString& fileName) = 0;
   virtual void exportAs(const QString& fileName) = 0;
   virtual void print() = 0;
