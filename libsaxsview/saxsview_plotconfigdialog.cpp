@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -47,6 +47,20 @@
 
 namespace Saxsview {
 
+static QFrame* vLine(QWidget *parent) {
+  QFrame *frame = new QFrame(parent);
+  frame->setFrameShape(QFrame::VLine);
+  frame->setFrameShadow(QFrame::Sunken);
+  return frame;
+}
+
+static QFrame* hLine(QWidget *parent) {
+  QFrame *frame = new QFrame(parent);
+  frame->setFrameShape(QFrame::HLine);
+  frame->setFrameShadow(QFrame::Sunken);
+  return frame;
+}
+
 //-------------------------------------------------------------------------
 class ConfigPage : public QWidget {
 public:
@@ -65,49 +79,130 @@ public:
   void reset(Plot *plot);
 
 private:
+  QGroupBox *groupTitle;
   QLineEdit *editTitle;
+  QFontComboBox *fontFamilyTitle;
+  QSpinBox *fontSizeTitle;
+  QCheckBox *fontStyleBoldTitle;
+  QCheckBox *fontStyleItalicTitle;
+
+  QGroupBox *groupAxis;
+  QLineEdit *editXAxis;
+  QLineEdit *editYAxis;
+  QFontComboBox *fontFamilyAxis;
+  QSpinBox *fontSizeAxis;
+  QCheckBox *fontStyleBoldAxis;
+  QCheckBox *fontStyleItalicAxis;
 };
 
 PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
- : ConfigPage(parent) {
-  QVBoxLayout *layout;
+ : ConfigPage(parent),
+   groupTitle(new QGroupBox("Title", this)),
+   editTitle(new QLineEdit(this)),
+   fontFamilyTitle(new QFontComboBox(this)),
+   fontSizeTitle(new QSpinBox(this)),
+   fontStyleBoldTitle(new QCheckBox("Bold", this)),
+   fontStyleItalicTitle(new QCheckBox("Italic", this)),
+   groupAxis(new QGroupBox("Axis", this)),
+   editXAxis(new QLineEdit(this)),
+   editYAxis(new QLineEdit(this)),
+   fontFamilyAxis(new QFontComboBox(this)),
+   fontSizeAxis(new QSpinBox(this)),
+   fontStyleBoldAxis(new QCheckBox("Bold", this)),
+   fontStyleItalicAxis(new QCheckBox("Italic", this)) {
 
-  QGroupBox *group = new QGroupBox("Plot Title", this);
-  editTitle = new QLineEdit(group);
+  QGridLayout *groupLayout = new QGridLayout;
+  groupLayout->setColumnMinimumWidth(0, 60);
+  groupLayout->addWidget(new QLabel("Title"), 0, 0);
+  groupLayout->addWidget(editTitle, 0, 1, 1, 4);
+  groupLayout->addWidget(hLine(this), 1, 0, 1, 4);
+  groupLayout->addWidget(new QLabel("Title Font"), 2, 0);
+  groupLayout->addWidget(fontFamilyTitle, 2, 1);
+  groupLayout->addWidget(fontSizeTitle, 2, 2);
+  groupLayout->addWidget(fontStyleBoldTitle, 2, 3);
+  groupLayout->addWidget(fontStyleItalicTitle, 2, 4);
+  groupTitle->setLayout(groupLayout);
 
-  layout = new QVBoxLayout;
-  layout->addWidget(editTitle);
+  groupLayout = new QGridLayout;
+  groupLayout->setColumnMinimumWidth(0, 60);
+  groupLayout->addWidget(new QLabel("X Label"), 0, 0);
+  groupLayout->addWidget(editXAxis, 0, 1, 1, 4);
+  groupLayout->addWidget(new QLabel("Y Label"), 1, 0);
+  groupLayout->addWidget(editYAxis, 1, 1, 1, 4);
+  groupLayout->addWidget(hLine(this), 2, 0, 1, 4);
+  groupLayout->addWidget(new QLabel("Axis Font"), 3, 0);
+  groupLayout->addWidget(fontFamilyAxis, 3, 1);
+  groupLayout->addWidget(fontSizeAxis, 3, 2);
+  groupLayout->addWidget(fontStyleBoldAxis, 3, 3);
+  groupLayout->addWidget(fontStyleItalicAxis, 3, 4);
+  groupAxis->setLayout(groupLayout);
+
+  QVBoxLayout *layout = new QVBoxLayout;
+  layout->addWidget(groupTitle);
+  layout->addWidget(groupAxis);
   layout->addStretch();
-  group->setLayout(layout);
-
-  layout = new QVBoxLayout;
-  layout->addWidget(group);
   setLayout(layout);
 }
 
 void PlotConfigPage::apply(Plot *plot) {
-  plot->setTitle(editTitle->text());
+  // title
+  QFont titleFont = fontFamilyTitle->currentFont();
+  titleFont.setPointSize(fontSizeTitle->value());
+  titleFont.setBold(fontStyleBoldTitle->isChecked());
+  titleFont.setItalic(fontStyleItalicTitle->isChecked());
+
+  QwtText title;
+  title.setText(editTitle->text());
+  title.setFont(titleFont);
+
+  plot->setTitle(title);
+
+  // axis
+  QFont axisLabelFont = fontFamilyAxis->currentFont();
+  axisLabelFont.setPointSize(fontSizeAxis->value());
+  axisLabelFont.setBold(fontStyleBoldAxis->isChecked());
+  axisLabelFont.setItalic(fontStyleItalicAxis->isChecked());
+
+  QwtText xLabel;
+  xLabel.setText(editXAxis->text());
+  xLabel.setFont(axisLabelFont);
+  plot->setAxisTitle(QwtPlot::xBottom, xLabel);
+
+  QwtText yLabel;
+  yLabel.setText(editYAxis->text());
+  yLabel.setFont(axisLabelFont);
+  plot->setAxisTitle(QwtPlot::yLeft, yLabel);
+
+  // FIXME: tick marks shall be configurable on their own
+//   plot->setAxisFont(QwtPlot::yLeft, axisLabelFont);
+//   plot->setAxisFont(QwtPlot::xBottom, axisLabelFont);
 }
 
 void PlotConfigPage::reset(Plot *plot) {
-  editTitle->setText(plot->title().text());
+  // title
+  QwtText title = plot->title();
+  QFont titleFont = title.font();
+
+  editTitle->setText(title.text());
+  fontFamilyTitle->setCurrentFont(titleFont);
+  fontSizeTitle->setValue(titleFont.pointSize());
+  fontStyleBoldTitle->setChecked(titleFont.bold());
+  fontStyleItalicTitle->setChecked(titleFont.italic());
+
+  // axis
+  QwtText xLabel = plot->axisTitle(QwtPlot::xBottom);
+  QwtText yLabel = plot->axisTitle(QwtPlot::yLeft);
+  QFont axisLabelFont = xLabel.font();
+
+  editXAxis->setText(xLabel.text());
+  editYAxis->setText(yLabel.text());
+  fontFamilyAxis->setCurrentFont(axisLabelFont);
+  fontSizeAxis->setValue(axisLabelFont.pointSize());
+  fontStyleBoldAxis->setChecked(axisLabelFont.bold());
+  fontStyleItalicAxis->setChecked(axisLabelFont.italic());
 }
 
 //-------------------------------------------------------------------------
-static QFrame* vLine(QWidget *parent) {
-  QFrame *frame = new QFrame(parent);
-  frame->setFrameShape(QFrame::VLine);
-  frame->setFrameShadow(QFrame::Sunken);
-  return frame;
-}
-
-static QFrame* hLine(QWidget *parent) {
-  QFrame *frame = new QFrame(parent);
-  frame->setFrameShape(QFrame::HLine);
-  frame->setFrameShadow(QFrame::Sunken);
-  return frame;
-}
-
 static QIcon penStyleIcon(Qt::PenStyle style) {
   QPixmap pixmap(16, 16);
 
@@ -321,7 +416,6 @@ void CurveConfigWidget::reset(PlotCurve *curve) {
   comboErrorbarStyle->setCurrentIndex(errorBarPen.style());
   spinErrorbarWidth->setValue(errorBarPen.width());
   buttonErrorbarColor->setColor(errorBarPen.color());
-  
 
   spinScaleX->setValue(curve->scalingFactorX());
   spinScaleY->setValue(curve->scalingFactorY());
@@ -341,6 +435,8 @@ CurveConfigPage::CurveConfigPage(Plot *plot, QWidget *parent)
  : ConfigPage(parent) {
 
   QScrollArea *scrollArea = new QScrollArea(this);
+  scrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+  scrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
   scrollArea->setWidgetResizable(true);
 
   QWidget *w = new QWidget;
@@ -372,6 +468,49 @@ void CurveConfigPage::reset(Plot *) {
     it.value()->reset(it.key());
 }
 
+
+//-------------------------------------------------------------------------
+class LegendConfigPage : public ConfigPage {
+public:
+  LegendConfigPage(Plot *plot, QWidget *parent = 0L);
+  void apply(Plot *plot);
+  void reset(Plot *plot);
+
+private:
+  QGroupBox *groupLegend;
+  QFontComboBox *fontFamilyLegend;
+  QSpinBox *fontSizeLegend;
+  QCheckBox *fontStyleBoldLegend;
+  QCheckBox *fontStyleItalicLegend;
+};
+
+LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
+ : ConfigPage(parent),
+   groupLegend(new QGroupBox("Legend", this)),
+   fontFamilyLegend(new QFontComboBox(this)),
+   fontSizeLegend(new QSpinBox(this)),
+   fontStyleBoldLegend(new QCheckBox("Bold", this)),
+   fontStyleItalicLegend(new QCheckBox("Italic", this)) {
+
+  QGridLayout *groupLayout = new QGridLayout;
+  groupLayout->addWidget(fontFamilyLegend, 0, 0);
+  groupLayout->addWidget(fontSizeLegend, 0, 1);
+  groupLayout->addWidget(fontStyleBoldLegend, 0, 2);
+  groupLayout->addWidget(fontStyleItalicLegend, 0, 3);
+  groupLegend->setLayout(groupLayout);
+  groupLegend->setCheckable(true);
+
+  QVBoxLayout *layout = new QVBoxLayout;
+  layout->addWidget(groupLegend);
+  layout->addStretch();
+  setLayout(layout);
+}
+
+void LegendConfigPage::apply(Plot *plot) {
+}
+
+void LegendConfigPage::reset(Plot *plot) {
+}
 
 
 //-------------------------------------------------------------------------
@@ -408,6 +547,7 @@ void PlotConfigDialog::PlotConfigDialogPrivate::setupUi(PlotConfigDialog *dlg) {
 
   configPages.append(new PlotConfigPage(plot, dlg));
   configPages.append(new CurveConfigPage(plot, dlg));
+  configPages.append(new LegendConfigPage(plot, dlg));
 
   stackedPages = new QStackedWidget(dlg);
   foreach(ConfigPage *page, configPages)
@@ -449,6 +589,12 @@ void PlotConfigDialog::PlotConfigDialogPrivate::setupIcons(PlotConfigDialog *dlg
   icon = new QListWidgetItem(listView);
 //   icon->setIcon(QIcon(":/images/config.png"));
   icon->setText(tr("Curves Setup"));
+  icon->setTextAlignment(Qt::AlignHCenter);
+  icon->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
+
+  icon = new QListWidgetItem(listView);
+//   icon->setIcon(QIcon(":/images/config.png"));
+  icon->setText(tr("Legend Setup"));
   icon->setTextAlignment(Qt::AlignHCenter);
   icon->setFlags(Qt::ItemIsSelectable | Qt::ItemIsEnabled);
 

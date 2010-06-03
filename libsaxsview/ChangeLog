@@ -1,3 +1,16 @@
+2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plotconfigdialog.cpp (vLine, hLine): Moved to the top
+	of the file.
+	(PlotConfigPage::ctor): Add configuration widgets for plot title and
+	axis labels.
+	(PlotConfigPage::apply): Apply new config options.
+	(PlotConfigPage::reset): Reset new config options.
+	(CurveConfigPage::ctor): Always show vertical scrollbar, always
+	hide horizontal scrollbar.
+	(LegendConfigPage): New.
+	(PlotConfigDialog::setupUi): Include LegendConfigPage.
+
 2009-08-24  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_image.h: New.
