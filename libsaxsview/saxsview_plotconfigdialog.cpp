@@ -313,7 +313,7 @@ protected:
   void resizeEvent(QResizeEvent *e);
 
 private:
-  void setElidedTitle(const QString& title, const QSize& size);
+  void setElidedTitle(const QSize& size);
 };
 
 CurveConfigWidget::CurveConfigWidget(QWidget *parent)
