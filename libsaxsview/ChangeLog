@@ -1,5 +1,15 @@
 2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotconfigdialog.cpp (PlotConfigPage::ctor): Fixed span
+	of horizontal lines.
+	(CurveConfigWidget): Derive from QGroupBox, not QWidget. Removed
+	member 'group'; fixed all usages.
+	(CurveConfigWidget::resizeEvent): New.
+	(CurveConfigWidget::setElidedText): New.
+	(CurveConfigWidget::reset): Set elided title instead of full file name.
+
+2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotconfigdialog.cpp (vLine, hLine): Moved to the top
 	of the file.
 	(PlotConfigPage::ctor): Add configuration widgets for plot title and

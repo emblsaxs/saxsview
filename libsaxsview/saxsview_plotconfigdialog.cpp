@@ -36,6 +36,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QPushButton>
+#include <QResizeEvent>
 #include <QScrollArea>
 #include <QSpinBox>
 #include <QStackedWidget>
@@ -115,7 +116,7 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupLayout->setColumnMinimumWidth(0, 60);
   groupLayout->addWidget(new QLabel("Title"), 0, 0);
   groupLayout->addWidget(editTitle, 0, 1, 1, 4);
-  groupLayout->addWidget(hLine(this), 1, 0, 1, 4);
+  groupLayout->addWidget(hLine(this), 1, 0, 1, 5);
   groupLayout->addWidget(new QLabel("Title Font"), 2, 0);
   groupLayout->addWidget(fontFamilyTitle, 2, 1);
   groupLayout->addWidget(fontSizeTitle, 2, 2);
@@ -129,7 +130,7 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupLayout->addWidget(editXAxis, 0, 1, 1, 4);
   groupLayout->addWidget(new QLabel("Y Label"), 1, 0);
   groupLayout->addWidget(editYAxis, 1, 1, 1, 4);
-  groupLayout->addWidget(hLine(this), 2, 0, 1, 4);
+  groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
   groupLayout->addWidget(new QLabel("Axis Font"), 3, 0);
   groupLayout->addWidget(fontFamilyAxis, 3, 1);
   groupLayout->addWidget(fontSizeAxis, 3, 2);
@@ -286,14 +287,15 @@ static QComboBox* comboBoxSymbolStyle(QWidget *parent) {
 
 
 
-class CurveConfigWidget : public QWidget {
+class CurveConfigWidget : public QGroupBox {
 public:
   CurveConfigWidget(QWidget *parent = 0L);
 
   void apply(PlotCurve *curve);
   void reset(PlotCurve *curve);
 
-  QGroupBox *group;
+  QString fileName;
+
   QLineEdit *editLegendLabel;
   QComboBox *comboLineStyle;
   QSpinBox *spinLineWidth;
@@ -306,11 +308,16 @@ public:
   ColorButton *buttonErrorbarColor;
   QDoubleSpinBox *spinScaleX;
   QDoubleSpinBox *spinScaleY;
+
+protected:
+  void resizeEvent(QResizeEvent *e);
+
+private:
+  void setElidedTitle(const QString& title, const QSize& size);
 };
 
 CurveConfigWidget::CurveConfigWidget(QWidget *parent)
- : QWidget(parent),
-   group(new QGroupBox(this)),
+ : QGroupBox(parent),
    editLegendLabel(new QLineEdit(this)),
    comboLineStyle(comboBoxLineStyle(this)),
    spinLineWidth(new QSpinBox(this)),
@@ -353,18 +360,27 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
   groupLayout->addWidget(comboErrorbarStyle, 3, 1);
   groupLayout->addWidget(spinErrorbarWidth, 3, 2);
   groupLayout->addWidget(buttonErrorbarColor, 3, 3);
-  groupLayout->addWidget(hLine(group), 4, 0, 1, 4);
+  groupLayout->addWidget(hLine(this), 4, 0, 1, 4);
   groupLayout->addWidget(new QLabel("Scale X"), 5, 0);
   groupLayout->addWidget(spinScaleX, 5, 1);
   groupLayout->addWidget(new QLabel("Scale Y"), 5, 2);
   groupLayout->addWidget(spinScaleY, 5, 3);
 
-  group->setCheckable(true);
-  group->setLayout(groupLayout);
+  setCheckable(true);
+  setLayout(groupLayout);
+}
+
+void CurveConfigWidget::setElidedTitle(const QSize& size) {
+  setTitle(fontMetrics().elidedText(fileName, Qt::ElideMiddle,
+                                    size.width() * 0.75));
+}
+
+void CurveConfigWidget::resizeEvent(QResizeEvent *e) {
+  setElidedTitle(e->size());
 }
 
 void CurveConfigWidget::apply(PlotCurve *curve) {
-  curve->setVisible(group->isChecked());
+  curve->setVisible(isChecked());
   curve->setTitle(editLegendLabel->text());
 
   // line style
@@ -395,8 +411,10 @@ void CurveConfigWidget::apply(PlotCurve *curve) {
 }
 
 void CurveConfigWidget::reset(PlotCurve *curve) {
-  group->setTitle(curve->fileName());
-  group->setChecked(curve->isVisible());
+  fileName = curve->fileName();
+  setElidedTitle(size());
+
+  setChecked(curve->isVisible());
   editLegendLabel->setText(curve->title());
 
   // line style
@@ -444,7 +462,7 @@ CurveConfigPage::CurveConfigPage(Plot *plot, QWidget *parent)
 
   foreach (PlotCurve *curve, plot->curves()) {
     curveConfig[curve] = new CurveConfigWidget(w);
-    layout->addWidget(curveConfig[curve]->group);
+    layout->addWidget(curveConfig[curve]);
   }
   layout->addStretch();
 
