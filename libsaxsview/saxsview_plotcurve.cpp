@@ -238,6 +238,12 @@ QString PlotCurve::title() const {
 }
 
 void PlotCurve::setTitle(const QString& title) {
+  //
+  // Remove the legend entry if the title is empty.
+  //
+  if (Plot *plot = qobject_cast<Plot*>(p->curve->plot()))
+    qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve))->setVisible(!title.isEmpty());
+
   p->curve->setTitle(title);
 }
 
