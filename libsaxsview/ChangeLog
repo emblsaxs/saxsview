@@ -1,5 +1,14 @@
 2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotcurve.h (every, setEvery): New.
+	* saxsview_plotcurve.cpp (every, setEvery): New.
+	(scale): only scale 'every' other point. Omit the rest.
+	* saxsview_plotconfigdialog.cpp (CurveConfigWidget::ctor): Add
+	controls for 'every' other point.
+	(apply, reset): Apply and reset setting of 'every' parameter.
+
+2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotcurve.cpp (setTitle): Remove the legend entry if
 	the title is empty.
 

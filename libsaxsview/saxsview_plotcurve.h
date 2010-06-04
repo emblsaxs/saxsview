@@ -121,6 +121,7 @@ public:
 
   double scalingFactorX() const;
   double scalingFactorY() const;
+  int every() const;
 
   QPen pen() const;
   void setPen(const QPen&); 
@@ -139,6 +140,7 @@ public slots:
 
   void setScalingFactorX(double);
   void setScalingFactorY(double);
+  void setEvery(int);
 
 private:
   class PlotCurvePrivate;

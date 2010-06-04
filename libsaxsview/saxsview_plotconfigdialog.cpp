@@ -306,6 +306,7 @@ public:
   QComboBox *comboErrorbarStyle;
   QSpinBox *spinErrorbarWidth;
   ColorButton *buttonErrorbarColor;
+  QSpinBox *spinEvery;
   QDoubleSpinBox *spinScaleX;
   QDoubleSpinBox *spinScaleY;
 
@@ -328,6 +329,7 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
    comboErrorbarStyle(comboBoxLineStyle(this)),
    spinErrorbarWidth(new QSpinBox(this)),
    buttonErrorbarColor(new ColorButton(this)),
+   spinEvery(new QSpinBox(this)),
    spinScaleX(new QDoubleSpinBox(this)),
    spinScaleY(new QDoubleSpinBox(this)) {
 
@@ -342,6 +344,9 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
   spinScaleX->setRange(0.1, 10.0);
   spinScaleY->setDecimals(4);
   spinScaleY->setRange(0.0001, 100000.0);
+
+  spinEvery->setSuffix("th");
+  spinEvery->setRange(1, 100);
 
   buttonLineColor->setMinimumWidth(60);
 
@@ -365,6 +370,10 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
   groupLayout->addWidget(spinScaleX, 5, 1);
   groupLayout->addWidget(new QLabel("Scale Y"), 5, 2);
   groupLayout->addWidget(spinScaleY, 5, 3);
+  groupLayout->addWidget(hLine(this), 6, 0, 1, 4);
+  groupLayout->addWidget(new QLabel("Show every"), 7, 0);
+  groupLayout->addWidget(spinEvery, 7, 1);
+  groupLayout->addWidget(new QLabel("point"), 7, 2);
 
   setCheckable(true);
   setLayout(groupLayout);
@@ -408,6 +417,8 @@ void CurveConfigWidget::apply(PlotCurve *curve) {
 
   curve->setScalingFactorX(spinScaleX->value());
   curve->setScalingFactorY(spinScaleY->value());
+
+  curve->setEvery(spinEvery->value());
 }
 
 void CurveConfigWidget::reset(PlotCurve *curve) {
@@ -437,6 +448,8 @@ void CurveConfigWidget::reset(PlotCurve *curve) {
 
   spinScaleX->setValue(curve->scalingFactorX());
   spinScaleY->setValue(curve->scalingFactorY());
+
+  spinEvery->setValue(curve->every());
 }
 
 //-------------------------------------------------------------------------

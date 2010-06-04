@@ -94,6 +94,7 @@ public:
   PlotPointData *pointData;
   PlotIntervalData *intervalData;
   double scaleX, scaleY;
+  int every;
 
   bool errorBarsEnabled;
   QString fileName;
@@ -101,7 +102,7 @@ public:
 
 PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
  : curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
-   scaleX(1.0), scaleY(1.0), errorBarsEnabled(true) {
+   scaleX(1.0), scaleY(1.0), every(1), errorBarsEnabled(true) {
 
   // TODO: Read default values
 
@@ -136,16 +137,16 @@ PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
 
 void PlotCurve::PlotCurvePrivate::scale() {
   PlotPointData scaledPoints;
-  foreach (QwtDoublePoint point, *pointData)
-    scaledPoints.push_back(QwtDoublePoint(point.x() * scaleX,
-                                          point.y() * scaleY));
+  for (int i = 0 ; i < pointData->size(); i += every)
+    scaledPoints.push_back(QwtDoublePoint(pointData->at(i).x() * scaleX,
+                                          pointData->at(i).y() * scaleY));
   curve->setData(scaledPoints);
 
   PlotIntervalData scaledIntervals;
-  foreach (QwtIntervalSample is, *intervalData)
-    scaledIntervals.push_back(QwtIntervalSample(is.value * scaleX,
-                                                QwtDoubleInterval(is.interval.minValue() * scaleY,
-                                                                  is.interval.maxValue() * scaleY)));
+  for (int i = 0 ; i < intervalData->size(); i += every)
+    scaledIntervals.push_back(QwtIntervalSample(intervalData->at(i).value * scaleX,
+                                                QwtDoubleInterval(intervalData->at(i).interval.minValue() * scaleY,
+                                                                  intervalData->at(i).interval.maxValue() * scaleY)));
   errorCurve->setData(scaledIntervals);
 }
 
@@ -263,6 +264,15 @@ double PlotCurve::scalingFactorY() const {
 
 void PlotCurve::setScalingFactorY(double scale) {
   p->scaleY = scale;
+  p->scale();
+}
+
+int PlotCurve::every() const {
+  return p->every;
+}
+
+void PlotCurve::setEvery(int every) {
+  p->every = every;
   p->scale();
 }
 
