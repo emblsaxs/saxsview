@@ -7,20 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_PLOT_ZOOMER_H
 #define QWT_PLOT_ZOOMER_H
 
-#include <qglobal.h>
-#if QT_VERSION < 0x040000
-#include <qvaluestack.h>
-#else
-#include <qstack.h>
-#endif
-
-#include "qwt_double_rect.h"
+#include "qwt_global.h"
 #include "qwt_plot_picker.h"
+#include <qstack.h>
 
 /*!
   \brief QwtPlotZoomer provides stacked zooming for a plot widget
@@ -57,35 +49,30 @@ public:
     virtual ~QwtPlotZoomer();
 
     virtual void setZoomBase(bool doReplot = true);
-    virtual void setZoomBase(const QwtDoubleRect &);
+    virtual void setZoomBase(const QRectF &);
 
-    QwtDoubleRect zoomBase() const;
-    QwtDoubleRect zoomRect() const;
+    QRectF zoomBase() const;
+    QRectF zoomRect() const;
 
     virtual void setAxis(int xAxis, int yAxis);
 
     void setMaxStackDepth(int);
     int maxStackDepth() const;
 
-#if QT_VERSION < 0x040000
-    const QValueStack<QwtDoubleRect> &zoomStack() const;
-    void setZoomStack(const QValueStack<QwtDoubleRect> &,
+    const QStack<QRectF> &zoomStack() const;
+    void setZoomStack(const QStack<QRectF> &,
         int zoomRectIndex = -1);
-#else
-    const QStack<QwtDoubleRect> &zoomStack() const;
-    void setZoomStack(const QStack<QwtDoubleRect> &,
-        int zoomRectIndex = -1);
-#endif
+
     uint zoomRectIndex() const;
 
-public slots:
+public Q_SLOTS:
     void moveBy(double x, double y);
     virtual void move(double x, double y);
 
-    virtual void zoom(const QwtDoubleRect &);
+    virtual void zoom(const QRectF &);
     virtual void zoom(int up);
 
-signals:
+Q_SIGNALS:
     /*!
       A signal emitting the zoomRect(), when the plot has been 
       zoomed in or out.
@@ -93,19 +80,19 @@ signals:
       \param rect Current zoom rectangle.
     */
 
-    void zoomed(const QwtDoubleRect &rect);
+    void zoomed(const QRectF &rect);
 
 protected:
     virtual void rescale();
 
-    virtual QwtDoubleSize minZoomSize() const;
+    virtual QSizeF minZoomSize() const;
 
     virtual void widgetMouseReleaseEvent(QMouseEvent *);
     virtual void widgetKeyPressEvent(QKeyEvent *);
 
     virtual void begin();
     virtual bool end(bool ok = true);
-    virtual bool accept(QwtPolygon &) const;
+    virtual bool accept(QPolygon &) const;
 
 private:
     void init(bool doReplot);

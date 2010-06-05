@@ -37,12 +37,12 @@
 #include <QString>
 #include <QUrl>
 
-#include <qwt_color_map.h>
-#include <qwt_plot_layout.h>
-#include <qwt_plot_spectrogram.h>
-#include <qwt_raster_data.h>
-#include <qwt_scale_engine.h>
-#include <qwt_scale_widget.h>
+#include "qwt_color_map.h"
+#include "qwt_plot_layout.h"
+#include "qwt_plot_spectrogram.h"
+#include "qwt_raster_data.h"
+#include "qwt_scale_engine.h"
+#include "qwt_scale_widget.h"
 
 //
 // In Qt-4.5.x, maybe earlier ones as well, it's not possible to store
@@ -62,17 +62,16 @@ public:
   };
 
   ImageData(saxs_image *image)
-   : QwtRasterData(QwtDoubleRect(0.0, 0.0,
-                                 saxs_image_width(image) - 1,
-                                 saxs_image_height(image) - 1)),
+   : QwtRasterData(QRectF(0.0, 0.0,
+                          saxs_image_width(image) - 1,
+                          saxs_image_height(image) - 1)),
      p(QSharedPointer<ImagePointerHolder>(new ImagePointerHolder(image))),
      mMin(qMax((int)saxs_image_value_min(image), 1)),
      mMax(saxs_image_value_max(image)) {
   }
 
   ImageData(const ImageData& other)
-   : QwtRasterData(other), p(other.p),
-     mMin(other.mMin), mMax(other.mMax)  {
+   : p(other.p), mMin(other.mMin), mMax(other.mMax) {
   }
 
   ~ImageData() {
@@ -185,8 +184,8 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setScale(Saxsview::Plot::P
       break;
   }
 
-  if (image->data().boundingRect().isValid())
-    plot->axisWidget(QwtPlot::yRight)->setColorMap(image->data().range(),
+  if (image->data()->boundingRect().isValid())
+    plot->axisWidget(QwtPlot::yRight)->setColorMap(image->data()->range(),
                                                    image->colorMap());
   plot->replot();
 }
@@ -238,10 +237,10 @@ void SaxsviewImageWindow::load(const QString& fileName) {
   setWindowTitle(fileName);
 
   p->image->detach();
-  p->image->setData(ImageData(image));
+  p->image->setData(new ImageData(image));
   p->image->attach(p->plot);
 
-  const QwtDoubleInterval range = p->image->data().range();
+  const QwtDoubleInterval range = p->image->data()->range();
   p->plot->axisWidget(QwtPlot::yRight)->setColorMap(range,
                                                     p->image->colorMap());
 

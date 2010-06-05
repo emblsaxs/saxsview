@@ -7,15 +7,22 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
+#include "qwt_knob.h"
+#include "qwt_round_scale_draw.h"
+#include "qwt_math.h"
+#include "qwt_painter.h"
 #include <qpainter.h>
 #include <qpalette.h>
 #include <qstyle.h>
 #include <qevent.h>
-#include "qwt_round_scale_draw.h"
-#include "qwt_knob.h"
-#include "qwt_math.h"
-#include "qwt_painter.h"
-#include "qwt_paint_buffer.h"
+#include <qmath.h>
+
+#if QT_VERSION < 0x040601
+#define qAtan2(y, x) ::atan2(y, x)
+#define qFabs(x) ::fabs(x)
+#define qFastCos(x) ::cos(x)
+#define qFastSin(x) ::sin(x)
+#endif
 
 class QwtKnob::PrivateData
 {
@@ -59,26 +66,8 @@ QwtKnob::QwtKnob(QWidget* parent):
     initKnob();
 }
 
-#if QT_VERSION < 0x040000
-/*!
-  Constructor
-  \param parent Parent widget
-  \param name Object name
-*/
-QwtKnob::QwtKnob(QWidget* parent, const char *name): 
-    QwtAbstractSlider(Qt::Horizontal, parent)
-{
-    setName(name);
-    initKnob();
-}
-#endif
-
 void QwtKnob::initKnob()
 {
-#if QT_VERSION < 0x040000
-    setWFlags(Qt::WNoAutoErase);
-#endif
-
     d_data = new PrivateData;
 
     setScaleDraw(new QwtRoundScaleDraw());
@@ -186,21 +175,14 @@ QwtRoundScaleDraw *QwtKnob::scaleDraw()
 */
 void QwtKnob::drawKnob(QPainter *painter, const QRect &r)
 {
-#if QT_VERSION < 0x040000
-    const QBrush buttonBrush = colorGroup().brush(QColorGroup::Button);
-    const QColor buttonTextColor = colorGroup().buttonText();
-    const QColor lightColor = colorGroup().light();
-    const QColor darkColor = colorGroup().dark();
-#else
     const QBrush buttonBrush = palette().brush(QPalette::Button);
     const QColor buttonTextColor = palette().color(QPalette::ButtonText);
     const QColor lightColor = palette().color(QPalette::Light);
     const QColor darkColor = palette().color(QPalette::Dark);
-#endif
 
     const int bw2 = d_data->borderWidth / 2;
 
-    const int radius = (qwtMin(r.width(), r.height()) - bw2) / 2;
+    const int radius = (qMin(r.width(), r.height()) - bw2) / 2;
 
     const QRect aRect( 
         r.center().x() - radius, r.center().y() - radius,
@@ -257,16 +239,16 @@ double QwtKnob::getValue(const QPoint &p)
     const double dx = double((rect().x() + rect().width() / 2) - p.x() );
     const double dy = double((rect().y() + rect().height() / 2) - p.y() );
 
-    const double arc = atan2(-dx,dy) * 180.0 / M_PI;
+    const double arc = qAtan2(-dx,dy) * 180.0 / M_PI;
 
     double newValue =  0.5 * (minValue() + maxValue())
        + (arc + d_data->nTurns * 360.0) * (maxValue() - minValue())
       / d_data->totalAngle;
 
-    const double oneTurn = fabs(maxValue() - minValue()) * 360.0 / d_data->totalAngle;
+    const double oneTurn = qFabs(maxValue() - minValue()) * 360.0 / d_data->totalAngle;
     const double eqValue = value() + mouseOffset();
 
-    if (fabs(newValue - eqValue) > 0.5 * oneTurn)
+    if (qFabs(newValue - eqValue) > 0.5 * oneTurn)
     {
         if (newValue < eqValue)
            newValue += oneTurn;
@@ -298,7 +280,7 @@ void QwtKnob::getScrollMode(const QPoint &p, int &scrollMode, int &direction)
     else                                // point lies outside
     {
         scrollMode = ScrTimer;
-        double arc = atan2(double(-dx),double(dy)) * 180.0 / M_PI;
+        double arc = qAtan2(double(-dx),double(dy)) * 180.0 / M_PI;
         if ( arc < d_data->angle)
            direction = -1;
         else if (arc > d_data->angle)
@@ -367,14 +349,9 @@ void QwtKnob::paintEvent(QPaintEvent *e)
     const QRect &ur = e->rect();
     if ( ur.isValid() ) 
     {
-#if QT_VERSION < 0x040000
-        QwtPaintBuffer paintBuffer(this, ur);
-        draw(paintBuffer.painter(), ur);
-#else
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing);
         draw(&painter, ur);
-#endif
     }
 }
 
@@ -387,18 +364,12 @@ void QwtKnob::paintEvent(QPaintEvent *e)
 void QwtKnob::draw(QPainter *painter, const QRect& rect)
 {
     if ( !d_data->knobRect.contains( rect ) ) // event from valueChange()
-    {
-#if QT_VERSION < 0x040000
-        scaleDraw()->draw( painter, colorGroup() );
-#else
         scaleDraw()->draw( painter, palette() );
-#endif
-    }
 
     drawKnob( painter, d_data->knobRect );
 
     if ( hasFocus() )
-        QwtPainter::drawFocusRect(painter, this);
+        QwtPainter::drawFocusRect(painter, this, rect);
 }
 
 /*!
@@ -410,8 +381,8 @@ void QwtKnob::draw(QPainter *painter, const QRect& rect)
 void QwtKnob::drawMarker(QPainter *p, double arc, const QColor &c)
 {
     const double rarc = arc * M_PI / 180.0;
-    const double ca = cos(rarc);
-    const double sa = - sin(rarc);
+    const double ca = qFastCos(rarc);
+    const double sa = - qFastSin(rarc);
 
     int radius = d_data->knobRect.width() / 2 - d_data->borderWidth;
     if (radius < 3) 
@@ -427,7 +398,7 @@ void QwtKnob::drawMarker(QPainter *p, double arc, const QColor &c)
             p->setBrush(c);
             p->setPen(Qt::NoPen);
 
-            const double rb = double(qwtMax(radius - 4 - d_data->dotWidth / 2, 0));
+            const double rb = double(qMax(radius - 4 - d_data->dotWidth / 2, 0));
             p->drawEllipse(xm - qRound(sa * rb) - d_data->dotWidth / 2,
                    ym - qRound(ca * rb) - d_data->dotWidth / 2,
                    d_data->dotWidth, d_data->dotWidth);
@@ -437,8 +408,8 @@ void QwtKnob::drawMarker(QPainter *p, double arc, const QColor &c)
         {
             p->setPen(QPen(c, 2));
 
-            const double rb = qwtMax(double((radius - 4) / 3.0), 0.0);
-            const double re = qwtMax(double(radius - 4), 0.0);
+            const double rb = qMax(double((radius - 4) / 3.0), 0.0);
+            const double re = qMax(double(radius - 4), 0.0);
             
             p->drawLine ( xm - qRound(sa * rb), ym - qRound(ca * rb),
                 xm - qRound(sa * re), ym - qRound(ca * re));
@@ -456,7 +427,7 @@ void QwtKnob::drawMarker(QPainter *p, double arc, const QColor &c)
 */
 void QwtKnob::setKnobWidth(int w)
 {
-    d_data->knobWidth = qwtMax(w,5);
+    d_data->knobWidth = qMax(w,5);
     layoutKnob();
 }
 
@@ -472,7 +443,7 @@ int QwtKnob::knobWidth() const
 */
 void QwtKnob::setBorderWidth(int bw)
 {
-    d_data->borderWidth = qwtMax(bw, 0);
+    d_data->borderWidth = qMax(bw, 0);
     layoutKnob();
 }
 
@@ -500,7 +471,7 @@ void QwtKnob::recalcAngle()
     {
         d_data->angle = (value() - 0.5 * (minValue() + maxValue()))
             / (maxValue() - minValue()) * d_data->totalAngle;
-        d_data->nTurns = floor((d_data->angle + 180.0) / 360.0);
+        d_data->nTurns = qFloor((d_data->angle + 180.0) / 360.0);
         d_data->angle = d_data->angle - d_data->nTurns * 360.0;
     }
 }
@@ -541,7 +512,7 @@ QSize QwtKnob::sizeHint() const
 QSize QwtKnob::minimumSizeHint() const
 {
     // Add the scale radial thickness to the knobWidth
-    const int sh = scaleDraw()->extent( QPen(), font() );
+    const int sh = qCeil(scaleDraw()->extent( font() ));
     const int d = 2 * sh + 2 * d_data->scaleDist + d_data->knobWidth;
 
     return QSize( d, d );

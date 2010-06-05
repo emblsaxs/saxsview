@@ -10,12 +10,13 @@
 #ifndef QWT_INTERVAL_SYMBOL_H
 #define QWT_INTERVAL_SYMBOL_H
 
+#include "qwt_global.h"
 #include <qpen.h>
 #include <qsize.h>
-#include "qwt_global.h"
 
 class QPainter;
 class QRect;
+class QPointF;
 
 //! A drawing primitive for bars
 class QWT_EXPORT QwtIntervalSymbol
@@ -42,8 +43,6 @@ public:
     bool operator!=(const QwtIntervalSymbol &) const;
     virtual bool operator==(const QwtIntervalSymbol &) const;
 
-    virtual QwtIntervalSymbol *clone() const;
-
     void setWidth(int);
     int width() const;
 
@@ -57,9 +56,13 @@ public:
     Style style() const;
     
     virtual void draw(QPainter *, 
-        const QPoint& from, const QPoint& to) const;
+        const QPointF& from, const QPointF& to) const;
 
 private:
+    // Disabled copy constructor and operator=
+    QwtIntervalSymbol( const QwtIntervalSymbol & );
+    QwtIntervalSymbol &operator=( const QwtIntervalSymbol & );
+
     class PrivateData;
     PrivateData* d_data;
 };

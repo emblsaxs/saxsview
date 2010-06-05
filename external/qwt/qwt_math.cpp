@@ -7,8 +7,6 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #include "qwt_math.h"
 
 /*!
@@ -23,7 +21,7 @@ double qwtGetMin(const double *array, int size)
 
     double rv = array[0];
     for (int i = 1; i < size; i++)
-       rv = qwtMin(rv, array[i]);
+       rv = qMin(rv, array[i]);
 
     return rv;
 }
@@ -41,7 +39,7 @@ double qwtGetMax(const double *array, int size)
     
     double rv = array[0];
     for (int i = 1; i < size; i++)
-       rv = qwtMax(rv, array[i]);
+       rv = qMax(rv, array[i]);
 
     return rv;
 }

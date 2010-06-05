@@ -7,8 +7,6 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_PLOT_MARKER_H
 #define QWT_PLOT_MARKER_H
 
@@ -19,7 +17,7 @@
 #include "qwt_global.h"
 #include "qwt_plot_item.h"
 
-class QRect;
+class QRectF;
 class QwtText;
 class QwtSymbol;
 
@@ -65,12 +63,12 @@ public:
 
     double xValue() const;
     double yValue() const;
-    QwtDoublePoint value() const;
+    QPointF value() const;
 
     void setXValue(double);
     void setYValue(double);
     void setValue(double, double);
-    void setValue(const QwtDoublePoint &);
+    void setValue(const QPointF &);
 
     void setLineStyle(LineStyle st);
     LineStyle lineStyle() const;
@@ -78,19 +76,14 @@ public:
     void setLinePen(const QPen &p);
     const QPen &linePen() const;
 
-    void setSymbol(const QwtSymbol &s);
+    void setSymbol(const QwtSymbol *s);
     const QwtSymbol &symbol() const;
 
     void setLabel(const QwtText&);
     QwtText label() const;
 
-#if QT_VERSION < 0x040000
-    void setLabelAlignment(int align);
-    int labelAlignment() const;
-#else
     void setLabelAlignment(Qt::Alignment);
     Qt::Alignment labelAlignment() const;
-#endif
 
     void setLabelOrientation(Qt::Orientation);
     Qt::Orientation labelOrientation() const;
@@ -100,15 +93,15 @@ public:
 
     virtual void draw(QPainter *p, 
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &) const;
+        const QRectF &) const;
     
-    virtual QwtDoubleRect boundingRect() const;
+    virtual QRectF boundingRect() const;
 
 protected:
-    void drawAt(QPainter *,const QRect &, const QPoint &) const;
+    void drawAt(QPainter *,const QRectF &, const QPointF &) const;
 
 private:
-    void drawLabel(QPainter *, const QRect &, const QPoint &) const;
+    void drawLabel(QPainter *, const QRectF &, const QPointF &) const;
 
     class PrivateData;
     PrivateData *d_data;

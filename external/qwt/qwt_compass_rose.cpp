@@ -7,11 +7,10 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <math.h>
-#include <qpainter.h>
+#include "qwt_compass_rose.h"
 #include "qwt_math.h"
 #include "qwt_painter.h"
-#include "qwt_compass_rose.h"
+#include <qpainter.h>
 
 static QPoint cutPoint(QPoint p11, QPoint p12, QPoint p21, QPoint p22)
 {
@@ -70,17 +69,10 @@ QwtSimpleCompassRose::QwtSimpleCompassRose(int numThorns, int numThornLevels):
     QPalette palette;
     for ( int i = 0; i < QPalette::NColorGroups; i++ )
     {
-#if QT_VERSION < 0x040000
-        palette.setColor((QPalette::ColorGroup)i,
-            QColorGroup::Dark, dark);
-        palette.setColor((QPalette::ColorGroup)i,
-            QColorGroup::Light, light);
-#else
         palette.setColor((QPalette::ColorGroup)i,
             QPalette::Dark, dark);
         palette.setColor((QPalette::ColorGroup)i,
             QPalette::Light, light);
-#endif
     }
 
     setPalette(palette);
@@ -98,26 +90,10 @@ QwtSimpleCompassRose::QwtSimpleCompassRose(int numThorns, int numThornLevels):
 void QwtSimpleCompassRose::draw(QPainter *painter, const QPoint &center, 
     int radius, double north, QPalette::ColorGroup cg) const
 {
-#if QT_VERSION < 0x040000
-    QColorGroup colorGroup;
-    switch(cg)
-    {
-        case QPalette::Disabled:
-            colorGroup = palette().disabled();
-        case QPalette::Inactive:
-            colorGroup = palette().inactive();
-        default:
-            colorGroup = palette().active();
-    }
-
-    drawRose(painter, colorGroup, center, radius, north, d_width, 
-        d_numThorns, d_numThornLevels, d_shrinkFactor);
-#else
     QPalette pal = palette();
     pal.setCurrentColorGroup(cg);
     drawRose(painter, pal, center, radius, north, d_width, 
         d_numThorns, d_numThornLevels, d_shrinkFactor);
-#endif
 }
 
 /*!
@@ -135,11 +111,7 @@ void QwtSimpleCompassRose::draw(QPainter *painter, const QPoint &center,
 */
 void QwtSimpleCompassRose::drawRose(
     QPainter *painter, 
-#if QT_VERSION < 0x040000
-    const QColorGroup &cg,
-#else
     const QPalette &palette,
-#endif
     const QPoint &center, int radius, double north, double width,
     int numThorns, int numThornLevels, double shrinkFactor)
 {
@@ -164,7 +136,7 @@ void QwtSimpleCompassRose::drawRose(
 
     for ( int j = 1; j <= numThornLevels; j++ )
     {
-        double step =  pow(2.0, j) * M_PI / (double)numThorns;
+        double step =  qPow(2.0, j) * M_PI / (double)numThorns;
         if ( step > M_PI_2 )
             break;
 
@@ -187,29 +159,21 @@ void QwtSimpleCompassRose::drawRose(
             QPoint p1 = qwtPolar2Pos(center, leafWidth, angle + M_PI_2);
             QPoint p2 = qwtPolar2Pos(center, leafWidth, angle - M_PI_2);
 
-            QwtPolygon pa(3);
+            QPolygon pa(3);
             pa.setPoint(0, center);
             pa.setPoint(1, p);
 
             QPoint p3 = qwtPolar2Pos(center, r, angle + step / 2.0);
             p1 = cutPoint(center, p3, p1, p);
             pa.setPoint(2, p1);
-#if QT_VERSION < 0x040000
-            painter->setBrush(cg.brush(QColorGroup::Dark));
-#else
             painter->setBrush(palette.brush(QPalette::Dark));
-#endif
             painter->drawPolygon(pa);
 
             QPoint p4 = qwtPolar2Pos(center, r, angle - step / 2.0);
             p2 = cutPoint(center, p4, p2, p);
 
             pa.setPoint(2, p2);
-#if QT_VERSION < 0x040000
-            painter->setBrush(cg.brush(QColorGroup::Light));
-#else
             painter->setBrush(palette.brush(QPalette::Light));
-#endif
             painter->drawPolygon(pa);
         }
     }

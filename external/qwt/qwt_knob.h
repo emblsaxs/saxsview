@@ -49,9 +49,6 @@ public:
     enum Symbol { Line, Dot };
 
     explicit QwtKnob(QWidget* parent = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtKnob(QWidget* parent, const char *name);
-#endif
     virtual ~QwtKnob();
 
     void setKnobWidth(int w);

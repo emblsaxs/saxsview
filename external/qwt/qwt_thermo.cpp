@@ -7,17 +7,18 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
+#include "qwt_thermo.h"
+#include "qwt_math.h"
+#include "qwt_scale_engine.h"
+#include "qwt_scale_draw.h"
+#include "qwt_scale_map.h"
 #include <qpainter.h>
 #include <qevent.h>
 #include <qstyle.h>
 #include <qpixmap.h>
 #include <qdrawutil.h>
-#include "qwt_math.h"
-#include "qwt_scale_engine.h"
-#include "qwt_scale_draw.h"
-#include "qwt_scale_map.h"
-#include "qwt_paint_buffer.h"
-#include "qwt_thermo.h"
+#include <qalgorithms.h>
+#include <qmath.h>
 
 class QwtThermo::PrivateData
 {
@@ -67,24 +68,8 @@ QwtThermo::QwtThermo(QWidget *parent):
     initThermo();
 }
 
-#if QT_VERSION < 0x040000
-/*! 
-  Constructor
-  \param parent Parent widget
-  \param name Object name
-*/
-QwtThermo::QwtThermo(QWidget *parent, const char *name): 
-    QWidget(parent, name)
-{
-    initThermo();
-}
-#endif
-
 void QwtThermo::initThermo()
 {
-#if QT_VERSION < 0x040000
-    setWFlags(Qt::WNoAutoErase);
-#endif
     d_data = new PrivateData;
     setRange(d_data->minValue, d_data->maxValue, false);
 
@@ -94,11 +79,7 @@ void QwtThermo::initThermo()
 
     setSizePolicy(policy);
     
-#if QT_VERSION >= 0x040000
     setAttribute(Qt::WA_WState_OwnSizePolicy, false);
-#else
-    clearWState( WState_OwnSizePolicy );
-#endif
 }
 
 //! Destructor
@@ -206,13 +187,8 @@ void QwtThermo::paintEvent(QPaintEvent *event)
     const QRect &ur = event->rect();
     if ( ur.isValid() )
     {
-#if QT_VERSION < 0x040000
-        QwtPaintBuffer paintBuffer(this, ur);
-        draw(paintBuffer.painter(), ur);
-#else
         QPainter painter(this);
         draw(&painter, ur);
-#endif
     }
 }
 
@@ -227,25 +203,14 @@ void QwtThermo::draw(QPainter *painter, const QRect& rect)
     if ( !d_data->thermoRect.contains(rect) )
     {
         if (d_data->scalePos != NoScale)
-        {
-#if QT_VERSION < 0x040000
-            scaleDraw()->draw(painter, colorGroup());
-#else
             scaleDraw()->draw(painter, palette());
-#endif
-        }
 
         qDrawShadePanel(painter,
             d_data->thermoRect.x() - d_data->borderWidth,
             d_data->thermoRect.y() - d_data->borderWidth,
             d_data->thermoRect.width() + 2 * d_data->borderWidth,
             d_data->thermoRect.height() + 2 * d_data->borderWidth,
-#if QT_VERSION < 0x040000
-            colorGroup(), 
-#else
-            palette(), 
-#endif
-            true, d_data->borderWidth, 0);
+            palette(), true, d_data->borderWidth, 0);
     }
     drawThermo(painter);
 }
@@ -271,7 +236,7 @@ void QwtThermo::layoutThermo( bool update_geometry )
     {
         int d1, d2;
         scaleDraw()->getBorderDistHint(font(), d1, d2);
-        mbd = qwtMax(d1, d2);
+        mbd = qMax(d1, d2);
     }
 
     if ( d_data->orientation == Qt::Horizontal )
@@ -413,21 +378,13 @@ void QwtThermo::setOrientation(Qt::Orientation o, ScalePos s)
 
     if ( o != d_data->orientation )
     {
-#if QT_VERSION >= 0x040000
         if ( !testAttribute(Qt::WA_WState_OwnSizePolicy) )
-#else
-        if ( !testWState( WState_OwnSizePolicy ) )
-#endif
         {
             QSizePolicy sp = sizePolicy();
             sp.transpose();
             setSizePolicy(sp);
 
-#if QT_VERSION >= 0x040000
             setAttribute(Qt::WA_WState_OwnSizePolicy, false);
-#else
-            clearWState( WState_OwnSizePolicy );
-#endif
         }
     }
 
@@ -635,12 +592,7 @@ void QwtThermo::drawThermo(QPainter *painter)
     //
     // paint thermometer
     //
-    const QColor bgColor =
-#if QT_VERSION < 0x040000
-        colorGroup().color(QColorGroup::Background);
-#else
-        palette().color(QPalette::Background);
-#endif
+    const QColor bgColor = palette().color(QPalette::Window);
     painter->fillRect(bRect, bgColor);
 
     if (alarm)
@@ -656,7 +608,7 @@ void QwtThermo::drawThermo(QPainter *painter)
 */
 void QwtThermo::setBorderWidth(int width)
 {
-    if ((width >= 0) && (width < (qwtMin(d_data->thermoRect.width(), 
+    if ((width >= 0) && (width < (qMin(d_data->thermoRect.width(), 
         d_data->thermoRect.height()) + d_data->borderWidth) / 2  - 1))
     {
         d_data->borderWidth = width;
@@ -882,8 +834,8 @@ QSize QwtThermo::minimumSizeHint() const
 
     if ( d_data->scalePos != NoScale )
     {
-        const int sdExtent = scaleDraw()->extent( QPen(), font() );
-        const int sdLength = scaleDraw()->minLength( QPen(), font() );
+        const int sdExtent = qCeil(scaleDraw()->extent( font() ));
+        const int sdLength = scaleDraw()->minLength( font() );
 
         w = sdLength;
         h = d_data->thermoWidth + sdExtent + 
@@ -907,13 +859,13 @@ QSize QwtThermo::minimumSizeHint() const
 
 int QwtThermo::transform(double value) const
 {
-    const double min = qwtMin(d_data->map.s1(), d_data->map.s2());
-    const double max = qwtMax(d_data->map.s1(), d_data->map.s2());
+    const double min = qMin(d_data->map.s1(), d_data->map.s2());
+    const double max = qMax(d_data->map.s1(), d_data->map.s2());
 
     if ( value > max )
         value = max;
     if ( value < min )
         value = min;
 
-    return d_data->map.transform(value);
+    return qRound(d_data->map.transform(value));
 }

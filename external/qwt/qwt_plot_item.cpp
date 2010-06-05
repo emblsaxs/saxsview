@@ -7,11 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
+#include "qwt_plot_item.h"
 #include "qwt_text.h"
 #include "qwt_plot.h"
 #include "qwt_legend.h"
 #include "qwt_legend_item.h"
-#include "qwt_plot_item.h"
+#include <qpainter.h>
 
 class QwtPlotItem::PrivateData
 {
@@ -20,9 +21,7 @@ public:
         plot(NULL),
         isVisible(true),
         attributes(0),
-#if QT_VERSION >= 0x040000
         renderHints(0),
-#endif
         z(0.0),
         xAxis(QwtPlot::xBottom),
         yAxis(QwtPlot::yLeft)
@@ -33,9 +32,7 @@ public:
 
     bool isVisible;
     int attributes;
-#if QT_VERSION >= 0x040000
     int renderHints;
-#endif
     double z;
 
     int xAxis;
@@ -85,7 +82,10 @@ void QwtPlotItem::attach(QwtPlot *plot)
         {
             QWidget *legendItem = d_data->plot->legend()->find(this);
             if ( legendItem )
-                delete legendItem; 
+            {
+                legendItem->hide();
+                legendItem->deleteLater();
+            }
         }
 
         d_data->plot->attachItem(this, false);
@@ -229,8 +229,6 @@ bool QwtPlotItem::testItemAttribute(ItemAttribute attribute) const
     return d_data->attributes & attribute;
 }
 
-#if QT_VERSION >= 0x040000
-
 /*!
    Toggle an render hint
  
@@ -263,8 +261,6 @@ bool QwtPlotItem::testRenderHint(RenderHint hint) const
 {
     return (d_data->renderHints & hint);
 }
-
-#endif
 
 //! Show the item
 void QwtPlotItem::show()
@@ -387,11 +383,11 @@ int QwtPlotItem::yAxis() const
 }
 
 /*!
-   \return An invalid bounding rect: QwtDoubleRect(1.0, 1.0, -2.0, -2.0)
+   \return An invalid bounding rect: QRectF(1.0, 1.0, -2.0, -2.0)
 */
-QwtDoubleRect QwtPlotItem::boundingRect() const
+QRectF QwtPlotItem::boundingRect() const
 {
-    return QwtDoubleRect(1.0, 1.0, -2.0, -2.0); // invalid
+    return QRectF(1.0, 1.0, -2.0, -2.0); // invalid
 }
 
 /*!
@@ -406,7 +402,15 @@ QwtDoubleRect QwtPlotItem::boundingRect() const
 */
 QWidget *QwtPlotItem::legendItem() const
 {
-    return new QwtLegendCurveItem;
+    QwtLegendItem *item = new QwtLegendItem;
+    if ( d_data->plot )
+    {
+        QObject::connect(item, SIGNAL(clicked()),
+            d_data->plot, SLOT(legendItemClicked()));
+        QObject::connect(item, SIGNAL(checked(bool)),
+            d_data->plot, SLOT(legendItemChecked(bool)));
+    }
+    return item;
 }
 
 /*!
@@ -425,7 +429,7 @@ QWidget *QwtPlotItem::legendItem() const
 */
 void QwtPlotItem::updateLegend(QwtLegend *legend) const
 {
-    if ( !legend )
+    if ( legend == NULL )
         return;
 
     QWidget *lgdItem = legend->find(this);
@@ -435,33 +439,48 @@ void QwtPlotItem::updateLegend(QwtLegend *legend) const
         {
             lgdItem = legendItem();
             if ( lgdItem )
-            {
-                if ( lgdItem->inherits("QwtLegendItem") )
-                {
-                    QwtLegendItem *label = (QwtLegendItem *)lgdItem;
-                    label->setItemMode(legend->itemMode());
-
-                    if ( d_data->plot )
-                    {
-                        QObject::connect(label, SIGNAL(clicked()), 
-                            d_data->plot, SLOT(legendItemClicked()));
-                        QObject::connect(label, SIGNAL(checked(bool)), 
-                            d_data->plot, SLOT(legendItemChecked(bool)));
-                    }
-                }
                 legend->insert(this, lgdItem);
-            }
         }
         if ( lgdItem && lgdItem->inherits("QwtLegendItem") )
         {
             QwtLegendItem* label = (QwtLegendItem*)lgdItem;
             if ( label )
-                label->setText(d_data->title);
+            {
+                // paint the identifier
+                const QSize sz = label->identifierSize();
+
+                QPixmap identifier(sz.width(), sz.height());
+                identifier.fill(QColor(0, 0, 0, 0));
+            
+                QPainter painter(&identifier);
+                painter.setRenderHint(QPainter::Antialiasing, 
+                    testRenderHint(QwtPlotItem::RenderAntialiased) );
+                drawLegendIdentifier(&painter, 
+                    QRect(0, 0, sz.width(), sz.height()));
+                painter.end();
+
+                const bool doUpdate = label->updatesEnabled();
+                if ( doUpdate )
+                    label->setUpdatesEnabled(false);
+
+                label->setText(title());
+                label->setIdentifier(identifier);
+                label->setItemMode(legend->itemMode());
+
+                if ( doUpdate )
+                    label->setUpdatesEnabled(true);
+
+                label->update();
+            }
         }
     }
     else
     {
-        delete lgdItem;
+        if ( lgdItem )
+        {
+            lgdItem->hide();
+            lgdItem->deleteLater();
+        }
     }
 }
 
@@ -489,12 +508,12 @@ void QwtPlotItem::updateScaleDiv(const QwtScaleDiv &,
    \param xMap X map
    \param yMap X map
 
-   \return Bounding rect of the scale maps
+   \return Bounding scale rect of the scale maps, normalized
 */
-QwtDoubleRect QwtPlotItem::scaleRect(const QwtScaleMap &xMap, 
+QRectF QwtPlotItem::scaleRect(const QwtScaleMap &xMap, 
     const QwtScaleMap &yMap) const
 {
-    return QwtDoubleRect(xMap.s1(), yMap.s1(), 
+    return QRectF(xMap.s1(), yMap.s1(), 
         xMap.sDist(), yMap.sDist() );
 }
 
@@ -504,61 +523,13 @@ QwtDoubleRect QwtPlotItem::scaleRect(const QwtScaleMap &xMap,
    \param xMap X map
    \param yMap X map
 
-   \return Bounding rect of the scale maps
+   \return Bounding paint rect of the scale maps, normalized
 */
-QRect QwtPlotItem::paintRect(const QwtScaleMap &xMap, 
+QRectF QwtPlotItem::paintRect(const QwtScaleMap &xMap, 
     const QwtScaleMap &yMap) const
 {
-    const QRect rect( qRound(xMap.p1()), qRound(yMap.p1()),
-        qRound(xMap.pDist()), qRound(yMap.pDist()) );
+    const QRectF rect( xMap.p1(), yMap.p1(),
+        xMap.pDist(), yMap.pDist() );
 
     return rect;
-}
-
-/*!
-   Transform a rectangle
-
-   \param xMap X map
-   \param yMap Y map
-   \param rect Rectangle in scale coordinates
-   \return Rectangle in paint coordinates
- 
-   \sa invTransform()
-*/
-QRect QwtPlotItem::transform(const QwtScaleMap &xMap, 
-    const QwtScaleMap &yMap, const QwtDoubleRect& rect) const
-{
-    int x1 = qRound(xMap.transform(rect.left()));
-    int x2 = qRound(xMap.transform(rect.right()));
-    int y1 = qRound(yMap.transform(rect.top()));
-    int y2 = qRound(yMap.transform(rect.bottom()));
-
-    if ( x2 < x1 )
-        qSwap(x1, x2);
-    if ( y2 < y1 )
-        qSwap(y1, y2);
-
-    return QRect(x1, y1, x2 - x1 + 1, y2 - y1 + 1);
-}
-
-/*!
-   Transform a rectangle from paint to scale coordinates
-
-   \param xMap X map
-   \param yMap Y map
-   \param rect Rectangle in paint coordinates
-   \return Rectangle in scale coordinates
-   \sa transform()
-*/
-QwtDoubleRect QwtPlotItem::invTransform(const QwtScaleMap &xMap, 
-    const QwtScaleMap &yMap, const QRect& rect) const
-{
-    const double x1 = xMap.invTransform(rect.left());
-    const double x2 = xMap.invTransform(rect.right());
-    const double y1 = yMap.invTransform(rect.top());
-    const double y2 = yMap.invTransform(rect.bottom());
-        
-    const QwtDoubleRect r(x1, y1, x2 - x1, y2 - y1);
-
-    return r.normalized();
 }

@@ -15,6 +15,20 @@
 
 class QwtPlotAbstractSeriesItem;
 
+/*!
+    \brief Painter object trying to paint incrementally
+
+    Often applications want to display samples while they are
+    collected. When there are many samples complete replots
+    will be expensive to be processed for each sample.
+    QwtPlotDirectPainter offers an API to paint 
+    subsets ( f.e all additions points ) without erasing/repainting
+    the plot canvas.
+
+    \warning Incremental painting will only help when no replot is triggered
+             by another operation ( like chnging scales ) and nothing needs
+             to be erased.
+*/
 class QWT_EXPORT QwtPlotDirectPainter: public QObject
 {
 public:

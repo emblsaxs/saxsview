@@ -7,14 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_COUNTER_H
 #define QWT_COUNTER_H
 
-#include <qwidget.h>
 #include "qwt_global.h"
 #include "qwt_double_range.h"
+#include <qwidget.h>
 
 /*!
   \brief The Counter Widget
@@ -85,9 +83,6 @@ public:
     };
 
     explicit QwtCounter(QWidget *parent = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtCounter(QWidget *parent, const char *name);
-#endif
     virtual ~QwtCounter();
 
     bool editable() const;
@@ -120,7 +115,7 @@ public:
     int stepButton3() const;
     virtual double value() const;
 
-signals:
+Q_SIGNALS:
     /*!
         This signal is emitted when a button has been released
         \param value The new value
@@ -139,7 +134,7 @@ protected:
     virtual void keyPressEvent(QKeyEvent *);
     virtual void rangeChange();
 
-private slots:
+private Q_SLOTS:
     void btnReleased();
     void btnClicked();
     void textChanged();

@@ -246,7 +246,7 @@ static QIcon symbolIcon(PlotSymbol::Style style) {
   symbol.setSize(10);
   symbol.setColor(Qt::black);
   symbol.setStyle(style);
-  symbol.qwtSymbol().draw(&painter, 7, 7);
+  symbol.qwtSymbol()->drawSymbol(&painter, QPointF(7, 7));
 
   painter.end();
 

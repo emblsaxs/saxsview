@@ -10,15 +10,15 @@
 #ifndef QWT_PLOT_HISTOGRAM_H
 #define QWT_PLOT_HISTOGRAM_H
 
-#include <qglobal.h>
-#include <qcolor.h>
-
-#include "qwt_polygon.h" 
+#include "qwt_global.h" 
 #include "qwt_plot_seriesitem.h" 
 #include "qwt_column_symbol.h" 
+#include <qcolor.h>
+#include <qvector.h>
 
 class QwtIntervalData;
 class QString;
+class QPolygonF;
 
 class QWT_EXPORT QwtPlotHistogram: public QwtPlotSeriesItem<QwtIntervalSample>
 {
@@ -47,8 +47,7 @@ public:
     void setBrush(const QBrush &);
     const QBrush &brush() const;
 
-    void setData(const QwtArray<QwtIntervalSample> &data);
-    void setData(const QwtSeriesData<QwtIntervalSample> &data);
+    void setSamples(const QVector<QwtIntervalSample> &);
 
     void setBaseline(double reference);
     double baseline() const;
@@ -56,23 +55,23 @@ public:
     void setStyle(CurveStyle style);
     CurveStyle style() const;
 
-    void setSymbol(const QwtColumnSymbol &);
-    const QwtColumnSymbol &symbol() const;
+    void setSymbol(const QwtColumnSymbol *);
+    const QwtColumnSymbol *symbol() const;
 
     virtual void drawSeries(QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to) const;
 
-    virtual QwtDoubleRect boundingRect() const;
-    virtual void updateLegend(QwtLegend *) const;
+    virtual QRectF boundingRect() const;
+
+    virtual void drawLegendIdentifier(QPainter *, const QRectF &) const;
 
 protected:
-    virtual QRect columnRect(const QwtIntervalSample &,
-        const QwtScaleMap &, const QwtScaleMap &,
-        QwtColumnSymbol::Direction &) const;
+    virtual QwtColumnRect columnRect(const QwtIntervalSample &,
+        const QwtScaleMap &, const QwtScaleMap &) const;
 
-    virtual void drawColumn(QPainter *, const QRect &, 
-        QwtColumnSymbol::Direction, const QwtIntervalSample &) const;
+    virtual void drawColumn(QPainter *, const QwtColumnRect &,
+        const QwtIntervalSample & ) const;
 
     void drawColumns(QPainter *,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
@@ -88,12 +87,7 @@ protected:
 
 private:
     void init();
-#if QT_VERSION < 0x040000
-    void flushPolygon(QPainter *, int baseLine, QValueList<QPoint> &) const;
-    void drawPolygon(QPainter *, const QValueList<QPoint>&) const;
-#else
-    void flushPolygon(QPainter *, int baseLine, QwtPolygon &) const;
-#endif
+    void flushPolygon(QPainter *, double baseLine, QPolygonF &) const;
 
     class PrivateData;
     PrivateData *d_data;

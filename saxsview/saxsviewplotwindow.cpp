@@ -119,8 +119,8 @@ void SaxsviewPlotWindow::load(const QString& fileName) {
       if (y - y_err < 1e-6)
         continue;
 
-      points.push_back(QwtDoublePoint(x, y));
-      intervals.push_back(QwtIntervalSample(x, QwtDoubleInterval(y - y_err, y + y_err)));
+      points.push_back(QPointF(x, y));
+      intervals.push_back(QwtIntervalSample(x, y - y_err, y + y_err));
     }
 
     Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;

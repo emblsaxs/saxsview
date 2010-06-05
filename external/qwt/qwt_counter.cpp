@@ -7,16 +7,14 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
+#include "qwt_arrow_button.h"
+#include "qwt_math.h"
+#include "qwt_counter.h"
 #include <qlayout.h>
 #include <qlineedit.h>
 #include <qvalidator.h>
 #include <qevent.h>
 #include <qstyle.h>
-#include "qwt_math.h"
-#include "qwt_counter.h"
-#include "qwt_arrow_button.h"
 
 class QwtCounter::PrivateData
 {
@@ -53,29 +51,9 @@ QwtCounter::QwtCounter(QWidget *parent):
     initCounter();
 }
 
-#if QT_VERSION < 0x040000
-/*!
-  The default number of buttons is set to 2. The default increments are:
-  \li Button 1: 1 step
-  \li Button 2: 10 steps
-  \li Button 3: 100 steps
-
-  \param parent
- */
-QwtCounter::QwtCounter(QWidget *parent, const char *name):
-    QWidget(parent, name) 
-{
-    initCounter();
-}
-#endif
-
 void QwtCounter::initCounter()
 {
     d_data = new PrivateData;
-
-#if QT_VERSION >= 0x040000
-    using namespace Qt;
-#endif
 
     QHBoxLayout *layout = new QHBoxLayout(this);
     layout->setSpacing(0);
@@ -86,7 +64,7 @@ void QwtCounter::initCounter()
     {
         QwtArrowButton *btn =
             new QwtArrowButton(i+1, Qt::DownArrow,this);
-        btn->setFocusPolicy(NoFocus);
+        btn->setFocusPolicy(Qt::NoFocus);
         btn->installEventFilter(this);
         layout->addWidget(btn);
 
@@ -101,24 +79,16 @@ void QwtCounter::initCounter()
     d_data->valueEdit->setValidator(new QDoubleValidator(d_data->valueEdit));
     layout->addWidget(d_data->valueEdit);
 
-#if QT_VERSION >= 0x040000
     connect( d_data->valueEdit, SIGNAL(editingFinished()), 
         SLOT(textChanged()) );
-#else
-    connect( d_data->valueEdit, SIGNAL(returnPressed()), SLOT(textChanged()) );
-    connect( d_data->valueEdit, SIGNAL(lostFocus()), SLOT(textChanged()) );
-#endif
 
     layout->setStretchFactor(d_data->valueEdit, 10);
 
     for(i = 0; i < ButtonCnt; i++)
     {
-#if QT_VERSION >= 0x040000
-        using namespace Qt;
-#endif
         QwtArrowButton *btn =
             new QwtArrowButton(i+1, Qt::UpArrow, this);
-        btn->setFocusPolicy(NoFocus);
+        btn->setFocusPolicy(Qt::NoFocus);
         btn->installEventFilter(this);
         layout->addWidget(btn);
 
@@ -136,7 +106,7 @@ void QwtCounter::initCounter()
         QSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed));
 
     setFocusProxy(d_data->valueEdit);
-    setFocusPolicy(StrongFocus);
+    setFocusPolicy(Qt::StrongFocus);
 }
 
 //! Destructor
@@ -157,10 +127,6 @@ void QwtCounter::polish()
         d_data->buttonDown[i]->setMinimumWidth(w);
         d_data->buttonUp[i]->setMinimumWidth(w);
     }
-
-#if QT_VERSION < 0x040000
-    QWidget::polish();
-#endif
 }
 
 //! Set from lineedit
@@ -184,9 +150,6 @@ void QwtCounter::textChanged()
 */
 void QwtCounter::setEditable(bool editable)
 {
-#if QT_VERSION >= 0x040000
-    using namespace Qt;
-#endif
     if ( editable == d_data->editable ) 
         return;
 
@@ -205,10 +168,9 @@ bool QwtCounter::editable() const
 */
 bool QwtCounter::event ( QEvent * e ) 
 {
-#if QT_VERSION >= 0x040000
     if ( e->type() == QEvent::PolishRequest )
         polish();
-#endif
+
     return QWidget::event(e);
 }
 
@@ -239,21 +201,13 @@ void QwtCounter::keyPressEvent (QKeyEvent *e)
     switch ( e->key() )
     {
         case Qt::Key_Home:
-#if QT_VERSION >= 0x040000
             if ( e->modifiers() & Qt::ControlModifier )
-#else
-            if ( e->state() & Qt::ControlButton )
-#endif
                 setValue(minValue());
             else
                 accepted = false;
             break;
         case Qt::Key_End:
-#if QT_VERSION >= 0x040000
             if ( e->modifiers() & Qt::ControlModifier )
-#else
-            if ( e->state() & Qt::ControlButton )
-#endif
                 setValue(maxValue());
             else
                 accepted = false;
@@ -272,11 +226,7 @@ void QwtCounter::keyPressEvent (QKeyEvent *e)
                 increment = d_data->increment[1];
             if ( d_data->nButtons >= 3 )
             {
-#if QT_VERSION >= 0x040000
                 if ( e->modifiers() & Qt::ShiftModifier )
-#else
-                if ( e->state() & Qt::ShiftButton )
-#endif
                     increment = d_data->increment[2];
             }
             if ( e->key() == Qt::Key_PageDown )
@@ -311,20 +261,12 @@ void QwtCounter::wheelEvent(QWheelEvent *e)
     int increment = d_data->increment[0];
     if ( d_data->nButtons >= 2 )
     {
-#if QT_VERSION >= 0x040000
         if ( e->modifiers() & Qt::ControlModifier )
-#else
-        if ( e->state() & Qt::ControlButton )
-#endif
             increment = d_data->increment[1];
     }
     if ( d_data->nButtons >= 3 )
     {
-#if QT_VERSION >= 0x040000
         if ( e->modifiers() & Qt::ShiftModifier )
-#else
-        if ( e->state() & Qt::ShiftButton )
-#endif
             increment = d_data->increment[2];
     }
         
@@ -403,7 +345,7 @@ void QwtCounter::valueChange()
     updateButtons();
 
     if ( isValid() )
-        emit valueChanged(value());
+        Q_EMIT valueChanged(value());
 }
 
 /*!
@@ -502,7 +444,7 @@ void QwtCounter::btnClicked()
 //!  Button released
 void QwtCounter::btnReleased()
 {
-    emit buttonReleased(value());
+    Q_EMIT buttonReleased(value());
 }
 
 /*!
@@ -536,19 +478,15 @@ QSize QwtCounter::sizeHint() const
 
     QFontMetrics fm(d_data->valueEdit->font());
     w = fm.width(tmp) + 2;
-#if QT_VERSION >= 0x040000
     if ( d_data->valueEdit->hasFrame() )
         w += 2 * style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
-#else
-    w += 2 * d_data->valueEdit->frameWidth(); 
-#endif
 
     // Now we replace default sizeHint contribution of d_data->valueEdit by
     // what we really need.
 
     w += QWidget::sizeHint().width() - d_data->valueEdit->sizeHint().width();
 
-    const int h = qwtMin(QWidget::sizeHint().height(), 
+    const int h = qMin(QWidget::sizeHint().height(), 
         d_data->valueEdit->minimumSizeHint().height());
     return QSize(w, h);
 }

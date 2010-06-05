@@ -10,8 +10,9 @@
 #ifndef QWT_EVENT_PATTERN
 #define QWT_EVENT_PATTERN 1
 
+#include "qwt_global.h"
 #include <qnamespace.h>
-#include "qwt_array.h"
+#include <qvector.h>
 
 class QMouseEvent;
 class QKeyEvent;
@@ -170,14 +171,14 @@ public:
     void setMousePattern(uint pattern, int button, int state = Qt::NoButton);
     void setKeyPattern(uint pattern, int key, int state = Qt::NoButton);
 
-    void setMousePattern(const QwtArray<MousePattern> &);
-    void setKeyPattern(const QwtArray<KeyPattern> &);
+    void setMousePattern(const QVector<MousePattern> &);
+    void setKeyPattern(const QVector<KeyPattern> &);
 
-    const QwtArray<MousePattern> &mousePattern() const;
-    const QwtArray<KeyPattern> &keyPattern() const;
+    const QVector<MousePattern> &mousePattern() const;
+    const QVector<KeyPattern> &keyPattern() const;
 
-    QwtArray<MousePattern> &mousePattern();
-    QwtArray<KeyPattern> &keyPattern();
+    QVector<MousePattern> &mousePattern();
+    QVector<KeyPattern> &keyPattern();
 
     bool mouseMatch(uint pattern, const QMouseEvent *) const;
     bool keyMatch(uint pattern, const QKeyEvent *) const;
@@ -192,8 +193,8 @@ private:
 #pragma warning(push)
 #pragma warning(disable: 4251)
 #endif
-    QwtArray<MousePattern> d_mousePattern;
-    QwtArray<KeyPattern> d_keyPattern;
+    QVector<MousePattern> d_mousePattern;
+    QVector<KeyPattern> d_keyPattern;
 #if defined(_MSC_VER)
 #pragma warning(pop)
 #endif
@@ -210,12 +211,5 @@ inline bool operator==(QwtEventPattern::KeyPattern b1,
 { 
     return b1.key == b2.key && b1.state == b2.state; 
 }
-
-#if defined(QWT_TEMPLATEDLL)
-// MOC_SKIP_BEGIN
-template class QWT_EXPORT QwtArray<QwtEventPattern::MousePattern>;
-template class QWT_EXPORT QwtArray<QwtEventPattern::KeyPattern>;
-// MOC_SKIP_END
-#endif
 
 #endif

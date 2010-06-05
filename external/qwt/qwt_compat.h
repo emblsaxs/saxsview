@@ -7,29 +7,32 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#ifndef QWT_POLYGON_H
-#define QWT_POLYGON_H
+#ifndef _QWT_COMPAT_H_
+#define _QWT_COMPAT_H_
 
 #include "qwt_global.h"
-
-/*!
-  \def QwtPolygon
- */
-
-#if QT_VERSION < 0x040000
-#include <qpointarray.h>
-#include "qwt_double_rect.h"
-
-typedef QPointArray QwtPolygon;
-typedef QMemArray<QwtDoublePoint> QwtPolygonF;
-
-#else
-
+#include <qlist.h>
+#include <qvector.h>
+#include <qpoint.h>
+#include <qsize.h>
+#include <qrect.h>
 #include <qpolygon.h>
+
+// A couple of definition for Qwt5 compatibility
+
+#define qwtMax qMax
+#define qwtMin qMin
+#define qwtAbs qAbs
+#define qwtRound qRound
+
+#define QwtArray QVector
+
+typedef QList<double> QwtValueList;
+typedef QPointF QwtDoublePoint;
+typedef QSizeF QwtDoubleSize;
+typedef QRectF QwtDoubleRect;
+
 typedef QPolygon QwtPolygon;
 typedef QPolygonF QwtPolygonF;
-#endif
 
 #endif

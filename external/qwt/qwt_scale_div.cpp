@@ -10,6 +10,7 @@
 #include "qwt_scale_div.h"
 #include "qwt_math.h"
 #include "qwt_double_interval.h"
+#include <qalgorithms.h>
 
 //! Construct an invalid QwtScaleDiv instance.
 QwtScaleDiv::QwtScaleDiv():
@@ -27,7 +28,7 @@ QwtScaleDiv::QwtScaleDiv():
 */
 QwtScaleDiv::QwtScaleDiv(
         const QwtDoubleInterval &interval, 
-        QwtValueList ticks[NTickTypes]):
+        QList<double> ticks[NTickTypes]):
     d_lowerBound(interval.minValue()),
     d_upperBound(interval.maxValue()),
     d_isValid(true)
@@ -45,7 +46,7 @@ QwtScaleDiv::QwtScaleDiv(
 */
 QwtScaleDiv::QwtScaleDiv(
         double lowerBound, double upperBound,
-        QwtValueList ticks[NTickTypes]):
+        QList<double> ticks[NTickTypes]):
     d_lowerBound(lowerBound),
     d_upperBound(upperBound),
     d_isValid(true)
@@ -123,8 +124,8 @@ bool QwtScaleDiv::contains(double value) const
     if ( !d_isValid )
         return false;
 
-    const double min = qwtMin(d_lowerBound, d_upperBound);
-    const double max = qwtMax(d_lowerBound, d_upperBound);
+    const double min = qMin(d_lowerBound, d_upperBound);
+    const double max = qMax(d_lowerBound, d_upperBound);
 
     return value >= min && value <= max;
 }
@@ -136,7 +137,7 @@ void QwtScaleDiv::invert()
 
     for ( int i = 0; i < NTickTypes; i++ )
     {
-        QwtValueList& ticks = d_ticks[i];
+        QList<double>& ticks = d_ticks[i];
 
         const int size = ticks.count();
         const int size2 = size / 2;
@@ -152,7 +153,7 @@ void QwtScaleDiv::invert()
    \param type MinorTick, MediumTick or MajorTick
    \param ticks Values of the tick positions
 */
-void QwtScaleDiv::setTicks(int type, const QwtValueList &ticks)
+void QwtScaleDiv::setTicks(int type, const QList<double> &ticks)
 {
     if ( type >= 0 || type < NTickTypes )
         d_ticks[type] = ticks;
@@ -163,11 +164,11 @@ void QwtScaleDiv::setTicks(int type, const QwtValueList &ticks)
 
    \param type MinorTick, MediumTick or MajorTick
 */
-const QwtValueList &QwtScaleDiv::ticks(int type) const
+const QList<double> &QwtScaleDiv::ticks(int type) const
 {
     if ( type >= 0 || type < NTickTypes )
         return d_ticks[type];
 
-    static QwtValueList noTicks;
+    static QList<double> noTicks;
     return noTicks;
 }

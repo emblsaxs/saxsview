@@ -7,13 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <qpainter.h>
-#include <qevent.h>
+#include "qwt_text_label.h"
 #include "qwt_text.h"
 #include "qwt_painter.h"
-#include "qwt_text_label.h"
+#include <qpainter.h>
+#include <qevent.h>
+#include <qmath.h>
 
 class QwtTextLabel::PrivateData
 {
@@ -38,19 +37,6 @@ QwtTextLabel::QwtTextLabel(QWidget *parent):
 {
     init();
 }
-
-#if QT_VERSION < 0x040000
-/*! 
-  Constructs an empty label.
-  \param parent Parent widget
-  \param name Object name
-*/
-QwtTextLabel::QwtTextLabel(QWidget *parent, const char *name):
-    QFrame(parent, name)
-{
-    init();
-}
-#endif
 
 /*!
   Constructs a label that displays the text, text
@@ -166,7 +152,7 @@ QSize QwtTextLabel::sizeHint() const
 //! Return a minimum size hint
 QSize QwtTextLabel::minimumSizeHint() const
 {
-    QSize sz = d_data->text.textSize(font());
+    QSizeF sz = d_data->text.textSize(font());
 
     int mw = 2 * (frameWidth() + d_data->margin);
     int mh = mw;
@@ -184,9 +170,9 @@ QSize QwtTextLabel::minimumSizeHint() const
             mh += d_data->indent;
     }
         
-    sz += QSize(mw, mh);
+    sz += QSizeF(mw, mh);
 
-    return sz;
+    return QSize( qCeil(sz.width()), qCeil(sz.height()) );
 }
 
 /*!
@@ -220,7 +206,6 @@ int QwtTextLabel::heightForWidth(int width) const
 */
 void QwtTextLabel::paintEvent(QPaintEvent *event)
 {
-#if QT_VERSION >= 0x040000
     QPainter painter(this);
 
     if ( !contentsRect().contains( event->rect() ) )
@@ -234,10 +219,6 @@ void QwtTextLabel::paintEvent(QPaintEvent *event)
     painter.setClipRegion(event->region() & contentsRect());
 
     drawContents( &painter );
-#else // QT_VERSION < 0x040000
-    QFrame::paintEvent(event);
-#endif
-
 }
 
 //! Redraw the text and focus indicator
@@ -248,11 +229,7 @@ void QwtTextLabel::drawContents(QPainter *painter)
         return;
 
     painter->setFont(font());
-#if QT_VERSION < 0x040000
-    painter->setPen(palette().color(QPalette::Active, QColorGroup::Text));
-#else
     painter->setPen(palette().color(QPalette::Active, QPalette::Text));
-#endif
 
     drawText(painter, r);
 

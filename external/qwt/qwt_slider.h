@@ -7,8 +7,6 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_SLIDER_H
 #define QWT_SLIDER_H
 
@@ -77,9 +75,6 @@ public:
     explicit QwtSlider(QWidget *parent,
           Qt::Orientation = Qt::Horizontal,
           ScalePos = NoScale, BGSTYLE bgStyle = BgTrough);
-#if QT_VERSION < 0x040000
-    explicit QwtSlider(QWidget *parent, const char *name);
-#endif
     
     virtual ~QwtSlider();
 

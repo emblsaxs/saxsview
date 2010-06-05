@@ -13,10 +13,9 @@
 #include "qwt_global.h"
 #include "qwt_legend_itemmanager.h"
 #include "qwt_text.h"
-#include "qwt_double_rect.h"
+#include <qrect.h>
 
 class QString;
-class QRect;
 class QPainter;
 class QWidget;
 class QwtPlot;
@@ -79,6 +78,7 @@ public:
         Rtti_PlotScale,
         Rtti_PlotMarker,
         Rtti_PlotCurve,
+        Rtti_PlotSpectroCurve,
         Rtti_PlotIntervalCurve,
         Rtti_PlotHistogram,
         Rtti_PlotSpectrogram,
@@ -104,13 +104,11 @@ public:
         AutoScale = 2
     };
 
-#if QT_VERSION >= 0x040000
     //! Render hints
     enum RenderHint
     {
         RenderAntialiased = 1
     };
-#endif
 
     explicit QwtPlotItem(const QwtText &title = QwtText());
     virtual ~QwtPlotItem();
@@ -137,10 +135,8 @@ public:
     void setItemAttribute(ItemAttribute, bool on = true);
     bool testItemAttribute(ItemAttribute) const;
 
-#if QT_VERSION >= 0x040000
     void setRenderHint(RenderHint, bool on = true);
     bool testRenderHint(RenderHint) const;
-#endif
 
     double z() const; 
     void setZ(double z);
@@ -170,9 +166,9 @@ public:
     */
     virtual void draw(QPainter *painter, 
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &canvasRect) const = 0;
+        const QRectF &canvasRect) const = 0;
 
-    virtual QwtDoubleRect boundingRect() const;
+    virtual QRectF boundingRect() const;
 
     virtual void updateLegend(QwtLegend *) const;
     virtual void updateScaleDiv(const QwtScaleDiv&,
@@ -180,14 +176,9 @@ public:
 
     virtual QWidget *legendItem() const;
 
-    QwtDoubleRect scaleRect(const QwtScaleMap &, const QwtScaleMap &) const;
-    QRect paintRect(const QwtScaleMap &, const QwtScaleMap &) const;
+    QRectF scaleRect(const QwtScaleMap &, const QwtScaleMap &) const;
+    QRectF paintRect(const QwtScaleMap &, const QwtScaleMap &) const;
     
-    QRect transform(const QwtScaleMap &, const QwtScaleMap &, 
-        const QwtDoubleRect&) const; 
-    QwtDoubleRect invTransform(const QwtScaleMap &, const QwtScaleMap &,
-        const QRect&) const; 
-
 private:
     // Disabled copy constructor and operator=
     QwtPlotItem( const QwtPlotItem & );

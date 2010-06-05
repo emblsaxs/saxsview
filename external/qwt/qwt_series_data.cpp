@@ -7,8 +7,43 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include "qwt_math.h"
 #include "qwt_series_data.h"
+#include "qwt_math.h"
+
+static inline QRectF qwtBoundingRect(const QPointF &sample)
+{
+    return QRectF(sample.x(), sample.y(), 0.0, 0.0);
+}
+
+static inline QRectF qwtBoundingRect(const QwtDoublePoint3D &sample)
+{
+    return QRectF(sample.x(), sample.y(), 0.0, 0.0);
+}
+
+static inline QRectF qwtBoundingRect(const QwtIntervalSample &sample)
+{
+    return QRectF(sample.interval.minValue(), sample.value, 
+        sample.interval.maxValue() - sample.interval.minValue(), 0.0);
+}
+
+static inline QRectF qwtBoundingRect(const QwtSetSample &sample)
+{
+    double minX = sample.set[0];
+    double maxX = sample.set[0];
+
+    for ( int i = 1; i < (int)sample.set.size(); i++ )
+    {
+        if ( sample.set[i] < minX )
+            minX = sample.set[i];
+        if ( sample.set[i] > maxX )
+            maxX = sample.set[i];
+    }
+
+    double minY = sample.value;
+    double maxY = sample.value;
+
+    return QRectF(minX, minY, maxX - minX, maxY - minY);
+}
 
 /*!
   \brief Calculate the bounding rect of a series
@@ -18,34 +53,41 @@
   \param series Series
   \return Bounding rectangle
 */
-QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtDoublePoint>& series)
-{
-    const size_t sz = series.size();
 
+template <class T> 
+QRectF qwtBoundingRectT(const QwtSeriesData<T>& series)
+{
+    QRectF boundingRect(1.0, 1.0, -2.0, -2.0); // invalid;
+
+    const size_t sz = series.size();
     if ( sz <= 0 )
-        return QwtDoubleRect(1.0, 1.0, -2.0, -2.0); // invalid
+        return boundingRect;
 
-    double minX, maxX, minY, maxY;
-
-    const QwtDoublePoint point0 = series.sample(0);
-    minX = maxX = point0.x();
-    minY = maxY = point0.y();
-
-    for ( size_t i = 1; i < sz; i++ )
+    size_t i;
+    for ( i = 0; i < sz; i++ )
     {
-        const QwtDoublePoint point = series.sample(i);
-
-        if ( point.x() < minX )
-            minX = point.x();
-        if ( point.x() > maxX )
-            maxX = point.x();
-
-        if ( point.y() < minY )
-            minY = point.y();
-        if ( point.y() > maxY )
-            maxY = point.y();
+        const QRectF rect = qwtBoundingRect(series.sample(i));
+        if ( rect.width() >= 0.0 && rect.height() >= 0.0 )
+        {
+            boundingRect = rect;
+            i++;
+            break;
+        }
     }
-    return QwtDoubleRect(minX, minY, maxX - minX, maxY - minY);
+
+    for ( ;i < sz; i++ )
+    {
+        const QRectF rect = qwtBoundingRect(series.sample(i));
+        if ( rect.width() >= 0.0 && rect.height() >= 0.0 )
+        {
+            boundingRect.setLeft(qMin(boundingRect.left(), rect.left()));
+            boundingRect.setRight(qMax(boundingRect.right(), rect.right()));
+            boundingRect.setTop(qMin(boundingRect.top(), rect.top()));
+            boundingRect.setBottom(qMax(boundingRect.bottom(), rect.bottom()));
+        }
+    }
+
+    return boundingRect;
 }
 
 /*!
@@ -56,46 +98,9 @@ QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtDoublePoint>& series)
   \param series Series
   \return Bounding rectangle
 */
-QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtIntervalSample>& series)
+QRectF qwtBoundingRect(const QwtSeriesData<QPointF> &series)
 {
-    double minX, maxX, minY, maxY;
-    minX = maxX = minY = maxY = 0.0;
-
-    bool isValid = false;
-
-    const size_t sz = series.size();
-    for ( size_t i = 0; i < sz; i++ )
-    {
-        const QwtIntervalSample sample = series.sample(i);
-
-        if ( !sample.interval.isValid() )
-            continue;
-
-        if ( !isValid )
-        {
-            minX = sample.interval.minValue();
-            maxX = sample.interval.maxValue();
-            minY = maxY = sample.value;
-
-            isValid = true;
-        }
-        else
-        {
-            if ( sample.interval.minValue() < minX )
-                minX = sample.interval.minValue();
-            if ( sample.interval.maxValue() > maxX )
-                maxX = sample.interval.maxValue();
-
-            if ( sample.value < minY )
-                minY = sample.value;
-            if ( sample.value > maxY )
-                maxY = sample.value;
-        }
-    }
-    if ( !isValid )
-        return QwtDoubleRect(1.0, 1.0, -2.0, -2.0); // invalid
-
-    return QwtDoubleRect(minX, minY, maxX - minX, maxY - minY);
+    return qwtBoundingRectT<QPointF>(series);
 }
 
 /*!
@@ -106,47 +111,35 @@ QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtIntervalSample>& series)
   \param series Series
   \return Bounding rectangle
 */
-QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtSetSample>& series)
+QRectF qwtBoundingRect(const QwtSeriesData<QwtDoublePoint3D> &series)
 {
-    double minX, maxX, minY, maxY;
-    minX = maxX = minY = maxY = 0.0;
+    return qwtBoundingRectT<QwtDoublePoint3D>(series);
+}
 
-    bool isValid = false;
+/*!
+  \brief Calculate the bounding rect of a series
 
-    const size_t sz = series.size();
-    for ( size_t i = 0; i < sz; i++ )
-    {
-        const QwtSetSample sample = series.sample(i);
+  Slow implementation, that iterates over the series.
 
-        if ( !sample.set.isEmpty() )
-            continue;
+  \param series Series
+  \return Bounding rectangle
+*/
+QRectF qwtBoundingRect(const QwtSeriesData<QwtIntervalSample>& series)
+{
+    return qwtBoundingRectT<QwtIntervalSample>(series);
+}
 
-        if ( !isValid )
-        {
-            minX = sample.set[0];
-            maxX = sample.set[0];
-            minY = maxY = sample.value;
+/*!
+  \brief Calculate the bounding rect of a series
 
-            isValid = true;
-        }
+  Slow implementation, that iterates over the series.
 
-        if ( sample.value < minY )
-            minY = sample.value;
-        if ( sample.value > maxY )
-            maxY = sample.value;
-
-        for ( int i = 0; i < (int)sample.set.size(); i++ )
-        {
-            if ( sample.set[i] < minX )
-                minX = sample.set[i];
-            if ( sample.set[i] > maxX )
-                maxX = sample.set[i];
-        }
-    }
-    if ( !isValid )
-        return QwtDoubleRect(1.0, 1.0, -2.0, -2.0); // invalid
-
-    return QwtDoubleRect(minX, minY, maxX - minX, maxY - minY);
+  \param series Series
+  \return Bounding rectangle
+*/
+QRectF qwtBoundingRect(const QwtSeriesData<QwtSetSample>& series)
+{
+    return qwtBoundingRectT<QwtSetSample>(series);
 }
 
 /*! 
@@ -154,26 +147,51 @@ QwtDoubleRect qwtBoundingRect(const QwtSeriesData<QwtSetSample>& series)
    \param samples Samples
 */
 QwtPointSeriesData::QwtPointSeriesData(
-        const QwtArray<QwtDoublePoint> &samples):
-    QwtArraySeriesData<QwtDoublePoint>(samples)
+        const QVector<QPointF> &samples):
+    QwtArraySeriesData<QPointF>(samples)
 {
 }   
 
-//! Copy operator
-QwtSeriesData<QwtDoublePoint> *QwtPointSeriesData::copy() const
+/*!
+  \brief Calculate the bounding rect
+
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
+  \return Bounding rectangle
+*/
+QRectF QwtPointSeriesData::boundingRect() const
 {
-    return new QwtPointSeriesData(d_samples);
+    if ( d_boundingRect.width() < 0.0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
+}
+
+/*! 
+   Constructor
+   \param samples Samples
+*/
+QwtPoint3DSeriesData::QwtPoint3DSeriesData(
+        const QVector<QwtDoublePoint3D> &samples):
+    QwtArraySeriesData<QwtDoublePoint3D>(samples)
+{
 }
 
 /*!
   \brief Calculate the bounding rect
 
-  This implementation iterates over all points. 
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
   \return Bounding rectangle
 */
-QwtDoubleRect QwtPointSeriesData::boundingRect() const
+QRectF QwtPoint3DSeriesData::boundingRect() const
 {
-    return qwtBoundingRect(*this);
+    if ( d_boundingRect.width() < 0.0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
 }
 
 /*! 
@@ -181,19 +199,25 @@ QwtDoubleRect QwtPointSeriesData::boundingRect() const
    \param samples Samples
 */
 QwtIntervalSeriesData::QwtIntervalSeriesData(
-        const QwtArray<QwtIntervalSample> &samples):
+        const QVector<QwtIntervalSample> &samples):
     QwtArraySeriesData<QwtIntervalSample>(samples)
 {
 }   
 
-QwtSeriesData<QwtIntervalSample> *QwtIntervalSeriesData::copy() const
-{
-    return new QwtIntervalSeriesData(d_samples);
-}
+/*!
+  \brief Calculate the bounding rect
 
-QwtDoubleRect QwtIntervalSeriesData::boundingRect() const
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
+  \return Bounding rectangle
+*/
+QRectF QwtIntervalSeriesData::boundingRect() const
 {
-    return qwtBoundingRect(*this);
+    if ( d_boundingRect.width() < 0.0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
 }
 
 /*! 
@@ -201,25 +225,25 @@ QwtDoubleRect QwtIntervalSeriesData::boundingRect() const
    \param samples Samples
 */
 QwtSetSeriesData::QwtSetSeriesData(
-        const QwtArray<QwtSetSample> &samples):
+        const QVector<QwtSetSample> &samples):
     QwtArraySeriesData<QwtSetSample>(samples)
 {
 }   
 
-QwtSeriesData<QwtSetSample> *QwtSetSeriesData::copy() const
-{
-    return new QwtSetSeriesData(d_samples);
-}
-
 /*!
   \brief Calculate the bounding rect
 
-  This implementation iterates over all points. 
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
   \return Bounding rectangle
 */
-QwtDoubleRect QwtSetSeriesData::boundingRect() const
+QRectF QwtSetSeriesData::boundingRect() const
 {
-    return qwtBoundingRect(*this);
+    if ( d_boundingRect.width() < 0.0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
 }
 
 /*!
@@ -228,10 +252,10 @@ QwtDoubleRect QwtSetSeriesData::boundingRect() const
   \param x Array of x values
   \param y Array of y values
   
-  \sa QwtPlotCurve::setData()
+  \sa QwtPlotCurve::setData(), QwtPlotCurve::setSamples()
 */
 QwtPointArrayData::QwtPointArrayData(
-        const QwtArray<double> &x, const QwtArray<double> &y): 
+        const QVector<double> &x, const QVector<double> &y): 
     d_x(x), 
     d_y(y)
 {
@@ -243,51 +267,38 @@ QwtPointArrayData::QwtPointArrayData(
   \param x Array of x values
   \param y Array of y values
   \param size Size of the x and y arrays
-  \sa QwtPlotCurve::setData()
+  \sa QwtPlotCurve::setData(), QwtPlotCurve::setSamples()
 */
-QwtPointArrayData::QwtPointArrayData(const double *x, const double *y, size_t size)
+QwtPointArrayData::QwtPointArrayData(const double *x, 
+        const double *y, size_t size)
 {
-#if QT_VERSION >= 0x040000
     d_x.resize(size);
     qMemCopy(d_x.data(), x, size * sizeof(double));
 
     d_y.resize(size);
     qMemCopy(d_y.data(), y, size * sizeof(double));
-#else
-    d_x.detach();
-    d_x.duplicate(x, size);
-
-    d_y.detach();
-    d_y.duplicate(y, size);
-#endif
-}
-
-//! Assignment 
-QwtPointArrayData& QwtPointArrayData::operator=(const QwtPointArrayData &data)
-{
-    if (this != &data)
-    {
-        d_x = data.d_x;
-        d_y = data.d_y;
-    }
-    return *this;
 }
 
 /*!
   \brief Calculate the bounding rect
 
-  This implementation iterates over all points. 
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
   \return Bounding rectangle
 */
-QwtDoubleRect QwtPointArrayData::boundingRect() const
+QRectF QwtPointArrayData::boundingRect() const
 {
-    return qwtBoundingRect(*this);
+    if ( d_boundingRect.width() < 0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
 }
 
 //! \return Size of the data set 
 size_t QwtPointArrayData::size() const 
 { 
-    return qwtMin(d_x.size(), d_y.size()); 
+    return qMin(d_x.size(), d_y.size()); 
 }
 
 /*!
@@ -296,29 +307,21 @@ size_t QwtPointArrayData::size() const
   \param i Index
   \return Sample at position i
 */
-QwtDoublePoint QwtPointArrayData::sample(size_t i) const 
+QPointF QwtPointArrayData::sample(size_t i) const 
 { 
-    return QwtDoublePoint(d_x[int(i)], d_y[int(i)]); 
+    return QPointF(d_x[int(i)], d_y[int(i)]); 
 }
 
 //! \return Array of the x-values
-const QwtArray<double> &QwtPointArrayData::xData() const
+const QVector<double> &QwtPointArrayData::xData() const
 {
     return d_x;
 }
 
 //! \return Array of the y-values
-const QwtArray<double> &QwtPointArrayData::yData() const
+const QVector<double> &QwtPointArrayData::yData() const
 {
     return d_y;
-}
-
-/*!
-  \return Pointer to a copy (virtual copy constructor)
-*/
-QwtSeriesData<QwtDoublePoint> *QwtPointArrayData::copy() const 
-{ 
-    return new QwtPointArrayData(d_x, d_y); 
 }
 
 /*!
@@ -332,7 +335,7 @@ QwtSeriesData<QwtDoublePoint> *QwtPointArrayData::copy() const
            by the pointers remain valid during the lifetime of the 
            QwtPlotCPointer object.
 
-  \sa QwtPlotCurve::setData(), QwtPlotCurve::setRawData()
+  \sa QwtPlotCurve::setData(), QwtPlotCurve::setRawSamples()
 */
 QwtCPointerData::QwtCPointerData(
     const double *x, const double *y, size_t size):
@@ -342,27 +345,20 @@ QwtCPointerData::QwtCPointerData(
 {
 }
 
-//! Assignment 
-QwtCPointerData& QwtCPointerData::operator=(const QwtCPointerData &data)
-{
-    if (this != &data)
-    {
-        d_x = data.d_x;
-        d_y = data.d_y;
-        d_size = data.d_size;
-    }
-    return *this;
-}
-
 /*!
   \brief Calculate the bounding rect
 
-  This implementation iterates over all points. 
+  The bounding rectangle is calculated once by iterating over all
+  points and is stored for all following requests.
+
   \return Bounding rectangle
 */
-QwtDoubleRect QwtCPointerData::boundingRect() const
+QRectF QwtCPointerData::boundingRect() const
 {
-    return qwtBoundingRect(*this);
+    if ( d_boundingRect.width() < 0 )
+        d_boundingRect = qwtBoundingRect(*this);
+
+    return d_boundingRect;
 }
 
 //! \return Size of the data set 
@@ -377,9 +373,9 @@ size_t QwtCPointerData::size() const
   \param i Index
   \return Sample at position i
 */
-QwtDoublePoint QwtCPointerData::sample(size_t i) const 
+QPointF QwtCPointerData::sample(size_t i) const 
 { 
-    return QwtDoublePoint(d_x[int(i)], d_y[int(i)]); 
+    return QPointF(d_x[int(i)], d_y[int(i)]); 
 }
 
 //! \return Array of the x-values
@@ -392,14 +388,6 @@ const double *QwtCPointerData::xData() const
 const double *QwtCPointerData::yData() const
 {
     return d_y;
-}
-
-/*!
-  \return Pointer to a copy (virtual copy constructor)
-*/
-QwtSeriesData<QwtDoublePoint> *QwtCPointerData::copy() const 
-{
-    return new QwtCPointerData(d_x, d_y, d_size);
 }
 
 /*! 
@@ -468,7 +456,7 @@ QwtDoubleInterval QwtSyntheticPointData::interval() const
 
    \sa rectOfInterest()
 */
-void QwtSyntheticPointData::setRectOfInterest(const QwtDoubleRect &rect)
+void QwtSyntheticPointData::setRectOfInterest(const QRectF &rect)
 {
     d_rectOfInterest = rect;
     d_intervalOfInterest = QwtDoubleInterval(
@@ -479,7 +467,7 @@ void QwtSyntheticPointData::setRectOfInterest(const QwtDoubleRect &rect)
    \return "rect of interest"
    \sa setRectOfInterest()
 */
-QwtDoubleRect QwtSyntheticPointData::rectOfInterest() const
+QRectF QwtSyntheticPointData::rectOfInterest() const
 {
    return d_rectOfInterest;
 }
@@ -487,13 +475,18 @@ QwtDoubleRect QwtSyntheticPointData::rectOfInterest() const
 /*!
   \brief Calculate the bounding rect
 
-  This implementation iterates over all points. 
+  This implementation iterates over all points, what could often
+  be implemented much faster using the characteristics of the series.
+  When there are many points it is recommended to overload and
+  reimplement this method using the characteristics of the series
+  ( if possible ).
+   
   \return Bounding rectangle
 */
-QwtDoubleRect QwtSyntheticPointData::boundingRect() const
+QRectF QwtSyntheticPointData::boundingRect() const
 {
     if ( d_size == 0 || !d_interval.isValid() )
-        return QwtDoubleRect();
+        return QRectF();
 
     return qwtBoundingRect(*this);
 }
@@ -502,20 +495,20 @@ QwtDoubleRect QwtSyntheticPointData::boundingRect() const
    Calculate the point from an index
 
    \param index Index
-   \return QwtDoublePoint(x(index), y(x(index)));
+   \return QPointF(x(index), y(x(index)));
 
    \warning For invalid indices ( index < 0 || index >= size() ) 
             (0, 0) is returned.
 */
-QwtDoublePoint QwtSyntheticPointData::sample(size_t index) const
+QPointF QwtSyntheticPointData::sample(size_t index) const
 {
     if ( index >= d_size )
-        return QwtDoublePoint(0, 0);
+        return QPointF(0, 0);
 
     const double xValue = x(index);
     const double yValue = y(xValue);
 
-    return QwtDoublePoint(xValue, yValue);
+    return QPointF(xValue, yValue);
 }
 
 /*!

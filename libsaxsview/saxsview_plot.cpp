@@ -32,16 +32,17 @@
 #include <QSettings>
 #include <QSvgGenerator>
 
-#include <qwt_dyngrid_layout.h>
-#include <qwt_legend.h>
-#include <qwt_legend_item.h>
-#include <qwt_painter.h>
-#include <qwt_plot_canvas.h>
-#include <qwt_plot_layout.h>
-#include <qwt_plot_marker.h>
-#include <qwt_plot_panner.h>
-#include <qwt_plot_zoomer.h>
-#include <qwt_scale_engine.h>
+#include "qwt_dyngrid_layout.h"
+#include "qwt_legend.h"
+#include "qwt_legend_item.h"
+#include "qwt_painter.h"
+#include "qwt_plot_canvas.h"
+#include "qwt_plot_layout.h"
+#include "qwt_plot_marker.h"
+#include "qwt_plot_panner.h"
+#include "qwt_plot_renderer.h"
+#include "qwt_plot_zoomer.h"
+#include "qwt_scale_engine.h"
 
 
 namespace Saxsview {
@@ -197,38 +198,8 @@ void Plot::exportAs() {
 }
 
 void Plot::exportAs(const QString& fileName) {
-  if (fileName.isEmpty())
-    return;
-
-  QString ext = QFileInfo(fileName).completeSuffix();
-
-  bool bitmap = (ext == "bmp");
-#ifdef QT_IMAGEFORMAT_PNG
-  bitmap = bitmap || (ext == "png");
-#endif
-#ifdef QT_IMAGEFORMAT_JPEG
-  bitmap = bitmap || (ext == "jpg") || ext == "jpeg";
-#endif
-
-  if (bitmap) {
-    QPixmap::grabWidget(this).save(fileName);
-
-#ifdef QT_SVG_LIB
-  } else if (ext == "svg") {
-    QSvgGenerator generator;
-    generator.setFileName(fileName);
-    generator.setSize(QSize(800, 600));
-    QwtPlot::print(generator);
-#endif
-  } else if (ext == "ps" || ext == "pdf") {
-    QPrinter printer(QPrinter::HighResolution);
-    printer.setOrientation(QPrinter::Landscape);
-    printer.setOutputFileName(fileName);
-    QwtPlot::print(printer);
-
-  } else
-    QMessageBox::warning(this, "Not supported",
-                         QString("File format \".%1\" is not supported").arg(ext));
+  QwtPlotRenderer renderer;
+  renderer.renderDocument(this, fileName, QSize(210,297), 600);
 }
 
 void Plot::print() {
@@ -248,8 +219,10 @@ void Plot::print() {
     printer.setPrinterName(printerName);
 
   QPrintDialog dlg(&printer, this);
-  if (dlg.exec() == QDialog::Accepted)
-    QwtPlot::print(printer);
+  if (dlg.exec() == QDialog::Accepted) {
+    QwtPlotRenderer renderer;
+    renderer.renderTo(this, printer);
+  }
 
   settings.setValue(valueName, printer.printerName());
 }

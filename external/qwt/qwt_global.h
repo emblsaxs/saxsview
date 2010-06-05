@@ -7,22 +7,17 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_GLOBAL_H
 #define QWT_GLOBAL_H
 
 #include <qglobal.h>
-#if QT_VERSION < 0x040000
-#include <qmodules.h>
-#endif
 
 // QWT_VERSION is (major << 16) + (minor << 8) + patch.
 
 #define QWT_VERSION       0x050300
 #define QWT_VERSION_STR   "5.3.0-svn"
 
-#if defined(Q_WS_WIN)
+#if defined(Q_WS_WIN) || defined(Q_WS_S60)
 
 #if defined(_MSC_VER) /* MSVC Compiler */
 /* template-class specialization 'identifier' is already instantiated */
@@ -40,7 +35,7 @@
 
 #endif // QWT_DLL
 
-#endif // Q_WS_WIN
+#endif // Q_WS_WIN || Q_WS_S60
 
 #ifndef QWT_EXPORT
 #define QWT_EXPORT

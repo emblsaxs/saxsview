@@ -7,9 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <cfloat>
 #include "qwt_double_range.h"
 #include "qwt_math.h"
+
+#if QT_VERSION < 0x040601
+#define qFabs(x) ::fabs(x)
+#endif
 
 static double MinRelStep = 1.0e-10;
 static double DefaultRelStep = 1.0e-2;
@@ -68,8 +71,8 @@ void QwtDoubleRange::setNewValue(double x, bool align)
     
     d_prevValue = d_value;
 
-    vmin = qwtMin(d_minValue, d_maxValue);
-    vmax = qwtMax(d_minValue, d_maxValue);
+    vmin = qMin(d_minValue, d_maxValue);
+    vmax = qMax(d_minValue, d_maxValue);
 
     // 
     // Range check
@@ -77,7 +80,7 @@ void QwtDoubleRange::setNewValue(double x, bool align)
     if (x < vmin)
     {
         if ((d_periodic) && (vmin != vmax))
-           d_value = x + ::ceil( (vmin - x) / (vmax - vmin ) ) 
+           d_value = x + qCeil( (vmin - x) / (vmax - vmin ) ) 
               * (vmax - vmin);
         else
            d_value = vmin;
@@ -85,7 +88,7 @@ void QwtDoubleRange::setNewValue(double x, bool align)
     else if (x > vmax)
     {
         if ((d_periodic) && (vmin != vmax))
-           d_value = x - ::ceil( ( x - vmax) / (vmax - vmin )) 
+           d_value = x - qCeil( ( x - vmax) / (vmax - vmin )) 
               * (vmax - vmin);
         else
            d_value = vmax;
@@ -102,17 +105,17 @@ void QwtDoubleRange::setNewValue(double x, bool align)
         if (d_step != 0.0)
         {
            d_value = d_minValue +
-             qwtRound((d_value - d_minValue) / d_step) * d_step;
+             qRound((d_value - d_minValue) / d_step) * d_step;
         }
         else
             d_value = d_minValue;
         
         // correct rounding error at the border
-        if (fabs(d_value - d_maxValue) < MinEps * qwtAbs(d_step))
+        if (qFabs(d_value - d_maxValue) < MinEps * qAbs(d_step))
             d_value = d_maxValue;
 
         // correct rounding error if value = 0
-        if (::fabs(d_value) < MinEps * qwtAbs(d_step))
+        if (qFabs(d_value) < MinEps * qAbs(d_step))
             d_value = 0.0;
     }
 
@@ -189,7 +192,7 @@ void QwtDoubleRange::setRange(double vmin, double vmax, double vstep, int pageSi
     // limit page size
     //
     d_pageSize = qwtLim(pageSize,0, 
-        int(qwtAbs((d_maxValue - d_minValue) / d_step))); 
+        int(qAbs((d_maxValue - d_minValue) / d_step))); 
     
     // 
     // If the value lies out of the range, it 
@@ -222,7 +225,7 @@ void QwtDoubleRange::setStep(double vstep)
         else
            newStep = vstep;
         
-        if ( fabs(newStep) < fabs(MinRelStep * intv) )
+        if ( qFabs(newStep) < qFabs(MinRelStep * intv) )
            newStep = MinRelStep * intv;
     }
     
@@ -315,7 +318,7 @@ void QwtDoubleRange::stepChange()
 */
 double QwtDoubleRange::step() const
 {
-    return qwtAbs(d_step);
+    return qAbs(d_step);
 }
 
 /*!

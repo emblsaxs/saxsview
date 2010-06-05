@@ -7,15 +7,13 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <qpainter.h>
+#include "qwt_plot_marker.h"
 #include "qwt_painter.h"
 #include "qwt_scale_map.h"
-#include "qwt_plot_marker.h"
 #include "qwt_symbol.h"
 #include "qwt_text.h"
 #include "qwt_math.h"
+#include <qpainter.h>
 
 class QwtPlotMarker::PrivateData
 {
@@ -24,11 +22,11 @@ public:
         labelAlignment(Qt::AlignCenter),
         labelOrientation(Qt::Horizontal),
         spacing(2),
+        symbol(NULL),
         style(NoLine),
         xValue(0.0),
         yValue(0.0)
     {
-        symbol = new QwtSymbol();
     }
 
     ~PrivateData()
@@ -37,16 +35,12 @@ public:
     }
 
     QwtText label;
-#if QT_VERSION < 0x040000
-    int labelAlignment;
-#else
     Qt::Alignment labelAlignment;
-#endif
     Qt::Orientation labelOrientation;
     int spacing;
 
     QPen pen;
-    QwtSymbol *symbol;
+    const QwtSymbol *symbol;
     LineStyle style;
 
     double xValue;
@@ -74,9 +68,9 @@ int QwtPlotMarker::rtti() const
 }
 
 //! Return Value
-QwtDoublePoint QwtPlotMarker::value() const
+QPointF QwtPlotMarker::value() const
 {
-    return QwtDoublePoint(d_data->xValue, d_data->yValue);
+    return QPointF(d_data->xValue, d_data->yValue);
 }
 
 //! Return x Value
@@ -92,7 +86,7 @@ double QwtPlotMarker::yValue() const
 }
 
 //! Set Value
-void QwtPlotMarker::setValue(const QwtDoublePoint& pos)
+void QwtPlotMarker::setValue(const QPointF& pos)
 {
     setValue(pos.x(), pos.y());
 }
@@ -130,12 +124,12 @@ void QwtPlotMarker::setYValue(double y)
 */
 void QwtPlotMarker::draw(QPainter *painter,
     const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-    const QRect &canvasRect) const
+    const QRectF &canvasRect) const
 {
-    const int x = xMap.transform(d_data->xValue);
-    const int y = yMap.transform(d_data->yValue);
+    const double x = xMap.transform(d_data->xValue);
+    const double y = yMap.transform(d_data->yValue);
 
-    drawAt(painter, canvasRect, QPoint(x, y));
+    drawAt(painter, canvasRect, QPointF(x, y));
 }
 
 /*!
@@ -146,43 +140,46 @@ void QwtPlotMarker::draw(QPainter *painter,
   \param pos Position of the marker in painter coordinates
 */
 void QwtPlotMarker::drawAt(QPainter *painter, 
-    const QRect &canvasRect, const QPoint &pos) const
+    const QRectF &canvasRect, const QPointF &pos) const
 {
     // draw lines
     if (d_data->style != NoLine)
     {
-        painter->setPen(QwtPainter::scaledPen(d_data->pen));
+        painter->setPen(d_data->pen);
         if ( d_data->style == QwtPlotMarker::HLine || 
             d_data->style == QwtPlotMarker::Cross )
         {
             QwtPainter::drawLine(painter, canvasRect.left(), 
-                pos.y(), canvasRect.right(), pos.y() );
+                pos.y(), canvasRect.right() - 1.0, pos.y() );
         }
         if (d_data->style == QwtPlotMarker::VLine || 
             d_data->style == QwtPlotMarker::Cross )
         {
             QwtPainter::drawLine(painter, pos.x(), 
-                canvasRect.top(), pos.x(), canvasRect.bottom());
+                canvasRect.top(), pos.x(), canvasRect.bottom() - 1.0);
         }
     }
 
     // draw symbol
-    if (d_data->symbol->style() != QwtSymbol::NoSymbol)
-        d_data->symbol->draw(painter, pos.x(), pos.y());
+    if ( d_data->symbol &&
+        ( d_data->symbol->style() != QwtSymbol::NoSymbol ) )
+    {
+        d_data->symbol->drawSymbol(painter, pos);
+    }
 
     drawLabel(painter, canvasRect, pos);
 }
 
 void QwtPlotMarker::drawLabel(QPainter *painter, 
-    const QRect &canvasRect, const QPoint &pos) const
+    const QRectF &canvasRect, const QPointF &pos) const
 {
     if (d_data->label.isEmpty())
         return;
 
     int align = d_data->labelAlignment;
-    QPoint alignPos = pos;
+    QPointF alignPos = pos;
 
-    QSize symbolOff(0, 0);
+    QSizeF symbolOff(0, 0);
 
     switch(d_data->style)
     {
@@ -234,32 +231,29 @@ void QwtPlotMarker::drawLabel(QPainter *painter,
         }
         default:
         {
-            if ( d_data->symbol->style() != QwtSymbol::NoSymbol )
+            if ( d_data->symbol &&
+                ( d_data->symbol->style() != QwtSymbol::NoSymbol ) )
             {
-                symbolOff = d_data->symbol->size() + QSize(1, 1);
+                symbolOff = d_data->symbol->size() + QSizeF(1, 1);
                 symbolOff /= 2;
             }
         }
     }
     
-    int pw = d_data->pen.width();
-    if ( pw == 0 )
-        pw = 1;
+    double pw2 = d_data->pen.widthF() / 2.0;
+    if ( pw2 == 0.0 )
+        pw2 = 0.5;
 
-    const int xSpacing = 
-        QwtPainter::metricsMap().screenToLayoutX(d_data->spacing);
-    const int ySpacing = 
-        QwtPainter::metricsMap().screenToLayoutY(d_data->spacing);
+    const int spacing = d_data->spacing;
 
+    const double xOff = qMax( pw2, symbolOff.width() );
+    const double yOff = qMax( pw2, symbolOff.height() );
 
-    int xOff = qwtMax( (pw + 1) / 2, symbolOff.width() );
-    int yOff = qwtMax( (pw + 1) / 2, symbolOff.height() );
-
-    const QSize textSize = d_data->label.textSize(painter->font());
+    const QSizeF textSize = d_data->label.textSize(painter->font());
 
     if ( align & Qt::AlignLeft )
     {
-        alignPos.rx() -= xOff + xSpacing;
+        alignPos.rx() -= xOff + spacing;
         if ( d_data->labelOrientation == Qt::Vertical )
             alignPos.rx() -= textSize.height();
         else
@@ -267,7 +261,7 @@ void QwtPlotMarker::drawLabel(QPainter *painter,
     }
     else if ( align & Qt::AlignRight )
     {
-        alignPos.rx() += xOff + xSpacing;
+        alignPos.rx() += xOff + spacing;
     }
     else
     {
@@ -279,13 +273,13 @@ void QwtPlotMarker::drawLabel(QPainter *painter,
 
     if (align & (int) Qt::AlignTop)
     {
-        alignPos.ry() -= yOff + ySpacing;
+        alignPos.ry() -= yOff + spacing;
         if ( d_data->labelOrientation != Qt::Vertical )
             alignPos.ry() -= textSize.height();
     }
     else if (align & (int) Qt::AlignBottom)
     {
-        alignPos.ry() += yOff + ySpacing;
+        alignPos.ry() += yOff + spacing;
         if ( d_data->labelOrientation == Qt::Vertical )
             alignPos.ry() += textSize.width();
     }
@@ -301,7 +295,7 @@ void QwtPlotMarker::drawLabel(QPainter *painter,
     if ( d_data->labelOrientation == Qt::Vertical )
         painter->rotate(-90.0);
 
-    const QRect textRect(0, 0, textSize.width(), textSize.height());
+    const QRectF textRect(0, 0, textSize.width(), textSize.height());
     d_data->label.draw(painter, textRect);
 }
 
@@ -331,14 +325,17 @@ QwtPlotMarker::LineStyle QwtPlotMarker::lineStyle() const
 
 /*!
   \brief Assign a symbol
-  \param s New symbol 
+  \param symbol New symbol 
   \sa symbol()
 */
-void QwtPlotMarker::setSymbol(const QwtSymbol &s)
+void QwtPlotMarker::setSymbol(const QwtSymbol *symbol)
 {
-    delete d_data->symbol;
-    d_data->symbol = s.clone();
-    itemChanged();
+    if ( symbol != d_data->symbol )
+    {
+        delete d_data->symbol;
+        d_data->symbol = symbol;
+        itemChanged();
+    }
 }
 
 /*!
@@ -389,11 +386,7 @@ QwtText QwtPlotMarker::label() const
     AlignVCenter.  
   \sa labelAlignment(), labelOrientation()
 */
-#if QT_VERSION < 0x040000
-void QwtPlotMarker::setLabelAlignment(int align)
-#else
 void QwtPlotMarker::setLabelAlignment(Qt::Alignment align)
-#endif
 {
     if ( align != d_data->labelAlignment )
     {
@@ -406,11 +399,7 @@ void QwtPlotMarker::setLabelAlignment(Qt::Alignment align)
   \return the label alignment
   \sa setLabelAlignment(), setLabelOrientation()
 */
-#if QT_VERSION < 0x040000
-int QwtPlotMarker::labelAlignment() const 
-#else
 Qt::Alignment QwtPlotMarker::labelAlignment() const 
-#endif
 { 
     return d_data->labelAlignment; 
 }
@@ -500,7 +489,7 @@ const QPen &QwtPlotMarker::linePen() const
     return d_data->pen; 
 }
 
-QwtDoubleRect QwtPlotMarker::boundingRect() const
+QRectF QwtPlotMarker::boundingRect() const
 {
-    return QwtDoubleRect(d_data->xValue, d_data->yValue, 0.0, 0.0);
+    return QRectF(d_data->xValue, d_data->yValue, 0.0, 0.0);
 }

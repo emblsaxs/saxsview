@@ -7,15 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
+#include "qwt_plot_picker.h"
 #include "qwt_plot.h"
-#include "qwt_double_rect.h"
 #include "qwt_scale_div.h"
 #include "qwt_painter.h"
 #include "qwt_scale_map.h"
 #include "qwt_picker_machine.h"
-#include "qwt_plot_picker.h"
 
 /*!
   \brief Create a plot picker
@@ -144,9 +141,9 @@ const QwtPlot *QwtPlotPicker::plot() const
 
   \sa QwtPlot::autoReplot(), QwtPlot::replot().
 */
-QwtDoubleRect QwtPlotPicker::scaleRect() const
+QRectF QwtPlotPicker::scaleRect() const
 {
-    QwtDoubleRect rect;
+    QRectF rect;
 
     if ( plot() )
     {
@@ -155,7 +152,7 @@ QwtDoubleRect QwtPlotPicker::scaleRect() const
 
         if ( xs && ys )
         {
-            rect = QwtDoubleRect( xs->lowerBound(), ys->lowerBound(), 
+            rect = QRectF( xs->lowerBound(), ys->lowerBound(), 
                 xs->range(), ys->range() );
             rect = rect.normalized();
         }
@@ -203,7 +200,7 @@ int QwtPlotPicker::yAxis() const
 */
 QwtText QwtPlotPicker::trackerText(const QPoint &pos) const
 {
-    return trackerText(invTransform(pos));
+    return trackerTextF(invTransform(pos));
 }
 
 /*!
@@ -218,7 +215,7 @@ QwtText QwtPlotPicker::trackerText(const QPoint &pos) const
   \param pos Position
   \return Position string
 */
-QwtText QwtPlotPicker::trackerText(const QwtDoublePoint &pos) const
+QwtText QwtPlotPicker::trackerTextF(const QPointF &pos) const
 {
     QString text;
 
@@ -248,7 +245,7 @@ QwtText QwtPlotPicker::trackerText(const QwtDoublePoint &pos) const
 void QwtPlotPicker::append(const QPoint &pos)
 {
     QwtPicker::append(pos);
-    emit appended(invTransform(pos));
+    Q_EMIT appended(invTransform(pos));
 }
 
 /*!
@@ -263,7 +260,7 @@ void QwtPlotPicker::append(const QPoint &pos)
 void QwtPlotPicker::move(const QPoint &pos)
 {
     QwtPicker::move(pos);
-    emit moved(invTransform(pos));
+    Q_EMIT moved(invTransform(pos));
 }
 
 /*!
@@ -284,7 +281,7 @@ bool QwtPlotPicker::end(bool ok)
     if ( !plot )
         return false;
 
-    const QwtPolygon pa = selection();
+    const QPolygon pa = selection();
     if ( pa.count() == 0 )
         return false;
 
@@ -298,8 +295,8 @@ bool QwtPlotPicker::end(bool ok)
     {
         case QwtPickerMachine::PointSelection:
         {
-            const QwtDoublePoint pos = invTransform(pa[0]);
-            emit selected(pos);
+            const QPointF pos = invTransform(pa[0]);
+            Q_EMIT selected(pos);
             break;
         }
         case QwtPickerMachine::RectSelection:
@@ -309,22 +306,18 @@ bool QwtPlotPicker::end(bool ok)
                 const QPoint p1 = pa[0];
                 const QPoint p2 = pa[int(pa.count() - 1)];
 
-#if QT_VERSION < 0x040000
-                const QRect rect = QRect(p1, p2).normalize();
-#else
                 const QRect rect = QRect(p1, p2).normalized();
-#endif
-                emit selected(invTransform(rect));
+                Q_EMIT selected(invTransform(rect));
             }
             break;
         }
         case QwtPickerMachine::PolygonSelection:
         {
-            QwtArray<QwtDoublePoint> dpa(pa.count());
+            QVector<QPointF> dpa(pa.count());
             for ( int i = 0; i < int(pa.count()); i++ )
                 dpa[i] = invTransform(pa[i]);
 
-            emit selected(dpa);
+            Q_EMIT selected(dpa);
         }
         default:
             break;
@@ -337,51 +330,40 @@ bool QwtPlotPicker::end(bool ok)
     Translate a rectangle from pixel into plot coordinates
 
     \return Rectangle in plot coordinates
-    \sa QwtPlotPicker::transform()
+    \sa transform()
 */
-QwtDoubleRect QwtPlotPicker::invTransform(const QRect &rect) const
+QRectF QwtPlotPicker::invTransform(const QRect &rect) const
 {
-    QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
-    QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
+    const QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
+    const QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
 
-    const double left = xMap.invTransform(rect.left());
-    const double right = xMap.invTransform(rect.right());
-    const double top = yMap.invTransform(rect.top());
-    const double bottom = yMap.invTransform(rect.bottom());
-
-    return QwtDoubleRect(left, top,
-        right - left, bottom - top);
+    return QwtScaleMap::invTransform(xMap, yMap, rect);
 }
 
 /*!
     Translate a rectangle from plot into pixel coordinates
     \return Rectangle in pixel coordinates
-    \sa QwtPlotPicker::invTransform()
+    \sa invTransform()
 */
-QRect QwtPlotPicker::transform(const QwtDoubleRect &rect) const
+QRect QwtPlotPicker::transform(const QRectF &rect) const
 {
-    QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
-    QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
+    const QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
+    const QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
 
-    const int left = xMap.transform(rect.left());
-    const int right = xMap.transform(rect.right());
-    const int top = yMap.transform(rect.top());
-    const int bottom = yMap.transform(rect.bottom());
-
-    return QRect(left, top, right - left, bottom - top);
+    return QwtScaleMap::transform(xMap, yMap, rect).toRect();
 }
 
 /*!
     Translate a point from pixel into plot coordinates
     \return Point in plot coordinates
-    \sa QwtPlotPicker::transform()
+    \sa transform()
 */
-QwtDoublePoint QwtPlotPicker::invTransform(const QPoint &pos) const
+QPointF QwtPlotPicker::invTransform(const QPoint &pos) const
 {
     QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
     QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
 
-    return QwtDoublePoint(
+    return QPointF(
         xMap.invTransform(pos.x()),
         yMap.invTransform(pos.y())
     );
@@ -390,15 +372,15 @@ QwtDoublePoint QwtPlotPicker::invTransform(const QPoint &pos) const
 /*!
     Translate a point from plot into pixel coordinates
     \return Point in pixel coordinates
-    \sa QwtPlotPicker::invTransform()
+    \sa invTransform()
 */
-QPoint QwtPlotPicker::transform(const QwtDoublePoint &pos) const
+QPoint QwtPlotPicker::transform(const QPointF &pos) const
 {
     QwtScaleMap xMap = plot()->canvasMap(d_xAxis);
     QwtScaleMap yMap = plot()->canvasMap(d_yAxis);
 
-    return QPoint(
-        xMap.transform(pos.x()),
-        yMap.transform(pos.y())
-    );
+    const QPointF p( xMap.transform(pos.x()), 
+        yMap.transform(pos.y()) );
+
+    return p.toPoint();
 }

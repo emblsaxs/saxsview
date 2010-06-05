@@ -10,14 +10,13 @@
 #ifndef QWT_PICKER
 #define QWT_PICKER 1
 
+#include "qwt_global.h"
+#include "qwt_text.h"
+#include "qwt_event_pattern.h"
 #include <qobject.h>
 #include <qpen.h>
 #include <qfont.h>
 #include <qrect.h>
-#include "qwt_global.h"
-#include "qwt_text.h"
-#include "qwt_polygon.h"
-#include "qwt_event_pattern.h"
 
 class QWidget;
 class QMouseEvent;
@@ -234,12 +233,12 @@ public:
     QPoint trackerPosition() const;
     QRect trackerRect(const QFont &) const;
 
-    QwtPolygon selection() const;
+    QPolygon selection() const;
 
-public slots:
+public Q_SLOTS:
     void setEnabled(bool);
 
-signals:
+Q_SIGNALS:
     /*!
       A signal indicating, when the picker has been activated.
       Together with setEnabled() it can be used to implement
@@ -255,7 +254,7 @@ signals:
 
       \param pa Selected points
     */
-    void selected(const QwtPolygon &pa);
+    void selected(const QPolygon &pa);
 
     /*!
       A signal emitted when a point has been appended to the selection
@@ -288,10 +287,10 @@ signals:
       \param pa Changed selection
       \sa stretchSelection()
     */
-    void changed(const QwtPolygon &pa);
+    void changed(const QPolygon &pa);
 
 protected:
-    virtual QwtPolygon adjustedPoints(const QwtPolygon &) const;
+    virtual QPolygon adjustedPoints(const QPolygon &) const;
 
     virtual void transition(const QEvent *);
 
@@ -301,7 +300,7 @@ protected:
     virtual void remove();
     virtual bool end(bool ok = true);
 
-    virtual bool accept(QwtPolygon &) const;
+    virtual bool accept(QPolygon &) const;
     virtual void reset();
 
     virtual void widgetMousePressEvent(QMouseEvent *);
@@ -322,7 +321,7 @@ protected:
     const QWidget *rubberBandWidget() const;
     const QWidget *trackerWidget() const;
 
-    const QwtPolygon &pickedPoints() const; 
+    const QPolygon &pickedPoints() const; 
 
 private:
     void init(QWidget *, RubberBand rubberBand, DisplayMode trackerMode);

@@ -10,13 +10,11 @@
 #ifndef QWT_PLOT_H
 #define QWT_PLOT_H
 
-#include <qframe.h>
 #include "qwt_global.h"
-#include "qwt_array.h"
 #include "qwt_text.h"
 #include "qwt_plot_dict.h"
 #include "qwt_scale_map.h"
-#include "qwt_plot_printfilter.h"
+#include <qframe.h>
 
 class QwtPlotLayout;
 class QwtLegend;
@@ -26,7 +24,6 @@ class QwtScaleDiv;
 class QwtScaleDraw;
 class QwtTextLabel;
 class QwtPlotCanvas;
-class QwtPlotPrintFilter;
 
 /*!
   \brief A 2-D plotting widget
@@ -112,7 +109,7 @@ public:
           have a legend in an external window ( or on the canvas ).
 
         \note In case of ExternalLegend, the legend is not 
-              printed by print().
+              handled by QwtPlotRenderer
 
         \sa insertLegend()
      */
@@ -128,9 +125,6 @@ public:
 
     explicit QwtPlot(QWidget * = NULL);
     explicit QwtPlot(const QwtText &title, QWidget *p = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtPlot(QWidget *, const char* name);
-#endif
 
     virtual ~QwtPlot();
 
@@ -139,11 +133,6 @@ public:
 
     void setAutoReplot(bool tf = true);
     bool autoReplot() const;
-
-    void print(QPaintDevice &p,
-        const QwtPlotPrintFilter & = QwtPlotPrintFilter()) const;
-    virtual void print(QPainter *, const QRect &rect,
-        const QwtPlotPrintFilter & = QwtPlotPrintFilter()) const;
 
     // Layout
 
@@ -176,7 +165,7 @@ public:
     virtual QwtScaleMap canvasMap(int axisId) const;
 
     double invTransform(int axisId, int pos) const;
-    int transform(int axisId, double value) const;
+    double transform(int axisId, double value) const;
 
     // Axes
 
@@ -208,11 +197,7 @@ public:
     const QwtScaleWidget *axisWidget(int axisId) const;
     QwtScaleWidget *axisWidget(int axisId);
 
-#if QT_VERSION < 0x040000
-    void setAxisLabelAlignment(int axisId, int);
-#else
     void setAxisLabelAlignment(int axisId, Qt::Alignment);
-#endif
     void setAxisLabelRotation(int axisId, double rotation);
 
     void setAxisTitle(int axisId, const QString &);
@@ -220,9 +205,10 @@ public:
     QwtText axisTitle(int axisId) const;
 
     void setAxisMaxMinor(int axisId, int maxMinor);
-    int axisMaxMajor(int axisId) const;
-    void setAxisMaxMajor(int axisId, int maxMajor);
     int axisMaxMinor(int axisId) const;
+
+    void setAxisMaxMajor(int axisId, int maxMajor);
+    int axisMaxMajor(int axisId) const;
 
     // Legend 
 
@@ -245,7 +231,10 @@ public:
 
     virtual bool event(QEvent *);
 
-signals:
+    virtual void drawItems(QPainter *, const QRectF &,
+        const QwtScaleMap maps[axisCnt]) const;
+
+Q_SIGNALS:
     /*!
       A signal which is emitted when the user has clicked on 
       a legend item, which is in QwtLegend::ClickableItem mode. 
@@ -272,40 +261,22 @@ signals:
 
     void legendChecked(QwtPlotItem *plotItem, bool on);
 
-public slots:
+public Q_SLOTS:
     virtual void clear();
 
     virtual void replot();
     void autoRefresh();
 
-protected slots:
+protected Q_SLOTS:
     virtual void legendItemClicked();
     virtual void legendItemChecked(bool);
 
 protected:
     static bool axisValid(int axisId);
 
-    virtual void drawItems(QPainter *, const QRect &,
-        const QwtScaleMap maps[axisCnt],
-        const QwtPlotPrintFilter &) const;
-
     virtual void updateTabOrder();
 
     virtual void resizeEvent(QResizeEvent *e);
-
-    virtual void printLegendItem(QPainter *, 
-        const QWidget *, const QRect &) const;
-
-    virtual void printTitle(QPainter *, const QRect &) const;
-
-    virtual void printScale(QPainter *, int axisId, int startDist, int endDist,
-        int baseDist, const QRect &) const;
-
-    virtual void printCanvas(QPainter *, 
-        const QRect &boundingRect, const QRect &canvasRect,
-        const QwtScaleMap maps[axisCnt], const QwtPlotPrintFilter &) const;
-
-    virtual void printLegend(QPainter *, const QRect &) const;
 
 private:
     void initAxesData();

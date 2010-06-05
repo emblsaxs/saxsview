@@ -10,24 +10,22 @@
 #ifndef QWT_MATH_H
 #define QWT_MATH_H
 
-#include <math.h>
-#include <qpoint.h>
 #include "qwt_global.h"
-#include "qwt_double_rect.h"
 
-#if QT_VERSION < 0x040000
+#if defined(_MSC_VER)
+/*
+  Microsoft says:
 
-#define qwtMax QMAX
-#define qwtMin QMIN
-#define qwtAbs QABS
-
-#else // QT_VERSION >= 0x040000
-
-#define qwtMax qMax
-#define qwtMin qMin
-#define qwtAbs qAbs
-
+  Define _USE_MATH_DEFINES before including math.h to expose these macro
+  definitions for common math constants.  These are placed under an #ifdef
+  since these commonly-defined names are not part of the C/C++ standards.
+*/
+#define _USE_MATH_DEFINES 1
 #endif
+
+#include <qpoint.h>
+#include <qmath.h>
+#include "qwt_global.h"
 
 #ifndef LOG10_2
 #define LOG10_2     0.30102999566398119802  /* log10(2) */
@@ -110,6 +108,41 @@
 QWT_EXPORT double qwtGetMin(const double *array, int size);
 QWT_EXPORT double qwtGetMax(const double *array, int size);
 
+/*!
+  \brief Compare 2 values, relative to an interval
+
+  Values are "equal", when :
+  \f$\cdot value2 - value1 <= abs(intervalSize * 10e^{-6})\f$
+
+  \param value1 First value to compare
+  \param value2 Second value to compare
+  \param intervalSize interval size
+
+  \return 0: if equal, -1: if value2 > value1, 1: if value1 > value2
+*/
+inline int qwtFuzzyCompare(double value1, double value2, double intervalSize)
+{
+    const double eps = qAbs(1.0e-6 * intervalSize);
+
+    if ( value2 - value1 > eps )
+        return -1;
+
+    if ( value1 - value2 > eps )
+        return 1;
+
+    return 0;
+}
+
+
+inline bool qwtFuzzyGreaterOrEqual(double d1, double d2)
+{
+    return (d1 >= d2) || qFuzzyCompare(d1, d2);
+}
+
+inline bool qwtFuzzyLessOrEqual(double d1, double d2)
+{
+    return (d1 <= d2) || qFuzzyCompare(d1, d2);
+}
 
 //! Return the sign 
 inline int qwtSign(double x)
@@ -140,8 +173,8 @@ T qwtLim(const T& x, const T& x1, const T& x2)
     T rv;
     T xmin, xmax;
     
-    xmin = qwtMin(x1, x2);
-    xmax = qwtMax(x1, x2);
+    xmin = qMin(x1, x2);
+    xmax = qMax(x1, x2);
 
     if ( x < xmin )
        rv = xmin;
@@ -156,8 +189,8 @@ T qwtLim(const T& x, const T& x1, const T& x2)
 inline QPoint qwtPolar2Pos(const QPoint &pole,
     double radius, double angle)
 {
-    const double x = pole.x() + radius * ::cos(angle);
-    const double y = pole.y() - radius * ::sin(angle);
+    const double x = pole.x() + radius * qCos(angle);
+    const double y = pole.y() - radius * qSin(angle);
 
     return QPoint(qRound(x), qRound(y));
 }
@@ -168,25 +201,19 @@ inline QPoint qwtDegree2Pos(const QPoint &pole,
     return qwtPolar2Pos(pole, radius, angle / 180.0 * M_PI);
 }
 
-inline QwtDoublePoint qwtPolar2Pos(const QwtDoublePoint &pole,
+inline QPointF qwtPolar2Pos(const QPointF &pole,
     double radius, double angle)
 {
-    const double x = pole.x() + radius * ::cos(angle);
-    const double y = pole.y() - radius * ::sin(angle);
+    const double x = pole.x() + radius * qCos(angle);
+    const double y = pole.y() - radius * qSin(angle);
 
     return QPoint(qRound(x), qRound(y));
 }
 
-inline QwtDoublePoint qwtDegree2Pos(const QwtDoublePoint &pole,
+inline QPointF qwtDegree2Pos(const QPointF &pole,
     double radius, double angle)
 {
     return qwtPolar2Pos(pole, radius, angle / 180.0 * M_PI);
-}
-
-//! Rounding of doubles, like qRound for integers
-inline double qwtRound(double value)
-{
-    return ::floor(value + 0.5); // MSVC has no ::round().
 }
 
 #endif

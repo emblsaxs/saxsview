@@ -29,51 +29,71 @@
 
 namespace Saxsview {
 
-PlotSymbol::PlotSymbol() {
+PlotSymbol::PlotSymbol() : mSymbol(new QwtSymbol) {
   setStyle(NoSymbol);
   setSize(0);
   setColor(Qt::black);
 }
 
-PlotSymbol::PlotSymbol(Style style, int size, const QColor& color) {
+PlotSymbol::PlotSymbol(Style style, int size, const QColor& color)
+  : mSymbol(new QwtSymbol) {
   setStyle(style);
   setSize(size);
   setColor(color);
 }
 
+PlotSymbol::PlotSymbol(const PlotSymbol& other)
+ : mSymbol(new QwtSymbol) {
+  mSymbol->setStyle(other.mSymbol->style());
+  mSymbol->setBrush(other.mSymbol->brush());
+  mSymbol->setPen(other.mSymbol->pen());
+  mSymbol->setSize(other.mSymbol->size());
+}
+
+PlotSymbol::~PlotSymbol() {
+//   delete mSymbol;
+}
+
+PlotSymbol& PlotSymbol::operator=(const PlotSymbol& other) {
+  PlotSymbol tmp(other);
+  qSwap(mSymbol, tmp.mSymbol);
+  return *this;
+}
+
+
 QColor PlotSymbol::color() const {
-  return mSymbol.pen().color();
+  return mSymbol->pen().color();
 }
 
 void PlotSymbol::setColor(const QColor& color) {
-  mSymbol.setPen(QPen(color));
-  if (mSymbol.brush() != Qt::NoBrush)
-    mSymbol.setBrush(QBrush(color));
+  mSymbol->setPen(QPen(color));
+  if (mSymbol->brush() != Qt::NoBrush)
+    mSymbol->setBrush(QBrush(color));
 }
 
 int PlotSymbol::size() const {
-  return mSymbol.size().width();
+  return mSymbol->size().width();
 }
 
 void PlotSymbol::setSize(int size) {
-  mSymbol.setSize(size);
+  mSymbol->setSize(size);
 }
 
 PlotSymbol::Style PlotSymbol::style() const {
-  return (Style)(mSymbol.style() + (mSymbol.brush() == Qt::NoBrush ? 0 : 100));
+  return (Style)(mSymbol->style() + (mSymbol->brush() == Qt::NoBrush ? 0 : 100));
 }
 
 void PlotSymbol::setStyle(Style s) {
   if (s >= 100) {
-    mSymbol.setStyle((QwtSymbol::Style)(s - 100));
-    mSymbol.setBrush(QBrush(color()));
+    mSymbol->setStyle((QwtSymbol::Style)(s - 100));
+    mSymbol->setBrush(QBrush(color()));
   } else {
-    mSymbol.setStyle((QwtSymbol::Style)(s));
-    mSymbol.setBrush(QBrush(Qt::NoBrush));
+    mSymbol->setStyle((QwtSymbol::Style)(s));
+    mSymbol->setBrush(QBrush(Qt::NoBrush));
   }
 }
 
-const QwtSymbol& PlotSymbol::qwtSymbol() const {
+QwtSymbol* PlotSymbol::qwtSymbol() const {
   return mSymbol;
 }
 
@@ -107,22 +127,25 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
   // TODO: Read default values
 
   // data points
-  QwtSymbol symbol;
-//  symbol.setStyle(QwtSymbol::Cross);
-//   symbol.setPen(QPen(Qt::black));
-//   symbol.setSize(2);
+  // TODO: set default values
+  QwtSymbol *symbol = new QwtSymbol(QwtSymbol::NoSymbol);
 
   curve = new QwtPlotCurve;
+  curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
+  curve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol);
+  curve->setLegendAttribute(QwtPlotCurve::LegendShowBrush);
   curve->setStyle(QwtPlotCurve::Lines);
   curve->setSymbol(symbol);
   curve->setPen(QPen(Qt::black));
 
   // error bars
-  QwtIntervalSymbol errorBar(QwtIntervalSymbol::Bar);
-  errorBar.setWidth(1);
-  errorBar.setPen(QPen(Qt::lightGray));
+  // TODO: set default values
+  QwtIntervalSymbol *errorBar = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
+  errorBar->setWidth(1);
+  errorBar->setPen(QPen(Qt::lightGray));
 
   errorCurve = new QwtPlotIntervalCurve;
+  errorCurve->setItemAttribute(QwtPlotItem::Legend, false);
   errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
   errorCurve->setSymbol(errorBar);
 }
@@ -138,16 +161,18 @@ PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
 void PlotCurve::PlotCurvePrivate::scale() {
   PlotPointData scaledPoints;
   for (int i = 0 ; i < pointData->size(); i += every)
-    scaledPoints.push_back(QwtDoublePoint(pointData->at(i).x() * scaleX,
-                                          pointData->at(i).y() * scaleY));
-  curve->setData(scaledPoints);
+    scaledPoints.push_back(QPointF(pointData->at(i).x() * scaleX,
+                                   pointData->at(i).y() * scaleY));
+  curve->setSamples(scaledPoints);
 
   PlotIntervalData scaledIntervals;
-  for (int i = 0 ; i < intervalData->size(); i += every)
-    scaledIntervals.push_back(QwtIntervalSample(intervalData->at(i).value * scaleX,
-                                                QwtDoubleInterval(intervalData->at(i).interval.minValue() * scaleY,
-                                                                  intervalData->at(i).interval.maxValue() * scaleY)));
-  errorCurve->setData(scaledIntervals);
+  for (int i = 0 ; i < intervalData->size(); i += every) {
+    QwtIntervalSample is = intervalData->at(i);
+    scaledIntervals.push_back(QwtIntervalSample(is.value * scaleX,
+                                                is.interval.minValue() * scaleY,
+                                                is.interval.maxValue() * scaleY));
+  }
+  errorCurve->setSamples(scaledIntervals);
 }
 
 PlotCurve::PlotCurve(QObject *parent)
@@ -161,9 +186,6 @@ PlotCurve::~PlotCurve() {
 void PlotCurve::attach(Plot *plot) {
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
-
-  if (QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve)))
-    legendItem->setIdentifierWidth(20);
 }
 
 void PlotCurve::detach() {
@@ -181,9 +203,10 @@ void PlotCurve::setData(const PlotPointData& points,
 
   p->scaleX = 1.0;
   p->scaleY = 1.0;
+  p->every  = 1;
 
-  p->curve->setData(points);
-  p->errorCurve->setData(intervals);
+  p->curve->setSamples(points);
+  p->errorCurve->setSamples(intervals);
 }
 
 bool PlotCurve::errorBarsEnabled() const {
@@ -200,12 +223,11 @@ bool PlotCurve::isVisible() const {
 }
 
 void PlotCurve::setVisible(bool on) {
+  p->curve->setItemAttribute(QwtPlotItem::Legend, on);
   p->curve->setVisible(on);
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
 
  if (Plot *plot = qobject_cast<Plot*>(p->curve->plot())) {
-    qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve))->setVisible(on);
-
     //
     // UpdateLayout() is required to hide/show the
     // legend on the last/first curve.
@@ -241,13 +263,12 @@ QString PlotCurve::title() const {
 void PlotCurve::setTitle(const QString& title) {
   //
   // Remove the legend entry if the title is empty.
+  // Test for the attribute as it is also used by setVisible().
   //
-  if (Plot *plot = qobject_cast<Plot*>(p->curve->plot()))
-    qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve))->setVisible(!title.isEmpty());
-
+  if (p->curve->testItemAttribute(QwtPlotItem::Legend))
+    p->curve->setItemAttribute(QwtPlotItem::Legend, !title.isEmpty());
   p->curve->setTitle(title);
 }
-
 
 double PlotCurve::scalingFactorX() const {
   return p->scaleX;
@@ -285,13 +306,13 @@ void PlotCurve::setPen(const QPen& pen) {
 }
 
 QPen PlotCurve::errorBarPen() const {
-  return p->errorCurve->symbol().pen();
+  return p->errorCurve->symbol()->pen();
 }
 
 void PlotCurve::setErrorBarPen(const QPen& pen) {
-  QwtIntervalSymbol symbol(QwtIntervalSymbol::Bar);
-  symbol.setWidth(1);  // cap width
-  symbol.setPen(pen);
+  QwtIntervalSymbol *symbol = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
+  symbol->setWidth(1);  // cap width
+  symbol->setPen(pen);
   p->errorCurve->setSymbol(symbol);
 }
 
@@ -301,7 +322,11 @@ PlotSymbol PlotCurve::symbol() const {
 
 void PlotCurve::setSymbol(const PlotSymbol& symbol) {
   p->curveSymbol = symbol;
-  p->curve->setSymbol(symbol.qwtSymbol());
+  p->curve->setSymbol(p->curveSymbol.qwtSymbol());
+
+//   QwtSymbol *sym = new QwtSymbol(QwtSymbol::NoSymbol);
+
+//   p->curve->setSymbol(sym);
 }
 
 } // end of namespace Saxsview

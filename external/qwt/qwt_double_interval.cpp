@@ -7,15 +7,10 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <qglobal.h>
-#if QT_VERSION >= 0x040000
-#include <qalgorithms.h>
-#else
-#include <qtl.h>
-#endif
-
-#include "qwt_math.h"
 #include "qwt_double_interval.h"
+#include "qwt_math.h"
+#include <qalgorithms.h>
+#include <qdebug.h>
 
 /*!
    \brief Normalize the limits of the interval
@@ -265,7 +260,7 @@ QwtDoubleInterval QwtDoubleInterval::symmetrize(double value) const
         return *this;
 
     const double delta =
-        qwtMax(qwtAbs(value - d_maxValue), qwtAbs(value - d_minValue));
+        qMax(qAbs(value - d_maxValue), qAbs(value - d_minValue));
 
     return QwtDoubleInterval(value - delta, value + delta);
 }
@@ -284,11 +279,11 @@ QwtDoubleInterval QwtDoubleInterval::limited(
     if ( !isValid() || lowerBound > upperBound )
         return QwtDoubleInterval();
 
-    double minValue = qwtMax(d_minValue, lowerBound);
-    minValue = qwtMin(minValue, upperBound);
+    double minValue = qMax(d_minValue, lowerBound);
+    minValue = qMin(minValue, upperBound);
 
-    double maxValue = qwtMax(d_maxValue, lowerBound);
-    maxValue = qwtMin(maxValue, upperBound);
+    double maxValue = qMax(d_maxValue, lowerBound);
+    maxValue = qMin(maxValue, upperBound);
 
     return QwtDoubleInterval(minValue, maxValue, d_borderFlags);
 }
@@ -309,8 +304,8 @@ QwtDoubleInterval QwtDoubleInterval::extend(double value) const
     if ( !isValid() )
         return *this;
 
-    return QwtDoubleInterval( qwtMin(value, d_minValue), 
-        qwtMax(value, d_maxValue), d_borderFlags );
+    return QwtDoubleInterval( qMin(value, d_minValue), 
+        qMax(value, d_maxValue), d_borderFlags );
 }
 
 QwtDoubleInterval& QwtDoubleInterval::operator|=(double value)
@@ -318,3 +313,20 @@ QwtDoubleInterval& QwtDoubleInterval::operator|=(double value)
     *this = *this | value;
     return *this;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+
+QDebug operator<<( QDebug debug, const QwtDoubleInterval &interval)
+{
+    const int flags = interval.borderFlags();
+
+    debug.nospace() << "QwtDoubleInterval("
+        << ((flags & QwtDoubleInterval::ExcludeMinimum ) ? "]" : "[")
+        << interval.minValue() << "," << interval.maxValue()
+        << ((flags & QwtDoubleInterval::ExcludeMaximum ) ? "[" : "]")
+        << ")";
+
+    return debug.space();
+}
+
+#endif

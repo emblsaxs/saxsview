@@ -7,18 +7,12 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_LEGEND_H
 #define QWT_LEGEND_H
 
-#include <qframe.h>
 #include "qwt_global.h"
-#if QT_VERSION < 0x040000
-#include <qvaluelist.h>
-#else
+#include <qframe.h>
 #include <qlist.h>
-#endif
 
 class QScrollBar;
 class QwtLegendItemManager;
@@ -38,34 +32,6 @@ class QWT_EXPORT QwtLegend : public QFrame
     Q_OBJECT
 
 public:
-    /*!
-      \brief Display policy
-
-       - NoIdentifier\n
-         The client code is responsible how to display of each legend item.
-         The Qwt library will not interfere.
-
-       - FixedIdentifier\n
-         All legend items are displayed with the QwtLegendItem::IdentifierMode
-         to be passed in 'mode'.
-
-       - AutoIdentifier\n
-         Each legend item is displayed with a mode that is a bitwise or of
-         - QwtLegendItem::ShowLine (if its curve is drawn with a line) and
-         - QwtLegendItem::ShowSymbol (if its curve is drawn with symbols) and
-         - QwtLegendItem::ShowText (if the has a title).
-
-       Default is AutoIdentifier.
-       \sa setDisplayPolicy(), displayPolicy(), QwtLegendItem::IdentifierMode
-     */
-
-    enum LegendDisplayPolicy
-    {
-        NoIdentifier = 0,
-        FixedIdentifier = 1,
-        AutoIdentifier = 2
-    };
-
     /*!
       \brief Interaction mode for the legend items
 
@@ -94,13 +60,8 @@ public:
     explicit QwtLegend(QWidget *parent = NULL);
     virtual ~QwtLegend();
     
-    void setDisplayPolicy(LegendDisplayPolicy policy, int mode);
-    LegendDisplayPolicy displayPolicy() const;
-
     void setItemMode(LegendItemMode);
     LegendItemMode itemMode() const;
-
-    int identifierMode() const;
 
     QWidget *contentsWidget();
     const QWidget *contentsWidget() const;
@@ -111,11 +72,7 @@ public:
     QWidget *find(const QwtLegendItemManager *) const;
     QwtLegendItemManager *find(const QWidget *) const;
 
-#if QT_VERSION < 0x040000
-    virtual QValueList<QWidget *> legendItems() const;
-#else
     virtual QList<QWidget *> legendItems() const;
-#endif
 
     void clear();
     

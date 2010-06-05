@@ -13,6 +13,8 @@
 #include "qwt_global.h"
 #include "qwt_math.h"
 
+class QRectF;
+
 /*!
    \brief Operations for linear or logarithmic (base 10) transformations
 */
@@ -35,8 +37,7 @@ public:
     virtual double invXForm(double x, double s1, double s2,
         double p1, double p2) const;
 
-    //! \return Transformation type
-    inline Type type() const { return d_type; }
+    Type type() const;
     
     virtual QwtScaleTransformation *copy() const;
 
@@ -46,6 +47,12 @@ private:
 
     const Type d_type;
 };
+
+//! \return Transformation type
+inline QwtScaleTransformation::Type QwtScaleTransformation::type() const 
+{ 
+    return d_type; 
+}
 
 /*!
    \brief A scale map
@@ -66,26 +73,28 @@ public:
     void setTransformation(QwtScaleTransformation * );
     const QwtScaleTransformation *transformation() const;
 
-    void setPaintInterval(int p1, int p2);
-    void setPaintXInterval(double p1, double p2);
+    void setPaintInterval(double p1, double p2);
     void setScaleInterval(double s1, double s2);
 
-    int transform(double x) const;
-    double invTransform(double i) const;
+    double transform(double s) const;
+    double invTransform(double p) const;
 
-    double xTransform(double x) const;
+    double p1() const;
+    double p2() const;
 
-    inline double p1() const;
-    inline double p2() const;
+    double s1() const;
+    double s2() const;
 
-    inline double s1() const;
-    inline double s2() const;
-
-    inline double pDist() const;
-    inline double sDist() const;
+    double pDist() const;
+    double sDist() const;
 
     QT_STATIC_CONST double LogMin;
     QT_STATIC_CONST double LogMax;
+
+    static QRectF transform(const QwtScaleMap &,
+        const QwtScaleMap &, const QRectF &);
+    static QRectF invTransform(const QwtScaleMap &,
+        const QwtScaleMap &, const QRectF &);
 
 private:
     void newFactor();   
@@ -135,7 +144,7 @@ inline double QwtScaleMap::p2() const
 */
 inline double QwtScaleMap::pDist() const
 {
-    return qwtAbs(d_p2 - d_p1);
+    return qAbs(d_p2 - d_p1);
 }
 
 /*!
@@ -143,7 +152,7 @@ inline double QwtScaleMap::pDist() const
 */
 inline double QwtScaleMap::sDist() const
 {
-    return qwtAbs(d_s2 - d_s1);
+    return qAbs(d_s2 - d_s1);
 }
 
 /*!
@@ -152,7 +161,7 @@ inline double QwtScaleMap::sDist() const
 
   \param s Value relative to the coordinates of the scale
 */
-inline double QwtScaleMap::xTransform(double s) const
+inline double QwtScaleMap::transform(double s) const
 {
     // try to inline code from QwtScaleTransformation
 
@@ -177,17 +186,8 @@ inline double QwtScaleMap::invTransform(double p) const
     return d_transformation->invXForm(p, d_p1, d_p2, d_s1, d_s2 );
 }
 
-/*!
-  Transform a point related to the scale interval into an point 
-  related to the interval of the paint device and round it to
-  an integer. (In Qt <= 3.x paint devices are integer based. )
-
-  \param s Value relative to the coordinates of the scale
-  \sa xTransform()
-*/
-inline int QwtScaleMap::transform(double s) const
-{
-    return qRound(xTransform(s));
-}
+#ifndef QT_NO_DEBUG_STREAM
+QWT_EXPORT QDebug operator<<(QDebug, const QwtScaleMap &);
+#endif
 
 #endif

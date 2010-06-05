@@ -9,7 +9,6 @@
 
 #include "qwt_spline.h"
 #include "qwt_math.h"
-#include "qwt_array.h"
 
 class QwtSpline::PrivateData
 {
@@ -22,26 +21,18 @@ public:
     QwtSpline::SplineType splineType;
 
     // coefficient vectors
-    QwtArray<double> a;
-    QwtArray<double> b;
-    QwtArray<double> c;
+    QVector<double> a;
+    QVector<double> b;
+    QVector<double> c;
 
     // control points
-#if QT_VERSION < 0x040000
-    QwtArray<QwtDoublePoint> points;
-#else
     QPolygonF points;
-#endif
 };
 
-#if QT_VERSION < 0x040000
-static int lookup(double x, const QwtArray<QwtDoublePoint> &values)
-#else
 static int lookup(double x, const QPolygonF &values)
-#endif
 {
 #if 0
-//qLowerBiund/qHigherBound ???
+//qLowerBound/qHigherBound ???
 #endif
     int i1;
     const int size = (int)values.size();
@@ -127,20 +118,13 @@ QwtSpline::SplineType QwtSpline::splineType() const
   will determine the coefficients for a natural or a periodic
   spline and store them internally. 
   
-  \param x
-  \param y points
-  \param size number of points
-  \param periodic if true, calculate periodic spline
+  \param points Points
   \return true if successful
   \warning The sequence of x (but not y) values has to be strictly monotone
-           increasing, which means <code>x[0] < x[1] < .... < x[n-1]</code>.
+           increasing, which means <code>points[i].x() < points[i+1].x()</code>.
        If this is not the case, the function will return false
 */
-#if QT_VERSION < 0x040000
-bool QwtSpline::setPoints(const QwtArray<QwtDoublePoint>& points)
-#else
 bool QwtSpline::setPoints(const QPolygonF& points)
-#endif
 {
     const int size = points.size();
     if (size <= 2) 
@@ -149,11 +133,7 @@ bool QwtSpline::setPoints(const QPolygonF& points)
         return false;
     }
 
-#if QT_VERSION < 0x040000
-    d_data->points = points.copy(); // Qt3: deep copy
-#else
     d_data->points = points;
-#endif
     
     d_data->a.resize(size-1);
     d_data->b.resize(size-1);
@@ -174,29 +154,25 @@ bool QwtSpline::setPoints(const QPolygonF& points)
 /*!
    Return points passed by setPoints
 */
-#if QT_VERSION < 0x040000
-QwtArray<QwtDoublePoint> QwtSpline::points() const
-#else
 QPolygonF QwtSpline::points() const
-#endif
 {
     return d_data->points;
 }
 
 //! \return A coefficients
-const QwtArray<double> &QwtSpline::coefficientsA() const
+const QVector<double> &QwtSpline::coefficientsA() const
 {
     return d_data->a;
 }
 
 //! \return B coefficients
-const QwtArray<double> &QwtSpline::coefficientsB() const
+const QVector<double> &QwtSpline::coefficientsB() const
 {
     return d_data->b;
 }
 
 //! \return C coefficients
-const QwtArray<double> &QwtSpline::coefficientsC() const
+const QVector<double> &QwtSpline::coefficientsC() const
 {
     return d_data->c;
 }
@@ -237,19 +213,11 @@ double QwtSpline::value(double x) const
   \brief Determines the coefficients for a natural spline
   \return true if successful
 */
-#if QT_VERSION < 0x040000
-bool QwtSpline::buildNaturalSpline(const QwtArray<QwtDoublePoint> &points)
-#else
 bool QwtSpline::buildNaturalSpline(const QPolygonF &points)
-#endif
 {
     int i;
     
-#if QT_VERSION < 0x040000
-    const QwtDoublePoint *p = points.data();
-#else
     const QPointF *p = points.data();
-#endif
     const int size = points.size();
 
     double *a = d_data->a.data();
@@ -258,7 +226,7 @@ bool QwtSpline::buildNaturalSpline(const QPolygonF &points)
 
     //  set up tridiagonal equation system; use coefficient
     //  vectors as temporary buffers
-    QwtArray<double> h(size-1);
+    QVector<double> h(size-1);
     for (i = 0; i < size - 1; i++) 
     {
         h[i] = p[i+1].x() - p[i].x();
@@ -266,7 +234,7 @@ bool QwtSpline::buildNaturalSpline(const QPolygonF &points)
             return false;
     }
     
-    QwtArray<double> d(size-1);
+    QVector<double> d(size-1);
     double dy1 = (p[1].y() - p[0].y()) / h[0];
     for (i = 1; i < size - 1; i++)
     {
@@ -290,7 +258,7 @@ bool QwtSpline::buildNaturalSpline(const QPolygonF &points)
     }
 
     // forward elimination
-    QwtArray<double> s(size);
+    QVector<double> s(size);
     s[1] = d[1];
     for ( i = 2; i < size - 1; i++)
        s[i] = d[i] - c[i-1] * s[i-1];
@@ -319,29 +287,20 @@ bool QwtSpline::buildNaturalSpline(const QPolygonF &points)
   \brief Determines the coefficients for a periodic spline
   \return true if successful
 */
-#if QT_VERSION < 0x040000
-bool QwtSpline::buildPeriodicSpline(
-    const QwtArray<QwtDoublePoint> &points)
-#else
 bool QwtSpline::buildPeriodicSpline(const QPolygonF &points)
-#endif
 {
     int i;
     
-#if QT_VERSION < 0x040000
-    const QwtDoublePoint *p = points.data();
-#else
     const QPointF *p = points.data();
-#endif
     const int size = points.size();
 
     double *a = d_data->a.data();
     double *b = d_data->b.data();
     double *c = d_data->c.data();
 
-    QwtArray<double> d(size-1);
-    QwtArray<double> h(size-1);
-    QwtArray<double> s(size);
+    QVector<double> d(size-1);
+    QVector<double> h(size-1);
+    QVector<double> s(size);
     
     //
     //  setup equation system; use coefficient
@@ -372,7 +331,7 @@ bool QwtSpline::buildPeriodicSpline(const QPolygonF &points)
     //
     
     // L-U Factorization
-    a[0] = sqrt(a[0]);
+    a[0] = qSqrt(a[0]);
     c[0] = h[imax] / a[0];
     double sum = 0;
 
@@ -381,11 +340,11 @@ bool QwtSpline::buildPeriodicSpline(const QPolygonF &points)
         b[i] /= a[i];
         if (i > 0)
            c[i] = - c[i-1] * b[i-1] / a[i];
-        a[i+1] = sqrt( a[i+1] - qwtSqr(b[i]));
+        a[i+1] = qSqrt( a[i+1] - qwtSqr(b[i]));
         sum += qwtSqr(c[i]);
     }
     b[imax-1] = (b[imax-1] - c[imax-2] * b[imax-2]) / a[imax-1];
-    a[imax] = sqrt(a[imax] - qwtSqr(b[imax-1]) - sum);
+    a[imax] = qSqrt(a[imax] - qwtSqr(b[imax-1]) - sum);
     
 
     // forward elimination

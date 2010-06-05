@@ -7,9 +7,9 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <qevent.h>
-#include "qwt_event_pattern.h"
 #include "qwt_picker_machine.h"
+#include "qwt_event_pattern.h"
+#include <qevent.h>
 
 //! Constructor
 QwtPickerMachine::QwtPickerMachine(SelectionType type):

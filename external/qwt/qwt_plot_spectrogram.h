@@ -10,11 +10,10 @@
 #ifndef QWT_PLOT_SPECTROGRAM_H
 #define QWT_PLOT_SPECTROGRAM_H
 
-#include <qglobal.h>
-
-#include "qwt_valuelist.h" 
+#include "qwt_global.h" 
 #include "qwt_raster_data.h" 
 #include "qwt_plot_rasteritem.h" 
+#include <qlist.h>
 
 class QwtColorMap;
 
@@ -57,17 +56,21 @@ public:
     explicit QwtPlotSpectrogram(const QString &title = QString::null);
     virtual ~QwtPlotSpectrogram();
 
+    void setRenderThreadCount(uint numThreads);
+    uint renderThreadCount() const;
+
     void setDisplayMode(DisplayMode, bool on = true);
     bool testDisplayMode(DisplayMode) const;
 
-    void setData(const QwtRasterData &data);
-    const QwtRasterData &data() const;
+    void setData(QwtRasterData *data);
+    const QwtRasterData *data() const;
+    QwtRasterData *data();
 
     void setColorMap(const QwtColorMap &);
     const QwtColorMap &colorMap() const;
 
-    virtual QwtDoubleRect boundingRect() const;
-    virtual QSize rasterHint(const QwtDoubleRect &) const;
+    virtual QRectF boundingRect() const;
+    virtual QSize rasterHint(const QRectF &) const;
 
     void setDefaultContourPen(const QPen &);
     QPen defaultContourPen() const;
@@ -77,29 +80,32 @@ public:
     void setConrecAttribute(QwtRasterData::ConrecAttribute, bool on);
     bool testConrecAttribute(QwtRasterData::ConrecAttribute) const;
 
-    void setContourLevels(const QwtValueList &);
-    QwtValueList contourLevels() const;
+    void setContourLevels(const QList<double> &);
+    QList<double> contourLevels() const;
 
     virtual int rtti() const;
 
     virtual void draw(QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &rect) const;
+        const QRectF &rect) const;
 
 protected:
     virtual QImage renderImage(
         const QwtScaleMap &xMap, const QwtScaleMap &yMap, 
-        const QwtDoubleRect &rect) const;
+        const QRectF &rect) const;
 
     virtual QSize contourRasterSize(
-        const QwtDoubleRect &, const QRect &) const;
+        const QRectF &, const QRect &) const;
 
     virtual QwtRasterData::ContourLines renderContourLines(
-        const QwtDoubleRect &rect, const QSize &raster) const;
+        const QRectF &rect, const QSize &raster) const;
 
     virtual void drawContourLines(QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QwtRasterData::ContourLines& lines) const;
+
+    void renderTile(const QwtScaleMap &xMap, const QwtScaleMap &yMap, 
+        const QRect &rect, const QRect &imageRect, QImage *image) const;
 
 private:
     class PrivateData;

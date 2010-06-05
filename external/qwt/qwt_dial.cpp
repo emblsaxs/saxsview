@@ -7,21 +7,23 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <math.h>
-#include <qpainter.h>
-#if QT_VERSION >= 0x040000
-#include <qbitmap.h>
-#include <qpalette.h>
-#endif
-#include <qpixmap.h>
-#include <qevent.h>
+#include "qwt_dial.h"
+#include "qwt_dial_needle.h"
 #include "qwt_math.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_map.h"
-#include "qwt_paint_buffer.h"
 #include "qwt_painter.h"
-#include "qwt_dial_needle.h"
-#include "qwt_dial.h"
+#include <qpainter.h>
+#include <qbitmap.h>
+#include <qpalette.h>
+#include <qpixmap.h>
+#include <qevent.h>
+#include <qalgorithms.h>
+#include <qmath.h>
+
+#if QT_VERSION < 0x040601
+#define qAtan(x) ::atan(x)
+#endif
 
 class QwtDial::PrivateData
 {
@@ -78,7 +80,7 @@ double QwtDial::PrivateData::previousDir = -1.0;
 */
 QwtDialScaleDraw::QwtDialScaleDraw(QwtDial *parent):
     d_parent(parent),
-    d_penWidth(1)
+    d_penWidth(1.0)
 {
 }
 
@@ -89,16 +91,16 @@ QwtDialScaleDraw::QwtDialScaleDraw(QwtDial *parent):
   \sa penWidth(), QwtDial::drawScale()
 */
     
-void QwtDialScaleDraw::setPenWidth(uint penWidth)
+void QwtDialScaleDraw::setPenWidth(double penWidth)
 {
-    d_penWidth = penWidth;
+    d_penWidth = qMax(penWidth, 0.0);
 }
 
 /*!
   \return Pen width used for painting the scale
   \sa setPenWidth, QwtDial::drawScale()
 */
-uint QwtDialScaleDraw::penWidth() const
+double QwtDialScaleDraw::penWidth() const
 {
     return d_penWidth;
 }
@@ -134,37 +136,11 @@ QwtDial::QwtDial(QWidget* parent):
     initDial();
 }
 
-#if QT_VERSION < 0x040000
-/*!
-  \brief Constructor
-  \param parent Parent widget
-  \param name Object name
-
-  Create a dial widget with no scale and no needle. 
-  The default origin is 90.0 with no valid value. It accepts
-  mouse and keyboard inputs and has no step size. The default mode
-  is QwtDial::RotateNeedle.
-*/  
-QwtDial::QwtDial(QWidget* parent, const char *name):
-    QwtAbstractSlider(Qt::Horizontal, parent)
-{
-    setName(name);
-    initDial();
-}
-#endif
-
 void QwtDial::initDial()
 {
     d_data = new PrivateData;
 
-#if QT_VERSION < 0x040000
-    setWFlags(Qt::WNoAutoErase);
-#endif 
-
-#if QT_VERSION >= 0x040000
-    using namespace Qt;
-#endif
-    setFocusPolicy(TabFocus);
+    setFocusPolicy(Qt::TabFocus);
 
     QPalette p = palette();
     for ( int i = 0; i < QPalette::NColorGroups; i++ )
@@ -172,15 +148,10 @@ void QwtDial::initDial()
         const QPalette::ColorGroup cg = (QPalette::ColorGroup)i;
 
         // Base: background color of the circle inside the frame.
-        // Foreground: background color of the circle inside the scale
+        // WindowText: background color of the circle inside the scale
 
-#if QT_VERSION < 0x040000
-        p.setColor(cg, QColorGroup::Foreground, 
-            p.color(cg, QColorGroup::Base));
-#else
-        p.setColor(cg, QPalette::Foreground, 
+        p.setColor(cg, QPalette::WindowText, 
             p.color(cg, QPalette::Base));
-#endif
     }
     setPalette(p);
 
@@ -298,7 +269,7 @@ QRect QwtDial::contentsRect() const
 */
 QRect QwtDial::boundingRect() const
 {
-    const int radius = qwtMin(width(), height()) / 2;
+    const int radius = qMin(width(), height()) / 2;
 
     QRect r(0, 0, 2 * radius, 2 * radius);
     r.moveCenter(rect().center());
@@ -311,16 +282,12 @@ QRect QwtDial::boundingRect() const
 */
 QRect QwtDial::scaleContentsRect() const
 {
-#if QT_VERSION < 0x040000
-    const QPen scalePen(colorGroup().text(), 0, Qt::NoPen);
-#else
     const QPen scalePen(palette().text(), 0, Qt::NoPen);
-#endif
 
     int scaleDist = 0;
     if ( d_data->scaleDraw )
     {
-        scaleDist = d_data->scaleDraw->extent(scalePen, font());
+        scaleDist = qCeil(d_data->scaleDraw->extent(font()));
         scaleDist++; // margin
     }
 
@@ -448,13 +415,8 @@ void QwtDial::paintEvent(QPaintEvent *e)
     const QRect &ur = e->rect();
     if ( ur.isValid() )
     {
-#if QT_VERSION < 0x040000
-        QwtPaintBuffer paintBuffer(this, ur);
-        QPainter &painter = *paintBuffer.painter();
-#else
         QPainter painter(this);
         painter.setRenderHint(QPainter::Antialiasing, true);
-#endif
 
         painter.save();
         drawContents(&painter);
@@ -487,21 +449,13 @@ void QwtDial::drawFocusIndicator(QPainter *painter) const
             focusRect.width() - 2 * margin,
             focusRect.height() - 2 * margin);
 
-#if QT_VERSION < 0x040000
-        QColor color = colorGroup().color(QColorGroup::Base);
-#else
         QColor color = palette().color(QPalette::Base);
-#endif
         if (color.isValid())
         {
             const QColor gray(Qt::gray);
 
             int h, s, v;
-#if QT_VERSION < 0x040000
-            color.hsv(&h, &s, &v);
-#else
             color.getHsv(&h, &s, &v);
-#endif
             color = (v > 128) ? gray.dark(120) : gray.light(120);
         }
         else
@@ -529,34 +483,22 @@ void QwtDial::drawFrame(QPainter *painter)
     QRect r = boundingRect();
     r.setRect(r.x() + lw / 2 - off, r.y() + lw / 2 - off,
         r.width() - lw + off + 1, r.height() - lw + off + 1);
-#if QT_VERSION >= 0x040000
     r.setX(r.x() + 1);
     r.setY(r.y() + 1);
     r.setWidth(r.width() - 2);
     r.setHeight(r.height() - 2);
-#endif
 
     if ( lw > 0 )
     {
         switch(d_data->frameShadow)
         {
             case QwtDial::Raised:
-#if QT_VERSION < 0x040000
-                QwtPainter::drawRoundFrame(painter, r, 
-                    lw, colorGroup(), false);
-#else
                 QwtPainter::drawRoundFrame(painter, r, 
                     lw, palette(), false);
-#endif
                 break;
             case QwtDial::Sunken:
-#if QT_VERSION < 0x040000
-                QwtPainter::drawRoundFrame(painter, r, 
-                    lw, colorGroup(), true);
-#else
                 QwtPainter::drawRoundFrame(painter, r, 
                     lw, palette(), true);
-#endif
                 break;
             default: // Plain
             {
@@ -573,9 +515,9 @@ void QwtDial::drawFrame(QPainter *painter)
 /*!
   \brief Draw the contents inside the frame
  
-  QColorGroup::Background is the background color outside of the frame.
-  QColorGroup::Base is the background color inside the frame.
-  QColorGroup::Foreground is the background color inside the scale.
+  QPalette::Window is the background color outside of the frame.
+  QPalette::Base is the background color inside the frame.
+  QPalette::WindowText is the background color inside the scale.
 
   \param painter Painter
   \sa boundingRect(), contentsRect(),
@@ -583,54 +525,30 @@ void QwtDial::drawFrame(QPainter *painter)
 */
 void QwtDial::drawContents(QPainter *painter) const
 {
-#if QT_VERSION < 0x040000
-    if ( backgroundMode() == Qt::NoBackground || 
-        colorGroup().brush(QColorGroup::Base) != 
-            colorGroup().brush(QColorGroup::Background) )
-#else
     if ( testAttribute(Qt::WA_NoSystemBackground) ||
         palette().brush(QPalette::Base) != 
-            palette().brush(QPalette::Background) )
-#endif
+            palette().brush(QPalette::Window) )
     {
 
         const QRect br = boundingRect();
 
         painter->save();
         painter->setPen(Qt::NoPen);
-
-#if QT_VERSION < 0x040000
-        painter->setBrush(colorGroup().brush(QColorGroup::Base));
-#else
         painter->setBrush(palette().brush(QPalette::Base));
-#endif
-
         painter->drawEllipse(br);
         painter->restore();
     }
 
 
     const QRect insideScaleRect = scaleContentsRect();
-#if QT_VERSION < 0x040000
-    if ( colorGroup().brush(QColorGroup::Foreground) !=
-        colorGroup().brush(QColorGroup::Base) )
-#else
-    if ( palette().brush(QPalette::Foreground) !=
+    if ( palette().brush(QPalette::WindowText) !=
         palette().brush(QPalette::Base) )
-#endif
     {
         painter->save();
         painter->setPen(Qt::NoPen);
-
-#if QT_VERSION < 0x040000
-        painter->setBrush(colorGroup().brush(QColorGroup::Foreground));
-#else
-        painter->setBrush(palette().brush(QPalette::Foreground));
-#endif
-
+        painter->setBrush(palette().brush(QPalette::WindowText));
         painter->drawEllipse(insideScaleRect.x() - 1, insideScaleRect.y() - 1,
             insideScaleRect.width(), insideScaleRect.height() );
-
         painter->restore();
     }
 
@@ -754,24 +672,14 @@ void QwtDial::drawScale(QPainter *painter, const QPoint &center,
     d_data->scaleDraw->setRadius(radius);
     d_data->scaleDraw->moveCenter(center);
 
-#if QT_VERSION < 0x040000
-    QColorGroup cg = colorGroup();
-
-    const QColor textColor = cg.color(QColorGroup::Text);
-    cg.setColor(QColorGroup::Foreground, textColor);
-    painter->setPen(QPen(textColor, d_data->scaleDraw->penWidth()));
-    
-    d_data->scaleDraw->draw(painter, cg);
-#else
     QPalette pal = palette();
 
     const QColor textColor = pal.color(QPalette::Text);
-    pal.setColor(QPalette::Foreground, textColor); //ticks, backbone
+    pal.setColor(QPalette::WindowText, textColor); //ticks, backbone
     
     painter->setPen(QPen(textColor, d_data->scaleDraw->penWidth()));
 
     d_data->scaleDraw->draw(painter, pal);
-#endif
 }
 
 void QwtDial::drawScaleContents(QPainter *, 
@@ -1011,8 +919,8 @@ void QwtDial::setScaleArc(double minArc, double maxArc)
     if ( maxArc != 360.0 && maxArc != -360.0 )
         maxArc = fmod(maxArc, 360.0);
 
-    d_data->minScaleArc = qwtMin(minArc, maxArc);
-    d_data->maxScaleArc = qwtMax(minArc, maxArc);
+    d_data->minScaleArc = qMin(minArc, maxArc);
+    d_data->maxScaleArc = qMax(minArc, maxArc);
     if ( d_data->maxScaleArc - d_data->minScaleArc > 360.0 )
         d_data->maxScaleArc = d_data->minScaleArc + 360.0;
     
@@ -1033,7 +941,7 @@ QSize QwtDial::sizeHint() const
 {
     int sh = 0;
     if ( d_data->scaleDraw )
-        sh = d_data->scaleDraw->extent( QPen(), font() );
+        sh = qCeil(d_data->scaleDraw->extent( font() ));
 
     const int d = 6 * sh + 2 * lineWidth();
     
@@ -1049,7 +957,7 @@ QSize QwtDial::minimumSizeHint() const
 {   
     int sh = 0;
     if ( d_data->scaleDraw )
-        sh = d_data->scaleDraw->extent(QPen(), font() );
+        sh = qCeil(d_data->scaleDraw->extent(font() ));
 
     const int d = 3 * sh + 2 * lineWidth();
     
@@ -1065,7 +973,7 @@ static double line2Radians(const QPoint &p1, const QPoint &p2)
         angle = ( p.y() <= 0 ) ? M_PI_2 : 3 * M_PI_2;
     else
     {
-        angle = atan(double(-p.y()) / double(p.x()));
+        angle = qAtan(double(-p.y()) / double(p.x()));
         if ( p.x() < 0 )
             angle += M_PI;
         if ( angle < 0.0 )
@@ -1240,11 +1148,7 @@ void QwtDial::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Left:
             QwtDoubleRange::incValue(-1);
             break;
-#if QT_VERSION < 0x040000
-        case Qt::Key_Prior:
-#else
         case Qt::Key_PageUp:
-#endif
             QwtDoubleRange::incValue(-pageSize());
             break;
         case Qt::Key_Home:
@@ -1255,11 +1159,7 @@ void QwtDial::keyPressEvent(QKeyEvent *event)
         case Qt::Key_Right:
             QwtDoubleRange::incValue(1);
             break;
-#if QT_VERSION < 0x040000
-        case Qt::Key_Next:
-#else
         case Qt::Key_PageDown:
-#endif
             QwtDoubleRange::incValue(pageSize());
             break;
         case Qt::Key_End:
@@ -1270,7 +1170,7 @@ void QwtDial::keyPressEvent(QKeyEvent *event)
     }
 
     if (value() != previous)
-        emit sliderMoved(value());
+        Q_EMIT sliderMoved(value());
 }
 
 /*!

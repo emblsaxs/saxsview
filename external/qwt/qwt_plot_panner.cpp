@@ -7,12 +7,10 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
+#include "qwt_plot_panner.h"
 #include "qwt_scale_div.h"
 #include "qwt_plot.h"
 #include "qwt_plot_canvas.h"
-#include "qwt_plot_panner.h"
 
 class QwtPlotPanner::PrivateData
 {
@@ -146,19 +144,19 @@ void QwtPlotPanner::moveCanvas(int dx, int dy)
 
         const QwtScaleMap map = plot->canvasMap(axis);
 
-        const int i1 = map.transform(plot->axisScaleDiv(axis)->lowerBound());
-        const int i2 = map.transform(plot->axisScaleDiv(axis)->upperBound());
+        const double p1 = map.transform(plot->axisScaleDiv(axis)->lowerBound());
+        const double p2 = map.transform(plot->axisScaleDiv(axis)->upperBound());
 
         double d1, d2;
         if ( axis == QwtPlot::xBottom || axis == QwtPlot::xTop )
         {
-            d1 = map.invTransform(i1 - dx);
-            d2 = map.invTransform(i2 - dx);
+            d1 = map.invTransform(p1 - dx);
+            d2 = map.invTransform(p2 - dx);
         }
         else
         {
-            d1 = map.invTransform(i1 - dy);
-            d2 = map.invTransform(i2 - dy);
+            d1 = map.invTransform(p1 - dy);
+            d2 = map.invTransform(p2 - dy);
         }
 
         plot->setAxisScale(axis, d1, d2);

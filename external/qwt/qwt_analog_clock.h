@@ -10,10 +10,10 @@
 #ifndef QWT_ANALOG_CLOCK_H
 #define QWT_ANALOG_CLOCK_H
 
-#include <qdatetime.h>
 #include "qwt_global.h"
 #include "qwt_dial.h"
 #include "qwt_dial_needle.h"
+#include <qdatetime.h>
 
 /*!
   \brief An analog clock
@@ -62,16 +62,13 @@ public:
     };
 
     explicit QwtAnalogClock(QWidget* parent = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtAnalogClock(QWidget* parent, const char *name);
-#endif
     virtual ~QwtAnalogClock();
 
     virtual void setHand(Hand, QwtDialNeedle *);
     const QwtDialNeedle *hand(Hand) const;
     QwtDialNeedle *hand(Hand);
 
-public slots:
+public Q_SLOTS:
     void setCurrentTime();
     void setTime(const QTime & = QTime::currentTime());
 

@@ -10,9 +10,11 @@
 #ifndef QWT_SCALE_DRAW_H
 #define QWT_SCALE_DRAW_H
 
-#include <qpoint.h>
 #include "qwt_global.h"
 #include "qwt_abstract_scale_draw.h"
+#include <qpoint.h>
+#include <qrect.h>
+#include <qtransform.h>
 
 /*!
   \brief A class for drawing scales
@@ -46,28 +48,23 @@ public:
     void getBorderDistHint(const QFont &, int &start, int &end) const;
     int minLabelDist(const QFont &) const;
 
-    int minLength(const QPen &, const QFont &) const;
-    virtual int extent(const QPen &, const QFont &) const;
+    int minLength(const QFont &) const;
+    virtual double extent(const QFont &) const;
 
-    void move(int x, int y);
-    void move(const QPoint &);
-    void setLength(int length);
+    void move(double x, double y);
+    void move(const QPointF &);
+    void setLength(double length);
 
     Alignment alignment() const;
     void setAlignment(Alignment);
 
     Qt::Orientation orientation() const;
 
-    QPoint pos() const;
-    int length() const;
+    QPointF pos() const;
+    double length() const;
 
-#if QT_VERSION < 0x040000
-    void setLabelAlignment(int);
-    int labelAlignment() const;
-#else
     void setLabelAlignment(Qt::Alignment);
     Qt::Alignment labelAlignment() const;
-#endif
 
     void setLabelRotation(double rotation);
     double labelRotation() const;
@@ -75,24 +72,19 @@ public:
     int maxLabelHeight(const QFont &) const;
     int maxLabelWidth(const QFont &) const;
 
-    QPoint labelPosition(double val) const;
+    QPointF labelPosition(double val) const;
 
-    QRect labelRect(const QFont &, double val) const;
-    QSize labelSize(const QFont &, double val) const;
+    QRectF labelRect(const QFont &, double val) const;
+    QSizeF labelSize(const QFont &, double val) const;
 
     QRect boundingLabelRect(const QFont &, double val) const;
 
 protected:
+    QTransform labelTransformation(const QPointF &, const QSizeF &) const;
 
-#if QT_VERSION < 0x040000
-    QWMatrix labelMatrix(const QPoint &, const QSize &) const;
-#else   
-    QMatrix labelMatrix(const QPoint &, const QSize &) const;
-#endif  
-
-    virtual void drawTick(QPainter *p, double val, int len) const;
-    virtual void drawBackbone(QPainter *p) const;
-    virtual void drawLabel(QPainter *p, double val) const;
+    virtual void drawTick(QPainter *, double val, double len) const;
+    virtual void drawBackbone(QPainter *) const;
+    virtual void drawLabel(QPainter *, double val) const;
 
 private:
     void updateMap();
@@ -103,11 +95,11 @@ private:
 
 /*! 
    Move the position of the scale
-   \sa move(const QPoint &)
+   \sa move(const QPointF &)
 */
-inline void QwtScaleDraw::move(int x, int y)
+inline void QwtScaleDraw::move(double x, double y)
 {
-    move(QPoint(x, y));
+    move(QPointF(x, y));
 }
 
 #endif

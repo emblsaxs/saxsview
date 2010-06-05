@@ -7,29 +7,28 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <qpainter.h>
-#include <qpalette.h>
-#include <qmap.h>
-#include <qlocale.h>
+#include "qwt_abstract_scale_draw.h"
 #include "qwt_math.h"
 #include "qwt_text.h"
 #include "qwt_painter.h"
 #include "qwt_scale_map.h"
-#include "qwt_scale_draw.h"
+#include <qpainter.h>
+#include <qpalette.h>
+#include <qmap.h>
+#include <qlocale.h>
 
 class QwtAbstractScaleDraw::PrivateData
 {
 public:
     PrivateData():
         components(Backbone | Ticks | Labels),
-        spacing(4),
-        minExtent(0)
+        spacing(4.0),
+        penWidth(0),
+        minExtent(0.0)
     {
-        tickLength[QwtScaleDiv::MinorTick] = 4;
-        tickLength[QwtScaleDiv::MediumTick] = 6;
-        tickLength[QwtScaleDiv::MajorTick] = 8;
+        tickLength[QwtScaleDiv::MinorTick] = 4.0;
+        tickLength[QwtScaleDiv::MediumTick] = 6.0;
+        tickLength[QwtScaleDiv::MajorTick] = 8.0;
     }
 
     int components;
@@ -37,10 +36,11 @@ public:
     QwtScaleMap map;
     QwtScaleDiv scldiv;
         
-    int spacing;
-    int tickLength[QwtScaleDiv::NTickTypes];
+    double spacing;
+    double tickLength[QwtScaleDiv::NTickTypes];
+    int penWidth;
 
-    int minExtent;
+    double minExtent;
 
     QMap<double, QwtText> labelCache;
 };
@@ -140,19 +140,28 @@ const QwtScaleDiv& QwtAbstractScaleDraw::scaleDiv() const
     return d_data->scldiv; 
 }
 
-#if QT_VERSION < 0x040000
 /*!
-  \brief Draw the scale
-
-  \param painter    The painter
-
-  \param colorGroup Color group, text color is used for the labels, 
-                    foreground color for ticks and backbone
+  \brief Specify the width of the scale pen
+  \param width Pen width
+  \sa penWidth()
 */
-void QwtAbstractScaleDraw::draw(QPainter *painter, 
-    const QColorGroup& colorGroup) const
+void QwtAbstractScaleDraw::setPenWidth(int width)
+{
+    if ( width < 0 )
+        width = 0;
 
-#else
+    if ( width != d_data->penWidth )
+        d_data->penWidth = width;
+}
+
+/*! 
+    \return Scale pen width
+    \sa setPenWidth()
+*/
+int QwtAbstractScaleDraw::penWidth() const
+{
+    return d_data->penWidth;
+}
 
 /*!
   \brief Draw the scale
@@ -164,19 +173,20 @@ void QwtAbstractScaleDraw::draw(QPainter *painter,
 */
 void QwtAbstractScaleDraw::draw(QPainter *painter, 
     const QPalette& palette) const
-#endif
 {
+    painter->save();
+
+    QPen pen = painter->pen();
+    pen.setWidth(d_data->penWidth);
+    pen.setCosmetic(false);
+    painter->setPen(pen);
+
     if ( hasComponent(QwtAbstractScaleDraw::Labels) )
     {
         painter->save();
-
-#if QT_VERSION < 0x040000
-        painter->setPen(colorGroup.text()); // ignore pen style
-#else
         painter->setPen(palette.color(QPalette::Text)); // ignore pen style
-#endif
 
-        const QwtValueList &majorTicks = 
+        const QList<double> &majorTicks = 
             d_data->scldiv.ticks(QwtScaleDiv::MajorTick);
 
         for (int i = 0; i < (int)majorTicks.count(); i++)
@@ -194,17 +204,15 @@ void QwtAbstractScaleDraw::draw(QPainter *painter,
         painter->save();
 
         QPen pen = painter->pen();
-#if QT_VERSION < 0x040000
-        pen.setColor(colorGroup.foreground());
-#else
-        pen.setColor(palette.color(QPalette::Foreground));
-#endif
+        pen.setColor(palette.color(QPalette::WindowText));
+        pen.setCapStyle(Qt::FlatCap);
+
         painter->setPen(pen);
 
         for ( int tickType = QwtScaleDiv::MinorTick; 
             tickType < QwtScaleDiv::NTickTypes; tickType++ )
         {
-            const QwtValueList &ticks = d_data->scldiv.ticks(tickType);
+            const QList<double> &ticks = d_data->scldiv.ticks(tickType);
             for (int i = 0; i < (int)ticks.count(); i++)
             {
                 const double v = ticks[i];
@@ -221,17 +229,17 @@ void QwtAbstractScaleDraw::draw(QPainter *painter,
         painter->save();
 
         QPen pen = painter->pen();
-#if QT_VERSION < 0x040000
-        pen.setColor(colorGroup.foreground());
-#else
-        pen.setColor(palette.color(QPalette::Foreground));
-#endif
+        pen.setColor(palette.color(QPalette::WindowText));
+        pen.setCapStyle(Qt::FlatCap);
+
         painter->setPen(pen);
 
         drawBackbone(painter);
 
         painter->restore();
     }
+
+    painter->restore();
 }
 
 /*!
@@ -244,7 +252,7 @@ void QwtAbstractScaleDraw::draw(QPainter *painter,
 
   \sa spacing()
 */
-void QwtAbstractScaleDraw::setSpacing(int spacing)
+void QwtAbstractScaleDraw::setSpacing(double spacing)
 {
     if ( spacing < 0 )
         spacing = 0;
@@ -260,7 +268,7 @@ void QwtAbstractScaleDraw::setSpacing(int spacing)
 
   \sa setSpacing()
 */
-int QwtAbstractScaleDraw::spacing() const
+double QwtAbstractScaleDraw::spacing() const
 {
     return d_data->spacing;
 }
@@ -278,10 +286,10 @@ int QwtAbstractScaleDraw::spacing() const
 
   \sa extent(), minimumExtent()
 */
-void QwtAbstractScaleDraw::setMinimumExtent(int minExtent)
+void QwtAbstractScaleDraw::setMinimumExtent(double minExtent)
 {
-    if ( minExtent < 0 )
-        minExtent = 0;
+    if ( minExtent < 0.0 )
+        minExtent = 0.0;
 
     d_data->minExtent = minExtent;
 }
@@ -290,7 +298,7 @@ void QwtAbstractScaleDraw::setMinimumExtent(int minExtent)
   Get the minimum extent
   \sa extent(), setMinimumExtent()
 */
-int QwtAbstractScaleDraw::minimumExtent() const
+double QwtAbstractScaleDraw::minimumExtent() const
 {
     return d_data->minExtent;
 }
@@ -304,7 +312,7 @@ int QwtAbstractScaleDraw::minimumExtent() const
   \warning the length is limited to [0..1000]
 */
 void QwtAbstractScaleDraw::setTickLength(
-    QwtScaleDiv::TickType tickType, int length)
+    QwtScaleDiv::TickType tickType, double length)
 {
     if ( tickType < QwtScaleDiv::MinorTick || 
         tickType > QwtScaleDiv::MajorTick )
@@ -312,12 +320,12 @@ void QwtAbstractScaleDraw::setTickLength(
         return;
     }
 
-    if ( length < 0 )
-        length = 0;
+    if ( length < 0.0 )
+        length = 0.0;
 
-    const int maxTickLen = 1000;
+    const double maxTickLen = 1000.0;
     if ( length > maxTickLen )
-        length = 1000;
+        length = maxTickLen;
 
     d_data->tickLength[tickType] = length;
 }
@@ -327,7 +335,7 @@ void QwtAbstractScaleDraw::setTickLength(
 
     \sa setTickLength(), majTickLength()
 */
-int QwtAbstractScaleDraw::tickLength(QwtScaleDiv::TickType tickType) const
+double QwtAbstractScaleDraw::tickLength(QwtScaleDiv::TickType tickType) const
 {
     if ( tickType < QwtScaleDiv::MinorTick || 
         tickType > QwtScaleDiv::MajorTick )
@@ -341,7 +349,7 @@ int QwtAbstractScaleDraw::tickLength(QwtScaleDiv::TickType tickType) const
 /*!
    The same as QwtAbstractScaleDraw::tickLength(QwtScaleDiv::MajorTick).
 */
-int QwtAbstractScaleDraw::majTickLength() const
+double QwtAbstractScaleDraw::majTickLength() const
 {
     return d_data->tickLength[QwtScaleDiv::MajorTick];
 }

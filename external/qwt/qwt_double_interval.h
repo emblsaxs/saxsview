@@ -45,30 +45,30 @@ public:
         ExcludeBorders = ExcludeMinimum | ExcludeMaximum
     };
 
-    inline QwtDoubleInterval();
-    inline QwtDoubleInterval(double minValue, double maxValue, 
+    QwtDoubleInterval();
+    QwtDoubleInterval(double minValue, double maxValue, 
         int borderFlags = IncludeBorders);
 
-    inline void setInterval(double minValue, double maxValue, 
+    void setInterval(double minValue, double maxValue, 
         int borderFlags = IncludeBorders);
 
     QwtDoubleInterval normalized() const;
     QwtDoubleInterval inverted() const;
     QwtDoubleInterval limited(double minValue, double maxValue) const;
 
-    inline int operator==(const QwtDoubleInterval &) const;
-    inline int operator!=(const QwtDoubleInterval &) const;
+    int operator==(const QwtDoubleInterval &) const;
+    int operator!=(const QwtDoubleInterval &) const;
 
-    inline void setBorderFlags(int);
-    inline int borderFlags() const;
+    void setBorderFlags(int);
+    int borderFlags() const;
 
-    inline double minValue() const;
-    inline double maxValue() const;
+    double minValue() const;
+    double maxValue() const;
     
-    inline double width() const;
+    double width() const;
 
-    inline void setMinValue(double);
-    inline void setMaxValue(double);
+    void setMinValue(double);
+    void setMaxValue(double);
 
     bool contains(double value) const;
 
@@ -76,19 +76,19 @@ public:
     QwtDoubleInterval intersect(const QwtDoubleInterval &) const;
     QwtDoubleInterval unite(const QwtDoubleInterval &) const;
 
-    inline QwtDoubleInterval operator|(const QwtDoubleInterval &) const;
-    inline QwtDoubleInterval operator&(const QwtDoubleInterval &) const;
+    QwtDoubleInterval operator|(const QwtDoubleInterval &) const;
+    QwtDoubleInterval operator&(const QwtDoubleInterval &) const;
 
     QwtDoubleInterval &operator|=(const QwtDoubleInterval &);
     QwtDoubleInterval &operator&=(const QwtDoubleInterval &);
 
     QwtDoubleInterval extend(double value) const;
-    inline QwtDoubleInterval operator|(double) const;
+    QwtDoubleInterval operator|(double) const;
     QwtDoubleInterval &operator|=(double);
 
-    inline bool isValid() const;
-    inline bool isNull() const;
-    inline void invalidate();
+    bool isValid() const;
+    bool isNull() const;
+    void invalidate();
 
     QwtDoubleInterval symmetrize(double value) const;
 
@@ -280,5 +280,9 @@ inline void QwtDoubleInterval::invalidate()
     d_minValue = 0.0;
     d_maxValue = -1.0;
 }
+
+#ifndef QT_NO_DEBUG_STREAM
+QWT_EXPORT QDebug operator<<(QDebug, const QwtDoubleInterval &);
+#endif
 
 #endif

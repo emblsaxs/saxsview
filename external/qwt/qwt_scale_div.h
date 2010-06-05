@@ -11,8 +11,8 @@
 #define QWT_SCALE_DIV_H
 
 #include "qwt_global.h"
-#include "qwt_valuelist.h"
 #include "qwt_double_interval.h"
+#include <qlist.h>
 
 class QwtDoubleInterval;
 
@@ -44,9 +44,9 @@ public:
 
     explicit QwtScaleDiv();
     explicit QwtScaleDiv(const QwtDoubleInterval &,
-        QwtValueList[NTickTypes]);
+        QList<double>[NTickTypes]);
     explicit QwtScaleDiv(double lowerBound, double upperBound,
-        QwtValueList[NTickTypes]);
+        QList<double>[NTickTypes]);
 
     int operator==(const QwtScaleDiv &s) const;
     int operator!=(const QwtScaleDiv &s) const;
@@ -55,14 +55,14 @@ public:
     void setInterval(const QwtDoubleInterval &);
     QwtDoubleInterval interval() const;
 
-    inline double lowerBound() const;
-    inline double upperBound() const;
-    inline double range() const;
+    double lowerBound() const;
+    double upperBound() const;
+    double range() const;
 
     bool contains(double v) const;
 
-    void setTicks(int type, const QwtValueList &);
-    const QwtValueList &ticks(int type) const;
+    void setTicks(int type, const QList<double> &);
+    const QList<double> &ticks(int type) const;
 
     void invalidate();
     bool isValid() const;
@@ -72,7 +72,7 @@ public:
 private:
     double d_lowerBound;
     double d_upperBound;
-    QwtValueList d_ticks[NTickTypes];
+    QList<double> d_ticks[NTickTypes];
 
     bool d_isValid;
 };

@@ -10,15 +10,10 @@
 #ifndef QWT_DYNGRID_LAYOUT_H
 #define QWT_DYNGRID_LAYOUT_H
 
+#include "qwt_global.h"
 #include <qlayout.h>
 #include <qsize.h>
-#if QT_VERSION >= 0x040000
 #include <qlist.h>
-#else
-#include <qvaluelist.h>
-#endif
-#include "qwt_global.h"
-#include "qwt_array.h"
 
 /*!
   \brief The QwtDynGridLayout class lays out widgets in a grid,
@@ -34,9 +29,6 @@ class QWT_EXPORT QwtDynGridLayout : public QLayout
     Q_OBJECT
 public:
     explicit QwtDynGridLayout(QWidget *, int margin = 0, int space = -1);
-#if QT_VERSION < 0x040000
-    explicit QwtDynGridLayout(QLayout *, int space = -1);
-#endif
     explicit QwtDynGridLayout(int space = -1);
 
     virtual ~QwtDynGridLayout();
@@ -51,7 +43,6 @@ public:
 
     virtual void addItem(QLayoutItem *);
 
-#if QT_VERSION >= 0x040000
     virtual QLayoutItem *itemAt( int index ) const;
     virtual QLayoutItem *takeAt( int index );
     virtual int count() const;
@@ -59,13 +50,6 @@ public:
     void setExpandingDirections(Qt::Orientations);
     virtual Qt::Orientations expandingDirections() const;
     QList<QRect> layoutItems(const QRect &, uint numCols) const;
-#else
-    virtual QLayoutIterator iterator();
-
-    void setExpanding(QSizePolicy::ExpandData);
-    virtual QSizePolicy::ExpandData expanding() const;
-    QValueList<QRect> layoutItems(const QRect &, uint numCols) const;
-#endif
 
     virtual int maxItemWidth() const;
 
@@ -84,9 +68,9 @@ public:
 protected:
 
     void layoutGrid(uint numCols,
-        QwtArray<int>& rowHeight, QwtArray<int>& colWidth) const;
+        QVector<int>& rowHeight, QVector<int>& colWidth) const;
     void stretchGrid(const QRect &rect, uint numCols, 
-        QwtArray<int>& rowHeight, QwtArray<int>& colWidth) const;
+        QVector<int>& rowHeight, QVector<int>& colWidth) const;
 
 
 private:
@@ -94,11 +78,7 @@ private:
     int maxRowWidth(int numCols) const;
     void updateLayoutCache();
 
-#if QT_VERSION < 0x040000
-// xlC 5.1, the IBM/AIX C++ compiler, needs it to be public
-public:
-#endif
-   class PrivateData;
+    class PrivateData;
 
 private:
     PrivateData *d_data;

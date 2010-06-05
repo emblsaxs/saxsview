@@ -11,11 +11,7 @@
 #define QWT_PICKER_MACHINE 1
 
 #include "qwt_global.h"
-#if QT_VERSION < 0x040000
-#include <qvaluelist.h>
-#else
 #include <qlist.h>
-#endif
 
 class QEvent;
 class QwtEventPattern;
@@ -65,11 +61,7 @@ public:
         End
     };
 
-#if QT_VERSION < 0x040000
-    typedef QValueList<Command> CommandList;
-#else
     typedef QList<Command> CommandList;
-#endif
 
     QwtPickerMachine(SelectionType);
     virtual ~QwtPickerMachine();

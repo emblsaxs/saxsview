@@ -15,30 +15,36 @@
 #include "qwt_scale_div.h"
 #include "qwt_series_data.h"
 
-class QwtPlotAbstractSeriesItem: public QwtPlotItem
+/*!
+  Base class for plot items reprsenting a series of samples
+*/
+class QWT_EXPORT QwtPlotAbstractSeriesItem: public QwtPlotItem
 {
 public:
     explicit QwtPlotAbstractSeriesItem(const QString &title = QString::null);
     explicit QwtPlotAbstractSeriesItem(const QwtText &title);
 
-	virtual ~QwtPlotAbstractSeriesItem();
+    virtual ~QwtPlotAbstractSeriesItem();
 
     void setOrientation(Qt::Orientation);
     Qt::Orientation orientation() const;
 
     virtual void draw(QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &) const;
+        const QRectF &) const;
 
     virtual void drawSeries(QPainter *,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-		const QRect &, int from, int to) const = 0;
+        const QRectF &, int from, int to) const = 0;
 
 private:
-	class PrivateData;
-	PrivateData *d_data;
+    class PrivateData;
+    PrivateData *d_data;
 };
 
+/*!
+  Class template for plot items reprsenting a series of samples
+*/
 template <typename T> 
 class QwtPlotSeriesItem: public QwtPlotAbstractSeriesItem
 {
@@ -48,15 +54,15 @@ public:
 
     virtual ~QwtPlotSeriesItem<T>();
 
-    void setData(const QwtSeriesData<T> &);
+    void setData(QwtSeriesData<T> *);
     
-    QwtSeriesData<T> &data();
-    const QwtSeriesData<T> &data() const;
+    QwtSeriesData<T> *data();
+    const QwtSeriesData<T> *data() const;
 
-    int dataSize() const;
+    size_t dataSize() const;
     T sample(int i) const;
 
-    virtual QwtDoubleRect boundingRect() const;
+    virtual QRectF boundingRect() const;
     virtual void updateScaleDiv(const QwtScaleDiv &,
         const QwtScaleDiv &);
 
@@ -87,16 +93,16 @@ QwtPlotSeriesItem<T>::~QwtPlotSeriesItem()
 
 //! \return the the curve data
 template <typename T> 
-inline QwtSeriesData<T> &QwtPlotSeriesItem<T>::data()
+inline QwtSeriesData<T> *QwtPlotSeriesItem<T>::data()
 {
-    return *d_series;
+    return d_series;
 }
 
 //! \return the the curve data
 template <typename T> 
-inline const QwtSeriesData<T> &QwtPlotSeriesItem<T>::data() const
+inline const QwtSeriesData<T> *QwtPlotSeriesItem<T>::data() const
 {
-    return *d_series;
+    return d_series;
 }
 
 /*!
@@ -106,21 +112,25 @@ inline const QwtSeriesData<T> &QwtPlotSeriesItem<T>::data() const
 template <typename T> 
 inline T QwtPlotSeriesItem<T>::sample(int i) const 
 { 
-    return d_series->sample(i); 
+    return d_series ? d_series->sample(i) : T(); 
 }
 
 /*!
-  Assign a series of samples
-
+  Assign a series of samples 
+  
   \param data Data
-  \sa QwtSeriesData<T>::copy()
+  \warning The item takes ownership of the data object, deleting 
+           it when its not used anymore.
 */
 template <typename T> 
-void QwtPlotSeriesItem<T>::setData(const QwtSeriesData<T> &data)
+void QwtPlotSeriesItem<T>::setData(QwtSeriesData<T> *data)
 {
-    delete d_series;
-    d_series = data.copy();
-    itemChanged();
+    if ( d_series != data )
+    {
+        delete d_series;
+        d_series = data;
+        itemChanged();
+    }
 }
 
 /*!
@@ -128,7 +138,7 @@ void QwtPlotSeriesItem<T>::setData(const QwtSeriesData<T> &data)
   \sa setData()
 */
 template <typename T> 
-int QwtPlotSeriesItem<T>::dataSize() const
+size_t QwtPlotSeriesItem<T>::dataSize() const
 {
     if ( d_series == NULL )
         return 0;
@@ -139,13 +149,13 @@ int QwtPlotSeriesItem<T>::dataSize() const
 /*!
   Returns the bounding rectangle of the curve data. If there is
   no bounding rect, like for empty data the rectangle is invalid.
-  \sa QwtSeriesData<T>::boundingRect(), QwtDoubleRect::isValid()
+  \sa QwtSeriesData<T>::boundingRect(), QRectF::isValid()
 */
 template <typename T> 
-QwtDoubleRect QwtPlotSeriesItem<T>::boundingRect() const
+QRectF QwtPlotSeriesItem<T>::boundingRect() const
 {
     if ( d_series == NULL )
-        return QwtDoubleRect(1.0, 1.0, -2.0, -2.0); // invalid
+        return QRectF(1.0, 1.0, -2.0, -2.0); // invalid
 
     return d_series->boundingRect();
 }
@@ -154,7 +164,7 @@ template <typename T>
 void QwtPlotSeriesItem<T>::updateScaleDiv(const QwtScaleDiv &xScaleDiv,
         const QwtScaleDiv &yScaleDiv)
 {   
-    const QwtDoubleRect rect = QwtDoubleRect( 
+    const QRectF rect = QRectF( 
         xScaleDiv.lowerBound(), yScaleDiv.lowerBound(),
         xScaleDiv.range(), yScaleDiv.range());
 

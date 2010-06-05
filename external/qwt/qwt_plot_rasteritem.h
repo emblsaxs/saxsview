@@ -10,11 +10,11 @@
 #ifndef QWT_PLOT_RASTERITEM_H
 #define QWT_PLOT_RASTERITEM_H
 
+#include "qwt_global.h" 
+#include "qwt_plot_item.h" 
 #include <qglobal.h>
 #include <qstring.h>
 #include <qimage.h>
-
-#include "qwt_plot_item.h" 
 
 /*!
   \brief A class, which displays raster data
@@ -45,19 +45,13 @@ public:
         of cache is only useful for improving the performance of hide/show
         operations. All other situations are already handled by the
         plot canvas cache.
-      - ScreenCache\n
-        The screen cache is an image in size of the screen. As long as
-        the scales don't change the target image is scaled from the cache.
-        This might improve the performance
-        when resizing the plot widget, but suffers from scaling effects.
 
       The default policy is NoCache
      */
     enum CachePolicy
     {
         NoCache,
-        PaintCache,
-        ScreenCache
+        PaintCache
     };
 
     explicit QwtPlotRasterItem(const QString& title = QString::null);
@@ -74,9 +68,9 @@ public:
 
     virtual void draw(QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &rect) const;
+        const QRectF &rect) const;
 
-    virtual QSize rasterHint(const QwtDoubleRect &) const;
+    virtual QSize rasterHint(const QRectF &) const;
 
 protected:
 
@@ -91,8 +85,10 @@ protected:
       \param area Requested area for the image in scale coordinates
      */
     virtual QImage renderImage(const QwtScaleMap &xMap, 
-        const QwtScaleMap &yMap, const QwtDoubleRect &area
+        const QwtScaleMap &yMap, const QRectF &area
         ) const = 0;
+
+    QRect innerRect(const QRectF &r) const;
 
 private:
     QwtPlotRasterItem( const QwtPlotRasterItem & );

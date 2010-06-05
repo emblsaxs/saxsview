@@ -7,13 +7,10 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <math.h>
+#include "qwt_magnifier.h"
+#include "qwt_math.h"
 #include <qevent.h>
 #include <qwidget.h>
-#include "qwt_math.h"
-#include "qwt_magnifier.h"
 
 class QwtMagnifier::PrivateData
 {
@@ -28,13 +25,8 @@ public:
         keyFactor(0.9),
         zoomInKey(Qt::Key_Plus),
         zoomOutKey(Qt::Key_Minus),
-#if QT_VERSION < 0x040000
-        zoomInKeyModifiers(Qt::NoButton),
-        zoomOutKeyModifiers(Qt::NoButton),
-#else
         zoomInKeyModifiers(Qt::NoModifier),
         zoomOutKeyModifiers(Qt::NoModifier),
-#endif
         mousePressed(false)
     {
     }
@@ -332,13 +324,8 @@ void QwtMagnifier::widgetMousePressEvent(QMouseEvent *me)
     if ( me->button() != d_data->mouseButton || parentWidget() == NULL )
         return;
 
-#if QT_VERSION < 0x040000
-    if ( (me->state() & Qt::KeyButtonMask) !=
-        (d_data->mouseButtonState & Qt::KeyButtonMask) )
-#else
     if ( (me->modifiers() & Qt::KeyboardModifierMask) !=
         (int)(d_data->mouseButtonState & Qt::KeyboardModifierMask) )
-#endif
     {
         return;
     }
@@ -394,13 +381,8 @@ void QwtMagnifier::widgetMouseMoveEvent(QMouseEvent *me)
 */
 void QwtMagnifier::widgetWheelEvent(QWheelEvent *we)
 {
-#if QT_VERSION < 0x040000
-    if ( (we->state() & Qt::KeyButtonMask) !=
-        (d_data->wheelButtonState & Qt::KeyButtonMask) )
-#else
     if ( (we->modifiers() & Qt::KeyboardModifierMask) !=
         (int)(d_data->wheelButtonState & Qt::KeyboardModifierMask) )
-#endif
     {
         return;
     }
@@ -416,8 +398,7 @@ void QwtMagnifier::widgetWheelEvent(QWheelEvent *we)
            in which case the delta value is a multiple 
            of 120 (== 15 * 8).
         */
-        double f = ::pow(d_data->wheelFactor, 
-            qwtAbs(we->delta() / 120));
+        double f = qPow(d_data->wheelFactor, qAbs(we->delta() / 120));
         if ( we->delta() > 0 )
             f = 1 / f;
 
@@ -434,11 +415,7 @@ void QwtMagnifier::widgetWheelEvent(QWheelEvent *we)
 void QwtMagnifier::widgetKeyPressEvent(QKeyEvent *ke)
 {
     const int key = ke->key();
-#if QT_VERSION < 0x040000
-    const int state = ke->state();
-#else
     const int state = ke->modifiers();
-#endif
 
     if ( key == d_data->zoomInKey && 
         state == d_data->zoomInKeyModifiers )

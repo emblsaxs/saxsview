@@ -22,9 +22,6 @@ class QwtScaleTransformation;
 class QWT_EXPORT QwtScaleArithmetic
 {
 public:
-    static int compareEps(
-        double value1, double value2, double intervalSize);
-
     static double ceilEps(double value, double intervalSize);
     static double floorEps(double value, double intervalSize);
 
@@ -121,7 +118,7 @@ public:
 
 protected:
     bool contains(const QwtDoubleInterval &, double val) const;
-    QwtValueList strip(const QwtValueList&, const QwtDoubleInterval &) const;
+    QList<double> strip(const QList<double>&, const QwtDoubleInterval &) const;
     double divideInterval(double interval, int numSteps) const;
 
     QwtDoubleInterval buildInterval(double v) const;
@@ -157,14 +154,14 @@ protected:
 private:
     void buildTicks(
         const QwtDoubleInterval &, double stepSize, int maxMinSteps,
-        QwtValueList ticks[QwtScaleDiv::NTickTypes]) const;
+        QList<double> ticks[QwtScaleDiv::NTickTypes]) const;
 
     void buildMinorTicks(
-        const QwtValueList& majorTicks,
+        const QList<double>& majorTicks,
         int maxMinMark, double step,
-        QwtValueList &, QwtValueList &) const;
+        QList<double> &, QList<double> &) const;
 
-    QwtValueList buildMajorTicks(
+    QList<double> buildMajorTicks(
         const QwtDoubleInterval &interval, double stepSize) const;
 };
 
@@ -201,13 +198,13 @@ private:
 
     void buildTicks(
         const QwtDoubleInterval &, double stepSize, int maxMinSteps,
-        QwtValueList ticks[QwtScaleDiv::NTickTypes]) const;
+        QList<double> ticks[QwtScaleDiv::NTickTypes]) const;
 
-    QwtValueList buildMinorTicks(
-        const QwtValueList& majorTicks,
+    QList<double> buildMinorTicks(
+        const QList<double>& majorTicks,
         int maxMinMark, double step) const;
 
-    QwtValueList buildMajorTicks(
+    QList<double> buildMajorTicks(
         const QwtDoubleInterval &interval, double stepSize) const;
 };
 

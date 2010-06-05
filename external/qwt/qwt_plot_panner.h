@@ -46,7 +46,7 @@ public:
     void setAxisEnabled(int axis, bool on);
     bool isAxisEnabled(int axis) const;
 
-protected slots:
+protected Q_SLOTS:
     virtual void moveCanvas(int dx, int dy);
 
 private:

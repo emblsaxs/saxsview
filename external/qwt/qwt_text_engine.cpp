@@ -7,16 +7,17 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
+#include "qwt_text_engine.h"
+#include "qwt_math.h"
+#include "qwt_painter.h"
 #include <qpainter.h>
 #include <qpixmap.h>
 #include <qimage.h>
 #include <qmap.h>
 #include <qwidget.h>
-#include "qwt_math.h"
-#include "qwt_painter.h"
-#include "qwt_text_engine.h"
+#include <qtextobject.h>
+#include <qtextdocument.h>
+#include <qabstracttextdocumentlayout.h>
 
 static QString taggedRichText(const QString &text, int flags)
 {
@@ -42,30 +43,6 @@ static QString taggedRichText(const QString &text, int flags)
     return richText;
 }
 
-#if QT_VERSION < 0x040000
-
-#include <qsimplerichtext.h>
-#include <qstylesheet.h>
-
-class QwtRichTextDocument: public QSimpleRichText
-{
-public:
-    QwtRichTextDocument(const QString &text, int flags, const QFont &font):
-        QSimpleRichText(taggedRichText(text, flags), font)
-    {
-    }
-};
-
-#else // QT_VERSION >= 0x040000
-
-#include <qtextobject.h>
-#include <qtextdocument.h>
-#include <qabstracttextdocumentlayout.h>
-
-#if QT_VERSION < 0x040200
-#include <qlabel.h>
-#endif
-
 class QwtRichTextDocument: public QTextDocument
 {
 public:
@@ -73,16 +50,11 @@ public:
     {
         setUndoRedoEnabled(false);
         setDefaultFont(font);
-#if QT_VERSION >= 0x040300
         setHtml(text);
-#else
-        setHtml(taggedRichText(text, flags));
-#endif
 
         // make sure we have a document layout
         (void)documentLayout();
 
-#if QT_VERSION >= 0x040300
         QTextOption option = defaultTextOption();
         if ( flags & Qt::TextWordWrap )
             option.setWrapMode(QTextOption::WordWrap);
@@ -102,11 +74,8 @@ public:
         root->setFrameFormat(fm);
 
         adjustSize();
-#endif
     }
 };
-
-#endif
 
 class QwtPlainTextEngine::PrivateData
 {
@@ -141,11 +110,7 @@ private:
         p.drawText(0, 0,  pm.width(), pm.height(), 0, dummy);
         p.end();
 
-#if QT_VERSION < 0x040000
-        const QImage img = pm.convertToImage();
-#else
         const QImage img = pm.toImage();
-#endif
 
         int row = 0;
         for ( row = 0; row < img.height(); row++ )
@@ -198,12 +163,12 @@ QwtPlainTextEngine::~QwtPlainTextEngine()
 
    \return Calculated height
 */
-int QwtPlainTextEngine::heightForWidth(const QFont& font, int flags,
-        const QString& text, int width) const
+double QwtPlainTextEngine::heightForWidth(const QFont& font, int flags,
+        const QString& text, double width) const
 {
-    const QFontMetrics fm(font);
-    const QRect rect = fm.boundingRect(
-        0, 0, width, QWIDGETSIZE_MAX, flags, text);
+    const QFontMetricsF fm(font);
+    const QRectF rect = fm.boundingRect(
+        QRectF(0, 0, width, QWIDGETSIZE_MAX), flags, text);
 
     return rect.height();
 }
@@ -217,12 +182,12 @@ int QwtPlainTextEngine::heightForWidth(const QFont& font, int flags,
 
   \return Caluclated size
 */
-QSize QwtPlainTextEngine::textSize(const QFont &font,
+QSizeF QwtPlainTextEngine::textSize(const QFont &font,
     int flags, const QString& text) const
 {
-    const QFontMetrics fm(font);
-    const QRect rect = fm.boundingRect(
-        0, 0, QWIDGETSIZE_MAX, QWIDGETSIZE_MAX, flags, text);
+    const QFontMetricsF fm(font);
+    const QRectF rect = fm.boundingRect(
+        QRectF(0, 0, QWIDGETSIZE_MAX, QWIDGETSIZE_MAX), flags, text);
 
     return rect.size();
 }
@@ -237,13 +202,13 @@ QSize QwtPlainTextEngine::textSize(const QFont &font,
   \param bottom Return value for the bottom margin
 */
 void QwtPlainTextEngine::textMargins(const QFont &font, const QString &,
-    int &left, int &right, int &top, int &bottom) const
+    double &left, double &right, double &top, double &bottom) const
 {
     left = right = top = 0;
 
-    const QFontMetrics fm(font);
+    const QFontMetricsF fm(font);
     top = fm.ascent() - d_data->effectiveAscent(font);
-    bottom = fm.descent() + 1;
+    bottom = fm.descent();
 }
 
 /*!
@@ -256,7 +221,7 @@ void QwtPlainTextEngine::textMargins(const QFont &font, const QString &,
   \param flags Bitwise OR of the flags used like in QPainter::drawText
   \param text Text to be rendered
 */
-void QwtPlainTextEngine::draw(QPainter *painter, const QRect &rect,
+void QwtPlainTextEngine::draw(QPainter *painter, const QRectF &rect,
     int flags, const QString& text) const
 {
     QwtPainter::drawText(painter, rect, flags, text);
@@ -288,19 +253,13 @@ QwtRichTextEngine::QwtRichTextEngine()
 
    \return Calculated height
 */
-int QwtRichTextEngine::heightForWidth(const QFont& font, int flags,
-        const QString& text, int width) const
+double QwtRichTextEngine::heightForWidth(const QFont& font, int flags,
+        const QString& text, double width) const
 {
     QwtRichTextDocument doc(text, flags, font);
 
-#if QT_VERSION < 0x040000
-    doc.setWidth(width);
-    const int h = doc.height();
-#else
-    doc.setPageSize(QSize(width, QWIDGETSIZE_MAX));
-    const int h = qRound(doc.documentLayout()->documentSize().height());
-#endif
-    return h;
+    doc.setPageSize(QSizeF(width, QWIDGETSIZE_MAX));
+    return doc.documentLayout()->documentSize().height();
 }
 
 /*!
@@ -313,55 +272,11 @@ int QwtRichTextEngine::heightForWidth(const QFont& font, int flags,
   \return Caluclated size
 */
 
-QSize QwtRichTextEngine::textSize(const QFont &font,
+QSizeF QwtRichTextEngine::textSize(const QFont &font,
     int flags, const QString& text) const
 {
     QwtRichTextDocument doc(text, flags, font);
 
-#if QT_VERSION < 0x040000
-    doc.setWidth(QWIDGETSIZE_MAX);
-
-    const int w = doc.widthUsed();
-    const int h = doc.height();
-    return QSize(w, h);
-
-#else // QT_VERSION >= 0x040000
-
-#if QT_VERSION < 0x040200
-    /*
-      Unfortunately offering the bounding rect calculation in the
-      API of QTextDocument has been forgotten in Qt <= 4.1.x. It
-      is planned to come with Qt 4.2.x.
-      In the meantime we need a hack with a temporary QLabel,
-      to reengineer the internal calculations.
-    */
-
-    static int off = 0;
-    static QLabel *label = NULL;
-    if ( label == NULL )
-    {
-        label = new QLabel;
-        label->hide();
-
-        const char *s = "XXXXX";
-        label->setText(s);
-        int w1 = label->sizeHint().width();
-        const QFontMetrics fm(label->font());
-        int w2 = fm.width(s);
-        off = w1 - w2;
-    }
-    label->setFont(doc.defaultFont());
-    label->setText(text);
-
-    int w = qwtMax(label->sizeHint().width() - off, 0);
-    doc.setPageSize(QSize(w, QWIDGETSIZE_MAX));
-
-    int h = qRound(doc.documentLayout()->documentSize().height());
-    return QSize(w, h);
-
-#else // QT_VERSION >= 0x040200
-
-#if QT_VERSION >= 0x040300
     QTextOption option = doc.defaultTextOption();
     if ( option.wrapMode() != QTextOption::NoWrap )
     {
@@ -369,11 +284,8 @@ QSize QwtRichTextEngine::textSize(const QFont &font,
         doc.setDefaultTextOption(option);
         doc.adjustSize();
     }
-#endif
 
-    return doc.size().toSize();
-#endif
-#endif
+    return doc.size();
 }
 
 /*!
@@ -384,7 +296,7 @@ QSize QwtRichTextEngine::textSize(const QFont &font,
   \param flags Bitwise OR of the flags like in for QPainter::drawText
   \param text Text to be rendered
 */
-void QwtRichTextEngine::draw(QPainter *painter, const QRect &rect,
+void QwtRichTextEngine::draw(QPainter *painter, const QRectF &rect,
     int flags, const QString& text) const
 {
     QwtRichTextDocument doc(text, flags, painter->font());
@@ -412,11 +324,7 @@ QString QwtRichTextEngine::taggedText(const QString &text, int flags) const
 */
 bool QwtRichTextEngine::mightRender(const QString &text) const
 {
-#if QT_VERSION < 0x040000
-    return QStyleSheet::mightBeRichText(text);
-#else
     return Qt::mightBeRichText(text);
-#endif
 }
 
 /*!
@@ -428,7 +336,7 @@ bool QwtRichTextEngine::mightRender(const QString &text) const
   \param bottom Return 0
 */
 void QwtRichTextEngine::textMargins(const QFont &, const QString &,
-    int &left, int &right, int &top, int &bottom) const
+    double &left, double &right, double &top, double &bottom) const
 {
     left = right = top = bottom = 0;
 }

@@ -10,8 +10,8 @@
 #ifndef QWT_ARROW_BUTTON_H
 #define QWT_ARROW_BUTTON_H
 
-#include <qpushbutton.h>
 #include "qwt_global.h"
+#include <qpushbutton.h>
 
 /*!
   \brief Arrow Button
@@ -33,9 +33,7 @@ public:
     virtual QSize minimumSizeHint() const;
 
 protected:
-#if QT_VERSION >= 0x040000
     virtual void paintEvent(QPaintEvent *event);
-#endif
 
     virtual void drawButtonLabel(QPainter *p);
     virtual void drawArrow(QPainter *, 

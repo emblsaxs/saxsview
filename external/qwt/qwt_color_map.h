@@ -10,21 +10,10 @@
 #ifndef QWT_COLOR_MAP_H
 #define QWT_COLOR_MAP_H
 
-#include <qglobal.h>
-#include <qcolor.h>
-#if QT_VERSION < 0x040000
-#include <qvaluevector.h>
-#else
-#include <qvector.h>
-#endif
-#include "qwt_array.h"
+#include "qwt_global.h"
 #include "qwt_double_interval.h"
-
-#if defined(QWT_TEMPLATEDLL)
-// MOC_SKIP_BEGIN
-template class QWT_EXPORT QwtArray<double>;
-// MOC_SKIP_END
-#endif
+#include <qcolor.h>
+#include <qvector.h>
 
 /*!
   \brief QwtColorMap is used to map values into colors. 
@@ -63,7 +52,7 @@ public:
     QwtColorMap(Format = QwtColorMap::RGB );
     virtual ~QwtColorMap();
 
-    inline Format format() const;
+    Format format() const;
 
     //! Clone the color map
     virtual QwtColorMap *copy() const = 0;
@@ -87,11 +76,7 @@ public:
         const QwtDoubleInterval &interval, double value) const = 0;
 
     QColor color(const QwtDoubleInterval &, double value) const;
-#if QT_VERSION < 0x040000
-    virtual QValueVector<QRgb> colorTable(const QwtDoubleInterval &) const;
-#else
     virtual QVector<QRgb> colorTable(const QwtDoubleInterval &) const;
-#endif
 
 private:
     Format d_format;
@@ -138,7 +123,7 @@ public:
 
     void setColorInterval(const QColor &color1, const QColor &color2);
     void addColorStop(double value, const QColor&);
-    QwtArray<double> colorStops() const;
+    QVector<double> colorStops() const;
 
     QColor color1() const;
     QColor color2() const;

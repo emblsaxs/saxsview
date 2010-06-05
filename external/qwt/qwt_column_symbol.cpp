@@ -7,35 +7,127 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <qpainter.h>
-#include <qpalette.h>
-#include <qframe.h>
+#include "qwt_column_symbol.h"
 #include "qwt_math.h"
 #include "qwt_text.h"
-#include "qwt_column_symbol.h"
 #include "qwt_painter.h"
-#if QT_VERSION < 0x040000
-#include <qdrawutil.h>
-#endif
+#include <qpainter.h>
+#include <qpalette.h>
+
+static void drawBox(QPainter *p, const QRectF &rect,
+    const QPalette &pal, double lw)
+{
+    if ( lw > 0.0 )
+    {
+        if ( rect.width() == 0.0 )
+        {
+            p->setPen(pal.dark().color());
+            p->drawLine(rect.topLeft(), rect.bottomLeft());
+            return;
+        }
+
+        if ( rect.height() == 0.0 )
+        {
+            p->setPen(pal.dark().color());
+            p->drawLine(rect.topLeft(), rect.topRight());
+            return;
+        }
+
+        lw = qMin(lw, rect.height() / 2.0 - 1.0);
+        lw = qMin(lw, rect.width() / 2.0 - 1.0);
+
+        const QRectF outerRect = rect.adjusted(0, 0, 1, 1);
+        QPolygonF polygon(outerRect);
+
+        if ( outerRect.width() > 2 * lw && 
+            outerRect.height() > 2 * lw )
+        {
+            const QRectF innerRect = outerRect.adjusted(lw, lw, -lw, -lw);
+            polygon = polygon.subtracted(innerRect);
+        }
+
+        p->setPen(Qt::NoPen);
+
+        p->setBrush(pal.dark());
+        p->drawPolygon(polygon);
+    }
+
+    const QRectF windowRect = rect.adjusted(lw, lw, -lw + 1, -lw + 1);
+    if ( windowRect.isValid() )
+        p->fillRect(windowRect, pal.window());
+}
+
+static void drawPanel(QPainter *p, const QRectF &rect,
+    const QPalette &pal, double lw)
+{
+
+    if ( lw > 0.0 )
+    {
+        if ( rect.width() == 0.0 )
+        {
+            p->setPen(pal.window().color());
+            p->drawLine(rect.topLeft(), rect.bottomLeft());
+            return;
+        }
+
+        if ( rect.height() == 0.0 )
+        {
+            p->setPen(pal.window().color());
+            p->drawLine(rect.topLeft(), rect.topRight());
+            return;
+        }
+
+        lw = qMin(lw, rect.height() / 2.0 - 1.0);
+        lw = qMin(lw, rect.width() / 2.0 - 1.0);
+
+        const QRectF outerRect = rect.adjusted(0, 0, 1, 1);
+        const QRectF innerRect = outerRect.adjusted(lw, lw, -lw, -lw);
+
+        QPolygonF lines[2];
+
+        lines[0] += outerRect.bottomLeft();
+        lines[0] += outerRect.topLeft();
+        lines[0] += outerRect.topRight();
+        lines[0] += innerRect.topRight();
+        lines[0] += innerRect.topLeft();
+        lines[0] += innerRect.bottomLeft();
+
+        lines[1] += outerRect.topRight();
+        lines[1] += outerRect.bottomRight();
+        lines[1] += outerRect.bottomLeft();
+        lines[1] += innerRect.bottomLeft();
+        lines[1] += innerRect.bottomRight();
+        lines[1] += innerRect.topRight();
+
+        p->setPen(Qt::NoPen);
+
+        p->setBrush(pal.light());
+        p->drawPolygon(lines[0]);
+        p->setBrush(pal.dark());
+        p->drawPolygon(lines[1]);
+    }
+
+    p->fillRect(rect.adjusted(lw, lw, -lw + 1, -lw + 1), pal.window());
+}
 
 class QwtColumnSymbol::PrivateData
 {
 public:
     PrivateData():
         style(QwtColumnSymbol::Box),
-        lineWidth(2),
-        frameStyle(QFrame::Box | QFrame::Raised)
+        frameStyle(QwtColumnSymbol::Raised),
+        lineWidth(2)
     {
         palette = QPalette(Qt::gray);
     }
 
     QwtColumnSymbol::Style style;
+    QwtColumnSymbol::FrameStyle frameStyle;
 
     QPalette palette;
     QwtText label;
 
     int lineWidth;
-    int frameStyle;
 };
 
 QwtColumnSymbol::QwtColumnSymbol(Style style) 
@@ -47,14 +139,6 @@ QwtColumnSymbol::QwtColumnSymbol(Style style)
 QwtColumnSymbol::~QwtColumnSymbol()
 {
     delete d_data;
-}
-
-QwtColumnSymbol *QwtColumnSymbol::clone() const
-{
-    QwtColumnSymbol *other = new QwtColumnSymbol;
-    *other->d_data = *d_data;
-
-    return other;
 }
 
 //! == operator
@@ -93,12 +177,12 @@ const QPalette& QwtColumnSymbol::palette() const
     return d_data->palette;
 }
 
-void QwtColumnSymbol::setFrameStyle(int style)
+void QwtColumnSymbol::setFrameStyle(FrameStyle style)
 {
     d_data->frameStyle = style;
 }
 
-int QwtColumnSymbol::frameStyle() const
+QwtColumnSymbol::FrameStyle QwtColumnSymbol::frameStyle() const
 {
     return d_data->frameStyle;
 }
@@ -125,20 +209,15 @@ const QwtText& QwtColumnSymbol::label() const
 }
 
 void QwtColumnSymbol::draw(QPainter *painter, 
-    Direction direction, const QRect &rect) const
+    const QwtColumnRect &rect) const
 {
-#if QT_VERSION >= 0x040000
-    const QRect r = rect.normalized();
-#else
-    const QRect r = rect.normalize();
-#endif
     painter->save();
 
     switch(d_data->style)
     {
         case QwtColumnSymbol::Box:
         {
-            drawBox(painter, direction, r);
+            drawBox(painter, rect);
             break;
         }
         default:;
@@ -148,84 +227,34 @@ void QwtColumnSymbol::draw(QPainter *painter,
 }
 
 void QwtColumnSymbol::drawBox(QPainter *painter, 
-    Direction, const QRect &rect) const
+    const QwtColumnRect &rect) const
 {
-#if QT_VERSION < 0x040000
-    QRect r = rect.normalize();
-#else
-    QRect r = rect.normalized();
-#endif
-    r = QwtPainter::metricsMap().layoutToDevice(r, painter);
+    QRectF r = rect.toRect();
+    if ( rect.hInterval.borderFlags() & QwtDoubleInterval::ExcludeMinimum )
+        r.adjust(1, 0, 0, 0);
+    if ( rect.hInterval.borderFlags() & QwtDoubleInterval::ExcludeMaximum )
+        r.adjust(0, 0, -1, 0);
+    if ( rect.vInterval.borderFlags() & QwtDoubleInterval::ExcludeMinimum )
+        r.adjust(0, 1, 0, 0);
+    if ( rect.vInterval.borderFlags() & QwtDoubleInterval::ExcludeMaximum )
+        r.adjust(0, 0, 0, -1);
 
-    r.setTop(r.top() + 1);
-    r.setRight(r.right() + 1);
-
-#if QT_VERSION < 0x040000
-    const int shadowMask = 0x00f0;
-    const int shapeMask = 0x000f;
-#else
-    const int shadowMask = QFrame::Shadow_Mask;
-    const int shapeMask = QFrame::Shape_Mask;
-#endif
-    int shadow = d_data->frameStyle & shadowMask;
-    if ( shadow == 0 )
-        shadow = QFrame::Plain;
-
-    int shape = d_data->frameStyle & shapeMask;
-    if ( shadow == QFrame::Plain )
-        shape = QFrame::Box;
-
-    const QBrush brush =
-#if QT_VERSION < 0x040000
-        d_data->palette.brush(QPalette::Active, QColorGroup::Background);
-#else
-        d_data->palette.brush(QPalette::Window);
-#endif
-
-    switch(d_data->frameStyle & shapeMask )
+    switch(d_data->frameStyle) 
     {
-        case QFrame::Panel:
-        case QFrame::StyledPanel:
-        case QFrame::WinPanel:
+        case QwtColumnSymbol::Raised:
         {
-            qDrawShadePanel(painter, r, 
-#if QT_VERSION < 0x040000
-                d_data->palette.active(),
-#else
-                d_data->palette, 
-#endif
-                shadow == QFrame::Sunken, d_data->lineWidth, &brush
-            );
+            ::drawPanel(painter, r, d_data->palette, d_data->lineWidth);
             break;
         }
-        case QFrame::Box:
+        case QwtColumnSymbol::Plain:
+        {
+            ::drawBox(painter, r, d_data->palette, d_data->lineWidth);
+            break;
+        }
         default:
         {
-            if ( shadow == QFrame::Plain )
-            {
-                qDrawPlainRect(painter, r, 
-#if QT_VERSION < 0x040000
-                    d_data->palette.color(
-                        QPalette::Active, QColorGroup::Foreground),
-#else
-                    d_data->palette.color(QPalette::Foreground),
-#endif
-                    d_data->lineWidth, &brush);
-            }
-            else
-            {
-                const int midLineWidth = 0;
-
-                qDrawShadeRect( painter, r, 
-#if QT_VERSION < 0x040000
-                    d_data->palette.active(),
-#else
-                    d_data->palette, 
-#endif
-                    shadow == QFrame::Sunken, 
-                    d_data->lineWidth, midLineWidth, &brush 
-                );
-            }
+            painter->fillRect(r.adjusted(0, 0, -1, -1),
+                d_data->palette.window());
         }
     }
 }

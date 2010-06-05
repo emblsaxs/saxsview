@@ -76,28 +76,28 @@ public:
     virtual QSize minimumSizeHint(const QwtPlot *) const;    
 
     virtual void activate(const QwtPlot *, 
-        const QRect &rect, int options = 0);
+        const QRectF &rect, int options = 0);
 
     virtual void invalidate();
 
-    const QRect &titleRect() const;
-    const QRect &legendRect() const;
-    const QRect &scaleRect(int axis) const;
-    const QRect &canvasRect() const;
+    const QRectF &titleRect() const;
+    const QRectF &legendRect() const;
+    const QRectF &scaleRect(int axis) const;
+    const QRectF &canvasRect() const;
 
     class LayoutData;
 
 protected:
 
-    QRect layoutLegend(int options, const QRect &) const;
-    QRect alignLegend(const QRect &canvasRect, 
-        const QRect &legendRect) const;
+    QRectF layoutLegend(int options, const QRectF &) const;
+    QRectF alignLegend(const QRectF &canvasRect, 
+        const QRectF &legendRect) const;
 
-    void expandLineBreaks(int options, const QRect &rect, 
+    void expandLineBreaks(int options, const QRectF &rect, 
         int &dimTitle, int dimAxes[QwtPlot::axisCnt]) const;
 
-    void alignScales(int options, QRect &canvasRect,
-        QRect scaleRect[QwtPlot::axisCnt]) const;
+    void alignScales(int options, QRectF &canvasRect,
+        QRectF scaleRect[QwtPlot::axisCnt]) const;
 
 private:
     class PrivateData;

@@ -14,12 +14,7 @@
 #include "qwt_scale_div.h"
 #include "qwt_text.h"
 
-
-#if QT_VERSION < 0x040000
-class QColorGroup;
-#else
 class QPalette;
-#endif
 class QPainter;
 class QFont;
 class QwtScaleTransformation;
@@ -70,18 +65,17 @@ public:
     void enableComponent(ScaleComponent, bool enable = true);
     bool hasComponent(ScaleComponent) const;
 
-    void setTickLength(QwtScaleDiv::TickType, int length);
-    int tickLength(QwtScaleDiv::TickType) const;
-    int majTickLength() const;
+    void setTickLength(QwtScaleDiv::TickType, double length);
+    double tickLength(QwtScaleDiv::TickType) const;
+    double majTickLength() const;
 
-    void setSpacing(int margin);
-    int spacing() const;
+    void setSpacing(double margin);
+    double spacing() const;
         
-#if QT_VERSION < 0x040000
-    virtual void draw(QPainter *, const QColorGroup &) const;
-#else
+    void setPenWidth(int width);
+    int penWidth() const;
+
     virtual void draw(QPainter *, const QPalette &) const;
-#endif
 
     virtual QwtText label(double) const;
 
@@ -94,10 +88,10 @@ public:
  
       \sa setMinimumExtent(), minimumExtent()
     */
-    virtual int extent(const QPen &, const QFont &) const = 0;
+    virtual double extent(const QFont &) const = 0;
 
-    void setMinimumExtent(int);
-    int minimumExtent() const;
+    void setMinimumExtent(double);
+    double minimumExtent() const;
 
     QwtScaleMap &scaleMap();
 
@@ -111,7 +105,7 @@ protected:
 
        \sa drawBackbone(), drawLabel()
     */  
-    virtual void drawTick(QPainter *painter, double value, int len) const = 0;
+    virtual void drawTick(QPainter *painter, double value, double len) const = 0;
 
     /*!
       Draws the baseline of the scale

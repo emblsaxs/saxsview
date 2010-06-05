@@ -7,13 +7,14 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#include <qpainter.h>
-#include <qpen.h>
+#include "qwt_plot_grid.h"
 #include "qwt_painter.h"
 #include "qwt_text.h"
 #include "qwt_scale_map.h"
 #include "qwt_scale_div.h"
-#include "qwt_plot_grid.h"
+#include "qwt_math.h"
+#include <qpainter.h>
+#include <qpen.h>
 
 class QwtPlotGrid::PrivateData
 {
@@ -213,10 +214,13 @@ void QwtPlotGrid::setMinPen(const QPen &pen)
 */
 void QwtPlotGrid::draw(QPainter *painter, 
     const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-    const QRect &canvasRect) const
+    const QRectF &canvasRect) const
 {
     //  draw minor gridlines
-    painter->setPen(QwtPainter::scaledPen(d_data->minPen));
+    QPen minPen = d_data->minPen;
+    minPen.setCapStyle(Qt::FlatCap);
+
+    painter->setPen(minPen);
     
     if (d_data->xEnabled && d_data->xMinEnabled)
     {
@@ -235,7 +239,10 @@ void QwtPlotGrid::draw(QPainter *painter,
     }
 
     //  draw major gridlines
-    painter->setPen(QwtPainter::scaledPen(d_data->majPen));
+    QPen majPen = d_data->majPen;
+    majPen.setCapStyle(Qt::FlatCap);
+
+    painter->setPen(majPen);
     
     if (d_data->xEnabled)
     {
@@ -250,27 +257,33 @@ void QwtPlotGrid::draw(QPainter *painter,
     }
 }
 
-void QwtPlotGrid::drawLines(QPainter *painter, const QRect &canvasRect,
+void QwtPlotGrid::drawLines(QPainter *painter, const QRectF &canvasRect,
     Qt::Orientation orientation, const QwtScaleMap &scaleMap, 
-    const QwtValueList &values) const
+    const QList<double> &values) const
 {
-    const int x1 = canvasRect.left();
-    const int x2 = canvasRect.right();
-    const int y1 = canvasRect.top();
-    const int y2 = canvasRect.bottom();
+    const double x1 = canvasRect.left();
+    const double x2 = canvasRect.right() - 1.0;
+    const double y1 = canvasRect.top();
+    const double y2 = canvasRect.bottom() - 1.0;
 
     for (uint i = 0; i < (uint)values.count(); i++)
     {
-        const int value = scaleMap.transform(values[i]);
+        const double value = scaleMap.transform(values[i]);
         if ( orientation == Qt::Horizontal )
         {
-            if ((value >= y1) && (value <= y2))
+            if ( qwtFuzzyGreaterOrEqual(value, y1) && 
+                qwtFuzzyLessOrEqual(value, y2))
+            {
                 QwtPainter::drawLine(painter, x1, value, x2, value);
+            }
         }
         else
         {
-            if ((value >= x1) && (value <= x2))
+            if ( qwtFuzzyGreaterOrEqual(value, x1) && 
+                qwtFuzzyLessOrEqual(value, x2) )
+            {
                 QwtPainter::drawLine(painter, value, y1, value, y2);
+            }
         }
     }
 }

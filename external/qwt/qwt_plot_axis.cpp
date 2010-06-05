@@ -368,13 +368,12 @@ double QwtPlot::invTransform(int axisId, int pos) const
   \return X or y coordinate in the plotting region corresponding
           to the value.
 */
-int QwtPlot::transform(int axisId, double value) const
+double QwtPlot::transform(int axisId, double value) const
 {
     if (axisValid(axisId))
        return(canvasMap(axisId).transform(value));
     else
-       return 0;
-    
+       return 0.0;
 }
 
 /*!
@@ -397,7 +396,7 @@ void QwtPlot::setAxisFont(int axisId, const QFont &f)
   after a fixed scale has been set. Autoscaling is enabled by default.
 
   \param axisId axis index
-  \sa QwtPlot::setAxisScale(), QwtPlot::setAxisScaleDiv()
+  \sa setAxisScale(), setAxisScaleDiv()
 */
 void QwtPlot::setAxisAutoScale(int axisId)
 {
@@ -415,7 +414,7 @@ void QwtPlot::setAxisAutoScale(int axisId)
   \param max minimum and maximum of the scale
   \param stepSize Major step size. If <code>step == 0</code>, the step size is
             calculated automatically using the maxMajor setting.
-  \sa setAxisMaxMajor(), setAxisAutoScale()
+  \sa setAxisMaxMajor(), setAxisAutoScale(), axisStepSize()
 */
 void QwtPlot::setAxisScale(int axisId, double min, double max, double stepSize)
 {
@@ -483,11 +482,7 @@ void QwtPlot::setAxisScaleDraw(int axisId, QwtScaleDraw *scaleDraw)
   \param alignment Or'd Qt::AlignmentFlags <see qnamespace.h>
   \sa QwtScaleDraw::setLabelAlignment()
 */
-#if QT_VERSION < 0x040000
-void QwtPlot::setAxisLabelAlignment(int axisId, int alignment)
-#else
 void QwtPlot::setAxisLabelAlignment(int axisId, Qt::Alignment alignment)
-#endif
 {
     if (axisValid(axisId))
         axisWidget(axisId)->setLabelAlignment(alignment);
@@ -601,7 +596,7 @@ void QwtPlot::updateAxes()
 
         if ( axisAutoScale(item->xAxis()) || axisAutoScale(item->yAxis()) )
         {
-            const QwtDoubleRect rect = item->boundingRect();
+            const QRectF rect = item->boundingRect();
             intv[item->xAxis()] |= QwtDoubleInterval(rect.left(), rect.right());
             intv[item->yAxis()] |= QwtDoubleInterval(rect.top(), rect.bottom());
         }

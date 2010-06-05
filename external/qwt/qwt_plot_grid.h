@@ -67,15 +67,15 @@ public:
 
     virtual void draw(QPainter *p, 
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &rect) const;
+        const QRectF &rect) const;
 
     virtual void updateScaleDiv(const QwtScaleDiv &xMap,
         const QwtScaleDiv &yMap);
 
 private:
-    void drawLines(QPainter *painter, const QRect &,
+    void drawLines(QPainter *painter, const QRectF &,
         Qt::Orientation orientation, const QwtScaleMap &, 
-        const QwtValueList &) const;
+        const QList<double> &) const;
 
     class PrivateData;
     PrivateData *d_data;

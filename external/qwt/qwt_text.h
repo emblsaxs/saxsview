@@ -7,20 +7,18 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_TEXT_H
 #define QWT_TEXT_H
 
+#include "qwt_global.h"
 #include <qstring.h>
 #include <qsize.h>
 #include <qfont.h>
-#include "qwt_global.h"
 
 class QColor;
 class QPen;
 class QBrush;
-class QRect;
+class QRectF;
 class QPainter;
 class QwtTextEngine;
 
@@ -70,8 +68,7 @@ public:
       - MathMLText\n
         Use a MathML (http://en.wikipedia.org/wiki/MathML) render engine
         to display the text. The Qwt MathML extension offers such an engine
-        based on the MathML renderer of the Qt solutions package. Unfortunately
-        it is only available for owners of a commercial Qt license.
+        based on the MathML renderer of the Qt solutions package. 
       - TeXText\n
         Use a TeX (http://en.wikipedia.org/wiki/TeX) render engine
         to display the text. 
@@ -145,11 +142,8 @@ public:
         QwtText::TextFormat textFormat = AutoText);
     QString text() const;
 
-    //! \return text().isNull()
-    inline bool isNull() const { return text().isNull(); }
-
-    //! \return text().isEmpty()
-    inline bool isEmpty() const { return text().isEmpty(); }
+    bool isNull() const;
+    bool isEmpty() const;
 
     void setFont(const QFont &);
     QFont font() const;
@@ -176,10 +170,10 @@ public:
     void setLayoutAttribute(LayoutAttribute, bool on = true);
     bool testLayoutAttribute(LayoutAttribute) const;
 
-    int heightForWidth(int width, const QFont & = QFont()) const;
-    QSize textSize(const QFont & = QFont()) const;
+    double heightForWidth(double width, const QFont & = QFont()) const;
+    QSizeF textSize(const QFont & = QFont()) const;
 
-    void draw(QPainter *painter, const QRect &rect) const;
+    void draw(QPainter *painter, const QRectF &rect) const;
 
     static const QwtTextEngine *textEngine(const QString &text,
         QwtText::TextFormat = AutoText);
@@ -194,5 +188,17 @@ private:
     class LayoutCache;
     LayoutCache *d_layoutCache;
 };
+
+//! \return text().isNull()
+inline bool QwtText::isNull() const 
+{ 
+    return text().isNull(); 
+}
+
+//! \return text().isEmpty()
+inline bool QwtText::isEmpty() const 
+{ 
+    return text().isEmpty(); 
+}
 
 #endif

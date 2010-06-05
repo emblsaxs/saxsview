@@ -31,8 +31,8 @@ namespace Saxsview {
 
 class Plot;
 
-typedef QwtArray<QwtDoublePoint> PlotPointData;
-typedef QwtArray<QwtIntervalSample> PlotIntervalData;
+typedef QVector<QPointF> PlotPointData;
+typedef QVector<QwtIntervalSample> PlotIntervalData;
 
 
 /**
@@ -77,6 +77,10 @@ public:
 
   PlotSymbol();
   PlotSymbol(Style style, int size, const QColor& color);
+  PlotSymbol(const PlotSymbol&);
+  ~PlotSymbol();
+
+  PlotSymbol& operator=(const PlotSymbol&);
 
   QColor color() const;
   void setColor(const QColor& color);
@@ -87,10 +91,10 @@ public:
   Style style() const;
   void setStyle(Style s);
 
-  const QwtSymbol& qwtSymbol() const;
+  QwtSymbol* qwtSymbol() const;
 
 private:
-  QwtSymbol mSymbol;
+  QwtSymbol *mSymbol;
 };
 
 /**

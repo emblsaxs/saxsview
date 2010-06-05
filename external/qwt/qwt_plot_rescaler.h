@@ -11,7 +11,6 @@
 #define QWT_PLOT_RESCALER_H 1
 
 #include "qwt_global.h"
-#include "qwt_double_rect.h"
 #include "qwt_double_interval.h"
 #include "qwt_plot.h"
 #include <qobject.h>

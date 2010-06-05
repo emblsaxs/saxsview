@@ -14,11 +14,7 @@
 #include "qwt_plot_item.h"
 #include "qwt_scale_draw.h"
 
-#if QT_VERSION < 0x040000
-class QColorGroup;
-#else
 class QPalette;
-#endif
 
 /*!
   \brief A class which draws a scale inside the plot canvas
@@ -64,13 +60,8 @@ public:
     void setScaleDivFromAxis(bool on);
     bool isScaleDivFromAxis() const;
     
-#if QT_VERSION < 0x040000
-    void setColorGroup(const QColorGroup &);
-    QColorGroup colorGroup() const;
-#else
     void setPalette(const QPalette &);
     QPalette palette() const;
-#endif
 
     void setFont(const QFont&);
     QFont font() const;
@@ -90,13 +81,13 @@ public:
 
     virtual void draw(QPainter *p, 
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRect &rect) const;
+        const QRectF &rect) const;
 
-    virtual void updateScaleDiv(const QwtScaleDiv&,
-        const QwtScaleDiv&);
+    virtual void updateScaleDiv(const QwtScaleDiv &, const QwtScaleDiv &);
 
 private:
-    void updateBorders();
+    void updateBorders(const QRectF &, 
+        const QwtScaleMap &, const QwtScaleMap &);
 
     class PrivateData;
     PrivateData *d_data;

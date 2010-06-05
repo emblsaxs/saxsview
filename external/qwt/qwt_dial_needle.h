@@ -10,8 +10,8 @@
 #ifndef QWT_DIAL_NEEDLE_H
 #define QWT_DIAL_NEEDLE_H 1
 
-#include <qpalette.h>
 #include "qwt_global.h"
+#include <qpalette.h>
 
 class QPainter;
 class QPoint;
@@ -62,9 +62,9 @@ private:
   \brief A needle for dial widgets
 
   The following colors are used:
-  - QColorGroup::Mid\n
+  - QPalette::Mid\n
     Pointer
-  - QColorGroup::base\n
+  - QPalette::Base\n
     Knob
 
   \sa QwtDial, QwtCompass
@@ -112,11 +112,11 @@ private:
   north and south.
 
   The following colors are used:
-  - QColorGroup::Light\n
+  - QPalette::Light\n
     Used for pointing south
-  - QColorGroup::Dark\n
+  - QPalette::Dark\n
     Used for pointing north
-  - QColorGroup::Base\n
+  - QPalette::Base\n
     Knob (ThinStyle only)
 
   \sa QwtDial, QwtCompass
@@ -159,9 +159,9 @@ private:
 
   QwtCompassWindArrow shows the direction where the wind comes from.
 
-  - QColorGroup::Light\n
+  - QPalette::Light\n
     Used for Style1, or the light half of Style2
-  - QColorGroup::Dark\n
+  - QPalette::Dark\n
     Used for the dark half of Style2
 
   \sa QwtDial, QwtCompass

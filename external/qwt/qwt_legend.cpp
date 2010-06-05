@@ -7,18 +7,15 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <qapplication.h> 
-#include <qmap.h> 
-#if QT_VERSION >= 0x040000
-#include <qscrollbar.h> 
-#endif
-#include "qwt_math.h"
-#include "qwt_dyngrid_layout.h"
+#include "qwt_legend.h"
 #include "qwt_legend_itemmanager.h"
 #include "qwt_legend_item.h"
-#include "qwt_legend.h"
+#include "qwt_dyngrid_layout.h"
+#include "qwt_math.h"
+#include <qapplication.h> 
+#include <qmap.h> 
+#include <qscrollbar.h> 
+#include <qscrollarea.h>
 
 class QwtLegend::PrivateData
 {
@@ -50,51 +47,12 @@ public:
     };
 
     QwtLegend::LegendItemMode itemMode;
-    QwtLegend::LegendDisplayPolicy displayPolicy;
-    int identifierMode;
 
     LegendMap map;
 
     class LegendView;
     LegendView *view;
 };
-
-#if QT_VERSION < 0x040000
-#include <qscrollview.h>
-
-class QwtLegend::PrivateData::LegendView: public QScrollView
-{
-public:
-    LegendView(QWidget *parent):
-        QScrollView(parent)
-    {
-        setResizePolicy(Manual);
-
-        viewport()->setBackgroundMode(Qt::NoBackground); // Avoid flicker
-
-        contentsWidget = new QWidget(viewport());
-
-        addChild(contentsWidget);
-    }
-
-    void viewportResizeEvent(QResizeEvent *e)
-    {
-        QScrollView::viewportResizeEvent(e);
-
-        // It's not safe to update the layout now, because
-        // we are in an internal update of the scrollview framework.
-        // So we delay the update by posting a LayoutHint.
-
-        QApplication::postEvent(contentsWidget, 
-            new QEvent(QEvent::LayoutHint));
-    }
-
-    QWidget *contentsWidget;
-};
-
-#else // QT_VERSION >= 0x040000
-
-#include <qscrollarea.h>
 
 class QwtLegend::PrivateData::LegendView: public QScrollArea
 {
@@ -147,9 +105,6 @@ public:
     QWidget *contentsWidget;
 };
 
-#endif
-
-
 void QwtLegend::PrivateData::LegendMap::insert(
     const QwtLegendItemManager *item, QWidget *widget)
 {
@@ -180,19 +135,11 @@ void QwtLegend::PrivateData::LegendMap::clear()
        we are iterating.
      */
 
-#if QT_VERSION < 0x040000
-    QValueList<QWidget *> widgets;
-
-    QMap<const QwtLegendItemManager *, QWidget *>::const_iterator it;
-    for ( it = d_itemMap.begin(); it != d_itemMap.end(); ++it ) 
-        widgets.append(it.data());
-#else
     QList<QWidget *> widgets;
 
     QMap<const QwtLegendItemManager *, QWidget *>::const_iterator it;
     for ( it = d_itemMap.begin(); it != d_itemMap.end(); ++it ) 
         widgets.append(it.value());
-#endif
 
     d_itemMap.clear();
     d_widgetMap.clear();
@@ -264,18 +211,12 @@ QwtLegend::QwtLegend(QWidget *parent):
 
     d_data = new QwtLegend::PrivateData;
     d_data->itemMode = QwtLegend::ReadOnlyItem;
-    d_data->displayPolicy = QwtLegend::AutoIdentifier;
-    d_data->identifierMode = QwtLegendItem::ShowLine | 
-        QwtLegendItem::ShowSymbol | QwtLegendItem::ShowText;
 
     d_data->view = new QwtLegend::PrivateData::LegendView(this);
     d_data->view->setFrameStyle(NoFrame);
 
     QwtDynGridLayout *layout = new QwtDynGridLayout(
         d_data->view->contentsWidget);
-#if QT_VERSION < 0x040000
-    layout->setAutoAdd(true);
-#endif
     layout->setAlignment(Qt::AlignHCenter | Qt::AlignTop);
 
     d_data->view->contentsWidget->installEventFilter(this);
@@ -285,47 +226,6 @@ QwtLegend::QwtLegend(QWidget *parent):
 QwtLegend::~QwtLegend()
 {
     delete d_data;
-}
-
-/*!
-  Set the legend display policy to:
-
-  \param policy Legend display policy
-  \param mode Identifier mode (or'd ShowLine, ShowSymbol, ShowText)
-
-  \sa displayPolicy(), LegendDisplayPolicy
-*/
-void QwtLegend::setDisplayPolicy(LegendDisplayPolicy policy, int mode)
-{
-    d_data->displayPolicy = policy;
-    if (-1 != mode)
-       d_data->identifierMode = mode;
-
-    QMap<QWidget *, const QwtLegendItemManager *> &map = 
-        d_data->map.widgetMap();
-
-    QMap<QWidget *, const QwtLegendItemManager *>::iterator it;
-    for ( it = map.begin(); it != map.end(); ++it ) 
-    {
-#if QT_VERSION < 0x040000
-        QwtLegendItemManager *item = (QwtLegendItemManager *)it.data();
-#else
-        QwtLegendItemManager *item = (QwtLegendItemManager *)it.value();
-#endif
-        if ( item )
-            item->updateLegend(this);
-    }
-}
-
-/*! 
-  \return the legend display policy.
-  Default is LegendDisplayPolicy::Auto.
-  \sa setDisplayPolicy(), LegendDisplayPolicy
-*/ 
-
-QwtLegend::LegendDisplayPolicy QwtLegend::displayPolicy() const 
-{ 
-    return d_data->displayPolicy; 
 }
 
 //! \sa LegendItemMode
@@ -338,17 +238,6 @@ void QwtLegend::setItemMode(LegendItemMode mode)
 QwtLegend::LegendItemMode QwtLegend::itemMode() const
 {
     return d_data->itemMode;
-}
-
-/*!
-  \return the IdentifierMode to be used in combination with
-  LegendDisplayPolicy::Fixed.
-
-  Default is ShowLine | ShowSymbol | ShowText.
-*/
-int QwtLegend::identifierMode() const
-{
-    return d_data->identifierMode;
 }
 
 /*! 
@@ -401,13 +290,7 @@ void QwtLegend::insert(const QwtLegendItemManager *plotItem, QWidget *legendItem
     QWidget *contentsWidget = d_data->view->contentsWidget;
 
     if ( legendItem->parent() != contentsWidget )
-    {
-#if QT_VERSION >= 0x040000
         legendItem->setParent(contentsWidget);
-#else
-        legendItem->reparent(contentsWidget, QPoint(0, 0));
-#endif
-    }
 
     legendItem->show();
 
@@ -417,30 +300,19 @@ void QwtLegend::insert(const QwtLegendItemManager *plotItem, QWidget *legendItem
 
     if ( contentsWidget->layout() )
     {
-#if QT_VERSION >= 0x040000
         contentsWidget->layout()->addWidget(legendItem);
-#endif
 
         // set tab focus chain
 
         QWidget *w = NULL;
 
-#if QT_VERSION < 0x040000
-        QLayoutIterator layoutIterator = 
-            contentsWidget->layout()->iterator();
-        for ( QLayoutItem *item = layoutIterator.current();
-            item != 0; item = ++layoutIterator)
-        {
-#else
         for (int i = 0; i < contentsWidget->layout()->count(); i++)
         {
             QLayoutItem *item = contentsWidget->layout()->itemAt(i);
-#endif
             if ( w && item->widget() )
-            {
                 QWidget::setTabOrder(w, item->widget());
-                w = item->widget();
-            }
+
+            w = item->widget();
         }
     }
     if ( parentWidget() && parentWidget()->layout() == NULL )
@@ -451,13 +323,8 @@ void QwtLegend::insert(const QwtLegendItemManager *plotItem, QWidget *legendItem
           parent widget notified, so it can show/hide the legend
           depending on its items.
         */
-#if QT_VERSION < 0x040000
-        QApplication::postEvent(parentWidget(),
-            new QEvent(QEvent::LayoutHint));
-#else
         QApplication::postEvent(parentWidget(),
             new QEvent(QEvent::LayoutRequest));
-#endif
     }
 }
 
@@ -499,16 +366,15 @@ void QwtLegend::remove(const QwtLegendItemManager *plotItem)
 //! Remove all items.
 void QwtLegend::clear()
 {
-#if QT_VERSION < 0x040000
-    bool doUpdate = isUpdatesEnabled();
-#else
     bool doUpdate = updatesEnabled();
-#endif
-    setUpdatesEnabled(false);
+    if ( doUpdate )
+        setUpdatesEnabled(false);
 
     d_data->map.clear();
 
-    setUpdatesEnabled(doUpdate);
+    if ( doUpdate )
+        setUpdatesEnabled(true);
+
     update();
 }
 
@@ -530,17 +396,6 @@ int QwtLegend::heightForWidth(int width) const
     width -= 2 * frameWidth();
 
     int h = d_data->view->contentsWidget->heightForWidth(width);
-#if QT_VERSION < 0x040000
-
-    // Asking the layout is the default implementation in Qt4 
-
-    if ( h <= 0 ) 
-    {
-        QLayout *l = d_data->view->contentsWidget->layout();
-        if ( l && l->hasHeightForWidth() )
-            h = l->heightForWidth(width);
-    }
-#endif
     if ( h >= 0 )
         h += 2 * frameWidth();
 
@@ -561,20 +416,17 @@ void QwtLegend::layoutContents()
 
         const int minW = int(tl->maxItemWidth()) + 2 * tl->margin();
 
-        int w = qwtMax(visibleSize.width(), minW);
-        int h = qwtMax(tl->heightForWidth(w), visibleSize.height());
+        int w = qMax(visibleSize.width(), minW);
+        int h = qMax(tl->heightForWidth(w), visibleSize.height());
 
         const int vpWidth = d_data->view->viewportSize(w, h).width();
         if ( w > vpWidth )
         {
-            w = qwtMax(vpWidth, minW);
-            h = qwtMax(tl->heightForWidth(w), visibleSize.height());
+            w = qMax(vpWidth, minW);
+            h = qMax(tl->heightForWidth(w), visibleSize.height());
         }
 
         d_data->view->contentsWidget->resize(w, h);
-#if QT_VERSION < 0x040000
-        d_data->view->resizeContents(w, h);
-#endif
     }
 }
 
@@ -597,22 +449,11 @@ bool QwtLegend::eventFilter(QObject *o, QEvent *e)
                     d_data->map.remove((QWidget *)ce->child());
                 break;
             }
-#if QT_VERSION < 0x040000
-            case QEvent::LayoutHint:
-#else
             case QEvent::LayoutRequest:
-#endif
             {
                 layoutContents();
                 break;
             }
-#if QT_VERSION < 0x040000
-            case QEvent::Resize:
-            {
-                updateGeometry();
-                break;
-            }
-#endif
             default:
                 break;
         }
@@ -635,20 +476,12 @@ uint QwtLegend::itemCount() const
 }
 
 //! Return a list of all legend items
-#if QT_VERSION < 0x040000
-QValueList<QWidget *> QwtLegend::legendItems() const
-#else
 QList<QWidget *> QwtLegend::legendItems() const
-#endif
 {
     const QMap<QWidget *, const QwtLegendItemManager *> &map = 
         d_data->map.widgetMap();
 
-#if QT_VERSION < 0x040000
-    QValueList<QWidget *> list;
-#else
     QList<QWidget *> list;
-#endif
 
     QMap<QWidget *, const QwtLegendItemManager *>::const_iterator it;
     for ( it = map.begin(); it != map.end(); ++it ) 

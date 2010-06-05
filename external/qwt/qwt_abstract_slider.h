@@ -10,9 +10,9 @@
 #ifndef QWT_ABSTRACT_SLIDER_H
 #define QWT_ABSTRACT_SLIDER_H
 
-#include <qwidget.h>
 #include "qwt_global.h"
 #include "qwt_double_range.h"
+#include <qwidget.h>
 
 /*!
   \brief An abstract base class for slider widgets
@@ -31,16 +31,8 @@ class QWT_EXPORT QwtAbstractSlider : public QWidget, public QwtDoubleRange
     Q_PROPERTY( bool readOnly READ isReadOnly WRITE setReadOnly )
     Q_PROPERTY( bool valid READ isValid WRITE setValid )
     Q_PROPERTY( double mass READ mass WRITE setMass )
-#ifndef Q_MOC_RUN // Qt3 moc
-#define QWT_PROPERTY Q_PROPERTY
-    Q_PROPERTY( Orientation orientation 
-        READ orientation WRITE setOrientation )
-#else // Qt4 moc
-// MOC_SKIP_BEGIN
     Q_PROPERTY( Qt::Orientation orientation 
         READ orientation WRITE setOrientation )
-// MOC_SKIP_END
-#endif
 
 public:
     /*! 
@@ -66,13 +58,8 @@ public:
     virtual void setMass(double val);
     virtual double mass() const;
 
-#if QT_VERSION >= 0x040000
     virtual void setOrientation(Qt::Orientation o);
     Qt::Orientation orientation() const;
-#else
-    virtual void setOrientation(Orientation o);
-    Orientation orientation() const;
-#endif
 
     bool isReadOnly() const;
 
@@ -92,14 +79,14 @@ public:
     */
     void setValid(bool valid) { QwtDoubleRange::setValid(valid); }
 
-public slots:
+public Q_SLOTS:
     virtual void setValue(double val);
     virtual void fitValue(double val);
     virtual void incValue(int steps);
 
     virtual void setReadOnly(bool); 
 
-signals:
+Q_SIGNALS:
 
     /*!
       \brief Notify a change of value.

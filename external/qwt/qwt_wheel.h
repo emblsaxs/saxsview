@@ -33,9 +33,6 @@ class QWT_EXPORT QwtWheel : public QwtAbstractSlider
             
 public:
     explicit QwtWheel(QWidget *parent = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtWheel(QWidget *parent, const char *name);
-#endif
     virtual ~QwtWheel();
 
     virtual void setOrientation(Qt::Orientation);
@@ -62,16 +59,16 @@ protected:
     virtual void paintEvent(QPaintEvent *e);
 
     void layoutWheel( bool update = true );
-    void draw(QPainter *p, const QRect& update_rect);
-    void drawWheel(QPainter *p, const QRect &r);
-    void drawWheelBackground(QPainter *p, const QRect &r);
+    void draw(QPainter *, const QRect &);
+    void drawWheel(QPainter *, const QRect &);
+    void drawWheelBackground(QPainter *, const QRect &);
     void setColorArray();
 
     virtual void valueChange();
     virtual void paletteChange( const QPalette &);
 
-    virtual double getValue(const QPoint &p);
-    virtual void getScrollMode(const QPoint &p, 
+    virtual double getValue(const QPoint &);
+    virtual void getScrollMode(const QPoint &, 
         int &scrollMode, int &direction);
 
 private:

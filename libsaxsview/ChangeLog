@@ -1,3 +1,10 @@
+2010-06-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plotcurve.h: Ported to libqwt-6.0.
+	* saxsview_plotcurve.cpp: Likewise.
+	* saxsview_plot.cpp: Likewise.
+	* saxsview_plotconfigdialog.cpp: Likewise.
+
 2010-06-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plotcurve.h (every, setEvery): New.

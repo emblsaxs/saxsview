@@ -7,16 +7,14 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
 #ifndef QWT_DIAL_H
 #define QWT_DIAL_H 1
 
-#include <qframe.h>
-#include <qpalette.h>
 #include "qwt_global.h"
 #include "qwt_abstract_slider.h"
 #include "qwt_round_scale_draw.h"
+#include <qframe.h>
+#include <qpalette.h>
 
 class QwtDialNeedle;
 class QwtDial;
@@ -32,12 +30,12 @@ public:
     explicit QwtDialScaleDraw(QwtDial *);
     virtual QwtText label(double value) const;
 
-    void setPenWidth(uint);
-    uint penWidth() const;
+    void setPenWidth(double);
+    double penWidth() const;
 
 private:
     QwtDial *d_parent;
-    int d_penWidth;
+    double d_penWidth;
 };
 
 /*!
@@ -127,10 +125,6 @@ public:
     };
 
     explicit QwtDial( QWidget *parent = NULL);
-#if QT_VERSION < 0x040000
-    explicit QwtDial( QWidget *parent, const char *name);
-#endif
-
     virtual ~QwtDial();
 
     void setFrameShadow(Shadow);

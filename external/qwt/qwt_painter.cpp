@@ -7,8 +7,11 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
+#include "qwt_painter.h"
+#include "qwt_math.h"
+#include "qwt_clipper.h"
+#include "qwt_color_map.h"
+#include "qwt_scale_map.h"
 #include <qwindowdefs.h>
 #include <qwidget.h>
 #include <qrect.h>
@@ -17,42 +20,20 @@
 #include <qpaintdevice.h>
 #include <qpixmap.h>
 #include <qstyle.h>
-#if QT_VERSION < 0x040000
-#include <qsimplerichtext.h>
-#else
 #include <qtextdocument.h>
 #include <qabstracttextdocumentlayout.h>
 #include <qstyleoption.h>
 #include <qpaintengine.h>
-#endif
+#include <qapplication.h>
+#include <qdesktopwidget.h>
 
-#include "qwt_math.h"
-#include "qwt_clipper.h"
-#include "qwt_color_map.h"
-#include "qwt_scale_map.h"
-#include "qwt_painter.h"
+bool QwtPainter::d_polylineSplitting = true;
 
-QwtMetricsMap QwtPainter::d_metricsMap;
-
-#if defined(Q_WS_X11)
-bool QwtPainter::d_deviceClipping = true;
-#else
-bool QwtPainter::d_deviceClipping = false;
-#endif
-
-#if QT_VERSION < 0x040000
-bool QwtPainter::d_SVGMode = false;
-#endif
-
-static inline bool isClippingNeeded(const QPainter *painter, QRect &clipRect)
+static inline bool isClippingNeeded(const QPainter *painter, QRectF &clipRect)
 {
     bool doClipping = false;
-#if QT_VERSION >= 0x040000
     const QPaintEngine *pe = painter->paintEngine();
     if ( pe && pe->type() == QPaintEngine::SVG )
-#else
-    if ( painter->device()->devType() == QInternal::Picture )
-#endif
     {
         // The SVG paint engine ignores any clipping,
 
@@ -63,143 +44,120 @@ static inline bool isClippingNeeded(const QPainter *painter, QRect &clipRect)
         }
     }
 
-    if ( QwtPainter::deviceClipping() )
-    {
-        if (painter->device()->devType() == QInternal::Widget ||
-          painter->device()->devType() == QInternal::Pixmap )
-        {
-            if ( doClipping )
-            {
-                clipRect &= QwtPainter::deviceClipRect();
-            }
-            else
-            {
-                doClipping = true;
-                clipRect = QwtPainter::deviceClipRect();
-            }
-        }
-    }
-
     return doClipping;
 }
 
-/*!
-  \brief En/Disable device clipping. 
-
-  On X11 the default for device clipping is enabled, 
-  otherwise it is disabled.
-  \sa QwtPainter::deviceClipping()
-*/
-void QwtPainter::setDeviceClipping(bool enable)
+static inline void drawPolyline(QPainter *painter, 
+    const QPointF *points, int pointCount, bool polylineSplitting)
 {
-    d_deviceClipping = enable;
-}
-
-/*!
-  Returns rect for device clipping
-  \sa QwtPainter::setDeviceClipping()
-*/
-const QRect &QwtPainter::deviceClipRect()
-{
-    static QRect clip;
-
-    if ( !clip.isValid() )
+    bool doSplit = false;
+    if ( polylineSplitting )
     {
-        clip.setCoords(QWT_COORD_MIN, QWT_COORD_MIN,
-            QWT_COORD_MAX, QWT_COORD_MAX);
+        const QPaintEngine *pe = painter->paintEngine();
+        if ( pe && pe->type() == QPaintEngine::Raster )
+        {
+            /*
+                The raster paint engine seems to use some algo with O(n*n).
+                ( Qt 4.3 is better than Qt 4.2, but remains unacceptable)
+                To work around this problem, we have to split the polygon into
+                smaller pieces.
+             */
+            doSplit = true;
+        }
     }
-    return clip;
+
+    if ( doSplit )
+    {
+        const int splitSize = 20;
+        for ( int i = 0; i < pointCount; i += splitSize )
+        {
+            const int n = qMin(splitSize + 1, pointCount - i);
+            painter->drawPolyline(points + i, n);
+        }
+    }
+    else
+        painter->drawPolyline(points, pointCount);
 }
 
-#if QT_VERSION < 0x040000 
-
-/*!
-  \brief En/Disable SVG mode. 
-
-  When saving a QPicture to a SVG some texts are misaligned.
-  In SVGMode QwtPainter tries to fix them. 
-
-  \sa QwtPainter::isSVGMode()
-  \note A QPicture that is created in SVG mode and saved to the
-        native format, will be misaligned. Also it is not possible to
-        reload and play a SVG document, that was created in SVG mode.
-*/
-void QwtPainter::setSVGMode(bool on)
+static inline void unscaleFont(QPainter *painter)
 {
-    d_SVGMode = on;
-}
+    if ( painter->font().pixelSize() >= 0 )
+        return;
 
-bool QwtPainter::isSVGMode()
-{
-    return d_SVGMode;
-}
+    static QSize screenResolution;
+    if ( !screenResolution.isValid() )
+    {
+        QDesktopWidget *desktop = QApplication::desktop();
+        if ( desktop )
+        {
+            screenResolution.setWidth(desktop->logicalDpiX());
+            screenResolution.setHeight(desktop->logicalDpiY());
+        }
+    }
 
-#endif // QT_VERSION < 0x040000
+    const QPaintDevice *pd = painter->device();
+    if ( pd->logicalDpiX() != screenResolution.width() ||
+        pd->logicalDpiY() != screenResolution.height() )
+    {
+        QFont pixelFont(painter->font(), QApplication::desktop());
+        pixelFont.setPixelSize(QFontInfo(pixelFont).pixelSize());
 
-/*!
-  Scale all QwtPainter drawing operations using the ratio
-  QwtPaintMetrics(from).logicalDpiX() / QwtPaintMetrics(to).logicalDpiX()
-  and QwtPaintMetrics(from).logicalDpiY() / QwtPaintMetrics(to).logicalDpiY()
-
-  \sa QwtPainter::resetScaleMetrics(), QwtPainter::scaleMetricsX(),
-        QwtPainter::scaleMetricsY()
-*/
-void QwtPainter::setMetricsMap(const QPaintDevice *layout,
-    const QPaintDevice *device)
-{
-    d_metricsMap.setMetrics(layout, device);
-}
-
-/*! 
-  Change the metrics map 
-  \sa QwtPainter::resetMetricsMap(), QwtPainter::metricsMap()
-*/
-void QwtPainter::setMetricsMap(const QwtMetricsMap &map)
-{
-    d_metricsMap = map;
-}
-
-/*! 
-   Reset the metrics map to the ratio 1:1
-   \sa QwtPainter::setMetricsMap(), QwtPainter::resetMetricsMap()
-*/
-void QwtPainter::resetMetricsMap()
-{
-    d_metricsMap = QwtMetricsMap();
+        painter->setFont(pixelFont);
+    }   
 }
 
 /*!
-  \return Metrics map
+  Check if the painter is using a paint engine, that aligns
+  coordinates to integers,
+
+  \param  painter Painter
+  \return true, when the paint engine is aligning
 */
-const QwtMetricsMap &QwtPainter::metricsMap()
+bool QwtPainter::isAligning(QPainter *painter)
 {
-    return d_metricsMap;
+    if ( painter && painter->isActive() )
+    {
+        switch(painter->paintEngine()->type())
+        {
+            case QPaintEngine::Pdf:
+            case QPaintEngine::SVG:
+                return false;
+            default:;
+        }
+    }
+
+    return true;
 }
 
 /*!
-    Wrapper for QPainter::setClipRect()
-*/
-void QwtPainter::setClipRect(QPainter *painter, const QRect &rect)
-{
-    painter->setClipRect(d_metricsMap.layoutToDevice(rect, painter));
-}
+  \brief En/Disable line splitting for the raster paint engine
 
-/*!
-    Wrapper for QPainter::drawRect()
+  The raster paint engine paints polylines of many points
+  much faster when they are splitted in smaller chunks.
+
+  \sa polylineSplitting()
 */
-void QwtPainter::drawRect(QPainter *painter, int x, int y, int w, int h) 
+void QwtPainter::setPolylineSplitting(bool enable)
 {
-    drawRect(painter, QRect(x, y, w, h));
+    d_polylineSplitting = enable;
 }
 
 /*!
     Wrapper for QPainter::drawRect()
 */
-void QwtPainter::drawRect(QPainter *painter, const QRect &rect) 
+void QwtPainter::drawRect(QPainter *painter, double x, double y, double w, double h) 
 {
-    const QRect r = d_metricsMap.layoutToDevice(rect, painter);
+    drawRect(painter, QRectF(x, y, w, h));
+}
 
-    QRect clipRect;
+/*!
+    Wrapper for QPainter::drawRect()
+*/
+void QwtPainter::drawRect(QPainter *painter, const QRectF &rect) 
+{
+    const QRectF r = rect;
+
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
     if ( deviceClipping )
@@ -211,19 +169,9 @@ void QwtPainter::drawRect(QPainter *painter, const QRect &rect)
         {
             fillRect(painter, r & clipRect, painter->brush());
 
-            int pw = painter->pen().width();
-            pw = pw % 2 + pw / 2;
-
-            QwtPolygon pa(5);
-            pa.setPoint(0, r.left(), r.top());
-            pa.setPoint(1, r.right() - pw, r.top());
-            pa.setPoint(2, r.right() - pw, r.bottom() - pw);
-            pa.setPoint(3, r.left(), r.bottom() - pw);
-            pa.setPoint(4, r.left(), r.top());
-
             painter->save();
             painter->setBrush(Qt::NoBrush);
-            drawPolyline(painter, pa);
+            drawPolyline(painter, QPolygonF(r));
             painter->restore();
 
             return;
@@ -237,15 +185,14 @@ void QwtPainter::drawRect(QPainter *painter, const QRect &rect)
     Wrapper for QPainter::fillRect()
 */
 void QwtPainter::fillRect(QPainter *painter, 
-    const QRect &rect, const QBrush &brush)
+    const QRectF &rect, const QBrush &brush)
 {
     if ( !rect.isValid() )
         return;
 
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
-#if QT_VERSION >= 0x040000
     /*
       Performance of Qt4 is horrible for non trivial brushs. Without
       clipping expect minutes or hours for repainting large rects
@@ -259,9 +206,8 @@ void QwtPainter::fillRect(QPainter *painter,
 
     if ( painter->hasClipping() )
         clipRect &= painter->clipRegion().boundingRect();
-#endif
 
-    QRect r = d_metricsMap.layoutToDevice(rect, painter);
+    QRectF r = rect;
     if ( deviceClipping )
         r = r.intersect(clipRect);
 
@@ -272,104 +218,79 @@ void QwtPainter::fillRect(QPainter *painter,
 /*!
     Wrapper for QPainter::drawPie()
 */
-void QwtPainter::drawPie(QPainter *painter, const QRect &rect, 
+void QwtPainter::drawPie(QPainter *painter, const QRectF &rect, 
     int a, int alen)
 {
-    const QRect r = d_metricsMap.layoutToDevice(rect, painter);
-
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
-    if ( deviceClipping && !clipRect.contains(r) )
+    if ( deviceClipping && !clipRect.contains(rect) )
         return;
 
-    painter->drawPie(r, a, alen);
+    painter->drawPie(rect, a, alen);
 }
 
 /*!
     Wrapper for QPainter::drawEllipse()
 */
-void QwtPainter::drawEllipse(QPainter *painter, const QRect &rect)
+void QwtPainter::drawEllipse(QPainter *painter, const QRectF &rect)
 {
-    QRect r = d_metricsMap.layoutToDevice(rect, painter);
-
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
-    if ( deviceClipping && !clipRect.contains(r) )
+    if ( deviceClipping && !clipRect.contains(rect) )
         return;
 
-#if QT_VERSION >= 0x040000
-    if ( painter->pen().style() != Qt::NoPen &&
-        painter->pen().color().isValid() )
-    {
-        // Qt4 adds the pen to the rect, Qt3 not.
-        int pw = painter->pen().width();
-        if ( pw == 0 )
-            pw = 1;
-
-        r.setWidth(r.width() - pw);
-        r.setHeight(r.height() - pw);
-    }
-#endif
-
-    painter->drawEllipse(r);
+    painter->drawEllipse(rect);
 }
 
 /*!
     Wrapper for QPainter::drawText()
 */
-void QwtPainter::drawText(QPainter *painter, int x, int y, 
+void QwtPainter::drawText(QPainter *painter, double x, double y, 
         const QString &text)
 {
-    drawText(painter, QPoint(x, y), text);
+    drawText(painter, QPointF(x, y), text);
 }
 
 /*!
     Wrapper for QPainter::drawText()
 */
-void QwtPainter::drawText(QPainter *painter, const QPoint &pos, 
+void QwtPainter::drawText(QPainter *painter, const QPointF &pos, 
         const QString &text)
 {
-    const QPoint p = d_metricsMap.layoutToDevice(pos, painter);
-
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
-    if ( deviceClipping && !clipRect.contains(p) )
+    if ( deviceClipping && !clipRect.contains(pos) )
         return;
 
-    painter->drawText(p, text);
+
+    painter->save();
+    unscaleFont(painter);
+    painter->drawText(pos, text);
+    painter->restore();
 }
 
 /*!
     Wrapper for QPainter::drawText()
 */
-void QwtPainter::drawText(QPainter *painter, int x, int y, int w, int h, 
-        int flags, const QString &text)
+void QwtPainter::drawText(QPainter *painter, 
+    double x, double y, double w, double h, 
+    int flags, const QString &text)
 {
-    drawText(painter, QRect(x, y, w, h), flags, text);
+    drawText(painter, QRectF(x, y, w, h), flags, text);
 }
 
 /*!
     Wrapper for QPainter::drawText()
 */
-void QwtPainter::drawText(QPainter *painter, const QRect &rect, 
+void QwtPainter::drawText(QPainter *painter, const QRectF &rect, 
         int flags, const QString &text)
 {
-    QRect textRect = d_metricsMap.layoutToDevice(rect, painter);
-#if QT_VERSION < 0x040000
-    if ( d_SVGMode &&
-        ( flags == 0 || flags & Qt::AlignVCenter ) 
-        && painter->device()->devType() == QInternal::Picture )
-    {
-        /*
-            Qt3 misalignes texts, when saving a text
-            to a SVG image. 
-         */
-        textRect.setY(textRect.y() - painter->fontMetrics().height() / 4);
-    }
-#endif
-    painter->drawText(textRect, flags, text);
+    painter->save();
+    unscaleFont(painter);
+    painter->drawText(rect, flags, text);
+    painter->restore();
 }
 
 #ifndef QT_NO_RICHTEXT
@@ -377,39 +298,16 @@ void QwtPainter::drawText(QPainter *painter, const QRect &rect,
 /*!
   Wrapper for QSimpleRichText::draw()
 */
-#if QT_VERSION < 0x040000
-
-void QwtPainter::drawSimpleRichText(QPainter *painter, const QRect &rect,
-    int flags, QSimpleRichText &text)
-{
-    QColorGroup cg;
-    cg.setColor(QColorGroup::Text, painter->pen().color());
-
-    const QRect scaledRect = d_metricsMap.layoutToDevice(rect, painter);
-
-    text.setWidth(painter, scaledRect.width());
-
-    // QSimpleRichText is Qt::AlignTop by default
-
-    int y = scaledRect.y();
-    if (flags & Qt::AlignBottom)
-        y += (scaledRect.height() - text.height());
-    else if (flags & Qt::AlignVCenter)
-        y += (scaledRect.height() - text.height())/2;
-
-    text.draw(painter, scaledRect.x(), y, scaledRect, cg);
-}
-#else
-void QwtPainter::drawSimpleRichText(QPainter *painter, const QRect &rect,
+void QwtPainter::drawSimpleRichText(QPainter *painter, const QRectF &rect,
     int flags, QTextDocument &text)
 {
-    const QRect scaledRect = d_metricsMap.layoutToDevice(rect, painter);
-    text.setPageSize(QSize(scaledRect.width(), QWIDGETSIZE_MAX));
+    const QRectF scaledRect = rect;
+    text.setPageSize(QSizeF(scaledRect.width(), QWIDGETSIZE_MAX));
 
     QAbstractTextDocumentLayout* layout = text.documentLayout();
 
-    const int height = qRound(layout->documentSize().height());
-    int y = scaledRect.y();
+    const double height = qRound(layout->documentSize().height());
+    double y = scaledRect.y();
     if (flags & Qt::AlignBottom)
         y += (scaledRect.height() - height);
     else if (flags & Qt::AlignVCenter)
@@ -425,7 +323,6 @@ void QwtPainter::drawSimpleRichText(QPainter *painter, const QRect &rect,
 
     painter->restore();
 }
-#endif
 
 #endif // !QT_NO_RICHTEXT
 
@@ -433,69 +330,42 @@ void QwtPainter::drawSimpleRichText(QPainter *painter, const QRect &rect,
 /*!
   Wrapper for QPainter::drawLine()
 */
-void QwtPainter::drawLine(QPainter *painter, int x1, int y1, int x2, int y2)
+void QwtPainter::drawLine(QPainter *painter, 
+    const QPointF &p1, const QPointF &p2)
 {
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
     if ( deviceClipping && 
-        !(clipRect.contains(x1, y1) && clipRect.contains(x2, y2)) )
+        !(clipRect.contains(p1) && clipRect.contains(p2)) )
     {
-        QwtPolygon pa(2);
-        pa.setPoint(0, x1, y1);
-        pa.setPoint(1, x2, y2);
-        drawPolyline(painter, pa);
+        QPolygonF polygon;
+        polygon += p1;
+        polygon += p2;
+        drawPolyline(painter, polygon);
         return;
     }
 
-    if ( d_metricsMap.isIdentity() )
-    {
-#if QT_VERSION >= 0x030200 && QT_VERSION < 0x040000
-        if ( !painter->device()->isExtDev() )
-#endif
-        {
-            painter->drawLine(x1, y1, x2, y2);
-            return;
-        }
-    }
-
-    const QPoint p1 = d_metricsMap.layoutToDevice(QPoint(x1, y1));
-    const QPoint p2 = d_metricsMap.layoutToDevice(QPoint(x2, y2));
-
-#if QT_VERSION >= 0x030200 && QT_VERSION < 0x040000
-    if ( painter->device()->isExtDev() )
-    {
-        // Strange: the postscript driver of QPrinter adds an offset 
-        // of 0.5 to the start/endpoint when using drawLine, but not
-        // for lines painted with drawLineSegments.
-
-        QwtPolygon pa(2);
-        pa.setPoint(0, p1);
-        pa.setPoint(1, p2);
-        painter->drawLineSegments(pa);
-    }
-    else
-        painter->drawLine(p1, p2);
-#else
     painter->drawLine(p1, p2);
-#endif
 }
 
 /*!
   Wrapper for QPainter::drawPolygon()
 */
-void QwtPainter::drawPolygon(QPainter *painter, const QwtPolygon &pa)
+void QwtPainter::drawPolygon(QPainter *painter, const QPolygonF &polygon)
 {
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
-    QwtPolygon cpa = d_metricsMap.layoutToDevice(pa);
+    QPolygonF cpa = polygon;
     if ( deviceClipping )
     {
+#if 0
 #ifdef __GNUC__
 #warning clipping ignores painter transformations
 #endif
-        cpa = QwtClipper::clipPolygon(clipRect, cpa);
+#endif
+        cpa = QwtClipper::clipPolygonF(clipRect, polygon);
     }
     painter->drawPolygon(cpa);
 }
@@ -503,63 +373,90 @@ void QwtPainter::drawPolygon(QPainter *painter, const QwtPolygon &pa)
 /*!
     Wrapper for QPainter::drawPolyline()
 */
-void QwtPainter::drawPolyline(QPainter *painter, const QwtPolygon &pa)
+void QwtPainter::drawPolyline(QPainter *painter, const QPolygonF &polygon)
 {
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
 
-    QwtPolygon cpa = d_metricsMap.layoutToDevice(pa);
+    QPolygonF cpa = polygon;
     if ( deviceClipping )
-        cpa = QwtClipper::clipPolygon(clipRect, cpa);
+        cpa = QwtClipper::clipPolygonF(clipRect, cpa);
 
-#if QT_VERSION >= 0x040000 
-    bool doSplit = false;
+    ::drawPolyline(painter, 
+        cpa.constData(), cpa.size(), d_polylineSplitting);
+}
 
-    const QPaintEngine *pe = painter->paintEngine();
-    if ( pe && pe->type() == QPaintEngine::Raster &&
-        painter->pen().width() >= 2 )
+void QwtPainter::drawPolyline(QPainter *painter, 
+    const QPointF *points, int pointCount)
+{
+    QRectF clipRect;
+    const bool deviceClipping = isClippingNeeded(painter, clipRect);
+
+    if ( deviceClipping )
     {
-        /*
-            The raster paint engine seems to use some algo with O(n*n).
-            ( Qt 4.3 is better than Qt 4.2, but remains unacceptable)
-            To work around this problem, we have to split the polygon into
-            smaller pieces.
-         */
-        doSplit = true;
-    }
-
-    if ( doSplit )
-    {
-        const int numPoints = cpa.size();
-        const QPoint *points = cpa.data();
-
-        const int splitSize = 20;
-        for ( int i = 0; i < numPoints; i += splitSize )
-        {
-            const int n = qwtMin(splitSize + 1, cpa.size() - i);
-            painter->drawPolyline(points + i, n);
-        }
+        QPolygonF polygon(pointCount);
+        qMemCopy(polygon.data(), points, pointCount * sizeof(QPointF));
+        
+        polygon = QwtClipper::clipPolygonF(clipRect, polygon);
+        ::drawPolyline(painter, 
+            polygon.constData(), polygon.size(), d_polylineSplitting);
     }
     else
-#endif
-        painter->drawPolyline(cpa);
+        ::drawPolyline(painter, points, pointCount, d_polylineSplitting);
 }
 
 /*!
     Wrapper for QPainter::drawPoint()
 */
-
-void QwtPainter::drawPoint(QPainter *painter, int x, int y)
+void QwtPainter::drawPoint(QPainter *painter, const QPointF &pos)
 {
-    QRect clipRect;
+    QRectF clipRect;
     const bool deviceClipping = isClippingNeeded(painter, clipRect);
-
-    const QPoint pos = d_metricsMap.layoutToDevice(QPoint(x, y));
 
     if ( deviceClipping && !clipRect.contains(pos) )
         return;
 
     painter->drawPoint(pos);
+}
+
+void QwtPainter::drawImage(QPainter *painter, 
+    const QRectF &rect, const QImage &image)
+{
+    const QRect alignedRect = rect.toAlignedRect();
+
+    if ( alignedRect != rect )
+    {
+        const QRectF clipRect = rect.adjusted(0.0, 0.0, -1.0, -1.0);
+
+        painter->save();
+        painter->setClipRect(clipRect, Qt::IntersectClip);
+        painter->drawImage(alignedRect, image);
+        painter->restore();
+    }
+    else
+    {
+        painter->drawImage(alignedRect, image);
+    }
+}
+
+void QwtPainter::drawPixmap(QPainter *painter, 
+    const QRectF &rect, const QPixmap &pixmap)
+{
+    const QRect alignedRect = rect.toAlignedRect();
+
+    if ( alignedRect != rect )
+    {
+        const QRectF clipRect = rect.adjusted(0.0, 0.0, -1.0, -1.0);
+
+        painter->save();
+        painter->setClipRect(clipRect, Qt::IntersectClip);
+        painter->drawPixmap(alignedRect, pixmap);
+        painter->restore();
+    }
+    else
+    {
+        painter->drawPixmap(alignedRect, pixmap);
+    }
 }
 
 void QwtPainter::drawColoredArc(QPainter *painter, const QRect &rect, 
@@ -568,13 +465,8 @@ void QwtPainter::drawColoredArc(QPainter *painter, const QRect &rect,
     int h1, s1, v1;
     int h2, s2, v2;
 
-#if QT_VERSION < 0x040000
-    c1.hsv(&h1, &s1, &v1);
-    c2.hsv(&h2, &s2, &v2);
-#else
     c1.getHsv(&h1, &s1, &v1);
     c2.getHsv(&h2, &s2, &v2);
-#endif
     
     arc /= 2;
     for ( int angle = -arc; angle < arc; angle += interval)
@@ -604,45 +496,20 @@ void QwtPainter::drawFocusRect(QPainter *painter, QWidget *widget)
 void QwtPainter::drawFocusRect(QPainter *painter, QWidget *widget,
     const QRect &rect)
 {
-#if QT_VERSION < 0x040000
-        widget->style().drawPrimitive(QStyle::PE_FocusRect, painter,
-            rect, widget->colorGroup());
-#else
-        QStyleOptionFocusRect opt;
-        opt.init(widget);
-        opt.rect = rect;
-        opt.state |= QStyle::State_HasFocus;
+    QStyleOptionFocusRect opt;
+    opt.init(widget);
+    opt.rect = rect;
+    opt.state |= QStyle::State_HasFocus;
 
-        widget->style()->drawPrimitive(QStyle::PE_FrameFocusRect, 
-            &opt, painter, widget);
-#endif
-
+    widget->style()->drawPrimitive(QStyle::PE_FrameFocusRect, 
+        &opt, painter, widget);
 }
 
 //!  Draw a round frame
-#if QT_VERSION < 0x040000
-void QwtPainter::drawRoundFrame(QPainter *painter, const QRect &rect,
-    int width, const QColorGroup &cg, bool sunken)
-#else
 void QwtPainter::drawRoundFrame(QPainter *painter, const QRect &rect,
     int width, const QPalette &palette, bool sunken)
-#endif
 {
 
-#if QT_VERSION < 0x040000
-    QColor c0 = cg.mid();
-    QColor c1, c2;
-    if ( sunken )
-    {
-        c1 = cg.dark();
-        c2 = cg.light();
-    }
-    else
-    {
-        c1 = cg.light();
-        c2 = cg.dark();
-    }
-#else
     QColor c0 = palette.color(QPalette::Mid);
     QColor c1, c2;
     if ( sunken )
@@ -655,7 +522,6 @@ void QwtPainter::drawRoundFrame(QPainter *painter, const QRect &rect,
         c1 = palette.color(QPalette::Light);
         c2 = palette.color(QPalette::Dark);
     }
-#endif
 
     painter->setPen(QPen(c0, width));
     painter->drawArc(rect, 0, 360 * 16); // full
@@ -672,19 +538,15 @@ void QwtPainter::drawRoundFrame(QPainter *painter, const QRect &rect,
 void QwtPainter::drawColorBar(QPainter *painter,
         const QwtColorMap &colorMap, const QwtDoubleInterval &interval,
         const QwtScaleMap &scaleMap, Qt::Orientation orientation,
-        const QRect &rect)
+        const QRectF &rect)
 {
-#if QT_VERSION < 0x040000
-    QValueVector<QRgb> colorTable;
-#else
     QVector<QRgb> colorTable;
-#endif
     if ( colorMap.format() == QwtColorMap::Indexed )
         colorTable = colorMap.colorTable(interval);
 
     QColor c;
 
-    const QRect devRect = d_metricsMap.layoutToDevice(rect);
+    const QRect devRect = rect.toAlignedRect();
 
     /*
       We paint to a pixmap first to have something scalable for printing
@@ -698,7 +560,7 @@ void QwtPainter::drawColorBar(QPainter *painter,
     if ( orientation == Qt::Horizontal )
     {
         QwtScaleMap sMap = scaleMap;
-        sMap.setPaintInterval(devRect.left(), devRect.right());
+        sMap.setPaintInterval(rect.left(), rect.right());
 
         for ( int x = devRect.left(); x <= devRect.right(); x++ )
         {
@@ -716,7 +578,7 @@ void QwtPainter::drawColorBar(QPainter *painter,
     else // Vertical
     {
         QwtScaleMap sMap = scaleMap;
-        sMap.setPaintInterval(devRect.bottom(), devRect.top());
+        sMap.setPaintInterval(rect.bottom(), rect.top());
 
         for ( int y = devRect.top(); y <= devRect.bottom(); y++ )
         {
@@ -732,37 +594,6 @@ void QwtPainter::drawColorBar(QPainter *painter,
         }
     }
     pmPainter.end();
-    painter->drawPixmap(devRect, pixmap);
+
+    drawPixmap(painter, rect, pixmap);
 }
-
-/*!
-  \brief Scale a pen according to the layout metrics
-    
-  The width of non cosmetic pens is scaled from screen to layout metrics, 
-  so that they look similar on paint devices with different resolutions.
-
-  \param pen Unscaled pen
-  \return Scaled pen
-*/
-
-QPen QwtPainter::scaledPen(const QPen &pen)
-{
-#if QT_VERSION < 0x040300
-    return pen;
-#else
-    QPen sPen = pen;
-
-    if ( !pen.isCosmetic() )
-    {
-        int pw = pen.width();
-        if ( pw == 0 )
-            pw = 1;
-
-        sPen.setWidth(QwtPainter::metricsMap().screenToLayoutX(pw));
-        sPen.setCosmetic(true);
-    }
-
-    return sPen;
-#endif
-}
-

@@ -7,14 +7,11 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-// vim: expandtab
-
-#include <math.h>
-#include <qevent.h>
 #include "qwt_plot.h"
 #include "qwt_plot_canvas.h"
 #include "qwt_scale_div.h"
 #include "qwt_plot_magnifier.h"
+#include <qevent.h>
 
 class QwtPlotMagnifier::PrivateData
 {
@@ -119,7 +116,7 @@ const QwtPlot *QwtPlotMagnifier::plot() const
 */
 void QwtPlotMagnifier::rescale(double factor)
 {
-    factor = qwtAbs(factor);
+    factor = qAbs(factor);
     if ( factor == 1.0 || factor == 0.0 )
         return;
 
