@@ -36,6 +36,7 @@
 #include <QPainter>
 #include <QPen>
 #include <QPushButton>
+#include <QRadioButton>
 #include <QResizeEvent>
 #include <QScrollArea>
 #include <QSpinBox>
@@ -43,8 +44,12 @@
 #include <QStringList>
 #include <QWidget>
 
+#include "qwt_legend.h"
+#include "qwt_plot_canvas.h"
+#include "qwt_plot_layout.h"
 #include "qwt_text.h"
 #include "qwt_scale_widget.h"
+
 
 namespace Saxsview {
 
@@ -122,10 +127,10 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontStyleBoldAxis(new QCheckBox("Bold", this)),
    fontStyleItalicAxis(new QCheckBox("Italic", this)),
    groupTicks(new QGroupBox("Ticks", this)),
-   checkXTicks(new QCheckBox("Show X-Tick Labels", this)),
+   checkXTicks(new QCheckBox("Show X Tick Labels", this)),
    spinXmin(new QDoubleSpinBox(this)),
    spinXmax(new QDoubleSpinBox(this)),
-   checkYTicks(new QCheckBox("Show Y-Tick Labels", this)),
+   checkYTicks(new QCheckBox("Show Y Tick Labels", this)),
    spinYmin(new QDoubleSpinBox(this)),
    spinYmax(new QDoubleSpinBox(this)),
    fontFamilyTicks(new QFontComboBox(this)),
@@ -291,15 +296,13 @@ void PlotConfigPage::reset(Plot *plot) {
 
   // y axis tick labels
   scaleDraw = plot->axisWidget(QwtPlot::yLeft)->scaleDraw();
-  checkXTicks->setChecked(scaleDraw->hasComponent(QwtAbstractScaleDraw::Labels));
+  checkYTicks->setChecked(scaleDraw->hasComponent(QwtAbstractScaleDraw::Labels));
 
   QRectF zoomBase = plot->zoomBase();
   spinXmin->setValue(zoomBase.left());
   spinXmax->setValue(zoomBase.right());
   spinYmin->setValue(zoomBase.top());
   spinYmax->setValue(zoomBase.bottom());
-
-  
 }
 
 //-------------------------------------------------------------------------
@@ -405,9 +408,9 @@ public:
   QComboBox *comboErrorbarStyle;
   QSpinBox *spinErrorbarWidth;
   ColorButton *buttonErrorbarColor;
-  QSpinBox *spinEvery;
   QDoubleSpinBox *spinScaleX;
   QDoubleSpinBox *spinScaleY;
+  QSpinBox *spinEvery;
 
 protected:
   void resizeEvent(QResizeEvent *e);
@@ -428,9 +431,9 @@ CurveConfigWidget::CurveConfigWidget(QWidget *parent)
    comboErrorbarStyle(comboBoxLineStyle(this)),
    spinErrorbarWidth(new QSpinBox(this)),
    buttonErrorbarColor(new ColorButton(this)),
-   spinEvery(new QSpinBox(this)),
    spinScaleX(new QDoubleSpinBox(this)),
-   spinScaleY(new QDoubleSpinBox(this)) {
+   spinScaleY(new QDoubleSpinBox(this)),
+   spinEvery(new QSpinBox(this)) {
 
   spinLineWidth->setSuffix("pt");
   spinLineWidth->setRange(1, 100);
@@ -612,6 +615,9 @@ private:
   QSpinBox *fontSizeLegend;
   QCheckBox *fontStyleBoldLegend;
   QCheckBox *fontStyleItalicLegend;
+  QCheckBox *checkLegendFramed;
+  QRadioButton *radioLegendPositionRight;
+  QRadioButton *radioLegendPositionInside;
 };
 
 LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
@@ -620,13 +626,23 @@ LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
    fontFamilyLegend(new QFontComboBox(this)),
    fontSizeLegend(new QSpinBox(this)),
    fontStyleBoldLegend(new QCheckBox("Bold", this)),
-   fontStyleItalicLegend(new QCheckBox("Italic", this)) {
+   fontStyleItalicLegend(new QCheckBox("Italic", this)),
+   checkLegendFramed(new QCheckBox("Framed", this)),
+   radioLegendPositionRight(new QRadioButton("Right of the plot", this)),
+   radioLegendPositionInside(new QRadioButton("Inside the plot", this)) {
+
+  radioLegendPositionRight->setChecked(true);
 
   QGridLayout *groupLayout = new QGridLayout;
-  groupLayout->addWidget(fontFamilyLegend, 0, 0);
-  groupLayout->addWidget(fontSizeLegend, 0, 1);
-  groupLayout->addWidget(fontStyleBoldLegend, 0, 2);
-  groupLayout->addWidget(fontStyleItalicLegend, 0, 3);
+  groupLayout->addWidget(new QLabel("Legend Font"), 0, 0);
+  groupLayout->addWidget(fontFamilyLegend, 0, 1);
+  groupLayout->addWidget(fontSizeLegend, 0, 2);
+  groupLayout->addWidget(fontStyleBoldLegend, 0, 3);
+  groupLayout->addWidget(fontStyleItalicLegend, 0, 4);
+  groupLayout->addWidget(checkLegendFramed, 1, 0);
+  groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
+  groupLayout->addWidget(radioLegendPositionRight, 3, 0);
+  groupLayout->addWidget(radioLegendPositionInside, 4, 0);
   groupLegend->setLayout(groupLayout);
   groupLegend->setCheckable(true);
 
@@ -637,11 +653,33 @@ LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
 }
 
 void LegendConfigPage::apply(Plot *plot) {
+  QwtLegend *legend = plot->legend();
+
+  if (checkLegendFramed->isChecked()) {
+    legend->setFrameStyle(QFrame::Box);
+    legend->setLineWidth(1);
+  } else {
+    legend->setFrameStyle(QFrame::NoFrame);
+    legend->setLineWidth(0);
+  }
+
+  if (radioLegendPositionRight->isChecked())
+    plot->plotLayout()->setLegendPosition(QwtPlot::RightLegend);
+  else if (radioLegendPositionInside->isChecked())
+    plot->plotLayout()->setLegendPosition(QwtPlot::ExternalLegend);
 }
 
 void LegendConfigPage::reset(Plot *plot) {
-}
+  switch (plot->plotLayout()->legendPosition()) {
+    case QwtPlot::RightLegend:
+      radioLegendPositionRight->setChecked(true);
+      break;
 
+    case QwtPlot::ExternalLegend:
+    default:
+      radioLegendPositionInside->setChecked(true);
+  }
+}
 
 //-------------------------------------------------------------------------
 class PlotConfigDialog::PlotConfigDialogPrivate {

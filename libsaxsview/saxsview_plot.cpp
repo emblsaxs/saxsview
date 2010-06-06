@@ -87,10 +87,16 @@ void Plot::PlotPrivate::setupCanvas() {
 
 void Plot::PlotPrivate::setupLegend() {
   legend = new QwtLegend(plot->canvas());
-  legend->show();
+
+  QLayout *layout = legend->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  ll->setMaxCols(1);
+  ll->setMargin(6);
+  ll->setSpacing(0);
 
   // to intercept right-click events
   legend->installEventFilter(plot);
+  legend->show();
 
   plot->insertLegend(legend, QwtPlot::RightLegend);
 }
@@ -277,6 +283,7 @@ void Plot::addCurve(PlotCurve *curve) {
   p->curves.push_back(curve);
   curve->attach(this);
 
+  updateLayout();
   setZoomBase();
 }
 
@@ -326,6 +333,15 @@ bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
   return QwtPlot::eventFilter(watchedObj, e);
 }
 
+void Plot::updateLayout() {
+  QwtPlot::updateLayout();
+
+  if (plotLayout()->legendPosition() == QwtPlot::ExternalLegend) {
+    QSize legendSizeHint = legend()->sizeHint();
+    legend()->setGeometry(width() - legendSizeHint.width() - 30, 30,
+                          legendSizeHint.width(), legendSizeHint.height());
+  }
+}
 
 void Plot::setZoomBase(const QRectF& rect) {
   QRectF r = rect;

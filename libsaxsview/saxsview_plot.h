@@ -57,6 +57,8 @@ public:
 
   void zoom(const QRectF&);
 
+  void updateLayout();
+
 public slots:
   void replot();
   void blockReplot(bool);

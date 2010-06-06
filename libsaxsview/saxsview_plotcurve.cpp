@@ -186,6 +186,11 @@ PlotCurve::~PlotCurve() {
 void PlotCurve::attach(Plot *plot) {
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
+
+  if (QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve)))
+    legendItem->setIdentifierSize(QSize(15, 10));
+
+  p->curve->updateLegend(plot->legend());
 }
 
 void PlotCurve::detach() {
@@ -223,11 +228,20 @@ bool PlotCurve::isVisible() const {
 }
 
 void PlotCurve::setVisible(bool on) {
-  p->curve->setItemAttribute(QwtPlotItem::Legend, on);
   p->curve->setVisible(on);
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
 
- if (Plot *plot = qobject_cast<Plot*>(p->curve->plot())) {
+  if (Plot *plot = qobject_cast<Plot*>(p->curve->plot())) {
+    //
+    // The equivalent
+    //    p->curve->setItemAttribute(QwtPlotItem::Legend, on);
+    //
+    // deletes the legend item and thus all settings may be lost.
+    //
+    QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve));
+    if (legendItem)
+      legendItem->setVisible(on);
+
     //
     // UpdateLayout() is required to hide/show the
     // legend on the last/first curve.

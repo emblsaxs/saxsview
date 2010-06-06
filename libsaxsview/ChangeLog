@@ -1,5 +1,23 @@
 2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.h (updateLayout): New.
+	* saxsview_plot.cpp (updateLayout): New.
+	(setupLegend): Set number of columns, margin and spacing.
+	(addCurve): Update plot layout to update modified legend
+	identifier.
+	* saxsview_plotcurve.cpp (attach): Set legend identifier
+	size for this curve.
+	(setVisible): Don't use item attribute to remove legend item.
+	* saxsview_plotconfigdialog.cpp (PlotConfigPage::resetPlot): Fixed
+	tick label selection.
+	(CurveConfigWidget): Fixed tab order.
+	(LegendConfigPage::ctor): Set up controls for plot position
+	and frame.
+	(LegendConfigPage::reset, LegendConfigPage::apply): Reset and
+	apply legend settings.
+
+2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotconfigdialog.cpp: Improved plot setup.
 
 2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
