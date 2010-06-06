@@ -154,7 +154,7 @@ void Plot::PlotPrivate::setupScales() {
   scaleDraw->enableComponent(QwtAbstractScaleDraw:: Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw:: Ticks, false);
 
-  axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
+  plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 }
 
 
