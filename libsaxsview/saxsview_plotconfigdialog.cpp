@@ -122,10 +122,10 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontStyleBoldAxis(new QCheckBox("Bold", this)),
    fontStyleItalicAxis(new QCheckBox("Italic", this)),
    groupTicks(new QGroupBox("Ticks", this)),
-   checkXTicks(new QCheckBox("X Ticks", this)),
+   checkXTicks(new QCheckBox("Show X-Tick Labels", this)),
    spinXmin(new QDoubleSpinBox(this)),
    spinXmax(new QDoubleSpinBox(this)),
-   checkYTicks(new QCheckBox("Y Ticks", this)),
+   checkYTicks(new QCheckBox("Show Y-Tick Labels", this)),
    spinYmin(new QDoubleSpinBox(this)),
    spinYmax(new QDoubleSpinBox(this)),
    fontFamilyTicks(new QFontComboBox(this)),
@@ -134,7 +134,7 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontStyleItalicTicks(new QCheckBox("Italic", this)) {
 
   QGridLayout *groupLayout = new QGridLayout;
-  groupLayout->setColumnMinimumWidth(0, 60);
+  groupLayout->setColumnMinimumWidth(0, 70);
   groupLayout->addWidget(new QLabel("Title"), 0, 0);
   groupLayout->addWidget(editTitle, 0, 1, 1, 4);
   groupLayout->addWidget(hLine(this), 1, 0, 1, 5);
@@ -146,7 +146,7 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupTitle->setLayout(groupLayout);
 
   groupLayout = new QGridLayout;
-  groupLayout->setColumnMinimumWidth(0, 60);
+  groupLayout->setColumnMinimumWidth(0, 70);
   groupLayout->addWidget(new QLabel("X Label"), 0, 0);
   groupLayout->addWidget(editXAxis, 0, 1, 1, 4);
   groupLayout->addWidget(new QLabel("Y Label"), 1, 0);
@@ -171,10 +171,11 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   spinYmax->setDecimals(4);
 
   groupLayout = new QGridLayout;
-  groupLayout->addWidget(checkXTicks, 0, 0);
+  groupLayout->setColumnMinimumWidth(0, 70);
+  groupLayout->addWidget(new QLabel("X Range"), 0, 0);
   groupLayout->addWidget(spinXmin, 0, 1);
   groupLayout->addWidget(spinXmax, 0, 2, 1, 3);
-  groupLayout->addWidget(checkYTicks, 1, 0);
+  groupLayout->addWidget(new QLabel("Y Range"), 1, 0);
   groupLayout->addWidget(spinYmin, 1, 1);
   groupLayout->addWidget(spinYmax, 1, 2, 1, 3);
   groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
@@ -183,6 +184,9 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupLayout->addWidget(fontSizeTicks, 3, 2);
   groupLayout->addWidget(fontStyleBoldTicks, 3, 3);
   groupLayout->addWidget(fontStyleItalicTicks, 3, 4);
+  groupLayout->addWidget(hLine(this), 4, 0, 1, 5);
+  groupLayout->addWidget(checkXTicks, 5, 1);
+  groupLayout->addWidget(checkYTicks, 5, 2, 1, 3);
   groupTicks->setLayout(groupLayout);
 
   QVBoxLayout *layout = new QVBoxLayout;

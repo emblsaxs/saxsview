@@ -1,5 +1,9 @@
 2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotconfigdialog.cpp: Improved plot setup.
+
+2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plot.cpp (exportAs): Improved selection of sizes
 	and resolutions.
 
