@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -55,6 +55,7 @@ public:
 
   bool replotBlocked() const;
 
+  void zoom(const QRectF&);
 
 public slots:
   void replot();

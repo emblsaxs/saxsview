@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -41,12 +41,13 @@
 #include "qwt_plot_marker.h"
 #include "qwt_plot_panner.h"
 #include "qwt_plot_renderer.h"
+#include "qwt_plot_scaleitem.h"
 #include "qwt_plot_zoomer.h"
 #include "qwt_scale_engine.h"
+#include "qwt_scale_widget.h"
 
 
 namespace Saxsview {
-
 
 class Plot::PlotPrivate {
 public:
@@ -57,9 +58,9 @@ public:
 
   void setupCanvas();
   void setupLegend();
-  void setupMarker();
   void setupPanner();
   void setupZoomer();
+  void setupScales();
 
   Plot *plot;
   PlotScale scale;
@@ -78,6 +79,7 @@ void Plot::PlotPrivate::setupCanvas() {
   plot->setAutoFillBackground(true);
   plot->setPalette(Qt::white);
   plot->canvas()->setFrameStyle(QFrame::NoFrame);
+  plot->canvas()->setLineWidth(0);
 
   // to intercept right-click events
   plot->canvas()->installEventFilter(plot);
@@ -91,14 +93,6 @@ void Plot::PlotPrivate::setupLegend() {
   legend->installEventFilter(plot);
 
   plot->insertLegend(legend, QwtPlot::RightLegend);
-}
-
-void Plot::PlotPrivate::setupMarker() {
-  // lines at x=0, y=0
-  marker = new QwtPlotMarker();
-  marker->setLineStyle(QwtPlotMarker::Cross);
-  marker->setValue(0.0, 0.0);
-  marker->attach(plot);
 }
 
 void Plot::PlotPrivate::setupPanner() {
@@ -131,6 +125,38 @@ void Plot::PlotPrivate::setupZoomer() {
                           Qt::RightButton, Qt::ControlModifier);
 }
 
+void Plot::PlotPrivate::setupScales() {
+  QwtPlotScaleItem *yRight = new QwtPlotScaleItem(QwtScaleDraw::LeftScale);
+  yRight->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
+  yRight->attach(plot);
+  yRight->setBorderDistance(1);
+
+  QwtPlotScaleItem *yLeft = new QwtPlotScaleItem(QwtScaleDraw::RightScale);
+  yLeft->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
+  yLeft->attach(plot);
+  yLeft->setBorderDistance(0);
+
+  QwtPlotScaleItem *xTop = new QwtPlotScaleItem(QwtScaleDraw::BottomScale);
+  xTop->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
+  xTop->attach(plot);
+  xTop->setBorderDistance(0);
+
+  QwtPlotScaleItem *xBottom = new QwtPlotScaleItem(QwtScaleDraw::TopScale);
+  xBottom->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
+  xBottom->attach(plot);
+  xBottom->setBorderDistance(1);
+
+  QwtScaleDraw *scaleDraw = plot->axisWidget(QwtPlot::yLeft)->scaleDraw();
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+
+  scaleDraw = plot->axisWidget(QwtPlot::xBottom)->scaleDraw();
+  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Backbone, false);
+  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Ticks, false);
+
+  axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
+}
+
 
 Plot::Plot(QWidget *parent)
  : QwtPlot(parent), p(new PlotPrivate(this)) {
@@ -139,10 +165,11 @@ Plot::Plot(QWidget *parent)
 
   // margin around the plot
   plotLayout()->setMargin(12);
+  plotLayout()->setAlignCanvasToScales(true);
 
+  p->setupScales();
   p->setupCanvas();
   p->setupLegend();
-  p->setupMarker();
   p->setupPanner();
   p->setupZoomer();
 }
@@ -293,10 +320,15 @@ void Plot::setZoomBase(const QRectF& rect) {
   // If no rect is specified, compute the overall bounding
   // rect of all visible curves.
   //
-  if (!r.isValid())
-    foreach (QwtPlotItem *item, itemList())
-      if (item->isVisible())
-        r = r.united(item->boundingRect());
+  if (!r.isValid()) {
+    foreach (PlotCurve *curve, p->curves)
+      if (curve->isVisible())
+        r = r.united(curve->boundingRect());
+
+    // make it two signigificant digits
+    r.setLeft(qFloor(r.left() * 100.0) / 100.0);
+    r.setRight(qCeil(r.right() * 100.0) / 100.0);
+  }
 
   if (r.isValid()) {
     //
@@ -310,6 +342,14 @@ void Plot::setZoomBase(const QRectF& rect) {
   }
 
   replot();
+}
+
+QRectF Plot::zoomBase() const {
+  return p->zoomer->zoomBase();
+}
+
+void Plot::zoom(const QRectF& rect) {
+  p->zoomer->zoom(rect);
 }
 
 void Plot::setZoomEnabled(bool on) {

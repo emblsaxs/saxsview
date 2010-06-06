@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -237,7 +237,7 @@ void PlotCurve::setVisible(bool on) {
     //
     // Update the bounding-rect and show the actual change.
     //
-    plot->setZoomBase();
+    plot->replot();
   }
 }
 

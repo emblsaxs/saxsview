@@ -43,8 +43,8 @@
 #include <QStringList>
 #include <QWidget>
 
-#include <qwt_text.h>
-
+#include "qwt_text.h"
+#include "qwt_scale_widget.h"
 
 namespace Saxsview {
 
@@ -94,6 +94,16 @@ private:
   QSpinBox *fontSizeAxis;
   QCheckBox *fontStyleBoldAxis;
   QCheckBox *fontStyleItalicAxis;
+
+  QGroupBox *groupTicks;
+  QCheckBox *checkXTicks;
+  QDoubleSpinBox *spinXmin, *spinXmax;
+  QCheckBox *checkYTicks;
+  QDoubleSpinBox *spinYmin, *spinYmax;
+  QFontComboBox *fontFamilyTicks;
+  QSpinBox *fontSizeTicks;
+  QCheckBox *fontStyleBoldTicks;
+  QCheckBox *fontStyleItalicTicks;
 };
 
 PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
@@ -110,7 +120,18 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontFamilyAxis(new QFontComboBox(this)),
    fontSizeAxis(new QSpinBox(this)),
    fontStyleBoldAxis(new QCheckBox("Bold", this)),
-   fontStyleItalicAxis(new QCheckBox("Italic", this)) {
+   fontStyleItalicAxis(new QCheckBox("Italic", this)),
+   groupTicks(new QGroupBox("Ticks", this)),
+   checkXTicks(new QCheckBox("X Ticks", this)),
+   spinXmin(new QDoubleSpinBox(this)),
+   spinXmax(new QDoubleSpinBox(this)),
+   checkYTicks(new QCheckBox("Y Ticks", this)),
+   spinYmin(new QDoubleSpinBox(this)),
+   spinYmax(new QDoubleSpinBox(this)),
+   fontFamilyTicks(new QFontComboBox(this)),
+   fontSizeTicks(new QSpinBox(this)),
+   fontStyleBoldTicks(new QCheckBox("Bold", this)),
+   fontStyleItalicTicks(new QCheckBox("Italic", this)) {
 
   QGridLayout *groupLayout = new QGridLayout;
   groupLayout->setColumnMinimumWidth(0, 60);
@@ -131,16 +152,43 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupLayout->addWidget(new QLabel("Y Label"), 1, 0);
   groupLayout->addWidget(editYAxis, 1, 1, 1, 4);
   groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
-  groupLayout->addWidget(new QLabel("Axis Font"), 3, 0);
+  groupLayout->addWidget(new QLabel("Label Font"), 3, 0);
   groupLayout->addWidget(fontFamilyAxis, 3, 1);
   groupLayout->addWidget(fontSizeAxis, 3, 2);
   groupLayout->addWidget(fontStyleBoldAxis, 3, 3);
   groupLayout->addWidget(fontStyleItalicAxis, 3, 4);
   groupAxis->setLayout(groupLayout);
 
+  checkXTicks->setChecked(true);
+  checkYTicks->setChecked(true);
+  spinXmin->setRange(-100.0, 100.0);
+  spinXmin->setDecimals(4);
+  spinXmax->setRange(-100.0, 100.0);
+  spinXmax->setDecimals(4);
+  spinYmin->setRange(-10e8, 10e8);
+  spinYmin->setDecimals(4);
+  spinYmax->setRange(-10e8, 10e8);
+  spinYmax->setDecimals(4);
+
+  groupLayout = new QGridLayout;
+  groupLayout->addWidget(checkXTicks, 0, 0);
+  groupLayout->addWidget(spinXmin, 0, 1);
+  groupLayout->addWidget(spinXmax, 0, 2, 1, 3);
+  groupLayout->addWidget(checkYTicks, 1, 0);
+  groupLayout->addWidget(spinYmin, 1, 1);
+  groupLayout->addWidget(spinYmax, 1, 2, 1, 3);
+  groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
+  groupLayout->addWidget(new QLabel("Ticks Font"), 3, 0);
+  groupLayout->addWidget(fontFamilyTicks, 3, 1);
+  groupLayout->addWidget(fontSizeTicks, 3, 2);
+  groupLayout->addWidget(fontStyleBoldTicks, 3, 3);
+  groupLayout->addWidget(fontStyleItalicTicks, 3, 4);
+  groupTicks->setLayout(groupLayout);
+
   QVBoxLayout *layout = new QVBoxLayout;
   layout->addWidget(groupTitle);
   layout->addWidget(groupAxis);
+  layout->addWidget(groupTicks);
   layout->addStretch();
   setLayout(layout);
 }
@@ -174,9 +222,31 @@ void PlotConfigPage::apply(Plot *plot) {
   yLabel.setFont(axisLabelFont);
   plot->setAxisTitle(QwtPlot::yLeft, yLabel);
 
-  // FIXME: tick marks shall be configurable on their own
-//   plot->setAxisFont(QwtPlot::yLeft, axisLabelFont);
-//   plot->setAxisFont(QwtPlot::xBottom, axisLabelFont);
+  // ticks
+  QFont ticksFont = fontFamilyTicks->currentFont();
+  ticksFont.setPointSize(fontSizeTicks->value());
+  ticksFont.setBold(fontStyleBoldTicks->isChecked());
+  ticksFont.setItalic(fontStyleItalicTicks->isChecked());
+
+  QwtScaleDraw *scaleDraw;
+
+  // x axis tick labels
+  scaleDraw = plot->axisWidget(QwtPlot::xBottom)->scaleDraw();
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Labels, checkXTicks->isChecked());
+  plot->setAxisFont(QwtPlot::xBottom, ticksFont);
+
+  // y axis tick labels
+  scaleDraw = plot->axisWidget(QwtPlot::yLeft)->scaleDraw();
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Labels, checkYTicks->isChecked());
+  plot->setAxisFont(QwtPlot::yLeft, ticksFont);
+
+  // update the zoomBase, then zoom to it
+  QRectF r(QPointF(spinXmin->value(), spinYmin->value()),
+           QPointF(spinXmax->value(), spinYmax->value()));
+
+  plot->setZoomBase(r);
+  plot->zoom(r);
+  plot->setZoomBase(r);
 }
 
 void PlotConfigPage::reset(Plot *plot) {
@@ -201,6 +271,31 @@ void PlotConfigPage::reset(Plot *plot) {
   fontSizeAxis->setValue(axisLabelFont.pointSize());
   fontStyleBoldAxis->setChecked(axisLabelFont.bold());
   fontStyleItalicAxis->setChecked(axisLabelFont.italic());
+
+  // ticks
+  QFont ticksFont = plot->axisFont(QwtPlot::xBottom);
+  fontFamilyTicks->setCurrentFont(ticksFont);
+  fontSizeTicks->setValue(ticksFont.pointSize());
+  fontStyleBoldTicks->setChecked(ticksFont.bold());
+  fontStyleItalicTicks->setChecked(ticksFont.italic());
+
+  QwtScaleDraw *scaleDraw;
+
+  // x axis tick labels
+  scaleDraw = plot->axisWidget(QwtPlot::xBottom)->scaleDraw();
+  checkXTicks->setChecked(scaleDraw->hasComponent(QwtAbstractScaleDraw::Labels));
+
+  // y axis tick labels
+  scaleDraw = plot->axisWidget(QwtPlot::yLeft)->scaleDraw();
+  checkXTicks->setChecked(scaleDraw->hasComponent(QwtAbstractScaleDraw::Labels));
+
+  QRectF zoomBase = plot->zoomBase();
+  spinXmin->setValue(zoomBase.left());
+  spinXmax->setValue(zoomBase.right());
+  spinYmin->setValue(zoomBase.top());
+  spinYmax->setValue(zoomBase.bottom());
+
+  
 }
 
 //-------------------------------------------------------------------------

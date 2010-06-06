@@ -1,3 +1,19 @@
+2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.h (zoom): New.
+	* saxsview_plot.cpp (setupMarker): Removed.
+	(zoom): New.
+	(zoomBase): New.
+	(setupScales): New.
+	(setupCanvas): Set minimum line width.
+	(setZoomBase): Adjust coordinates of initial zoom base;
+	use curves only, avoid other plot items.
+	* saxsview_plotcurve.cpp (setVisible): Avoid resetting the
+	zoom base, replot instead.
+	* saxsview_plotconfigdialog.cpp (PlotConfigPage::ctor): Make
+	tick labels configurable.
+	(apply, reset): Apply and reset tick label settings.
+
 2010-06-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plotcurve.h: Ported to libqwt-6.0.
