@@ -1,5 +1,9 @@
 2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewimagewindow.cpp (load): Fixed zoom base.
+
+2010-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.cpp (exportAsFormat): Removed useless(?)
 	ifdef's.
 

@@ -1,6 +1,6 @@
 /*
  * Implementation of 2D-images subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -248,7 +248,7 @@ void SaxsviewImageWindow::load(const QString& fileName) {
                         range.minValue(),
                         range.maxValue());
 
-  p->plot->setZoomBase();
+  p->plot->setZoomBase(p->image->boundingRect());
   p->plot->replot();
 }
 
