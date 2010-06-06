@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -125,6 +125,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
 
   actionPrint = new QAction("&Print", mw);
   actionPrint->setShortcut(QKeySequence::Print);
+  actionPrint->setEnabled(false);
   connect(actionPrint, SIGNAL(triggered()),
           mw, SLOT(print()));
 
@@ -153,23 +154,28 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupScale = new QActionGroup(mw);
   actionGroupScale->addAction(actionAbsScale);
   actionGroupScale->addAction(actionLogScale);
+  actionGroupScale->setEnabled(false);
 
   actionZoomIn = new QAction("Zoom &in", mw);
+  actionZoomIn->setEnabled(false);
   connect(actionZoomIn, SIGNAL(triggered()),
           mw, SLOT(zoomIn()));
 
   actionZoomOut = new QAction("Zoom &out", mw);
+  actionZoomOut->setEnabled(false);
   connect(actionZoomOut, SIGNAL(triggered()),
           mw, SLOT(zoomOut()));
 
   actionZoom = new QAction("&Zoom", mw);
   actionZoom->setCheckable(true);
+  actionZoom->setEnabled(false);
   connect(actionZoom, SIGNAL(toggled(bool)),
           mw, SLOT(setZoomEnabled(bool)));
 
   actionMove = new QAction("&Move", mw);
   actionMove->setCheckable(true);
   actionMove->setChecked(false);
+  actionMove->setEnabled(false);
   connect(actionMove, SIGNAL(toggled(bool)),
           mw, SLOT(setMoveEnabled(bool)));
   actionZoom->setChecked(true);
@@ -179,6 +185,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupZoomMove->addAction(actionMove);
 
   actionConfigure = new QAction("&Configure", mw);
+  actionConfigure->setEnabled(false);
   connect(actionConfigure, SIGNAL(triggered()),
           mw, SLOT(configure()));
 
@@ -247,6 +254,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
             exportAsFormatMapper, SLOT(map()));
     exportAsFormatMapper->setMapping(action, i.key());
   }
+  menuExportAs->setEnabled(false);
 
   QMenuBar *menuBar = mw->menuBar();
 
@@ -341,6 +349,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::addSubWindow(SaxsviewSubWind
     w->showMaximized();
   else
     w->show();
+
+  
 }
 
 
@@ -576,4 +586,17 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
     p->actionZoom->setChecked(subWindow->zoomEnabled());
     p->actionMove->setChecked(subWindow->moveEnabled());
   }
+
+  //
+  // 0L if and only if the last subwindow was closed.
+  //
+  const bool on = (w != 0L);
+  p->actionPrint->setEnabled(on);
+  p->actionGroupScale->setEnabled(on);
+  p->actionZoomIn->setEnabled(on);
+  p->actionZoomOut->setEnabled(on);
+  p->actionZoom->setEnabled(on);
+  p->actionMove->setEnabled(on);
+  p->actionConfigure->setEnabled(on);
+  p->menuExportAs->setEnabled(on);
 }
