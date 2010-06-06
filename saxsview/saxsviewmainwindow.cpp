@@ -90,18 +90,15 @@ public:
 SaxsviewMainWindow::SaxsviewMainWindowPrivate::SaxsviewMainWindowPrivate(SaxsviewMainWindow *w)
  : mw(w) {
 
-  exportAsFormat["pdf"] = "Portable Document Format";
-  exportAsFormat["ps"]  = "Postscript";
+  exportAsFormat["pdf"]  = "Portable Document Format";
+  exportAsFormat["ps"]   = "Postscript";
 #ifdef QT_SVG_LIB
-  exportAsFormat["svg"] = "Scalable Vector Graphics";
+  exportAsFormat["svg"]  = "Scalable Vector Graphics";
 #endif
-#ifdef QT_IMAGEFORMAT_PNG
-  exportAsFormat["png"] = "Portable Network Graphics";
-#endif
-#ifdef QT_IMAGEFORMAT_JPEG
-  exportAsFormat["jpg"] = "JPEG";
-#endif
-  exportAsFormat["bmp"] = "Windows Bitmap";
+  exportAsFormat["png"]  = "Portable Network Graphics";
+  exportAsFormat["jpg"]  = "JPEG";
+  exportAsFormat["tiff"] = "TIFF";
+  exportAsFormat["bmp"]  = "Windows Bitmap";
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {

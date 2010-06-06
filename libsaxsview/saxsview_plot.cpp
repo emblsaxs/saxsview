@@ -225,8 +225,22 @@ void Plot::exportAs() {
 }
 
 void Plot::exportAs(const QString& fileName) {
-  QwtPlotRenderer renderer;
-  renderer.renderDocument(this, fileName, QSize(210,297), 600);
+  if (fileName.isEmpty())
+    return;
+
+  QString ext = QFileInfo(fileName).completeSuffix();
+
+  if (ext == "ps" || ext == "pdf" || ext == "svg") {
+
+    //
+    // FIXME: there's no "do you want to overwrite" dialog if a
+    //        file already exists?!
+    //
+    QwtPlotRenderer renderer;
+    renderer.renderDocument(this, fileName, size()*25.4/85, 600);
+
+  } else
+    QPixmap::grabWidget(this).save(fileName);
 }
 
 void Plot::print() {
