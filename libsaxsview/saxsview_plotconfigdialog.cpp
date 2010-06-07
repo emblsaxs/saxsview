@@ -101,14 +101,14 @@ private:
   QCheckBox *fontStyleItalicAxis;
 
   QGroupBox *groupTicks;
-  QCheckBox *checkXTicks;
   QDoubleSpinBox *spinXmin, *spinXmax;
-  QCheckBox *checkYTicks;
   QDoubleSpinBox *spinYmin, *spinYmax;
   QFontComboBox *fontFamilyTicks;
   QSpinBox *fontSizeTicks;
   QCheckBox *fontStyleBoldTicks;
   QCheckBox *fontStyleItalicTicks;
+  QCheckBox *checkXTicks;
+  QCheckBox *checkYTicks;
 };
 
 PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
@@ -127,16 +127,16 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontStyleBoldAxis(new QCheckBox("Bold", this)),
    fontStyleItalicAxis(new QCheckBox("Italic", this)),
    groupTicks(new QGroupBox("Ticks", this)),
-   checkXTicks(new QCheckBox("Show X Tick Labels", this)),
    spinXmin(new QDoubleSpinBox(this)),
    spinXmax(new QDoubleSpinBox(this)),
-   checkYTicks(new QCheckBox("Show Y Tick Labels", this)),
    spinYmin(new QDoubleSpinBox(this)),
    spinYmax(new QDoubleSpinBox(this)),
    fontFamilyTicks(new QFontComboBox(this)),
    fontSizeTicks(new QSpinBox(this)),
    fontStyleBoldTicks(new QCheckBox("Bold", this)),
-   fontStyleItalicTicks(new QCheckBox("Italic", this)) {
+   fontStyleItalicTicks(new QCheckBox("Italic", this)),
+   checkXTicks(new QCheckBox("Show X Tick Labels", this)),
+   checkYTicks(new QCheckBox("Show Y Tick Labels", this)) {
 
   QGridLayout *groupLayout = new QGridLayout;
   groupLayout->setColumnMinimumWidth(0, 70);
