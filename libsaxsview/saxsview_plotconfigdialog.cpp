@@ -44,6 +44,7 @@
 #include <QStringList>
 #include <QWidget>
 
+#include "qwt_dyngrid_layout.h"
 #include "qwt_legend.h"
 #include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
@@ -615,9 +616,11 @@ private:
   QSpinBox *fontSizeLegend;
   QCheckBox *fontStyleBoldLegend;
   QCheckBox *fontStyleItalicLegend;
+  QComboBox *comboLegendPosition;
+  QSpinBox *spinLegendColumns;
+  QSpinBox *spinLegendSpacing;
+  QSpinBox *spinLegendMargin;
   QCheckBox *checkLegendFramed;
-  QRadioButton *radioLegendPositionRight;
-  QRadioButton *radioLegendPositionInside;
 };
 
 LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
@@ -627,11 +630,27 @@ LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
    fontSizeLegend(new QSpinBox(this)),
    fontStyleBoldLegend(new QCheckBox("Bold", this)),
    fontStyleItalicLegend(new QCheckBox("Italic", this)),
-   checkLegendFramed(new QCheckBox("Framed", this)),
-   radioLegendPositionRight(new QRadioButton("Right of the plot", this)),
-   radioLegendPositionInside(new QRadioButton("Inside the plot", this)) {
+   comboLegendPosition(new QComboBox(this)),
+   spinLegendColumns(new QSpinBox(this)),
+   spinLegendSpacing(new QSpinBox(this)),
+   spinLegendMargin(new QSpinBox(this)),
+   checkLegendFramed(new QCheckBox("Framed", this)) {
 
-  radioLegendPositionRight->setChecked(true);
+  // FIXME
+  fontFamilyLegend->setEnabled(false);
+  fontSizeLegend->setEnabled(false);
+  fontStyleBoldLegend->setEnabled(false);
+  fontStyleItalicLegend->setEnabled(false);
+
+  comboLegendPosition->addItem("Inside the plot area", QwtPlot::ExternalLegend);
+  comboLegendPosition->addItem("Right of the plot", QwtPlot::RightLegend);
+  comboLegendPosition->addItem("Left of the plot", QwtPlot::LeftLegend);
+  comboLegendPosition->addItem("Below the plot", QwtPlot::BottomLegend);
+  comboLegendPosition->addItem("Above the plot", QwtPlot::TopLegend);
+
+  spinLegendColumns->setRange(1,10);
+  spinLegendSpacing->setRange(0,100);
+  spinLegendMargin->setRange(0,100);
 
   QGridLayout *groupLayout = new QGridLayout;
   groupLayout->addWidget(new QLabel("Legend Font"), 0, 0);
@@ -639,10 +658,16 @@ LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
   groupLayout->addWidget(fontSizeLegend, 0, 2);
   groupLayout->addWidget(fontStyleBoldLegend, 0, 3);
   groupLayout->addWidget(fontStyleItalicLegend, 0, 4);
-  groupLayout->addWidget(checkLegendFramed, 1, 0);
-  groupLayout->addWidget(hLine(this), 2, 0, 1, 5);
-  groupLayout->addWidget(radioLegendPositionRight, 3, 0);
-  groupLayout->addWidget(radioLegendPositionInside, 4, 0);
+  groupLayout->addWidget(hLine(this), 1, 0, 1, 5);
+  groupLayout->addWidget(new QLabel("Legend Position"), 2, 0);
+  groupLayout->addWidget(comboLegendPosition, 2, 1);
+  groupLayout->addWidget(checkLegendFramed, 2, 2);
+  groupLayout->addWidget(new QLabel("Columns"), 3, 0);
+  groupLayout->addWidget(spinLegendColumns, 3, 1);
+  groupLayout->addWidget(new QLabel("Spacing"), 4, 0);
+  groupLayout->addWidget(spinLegendSpacing, 4, 1);
+  groupLayout->addWidget(new QLabel("Margin"), 5, 0);
+  groupLayout->addWidget(spinLegendMargin, 5, 1);
   groupLegend->setLayout(groupLayout);
   groupLegend->setCheckable(true);
 
@@ -653,32 +678,42 @@ LegendConfigPage::LegendConfigPage(Plot *plot, QWidget *parent)
 }
 
 void LegendConfigPage::apply(Plot *plot) {
+
+  // FIXME: apply legend font
+
+  QwtPlot::LegendPosition pos;
+  int posIndex = comboLegendPosition->currentIndex();
+  pos = (QwtPlot::LegendPosition) comboLegendPosition->itemData(posIndex).toInt();
+  plot->plotLayout()->setLegendPosition(pos);
+
   QwtLegend *legend = plot->legend();
+  QLayout *layout = legend->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  ll->setMaxCols(spinLegendColumns->value());
+  ll->setMargin(spinLegendMargin->value());
+  ll->setSpacing(spinLegendSpacing->value());
 
-  if (checkLegendFramed->isChecked()) {
+  if (checkLegendFramed->isChecked())
     legend->setFrameStyle(QFrame::Box);
-    legend->setLineWidth(1);
-  } else {
+  else
     legend->setFrameStyle(QFrame::NoFrame);
-    legend->setLineWidth(0);
-  }
-
-  if (radioLegendPositionRight->isChecked())
-    plot->plotLayout()->setLegendPosition(QwtPlot::RightLegend);
-  else if (radioLegendPositionInside->isChecked())
-    plot->plotLayout()->setLegendPosition(QwtPlot::ExternalLegend);
 }
 
 void LegendConfigPage::reset(Plot *plot) {
-  switch (plot->plotLayout()->legendPosition()) {
-    case QwtPlot::RightLegend:
-      radioLegendPositionRight->setChecked(true);
-      break;
+  // FIXME: read legend font
 
-    case QwtPlot::ExternalLegend:
-    default:
-      radioLegendPositionInside->setChecked(true);
-  }
+  QwtPlot::LegendPosition pos = plot->plotLayout()->legendPosition();
+  int posIndex = comboLegendPosition->findData(pos);
+  comboLegendPosition->setCurrentIndex(posIndex);
+
+  QwtLegend *legend = plot->legend();
+  QLayout *layout = legend->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  spinLegendColumns->setValue(ll->maxCols());
+  spinLegendMargin->setValue(ll->margin());
+  spinLegendSpacing->setValue(ll->spacing());
+
+  checkLegendFramed->setChecked(legend->frameStyle() == QFrame::Box);
 }
 
 //-------------------------------------------------------------------------
