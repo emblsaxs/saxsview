@@ -1,5 +1,12 @@
 2010-06-07  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotconfigdialog.cpp (PlotConfigPage::ctor): Make anti-
+	aliased plotting available.
+	(PlotConfigPage::apply, PlotConfigPage::reset): Apply and reset
+	antialiased plotting.
+
+2010-06-07  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotconfigdialog.cpp (LegendConfigPage::ctor): Interface
 	cleanup; make more aspects of the legend configurable.
 	(LegendConfigPage::apply, LegendConfigPage::reset): Apply and reset

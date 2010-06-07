@@ -110,6 +110,9 @@ private:
   QCheckBox *fontStyleItalicTicks;
   QCheckBox *checkXTicks;
   QCheckBox *checkYTicks;
+
+  QGroupBox *groupOther;
+  QCheckBox *checkAntiAliased;
 };
 
 PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
@@ -137,7 +140,9 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
    fontStyleBoldTicks(new QCheckBox("Bold", this)),
    fontStyleItalicTicks(new QCheckBox("Italic", this)),
    checkXTicks(new QCheckBox("Show X Tick Labels", this)),
-   checkYTicks(new QCheckBox("Show Y Tick Labels", this)) {
+   checkYTicks(new QCheckBox("Show Y Tick Labels", this)),
+   groupOther(new QGroupBox("Other", this)),
+   checkAntiAliased(new QCheckBox("Antialiased plotting", this)) {
 
   QGridLayout *groupLayout = new QGridLayout;
   groupLayout->setColumnMinimumWidth(0, 70);
@@ -195,10 +200,16 @@ PlotConfigPage::PlotConfigPage(Plot *plot, QWidget *parent)
   groupLayout->addWidget(checkYTicks, 5, 2, 1, 3);
   groupTicks->setLayout(groupLayout);
 
+  // FIXME: layout broken
+  groupLayout = new QGridLayout;
+  groupLayout->addWidget(checkAntiAliased, 0, 0);
+  groupOther->setLayout(groupLayout);
+
   QVBoxLayout *layout = new QVBoxLayout;
   layout->addWidget(groupTitle);
   layout->addWidget(groupAxis);
   layout->addWidget(groupTicks);
+  layout->addWidget(groupOther);
   layout->addStretch();
   setLayout(layout);
 }
@@ -257,6 +268,11 @@ void PlotConfigPage::apply(Plot *plot) {
   plot->setZoomBase(r);
   plot->zoom(r);
   plot->setZoomBase(r);
+
+  // other
+  const bool antiAliased = checkAntiAliased->isChecked();
+  foreach (QwtPlotItem* item, plot->itemList())
+    item->setRenderHint(QwtPlotItem::RenderAntialiased, antiAliased);
 }
 
 void PlotConfigPage::reset(Plot *plot) {
@@ -304,6 +320,13 @@ void PlotConfigPage::reset(Plot *plot) {
   spinXmax->setValue(zoomBase.right());
   spinYmin->setValue(zoomBase.top());
   spinYmax->setValue(zoomBase.bottom());
+
+  // other
+  if (!plot->itemList().isEmpty()) {
+    QwtPlotItem* item = plot->itemList().first();
+    checkAntiAliased->setChecked(item->testRenderHint(QwtPlotItem::RenderAntialiased));
+  } else
+    checkAntiAliased->setChecked(false);
 }
 
 //-------------------------------------------------------------------------
