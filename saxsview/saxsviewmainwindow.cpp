@@ -518,7 +518,7 @@ void SaxsviewMainWindow::configureSaxsview() {
 
 void SaxsviewMainWindow::about() {
   QString title = QString("About %1").arg(PROJECT_NAME);
-  QString about = QString("%1 %3 (r%4)\n"
+  QString about = QString("%1 %3\n"
                           "Written by Daniel Franke <%2>\n"
                           "\n"
                           "This is free software: you are free to "
@@ -526,12 +526,13 @@ void SaxsviewMainWindow::about() {
                           "WARRANTY to the extent permitted by law.\n"
                           "\n"
                           // And complying to COPYING of qwt:
-                          "%1 is based in part on the work of the"
+                          "%1 is based in part on the work of the "
                           "Qwt project (http://qwt.sourceforge.net).");
 
   QMessageBox::about(this, title,
-                     about.arg(PROJECT_NAME).arg(PROJECT_BUGREPORT)
-                          .arg(PROJECT_VERSION).arg(PROJECT_REVISION));
+                     about.arg(PROJECT_NAME)
+                          .arg(PROJECT_BUGREPORT)
+                          .arg(PROJECT_VERSION));
 }
 
 void SaxsviewMainWindow::prepareWindowMenu() {
