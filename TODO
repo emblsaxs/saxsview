@@ -14,53 +14,62 @@ saxsview
  * save/restore last working directory
  * watch files for changes (?)
  * allow for probability curves
- * if a .pdb-file shall be openend, run crysol 
-   to display its scattering pattern
  * allow for annotations, e.g. freely placeable labels,
    on the plot area
  * configurable plot layout (see below)
  * save/restore a particular configuration into/from
    plot-description files (based on QSettings, ini-format)
+ * show current coordinates (and values in images) in status bar
+ * make legend inside plot freely moveable
+ * bounding box: do not take error bars into account if they are disabled
+ * store/restore printer selected last
+
+ * if a .pdb-file shall be openend, run crysol
+   to display its scattering pattern
+ * make file handling configurable - this kind of file, that action
 
 
 Configurable Items in saxsview
 ------------------------------
-All fonts shall individually be configurable in family, 
+All fonts shall individually be configurable in family,
 size and style (bold, italic).
 
 Color selection should allow alpha channels.
 
+ o TODO
+ x DONE
+
 Plot
  o palette
- o plot title
- o plot title font
+ x plot title
+ x plot title font
  o enable/disable (0/0) marker
- o zoombase
+ x zoombase
 
 Curves
- o lines (style, width, color)
- o symbols (type, size, color, filled)
+ x lines (style, width, color)
+ x symbols (type, size, color, filled)
  o error bars (style, width, color)
    alternatively: no error bars but continuous "error tube"
- o legend label
- o scaling factor (x-axis)
- o offset (y-axis)
+ x legend label
+ x scaling factor (x-axis)
+ x offset (y-axis)
 
 For each axis
- o enable/disable axis label
- o axis label
- o axis label font
+ x enable/disable axis label (note: empty label implies "disabled")
+ x axis label
+ x axis label font
 
 Ticks
  o enable/disable ticks
- o enable/disable tick labels
- o tick values (at least: from, to, spacing)
- o tick label font
+ x enable/disable tick labels
+ x tick values (at least: from, to, spacing)
+ x tick label font
 
 Legend
  o enable/disable legend completely
- o legend font
- o legend position (?)
+ x legend font
+ x legend position (?)
 
 Grid (?)
  o enable/disable grid
@@ -70,4 +79,4 @@ Grid (?)
 Other
  o annotation font
  o save default settings for new plots/curves
- o anti-aliased plotting
+ x anti-aliased plotting
