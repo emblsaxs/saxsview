@@ -48,7 +48,8 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(int);
-  void configure();
+  void configureSaxsview();
+  void configurePlot();
 
   void about();
 

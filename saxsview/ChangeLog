@@ -1,6 +1,15 @@
 2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* saxsviewmainwindow.cpp: Add settings-menu.
+	* saxsviewmainwindow.h (configure): Removed.
+	(configurePlot, configureSaxsview): New.
+	* saxsviewmainwindow.cpp: Moved plot configuration from Plot- to
+	Settings-menu. Added action for application configuration.
+	(configure): Removed.
+	(configurePlot, configureSaxsview): New.
+
+2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewmainwindow.cpp: Added settings-menu.
 
 2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 

@@ -66,7 +66,7 @@ public:
   QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoomMove;
 
-  QAction *actionConfigure;
+  QAction *actionConfigurePlot, *actionConfigureSaxsview;
 
   // "Window"-menu
   QAction *actionPreviousPlot, *actionNextPlot, *actionCascadePlots;
@@ -188,10 +188,14 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupZoomMove->addAction(actionZoom);
   actionGroupZoomMove->addAction(actionMove);
 
-  actionConfigure = new QAction("&Configure", mw);
-  actionConfigure->setEnabled(false);
-  connect(actionConfigure, SIGNAL(triggered()),
-          mw, SLOT(configure()));
+  actionConfigurePlot = new QAction("&Configure Plot", mw);
+  actionConfigurePlot->setEnabled(false);
+  connect(actionConfigurePlot, SIGNAL(triggered()),
+          mw, SLOT(configurePlot()));
+
+  actionConfigureSaxsview = new QAction("&Configure Saxsview", mw);
+  connect(actionConfigureSaxsview, SIGNAL(triggered()),
+          mw, SLOT(configureSaxsview()));
 
   //
   // "Window"-menu
@@ -278,8 +282,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuPlot->addAction(actionZoomIn);
   menuPlot->addAction(actionZoomOut);
   menuPlot->addActions(actionGroupZoomMove->actions());
-  menuPlot->addSeparator();
-  menuPlot->addAction(actionConfigure);
   menuBar->addMenu(menuPlot);
 
   menuWindow = new QMenu("&Window", mw);
@@ -290,6 +292,9 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuSettings = new QMenu("&Settings", mw);
   menuSettings->addAction(saxsviewToolBar->toggleViewAction());
   menuSettings->addAction(plotToolBar->toggleViewAction());
+  menuSettings->addSeparator();
+  menuSettings->addAction(actionConfigurePlot);
+  menuSettings->addAction(actionConfigureSaxsview);
   menuBar->addMenu(menuSettings);
 
   menuHelp = new QMenu("&Help", mw);
@@ -314,7 +319,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   plotToolBar->addAction(actionZoomOut);
   plotToolBar->addActions(actionGroupZoomMove->actions());
   plotToolBar->addSeparator();
-  plotToolBar->addAction(actionConfigure);
+  plotToolBar->addAction(actionConfigurePlot);
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
@@ -502,9 +507,13 @@ void SaxsviewMainWindow::setScale(int scale) {
     currentSubWindow()->setScale(scale);
 }
 
-void SaxsviewMainWindow::configure() {
+void SaxsviewMainWindow::configurePlot() {
   if (currentSubWindow())
     currentSubWindow()->configure();
+}
+
+void SaxsviewMainWindow::configureSaxsview() {
+  QMessageBox::information(this, "Saxsview", "Nothing to configure yet.");
 }
 
 void SaxsviewMainWindow::about() {
@@ -606,6 +615,6 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionZoomOut->setEnabled(on);
   p->actionZoom->setEnabled(on);
   p->actionMove->setEnabled(on);
-  p->actionConfigure->setEnabled(on);
+  p->actionConfigurePlot->setEnabled(on);
   p->menuExportAs->setEnabled(on);
 }
