@@ -17,6 +17,13 @@ find_package (Qt4 4.4.0)
 set (QT_USE_QTSVG TRUE)
 include (${QT_USE_FILE})
 
+set (SAXSVIEW_WC_REVISION 0)
+find_package (Subversion)
+if (Subversion_FOUND)
+  Subversion_WC_INFO (${SAXSVIEW_SOURCE_DIR} SAXSVIEW)
+endif(Subversion_FOUND)
+
+
 set (CPACK_PACKAGE_NAME                "saxsview")
 set (CPACK_PACKAGE_CONTACT             "dfranke@users.sourceforge.net")
 set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "libsaxsdocument and saxsview; read, convert and view 1D and 2D-files related to Small Angle X-ray Scattering (SAXS).")

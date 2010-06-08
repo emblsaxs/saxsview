@@ -21,6 +21,7 @@
 #include "saxsviewplotwindow.h"
 #include "saxsviewimagewindow.h"
 #include "saxsview_plot.h"
+#include "config.h"
 
 #include <QAction>
 #include <QApplication>
@@ -503,17 +504,21 @@ void SaxsviewMainWindow::configure() {
 }
 
 void SaxsviewMainWindow::about() {
-  QMessageBox::about(this, "About saxsview",
-                     "Saxsview 0.1\n"
-                     "Written by Daniel Franke <dfranke@users.sourceforge.net>\n"
-                     "\n"
-                     "This is free software: you are free to "
-                     "change and redistribute it. There is NO, "
-                     "WARRANTY to the extent permitted by law.\n"
-                     "\n"
-                     // And complying to COPYING of qwt:
-                     "saxsview is based in part on the work of"
-                     "the Qwt project (http://qwt.sourceforge.net).");
+  QString title = QString("About %1").arg(PROJECT_NAME);
+  QString about = QString("%1 %3 (r%4)\n"
+                          "Written by Daniel Franke <%2>\n"
+                          "\n"
+                          "This is free software: you are free to "
+                          "change and redistribute it. There is NO, "
+                          "WARRANTY to the extent permitted by law.\n"
+                          "\n"
+                          // And complying to COPYING of qwt:
+                          "%1 is based in part on the work of the"
+                          "Qwt project (http://qwt.sourceforge.net).");
+
+  QMessageBox::about(this, title,
+                     about.arg(PROJECT_NAME).arg(PROJECT_BUGREPORT)
+                          .arg(PROJECT_VERSION).arg(PROJECT_REVISION));
 }
 
 void SaxsviewMainWindow::prepareWindowMenu() {
