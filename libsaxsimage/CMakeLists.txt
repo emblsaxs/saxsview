@@ -18,7 +18,7 @@ endif (TIFF_FOUND)
 add_library (saxsimage SHARED ${SOURCES} ${HEADERS})
 
 include_directories(${CBFLIB_SOURCE_DIR})
-target_link_libraries (saxsimage cbf)
+target_link_libraries (saxsimage saxsdocument cbf)
 
 # conditional include directories and libraries
 if (TIFF_FOUND)
