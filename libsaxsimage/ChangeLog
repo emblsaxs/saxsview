@@ -1,3 +1,7 @@
+2009-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Fixed install file names and location.
+
 2009-10-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CmakeLists.txt: Fixed source file names.

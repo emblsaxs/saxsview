@@ -31,6 +31,6 @@ install (TARGETS saxsimage
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
 
-install (FILES saxsdocument.h
-         DESTINATION include/saxsdocument)
+install (FILES saxsimage.h
+         DESTINATION include/saxsimage)
 
