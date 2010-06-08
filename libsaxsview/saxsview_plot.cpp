@@ -79,7 +79,7 @@ void Plot::PlotPrivate::setupCanvas() {
   plot->setAutoFillBackground(true);
   plot->setPalette(Qt::white);
   plot->canvas()->setFrameStyle(QFrame::NoFrame);
-  plot->canvas()->setLineWidth(0);
+  plot->canvas()->setLineWidth(1);
 
   // to intercept right-click events
   plot->canvas()->installEventFilter(plot);
@@ -129,6 +129,8 @@ void Plot::PlotPrivate::setupZoomer() {
   // Ctrl+RightButton: zoom out to full size
   zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
                           Qt::RightButton, Qt::ControlModifier);
+
+//   zoomer->setTrackerMode(QwtPicker::AlwaysOn);
 }
 
 void Plot::PlotPrivate::setupScales() {
@@ -152,11 +154,11 @@ void Plot::PlotPrivate::setupScales() {
   xBottom->attach(plot);
   xBottom->setBorderDistance(1);
 
-  QwtScaleDraw *scaleDraw = plot->axisWidget(QwtPlot::yLeft)->scaleDraw();
+  QwtScaleDraw *scaleDraw = plot->axisScaleDraw(QwtPlot::yLeft);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
 
-  scaleDraw = plot->axisWidget(QwtPlot::xBottom)->scaleDraw();
+  scaleDraw = plot->axisScaleDraw(QwtPlot::xBottom);
   scaleDraw->enableComponent(QwtAbstractScaleDraw:: Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw:: Ticks, false);
 
