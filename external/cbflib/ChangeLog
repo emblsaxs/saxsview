@@ -1,3 +1,7 @@
+2009-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Add library version to target properties.
+
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Imported v0.7.9.1 of CBFlib
