@@ -76,7 +76,10 @@ public:
   QAction *actionAbout;
 
   QMenu *menuFile, *menuCreateSubWindow, *menuRecentFiles, *menuExportAs;
-  QMenu *menuPlot, *menuWindow, *menuHelp;
+  QMenu *menuPlot, *menuWindow, *menuSettings, *menuHelp;
+
+  // toolbars
+  QToolBar *saxsviewToolBar, *plotToolBar;
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
@@ -247,6 +250,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
           mw, SLOT(prepareRecentFilesMenu()));
 
   menuExportAs = new QMenu("E&xport As", mw);
+  menuExportAs->setEnabled(false);
 
   supportedFormatsMap::const_iterator i = exportAsFormat.constBegin();
   for ( ; i != exportAsFormat.constEnd(); ++i) {
@@ -255,7 +259,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
             exportAsFormatMapper, SLOT(map()));
     exportAsFormatMapper->setMapping(action, i.key());
   }
-  menuExportAs->setEnabled(false);
 
   QMenuBar *menuBar = mw->menuBar();
 
@@ -284,6 +287,11 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
           mw, SLOT(prepareWindowMenu()));
   menuBar->addMenu(menuWindow);
 
+  menuSettings = new QMenu("&Settings", mw);
+  menuSettings->addAction(saxsviewToolBar->toggleViewAction());
+  menuSettings->addAction(plotToolBar->toggleViewAction());
+  menuBar->addMenu(menuSettings);
+
   menuHelp = new QMenu("&Help", mw);
   menuHelp->addAction(actionAbout);
   menuBar->addMenu(menuHelp);
@@ -293,22 +301,20 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   mw->setIconSize(QSize(24, 24));
   mw->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
-  QToolBar *toolBar;
-
-  toolBar = mw->addToolBar("saxsview Toolbar");
-  QAction *action = toolBar->addAction(qApp->style()->standardIcon(QStyle::SP_FileIcon), "New");
+  saxsviewToolBar = mw->addToolBar("saxsview Toolbar");
+  QAction *action = saxsviewToolBar->addAction(qApp->style()->standardIcon(QStyle::SP_FileIcon), "New Plot");
   connect(action, SIGNAL(triggered()),
           mw, SLOT(createPlotWindow()));
-  action->setMenu(menuCreateSubWindow);
+//   action->setMenu(menuCreateSubWindow);
 
-  toolBar = mw->addToolBar("plot Toolbar");
-  toolBar->addAction(actionLoad);
-  toolBar->addAction(actionPrint);
-  toolBar->addAction(actionZoomIn);
-  toolBar->addAction(actionZoomOut);
-  toolBar->addActions(actionGroupZoomMove->actions());
-  toolBar->addSeparator();
-  toolBar->addAction(actionConfigure);
+  plotToolBar = mw->addToolBar("plot Toolbar");
+  plotToolBar->addAction(actionLoad);
+  plotToolBar->addAction(actionPrint);
+  plotToolBar->addAction(actionZoomIn);
+  plotToolBar->addAction(actionZoomOut);
+  plotToolBar->addActions(actionGroupZoomMove->actions());
+  plotToolBar->addSeparator();
+  plotToolBar->addAction(actionConfigure);
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
@@ -350,8 +356,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::addSubWindow(SaxsviewSubWind
     w->showMaximized();
   else
     w->show();
-
-  
 }
 
 
@@ -361,8 +365,8 @@ SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
   p->setupSignalMappers();
   p->setupUi();
   p->setupActions();
-  p->setupMenus();
   p->setupToolbars();
+  p->setupMenus();
 }
 
 SaxsviewMainWindow::~SaxsviewMainWindow() {

@@ -1,5 +1,9 @@
 2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.cpp: Add settings-menu.
+
+2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* config.h.in: New.
 	* CMakeLists.txt: Configure config.h.
 	* saxsviewmainwindow.cpp (about): Use configured values.
