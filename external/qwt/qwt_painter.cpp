@@ -299,29 +299,35 @@ void QwtPainter::drawText(QPainter *painter, const QRectF &rect,
   Wrapper for QSimpleRichText::draw()
 */
 void QwtPainter::drawSimpleRichText(QPainter *painter, const QRectF &rect,
-    int flags, QTextDocument &text)
+    int flags, const QTextDocument &text)
 {
-    const QRectF scaledRect = rect;
-    text.setPageSize(QSizeF(scaledRect.width(), QWIDGETSIZE_MAX));
+    QTextDocument *txt = text.clone();
 
-    QAbstractTextDocumentLayout* layout = text.documentLayout();
+    painter->save();
 
-    const double height = qRound(layout->documentSize().height());
-    double y = scaledRect.y();
+    painter->setFont(txt->defaultFont());
+    unscaleFont(painter);
+
+    txt->setDefaultFont(painter->font());
+    txt->setPageSize(QSizeF(rect.width(), QWIDGETSIZE_MAX));
+
+    QAbstractTextDocumentLayout* layout = txt->documentLayout();
+
+    const double height = layout->documentSize().height();
+    double y = rect.y();
     if (flags & Qt::AlignBottom)
-        y += (scaledRect.height() - height);
+        y += (rect.height() - height);
     else if (flags & Qt::AlignVCenter)
-        y += (scaledRect.height() - height)/2;
+        y += (rect.height() - height)/2;
 
     QAbstractTextDocumentLayout::PaintContext context;
     context.palette.setColor(QPalette::Text, painter->pen().color());
 
-    painter->save();
-
-    painter->translate(scaledRect.x(), y);
+    painter->translate(rect.x(), y);
     layout->draw(painter, context);
 
     painter->restore();
+    delete txt;
 }
 
 #endif // !QT_NO_RICHTEXT

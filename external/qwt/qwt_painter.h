@@ -53,7 +53,7 @@ public:
 
 #ifndef QT_NO_RICHTEXT
     static void drawSimpleRichText(QPainter *, const QRectF &,
-        int flags, QTextDocument &);
+        int flags, const QTextDocument &);
 #endif
 
     static void drawRect(QPainter *, double x, double y, double w, double h);
