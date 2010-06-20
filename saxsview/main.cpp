@@ -24,6 +24,8 @@
 
 int main(int argc, char **argv) {
   QApplication app(argc, argv);
+  app.setOrganizationName("sourceforge");
+  app.setOrganizationDomain("sourceforge.net");
   app.setApplicationName("saxsview");
 
   SaxsviewMainWindow w;

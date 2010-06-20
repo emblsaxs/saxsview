@@ -21,7 +21,7 @@
 #include "saxsviewplotwindow.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
-#include "saxsview_plotconfigdialog.h"
+#include "saxsview_configdialog.h"
 
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
@@ -123,7 +123,7 @@ void SaxsviewPlotWindow::load(const QString& fileName) {
       intervals.push_back(QwtIntervalSample(x, y - y_err, y + y_err));
     }
 
-    Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve;
+    Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve(saxs_curve_type(curve));
     plotCurve->setData(points, intervals);
     if (plotCurve->boundingRect().isValid()) {
       QString curveTitle = fileInfo.fileName();
@@ -175,6 +175,8 @@ void SaxsviewPlotWindow::setScale(int scale) {
 void SaxsviewPlotWindow::configure() {
   Saxsview::PlotConfigDialog dlg(p->plot, this);
   dlg.exec();
+
+  p->plot->replot();
 }
 
 bool SaxsviewPlotWindow::eventFilter(QObject *watchedObj, QEvent *e) {

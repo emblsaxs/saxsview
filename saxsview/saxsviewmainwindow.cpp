@@ -21,6 +21,7 @@
 #include "saxsviewplotwindow.h"
 #include "saxsviewimagewindow.h"
 #include "saxsview_plot.h"
+#include "saxsview_configdialog.h"
 #include "config.h"
 
 #include <QAction>
@@ -513,7 +514,8 @@ void SaxsviewMainWindow::configurePlot() {
 }
 
 void SaxsviewMainWindow::configureSaxsview() {
-  QMessageBox::information(this, "Saxsview", "Nothing to configure yet.");
+  Saxsview::SaxsviewConfigDialog config(this);
+  config.exec();
 }
 
 void SaxsviewMainWindow::about() {
