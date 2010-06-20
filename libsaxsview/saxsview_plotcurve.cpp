@@ -19,6 +19,7 @@
 
 #include "saxsview_plotcurve.h"
 #include "saxsview_plot.h"
+#include "saxsview_config.h"
 
 #include <qwt_interval_symbol.h>
 #include <qwt_legend_item.h>
@@ -102,7 +103,7 @@ QwtSymbol* PlotSymbol::qwtSymbol() const {
 
 class PlotCurve::PlotCurvePrivate {
 public:
-  PlotCurvePrivate();
+  PlotCurvePrivate(int type);
   ~PlotCurvePrivate();
 
   void scale();
@@ -120,29 +121,25 @@ public:
   QString fileName;
 };
 
-PlotCurve::PlotCurvePrivate::PlotCurvePrivate()
+PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int type)
  : curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
    scaleX(1.0), scaleY(1.0), every(1), errorBarsEnabled(true) {
 
-  // TODO: Read default values
+  QPen line, errors;
+  config().templateForCurveType(type, line, curveSymbol, errors);
 
   // data points
-  // TODO: set default values
-  QwtSymbol *symbol = new QwtSymbol(QwtSymbol::NoSymbol);
-
   curve = new QwtPlotCurve;
   curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
   curve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol);
   curve->setLegendAttribute(QwtPlotCurve::LegendShowBrush);
-  curve->setStyle(QwtPlotCurve::Lines);
-  curve->setSymbol(symbol);
-  curve->setPen(QPen(Qt::black));
+  curve->setSymbol(curveSymbol.qwtSymbol());
+  curve->setPen(line);
 
   // error bars
-  // TODO: set default values
   QwtIntervalSymbol *errorBar = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
-  errorBar->setWidth(1);
-  errorBar->setPen(QPen(Qt::lightGray));
+  errorBar->setWidth(1);        // cap width
+  errorBar->setPen(errors);
 
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setItemAttribute(QwtPlotItem::Legend, false);
@@ -175,8 +172,8 @@ void PlotCurve::PlotCurvePrivate::scale() {
   errorCurve->setSamples(scaledIntervals);
 }
 
-PlotCurve::PlotCurve(QObject *parent)
- : QObject(parent), p(new PlotCurvePrivate) {
+PlotCurve::PlotCurve(int type, QObject *parent)
+ : QObject(parent), p(new PlotCurvePrivate(type)) {
 }
 
 PlotCurve::~PlotCurve() {

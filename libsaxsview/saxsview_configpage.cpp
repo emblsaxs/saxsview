@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -17,41 +17,15 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_COLORBUTTON_H
-#define SAXSVIEW_COLORBUTTON_H
+#include "saxsview_configpage.h"
 
-#include <QPushButton>
-#include <QColor>
+namespace Saxsview {
 
-class ColorButton : public QPushButton {
-  Q_OBJECT
+AbstractConfigPage::AbstractConfigPage(QWidget *parent)
+ : QWidget(parent) {
+}
 
-  Q_PROPERTY (QColor color
-              READ color
-              WRITE setColor
-              NOTIFY colorChanged
-              USER true);
+AbstractConfigPage::~AbstractConfigPage() {
+}
 
-public:
-  ColorButton(QWidget *parent = 0L);
-  ~ColorButton();
-
-  QColor color() const;
-
-public slots:
-  void getColor();
-  void setColor(const QColor&);
-
-signals:
-  void colorChanged(const QColor&);
-
-protected:
-  void resizeEvent(QResizeEvent*);
-  void updateIcon();
-
-private:
-  QColor mColor;
-};
-
-#endif // !SAXSVIEW_COLORBUTTON_H
-
+} // end of namespace Saxsview

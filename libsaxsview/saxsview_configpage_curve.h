@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -17,41 +17,33 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_COLORBUTTON_H
-#define SAXSVIEW_COLORBUTTON_H
+#ifndef SAXSVIEW_CONFIGPAGE_CURVE_H
+#define SAXSVIEW_CONFIGPAGE_CURVE_H
 
-#include <QPushButton>
-#include <QColor>
+#include "saxsview_configpage.h"
+#include "ui_saxsview_configpage_curve.h"
 
-class ColorButton : public QPushButton {
-  Q_OBJECT
+namespace Saxsview {
 
-  Q_PROPERTY (QColor color
-              READ color
-              WRITE setColor
-              NOTIFY colorChanged
-              USER true);
+class CurveConfigPage : public AbstractConfigPage,
+                        private Ui::CurveConfigPage {
+Q_OBJECT
 
 public:
-  ColorButton(QWidget *parent = 0L);
-  ~ColorButton();
+  CurveConfigPage(Plot *plot, QWidget *parent = 0L);
+  ~CurveConfigPage();
+  void apply();
+  void reset();
 
-  QColor color() const;
-
-public slots:
-  void getColor();
-  void setColor(const QColor&);
-
-signals:
-  void colorChanged(const QColor&);
-
-protected:
-  void resizeEvent(QResizeEvent*);
-  void updateIcon();
+private slots:
+  void applyTemplate();
+  void setCurrentIndex(int);
 
 private:
-  QColor mColor;
+  class CurveConfigPagePrivate;
+  CurveConfigPagePrivate *p;
 };
 
-#endif // !SAXSVIEW_COLORBUTTON_H
+} // end of namespace Saxsview
 
+#endif // !SAXSVIEW_CONFIGPAGE_CURVE_H

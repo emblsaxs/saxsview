@@ -107,7 +107,7 @@ class PlotCurve : public QObject {
   Q_OBJECT
 
 public:
-  PlotCurve(QObject *parent = 0L);
+  PlotCurve(int type, QObject *parent = 0L);
   ~PlotCurve();
 
   void attach(Plot *plot);

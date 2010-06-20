@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -17,41 +17,27 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_COLORBUTTON_H
-#define SAXSVIEW_COLORBUTTON_H
+#ifndef SAXSVIEW_SYMBOLSTYLECOMBO_H
+#define SAXSVIEW_SYMBOLSTYLECOMBO_H
 
-#include <QPushButton>
-#include <QColor>
+#include <QtGui>
 
-class ColorButton : public QPushButton {
+#include "saxsview_plotcurve.h"
+using Saxsview::PlotSymbol;
+
+class SymbolStyleCombo : public QComboBox {
   Q_OBJECT
 
-  Q_PROPERTY (QColor color
-              READ color
-              WRITE setColor
-              NOTIFY colorChanged
+  Q_PROPERTY (int currentStyle
+              READ currentStyle
+              WRITE setCurrentStyle
               USER true);
 
 public:
-  ColorButton(QWidget *parent = 0L);
-  ~ColorButton();
+  SymbolStyleCombo(QWidget *parent = 0L);
 
-  QColor color() const;
-
-public slots:
-  void getColor();
-  void setColor(const QColor&);
-
-signals:
-  void colorChanged(const QColor&);
-
-protected:
-  void resizeEvent(QResizeEvent*);
-  void updateIcon();
-
-private:
-  QColor mColor;
+  PlotSymbol::Style currentStyle() const;
+  void setCurrentStyle(int style);
 };
 
-#endif // !SAXSVIEW_COLORBUTTON_H
-
+#endif // !SAXSVIEW_SYMBOLSTYLECOMBO_H

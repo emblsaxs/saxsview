@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -19,17 +19,7 @@
 
 #include "saxsview_colorbutton.h"
 
-#include <QBrush>
-#include <QColor>
-#include <QColorDialog>
-#include <QDebug>
-#include <QIcon>
-#include <QPainter>
-#include <QPen>
-#include <QPixmap>
-#include <QResizeEvent>
-
-namespace Saxsview {
+#include <QtGui>
 
 ColorButton::ColorButton(QWidget *parent) : QPushButton(parent) {
   connect(this, SIGNAL(clicked()), SLOT(getColor()));
@@ -75,5 +65,3 @@ void ColorButton::updateIcon() {
   setIconSize(pixmap.size());
   setIcon(icon);
 }
-
-} // end of namespace Saxsview

@@ -1,3 +1,37 @@
+2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_colorbutton.h: Defined 'color' property; moved
+	out of namespace Saxsview.
+	* saxsview_colorbutton.cpp: Moved out of namespace Saxsview.
+	* saxsview_plotcurve.h (ctor): Take type from libsaxsdocument
+	to select configured template.
+	* saxsview_plotcurve.cpp (ctor): Likewise.
+	* saxsview_plotconfigdialog.h: Refactored and removed.
+	* saxsview_plotconfigdialog.cpp: Refactored and removed.
+	* saxsview_configdialog.h: New.
+	* saxsview_configdialog.cpp: New.
+	* saxsview_config.h: New.
+	* saxsview_config.cpp: New.
+	* saxsview_configpage.h: New.
+	* saxsview_configpage.cpp: New.
+	* saxsview_configpage_curve.ui: New.
+	* saxsview_configpage_curve.h: New.
+	* saxsview_configpage_curve.cpp: New.
+	* saxsview_configpage_legend.ui: New.
+	* saxsview_configpage_legend.cpp: New.
+	* saxsview_configpage_plot.ui: New.
+	* saxsview_configpage_plot.cpp: New.
+	* saxsview_configpage_curvetemplate.ui: New.
+	* saxsview_configpage_curvetemplate.h: New.
+	* saxsview_configpage_curvetemplate.cpp: New.
+	* saxsview_legendpositioncombo.cpp: New.
+	* saxsview_legendpositioncombo.h: New.
+	* saxsview_linestylecombo.cpp: New.
+	* saxsview_linestylecombo.h: New.
+	* saxsview_symbolstylecombo.cpp: New.
+	* saxsview_symbolstylecombo.h: New.
+	* CMakeLists.txt: Adjusted file names.
+
 2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.cpp (setupCanvas): Set default frame line width
