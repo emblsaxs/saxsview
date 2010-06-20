@@ -1,5 +1,10 @@
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.cpp (setupMenus): Create 'Settings' before
+	'Window' menu.
+
+2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* main.cpp: Set organization name and Domain in core application.
 	* saxsviewmainwindow.cpp (SaxsviewMainWindow::configureSaxsview):
 	Add config dialog.

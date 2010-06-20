@@ -24,23 +24,7 @@
 #include "saxsview_configdialog.h"
 #include "config.h"
 
-#include <QAction>
-#include <QApplication>
-#include <QDebug>
-#include <QFile>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QKeySequence>
-#include <QList>
-#include <QMdiArea>
-#include <QMdiSubWindow>
-#include <QMenu>
-#include <QMessageBox>
-#include <QMenuBar>
-#include <QSettings>
-#include <QSignalMapper>
-#include <QStyle>
-#include <QToolBar>
+#include <QtGui>
 
 class SaxsviewMainWindow::SaxsviewMainWindowPrivate {
 public:
@@ -67,6 +51,7 @@ public:
   QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoomMove;
 
+  // "Settings"-menu
   QAction *actionConfigurePlot, *actionConfigureSaxsview;
 
   // "Window"-menu
@@ -189,6 +174,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupZoomMove->addAction(actionZoom);
   actionGroupZoomMove->addAction(actionMove);
 
+  // "Settings"-menu
   actionConfigurePlot = new QAction("&Configure Plot", mw);
   actionConfigurePlot->setEnabled(false);
   connect(actionConfigurePlot, SIGNAL(triggered()),
@@ -285,11 +271,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuPlot->addActions(actionGroupZoomMove->actions());
   menuBar->addMenu(menuPlot);
 
-  menuWindow = new QMenu("&Window", mw);
-  connect(menuWindow, SIGNAL(aboutToShow()),
-          mw, SLOT(prepareWindowMenu()));
-  menuBar->addMenu(menuWindow);
-
   menuSettings = new QMenu("&Settings", mw);
   menuSettings->addAction(saxsviewToolBar->toggleViewAction());
   menuSettings->addAction(plotToolBar->toggleViewAction());
@@ -297,6 +278,11 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuSettings->addAction(actionConfigurePlot);
   menuSettings->addAction(actionConfigureSaxsview);
   menuBar->addMenu(menuSettings);
+
+  menuWindow = new QMenu("&Window", mw);
+  connect(menuWindow, SIGNAL(aboutToShow()),
+          mw, SLOT(prepareWindowMenu()));
+  menuBar->addMenu(menuWindow);
 
   menuHelp = new QMenu("&Help", mw);
   menuHelp->addAction(actionAbout);
