@@ -1,5 +1,35 @@
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_configpage_curve.ui: Fixed tab order.
+	* saxsview_configpage_defaultcolors.ui: New.
+	* saxsview_configpage_defaultcolors.h: New.
+	* saxsview_configpage_defaultcolors.cpp: New.
+	* saxsview_configdialog.cpp (SaxsviewConfigDialog): Add new
+	color config page.
+	* saxsview_colorbutton.cpp (colorIcon): Verify that color is valid,
+	otherwise return invalid icon.
+	(ctor): Add "no color" as first item.
+	(setColor): Set color name as tool tip.
+	* saxsview_configpage_curvetemplate.h (defaults): Removed.
+	* saxsview_configpage_curvetemplate.cpp (defaults): Removed;
+	removed all usages.
+	* saxsview_config.h (defaultColors): New.
+	(setDefaultColors): New.
+	* saxsview_config.cpp (curveTemplates): Set default templates
+	if none found in settings.
+	(setCurveTemplates): Clear existing curve templates before
+	writing new ones.
+	(defaultColors): New.
+	(setDefaultColors): New.
+	* saxsview_plot.h (defaultStyle): New.
+	* saxsview_plot.cpp (setupDefaultColors): New.
+	(defaultStyle): New.
+	* saxsview_plotcurve.cpp (attach): Retrieve default style from
+	plot, apply to curve.
+	* CMakeLists.txt: Add new files.
+
+2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_colorbutton.h: Rebased ColorButton from PushButton
 	to ToolButton.
 	(setColor): New overload (SignalMapper can not convert color

@@ -34,7 +34,6 @@ public:
   ~CurveTemplateConfigPage();
   void apply();
   void reset();
-  void defaults();
 
 private slots:
   void addTemplate();

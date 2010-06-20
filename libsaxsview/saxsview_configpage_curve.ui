@@ -167,7 +167,7 @@
          <string>Scale X</string>
         </property>
         <property name="buddy">
-         <cstring>comboErrorBarStyle</cstring>
+         <cstring>spinScaleX</cstring>
         </property>
        </widget>
       </item>
@@ -180,7 +180,7 @@
          <string>Scale Y</string>
         </property>
         <property name="buddy">
-         <cstring>comboErrorBarStyle</cstring>
+         <cstring>spinScaleY</cstring>
         </property>
        </widget>
       </item>
@@ -203,7 +203,7 @@
          <string>Every</string>
         </property>
         <property name="buddy">
-         <cstring>comboErrorBarStyle</cstring>
+         <cstring>spinEvery</cstring>
         </property>
        </widget>
       </item>
@@ -351,6 +351,24 @@
    <header>saxsview_colorbutton.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>curveList</tabstop>
+  <tabstop>editLegendLabel</tabstop>
+  <tabstop>comboLineStyle</tabstop>
+  <tabstop>spinLineWidth</tabstop>
+  <tabstop>btnLineColor</tabstop>
+  <tabstop>comboSymbolStyle</tabstop>
+  <tabstop>spinSymbolSize</tabstop>
+  <tabstop>btnSymbolStyleColor</tabstop>
+  <tabstop>comboErrorBarStyle</tabstop>
+  <tabstop>spinErrorBarWidth</tabstop>
+  <tabstop>btnErrorBarStyleColor</tabstop>
+  <tabstop>comboTemplates</tabstop>
+  <tabstop>btnApplyTemplate</tabstop>
+  <tabstop>spinScaleX</tabstop>
+  <tabstop>spinScaleY</tabstop>
+  <tabstop>spinEvery</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

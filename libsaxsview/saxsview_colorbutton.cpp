@@ -22,6 +22,9 @@
 #include <QtGui>
 
 static QIcon colorIcon(const QColor& color, const QSize& size) {
+  if (!color.isValid())
+    return QIcon();
+
   QPixmap pixmap(size);
 
   QPainter painter;
@@ -39,13 +42,22 @@ static QIcon colorIcon(const QColor& color, const QSize& size) {
 class ColorButton::ColorButtonPrivate {
 public:
   ColorButtonPrivate(ColorButton *btn)
-   : color(Qt::white),
+   : color(QColor()),
      menu(new QMenu),
      actionMapper(new QSignalMapper) {
 
-    QSize size(16, 16);
+    const QSize size(16, 16);
+    QAction *action;
+
+    action = menu->addAction(QIcon(), "none");
+    action->setIconVisibleInMenu(true);
+    connect(action, SIGNAL(triggered()),
+            actionMapper, SLOT(map()));
+    actionMapper->setMapping(action, "");
+
+    menu->addSeparator();
     foreach (QString name, QColor::colorNames()) {
-      QAction *action = menu->addAction(colorIcon(QColor(name), size), name);
+      action = menu->addAction(colorIcon(QColor(name), size), name);
       action->setIconVisibleInMenu(true);
       connect(action, SIGNAL(triggered()),
               actionMapper, SLOT(map()));
@@ -93,6 +105,7 @@ void ColorButton::setColor(const QColor& color) {
   if (p->color != color) {
     p->color = color;
     updateIcon();
+    setToolTip(color.name());
     emit colorChanged(p->color);
   }
 }

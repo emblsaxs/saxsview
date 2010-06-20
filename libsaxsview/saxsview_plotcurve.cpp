@@ -108,6 +108,7 @@ public:
 
   void scale();
 
+  int type;
   QwtPlotCurve *curve;
   QwtPlotIntervalCurve *errorCurve;
   PlotSymbol curveSymbol;
@@ -121,8 +122,8 @@ public:
   QString fileName;
 };
 
-PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int type)
- : curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
+PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
+ : type(t), curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
    scaleX(1.0), scaleY(1.0), every(1), errorBarsEnabled(true) {
 
   QPen line, errors;
@@ -181,6 +182,13 @@ PlotCurve::~PlotCurve() {
 }
 
 void PlotCurve::attach(Plot *plot) {
+  QPen line, errors;
+
+  plot->defaultStyle(p->type, line, p->curveSymbol, errors);
+  setPen(line);
+  setSymbol(p->curveSymbol);
+  setErrorBarPen(errors);
+
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
 

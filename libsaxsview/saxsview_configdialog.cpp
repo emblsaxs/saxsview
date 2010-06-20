@@ -21,6 +21,7 @@
 #include "saxsview_configpage.h"
 #include "saxsview_configpage_curve.h"
 #include "saxsview_configpage_curvetemplate.h"
+#include "saxsview_configpage_defaultcolors.h"
 
 #include <QtGui>
 
@@ -120,7 +121,8 @@ void AbstractConfigDialog::buttonClicked(QAbstractButton *button) {
 SaxsviewConfigDialog::SaxsviewConfigDialog(QWidget *parent) 
  : AbstractConfigDialog(parent) {
 
-  addConfigPage(new CurveTemplateConfigPage(this), "Templates");
+  addConfigPage(new CurveTemplateConfigPage(this), "Curve Templates");
+  addConfigPage(new DefaultColorsConfigPage(this), "Default Colors");
 }
 
 //-------------------------------------------------------------------------

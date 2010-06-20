@@ -118,37 +118,9 @@ void CurveTemplateConfigPage::reset() {
 
     index = config().currentCurveTemplate(SAXS_CURVE_PROBABILITY_DATA);
     comboProbabilityCurveTemplate->setCurrentIndex(index);
-
-  } else
-    defaults();
+  }
 
   setEditorEnabled(p->model->rowCount() > 0);
-}
-
-void CurveTemplateConfigPage::defaults() {
-  QList<QStandardItem*> t1, t2;
-
-  t1.push_back(new QStandardItem("open circles w/ errors"));
-  t1.push_back(new QStandardItem(QString::number(Qt::NoPen)));            // line style
-  t1.push_back(new QStandardItem("1"));                                   // line width
-  t1.push_back(new QStandardItem(QString::number(PlotSymbol::Ellipse)));  // symbol style
-  t1.push_back(new QStandardItem("4"));                                   // symbol size
-  t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));        // error bar style
-  t1.push_back(new QStandardItem("1"));                                   // error bar width
-  p->model->appendRow(t1);
-
-  t2.push_back(new QStandardItem("solid line w/o errors"));
-  t2.push_back(new QStandardItem(QString::number(Qt::SolidLine)));
-  t2.push_back(new QStandardItem("2"));
-  t2.push_back(new QStandardItem(QString::number(PlotSymbol::NoSymbol)));
-  t2.push_back(new QStandardItem("1"));
-  t2.push_back(new QStandardItem(QString::number(Qt::NoPen)));
-  t2.push_back(new QStandardItem("1"));
-  p->model->appendRow(t2);
-
-  comboExperimentalCurveTemplate->setCurrentIndex(0);
-  comboTheoreticalCurveTemplate->setCurrentIndex(1);
-  comboProbabilityCurveTemplate->setCurrentIndex(1);
 }
 
 void CurveTemplateConfigPage::addTemplate() {

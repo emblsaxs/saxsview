@@ -13,7 +13,8 @@ set (SOURCES saxsview_plot.cpp
              saxsview_configpage_plot.cpp
              saxsview_configpage_curve.cpp
              saxsview_configpage_legend.cpp
-             saxsview_configpage_curvetemplate.cpp)
+             saxsview_configpage_curvetemplate.cpp
+             saxsview_configpage_defaultcolors.cpp)
 
 set (HEADERS saxsview_plot.h
              saxsview_plotcurve.h
@@ -25,7 +26,8 @@ set (HEADERS saxsview_plot.h
              saxsview_config.h
              saxsview_configdialog.h
              saxsview_configpage.h
-             saxsview_configpage_curvetemplate.h)
+             saxsview_configpage_curvetemplate.h
+             saxsview_configpage_defaultcolors.h)
 
 qt4_wrap_cpp (MOC saxsview_plot.h
                   saxsview_plotcurve.h
@@ -41,7 +43,8 @@ qt4_wrap_cpp (MOC saxsview_plot.h
 qt4_wrap_ui (UIC saxsview_configpage_plot.ui
                  saxsview_configpage_curve.ui
                  saxsview_configpage_legend.ui
-                 saxsview_configpage_curvetemplate.ui)
+                 saxsview_configpage_curvetemplate.ui
+                 saxsview_configpage_defaultcolors.ui)
 
 # out-of-source builds need to include the ${CMAKE_CURRENT_*_DIR}
 include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}

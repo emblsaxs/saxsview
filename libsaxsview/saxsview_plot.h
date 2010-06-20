@@ -20,7 +20,6 @@
 #ifndef SAXSVIEW_PLOT_H
 #define SAXSVIEW_PLOT_H
 
-#include <QAction>
 class QEvent;
 class QPainter;
 class QRect;
@@ -31,6 +30,7 @@ class QRect;
 namespace Saxsview {
 
 class PlotCurve;
+class PlotSymbol;
 
 class Plot : public QwtPlot {
   Q_OBJECT
@@ -58,6 +58,8 @@ public:
   void zoom(const QRectF&);
 
   void updateLayout();
+
+  void defaultStyle(int, QPen&, PlotSymbol&, QPen&) const;
 
 public slots:
   void replot();

@@ -17,41 +17,28 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_CONFIG_H
-#define SAXSVIEW_CONFIG_H
+#ifndef SAXSVIEW_CONFIGPAGE_DEFAULTCOLORS_H
+#define SAXSVIEW_CONFIGPAGE_DEFAULTCOLORS_H
 
-#include <QList>
-class QColor;
-class QPen;
-class QStandardItemModel;
+#include "saxsview_configpage.h"
+#include "ui_saxsview_configpage_defaultcolors.h"
 
 namespace Saxsview {
 
-class PlotSymbol;
-
-
-class SaxsviewConfig {
+class DefaultColorsConfigPage : public AbstractConfigPage ,
+                                private Ui::DefaultColorsConfigPage {
 public:
-  void curveTemplates(QStandardItemModel*) const;
-  void setCurveTemplates(QStandardItemModel*);
+  DefaultColorsConfigPage(QWidget *parent = 0L);
+  ~DefaultColorsConfigPage();
 
-  int currentCurveTemplate(int type);
-  void setCurrentCurveTemplate(int type, int index);
+  void apply();
+  void reset();
 
-  void templateForCurveType(int type, QPen&, PlotSymbol&, QPen&);
-
-  void defaultColors(QList<QColor>&, QList<QColor>&) const;
-  void setDefaultColors(const QList<QColor>&, const QList<QColor>&);
-  
 private:
-  SaxsviewConfig();
-  ~SaxsviewConfig();
-
-  friend SaxsviewConfig& config();
+  class DefaultColorsConfigPagePrivate;
+  DefaultColorsConfigPagePrivate *p;
 };
-
-SaxsviewConfig& config();
 
 } // end of namespace Saxsview
 
-#endif // !SAXSVIEW_CONFIG_H
+#endif // !SAXSVIEW_CONFIGPAGE_DEFAULTCOLORS_H

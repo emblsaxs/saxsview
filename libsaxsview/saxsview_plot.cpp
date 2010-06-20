@@ -19,18 +19,9 @@
 
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
+#include "saxsview_config.h"
 
-#include <QApplication>
-#include <QDebug>
-#include <QFileDialog>
-#include <QMenu>
-#include <QMessageBox>
-#include <QMouseEvent>
-#include <QPainter>
-#include <QPrintDialog>
-#include <QPrinter>
-#include <QSettings>
-#include <QSvgGenerator>
+#include <QtGui>
 
 #include "qwt_dyngrid_layout.h"
 #include "qwt_legend.h"
@@ -62,6 +53,9 @@ public:
   void setupZoomer();
   void setupScales();
 
+  void setupDefaultColors();
+  void defaultStyle(int, QPen&, PlotSymbol&, QPen&) const;
+
   Plot *plot;
   PlotScale scale;
 
@@ -72,6 +66,8 @@ public:
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
   QList<PlotCurve*> curves;
+  QList<QColor> defaultLineColor, defaultErrorBarColor;
+  mutable int currentLineColor, currentErrorBarColor;
 };
 
 void Plot::PlotPrivate::setupCanvas() {
@@ -165,6 +161,29 @@ void Plot::PlotPrivate::setupScales() {
   plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 }
 
+void Plot::PlotPrivate::setupDefaultColors() {
+  config().defaultColors(defaultLineColor, defaultErrorBarColor);
+  currentLineColor = 0; 
+  currentErrorBarColor = 0;
+}
+
+void Plot::PlotPrivate::defaultStyle(int type, QPen& line,
+                                     PlotSymbol& symbol,
+                                     QPen& errors) const {
+  QColor color;
+
+  config().templateForCurveType(type, line, symbol, errors);
+
+  color = defaultLineColor[currentLineColor++ % defaultLineColor.size()];
+  line.setColor(color);
+  symbol.setColor(color);
+
+  color = defaultErrorBarColor[currentErrorBarColor++ % defaultErrorBarColor.size()];
+  errors.setColor(color);
+}
+
+
+
 
 Plot::Plot(QWidget *parent)
  : QwtPlot(parent), p(new PlotPrivate(this)) {
@@ -180,6 +199,7 @@ Plot::Plot(QWidget *parent)
   p->setupLegend();
   p->setupPanner();
   p->setupZoomer();
+  p->setupDefaultColors();
 }
 
 Plot::~Plot() {
@@ -343,6 +363,11 @@ void Plot::updateLayout() {
     legend()->setGeometry(width() - legendSizeHint.width() - 30, 30,
                           legendSizeHint.width(), legendSizeHint.height());
   }
+}
+
+void Plot::defaultStyle(int type, QPen& line, PlotSymbol& symbol,
+                        QPen& errors) const {
+  p->defaultStyle(type, line, symbol, errors);
 }
 
 void Plot::setZoomBase(const QRectF& rect) {

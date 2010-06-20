@@ -61,6 +61,31 @@ void SaxsviewConfig::curveTemplates(QStandardItemModel *model) const {
 
   settings().endArray();
   settings().endGroup();
+
+  //
+  // Defaults
+  //
+  if (model->rowCount() == 0) {
+    QList<QStandardItem*> t1, t2;
+
+    t1.push_back(new QStandardItem("open circles w/ errors"));
+    t1.push_back(new QStandardItem(QString::number(Qt::NoPen)));            // line style
+    t1.push_back(new QStandardItem("1"));                                   // line width
+    t1.push_back(new QStandardItem(QString::number(PlotSymbol::Ellipse)));  // symbol style
+    t1.push_back(new QStandardItem("4"));                                   // symbol size
+    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));        // error bar style
+    t1.push_back(new QStandardItem("1"));                                   // error bar width
+    model->appendRow(t1);
+
+    t2.push_back(new QStandardItem("solid line w/o errors"));
+    t2.push_back(new QStandardItem(QString::number(Qt::SolidLine)));
+    t2.push_back(new QStandardItem("2"));
+    t2.push_back(new QStandardItem(QString::number(PlotSymbol::NoSymbol)));
+    t2.push_back(new QStandardItem("1"));
+    t2.push_back(new QStandardItem(QString::number(Qt::NoPen)));
+    t2.push_back(new QStandardItem("1"));
+    model->appendRow(t2);
+  }
 }
 
 void SaxsviewConfig::setCurveTemplates(QStandardItemModel *model) {
@@ -71,6 +96,7 @@ void SaxsviewConfig::setCurveTemplates(QStandardItemModel *model) {
          << "error-bar-style" << "error-bar-width";
 
   settings().beginGroup("Templates");
+  settings().remove("template");
   settings().beginWriteArray("template");
 
   for (int i = 0; i < model->rowCount(); ++i) {
@@ -122,6 +148,65 @@ void SaxsviewConfig::templateForCurveType(int type, QPen& line,
   errors.setWidth(settings().value("error-bar-width", 1).toInt());
   errors.setColor(Qt::lightGray);
 
+  settings().endArray();
+  settings().endGroup();
+}
+
+void SaxsviewConfig::defaultColors(QList<QColor>& lineColor,
+                                   QList<QColor>& errorBarColor) const {
+  int count;
+
+  settings().beginGroup("Default Colors");
+  count = settings().beginReadArray("lineColors");
+  for (int i = 0; i < count; ++i) {
+    settings().setArrayIndex(i);
+    lineColor.push_back(qVariantValue<QColor>(settings().value("color", QColor())));
+  }
+  settings().endArray();
+
+  count = settings().beginReadArray("errorBarColors");
+  for (int i = 0; i < count; ++i) {
+    settings().setArrayIndex(i);
+    errorBarColor.push_back(qVariantValue<QColor>(settings().value("color", QColor())));
+  }
+  settings().endArray();
+  settings().endGroup();
+
+  //
+  // Defaults
+  //
+  if (lineColor.isEmpty()) {
+    lineColor.push_back(QColor("red"));
+    lineColor.push_back(QColor("blue"));
+    lineColor.push_back(QColor("lightgreen"));
+    lineColor.push_back(QColor("khaki"));
+    lineColor.push_back(QColor("aqua"));
+    lineColor.push_back(QColor("greenyellow"));
+  }
+
+  if (errorBarColor.isEmpty()) {
+    errorBarColor.push_back(QColor("lightgray"));
+  }
+}
+
+void SaxsviewConfig::setDefaultColors(const QList<QColor>& lineColor,
+                                      const QList<QColor>& errorBarColor) {
+  settings().beginGroup("Default Colors");
+
+  settings().remove("lineColors");
+  settings().beginWriteArray("lineColors");
+  for (int i = 0; i < lineColor.size(); ++i) {
+    settings().setArrayIndex(i);
+    settings().setValue("color", lineColor[i]);
+  }
+  settings().endArray();
+
+  settings().remove("errorBarColors");
+  settings().beginWriteArray("errorBarColors");
+  for (int i = 0; i < errorBarColor.size(); ++i) {
+    settings().setArrayIndex(i);
+    settings().setValue("color", errorBarColor[i]);
+  }
   settings().endArray();
   settings().endGroup();
 }
