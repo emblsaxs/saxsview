@@ -20,17 +20,20 @@
 #ifndef SAXSVIEW_COLORBUTTON_H
 #define SAXSVIEW_COLORBUTTON_H
 
-#include <QPushButton>
-#include <QColor>
+#include <QToolButton>
+class QColor;
 
-class ColorButton : public QPushButton {
+/**
+ * NOTE ColorButtons require an explicit StrongFocus to be set
+ *      to work with models!
+ */
+class ColorButton : public QToolButton {
   Q_OBJECT
 
   Q_PROPERTY (QColor color
               READ color
               WRITE setColor
-              NOTIFY colorChanged
-              USER true);
+              NOTIFY colorChanged);
 
 public:
   ColorButton(QWidget *parent = 0L);
@@ -41,6 +44,7 @@ public:
 public slots:
   void getColor();
   void setColor(const QColor&);
+  void setColor(const QString&);
 
 signals:
   void colorChanged(const QColor&);
@@ -50,7 +54,8 @@ protected:
   void updateIcon();
 
 private:
-  QColor mColor;
+  class ColorButtonPrivate;
+  ColorButtonPrivate *p;
 };
 
 #endif // !SAXSVIEW_COLORBUTTON_H

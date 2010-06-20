@@ -21,30 +21,84 @@
 
 #include <QtGui>
 
-ColorButton::ColorButton(QWidget *parent) : QPushButton(parent) {
+static QIcon colorIcon(const QColor& color, const QSize& size) {
+  QPixmap pixmap(size);
+
+  QPainter painter;
+  painter.begin(&pixmap);
+  painter.setBrush(QBrush(color));
+  painter.setPen(QPen(Qt::black));
+  painter.drawRect(pixmap.rect());
+  painter.end();
+
+  return QIcon(pixmap);
+}
+
+
+
+class ColorButton::ColorButtonPrivate {
+public:
+  ColorButtonPrivate(ColorButton *btn)
+   : color(Qt::white),
+     menu(new QMenu),
+     actionMapper(new QSignalMapper) {
+
+    QSize size(16, 16);
+    foreach (QString name, QColor::colorNames()) {
+      QAction *action = menu->addAction(colorIcon(QColor(name), size), name);
+      action->setIconVisibleInMenu(true);
+      connect(action, SIGNAL(triggered()),
+              actionMapper, SLOT(map()));
+      actionMapper->setMapping(action, name);
+    }
+
+    connect(actionMapper, SIGNAL(mapped(const QString&)),
+            btn, SLOT(setColor(const QString&)));
+  }
+
+  ~ColorButtonPrivate() {
+    delete actionMapper;
+    delete menu;
+  }
+
+  QColor color;
+  QMenu *menu;
+  QSignalMapper *actionMapper;
+};
+
+
+ColorButton::ColorButton(QWidget *parent)
+ : QToolButton(parent), p(new ColorButtonPrivate(this)) {
+
+  setMenu(p->menu);
+
   connect(this, SIGNAL(clicked()), SLOT(getColor()));
-  setColor(Qt::white);
 }
 
 ColorButton::~ColorButton() {
+  delete p;
 }
 
 QColor ColorButton::color() const {
-  return mColor;
+  return p->color;
 }
 
 void ColorButton::getColor() {
-  QColor color = QColorDialog::getColor(mColor, this);
+  QColor color = QColorDialog::getColor(p->color, this);
   if (color.isValid())
     setColor(color);
 }
 
 void ColorButton::setColor(const QColor& color) {
-  if (mColor != color) {
-    mColor = color;
+  if (p->color != color) {
+    p->color = color;
     updateIcon();
-    emit colorChanged(mColor);
+    emit colorChanged(p->color);
   }
+}
+
+void ColorButton::setColor(const QString& name) {
+  setColor(QColor(name));
 }
 
 void ColorButton::resizeEvent(QResizeEvent *) {
@@ -52,16 +106,5 @@ void ColorButton::resizeEvent(QResizeEvent *) {
 }
 
 void ColorButton::updateIcon() {
-  QPixmap pixmap(width() * 0.40, 16);
-
-  QPainter painter;
-  painter.begin(&pixmap);
-  painter.setBrush(QBrush(mColor));
-  painter.setPen(QPen(Qt::black));
-  painter.drawRect(pixmap.rect());
-  painter.end();
-
-  QIcon icon(pixmap);
-  setIconSize(pixmap.size());
-  setIcon(icon);
+  setIcon(colorIcon(p->color, iconSize()));
 }

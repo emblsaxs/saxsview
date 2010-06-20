@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>536</width>
+    <width>521</width>
     <height>351</height>
    </rect>
   </property>
@@ -82,13 +82,6 @@
         </property>
        </widget>
       </item>
-      <item row="3" column="3">
-       <widget class="ColorButton" name="btnLineColor">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="4" column="0">
        <widget class="QLabel" name="lblSymbolStyle">
         <property name="text">
@@ -125,13 +118,6 @@
         </property>
        </widget>
       </item>
-      <item row="4" column="3">
-       <widget class="ColorButton" name="btnSymbolStyleColor">
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
       <item row="5" column="0">
        <widget class="QLabel" name="lblErrorBarStyle">
         <property name="text">
@@ -165,13 +151,6 @@
         </property>
         <property name="minimum">
          <number>1</number>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="3">
-       <widget class="ColorButton" name="btnErrorBarStyleColor">
-        <property name="text">
-         <string/>
         </property>
        </widget>
       </item>
@@ -262,6 +241,81 @@
         </property>
        </widget>
       </item>
+      <item row="5" column="3">
+       <widget class="ColorButton" name="btnErrorBarStyleColor">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="popupMode">
+         <enum>QToolButton::DelayedPopup</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="3">
+       <widget class="ColorButton" name="btnSymbolStyleColor">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="popupMode">
+         <enum>QToolButton::DelayedPopup</enum>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="3">
+       <widget class="ColorButton" name="btnLineColor">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="focusPolicy">
+         <enum>Qt::StrongFocus</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>32</width>
+          <height>16</height>
+         </size>
+        </property>
+        <property name="popupMode">
+         <enum>QToolButton::DelayedPopup</enum>
+        </property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -272,8 +326,8 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>20</width>
-       <height>30</height>
+       <width>357</width>
+       <height>4</height>
       </size>
      </property>
     </spacer>
@@ -293,7 +347,7 @@
   </customwidget>
   <customwidget>
    <class>ColorButton</class>
-   <extends>QPushButton</extends>
+   <extends>QToolButton</extends>
    <header>saxsview_colorbutton.h</header>
   </customwidget>
  </customwidgets>

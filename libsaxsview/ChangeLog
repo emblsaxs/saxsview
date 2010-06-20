@@ -1,5 +1,16 @@
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_colorbutton.h: Rebased ColorButton from PushButton
+	to ToolButton.
+	(setColor): New overload (SignalMapper can not convert color
+	names to QColor).
+	* saxsview_colorbutton.cpp: Rebased ColorButton from PushButton
+	to ToolButton.
+	(colorIcon): New.
+	* saxsview_configpage_curve.ui: Promote QToolButtons to ColorButton.
+
+2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_colorbutton.h: Defined 'color' property; moved
 	out of namespace Saxsview.
 	* saxsview_colorbutton.cpp: Moved out of namespace Saxsview.
