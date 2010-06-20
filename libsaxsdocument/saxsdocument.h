@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS document creation and access.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -31,9 +31,12 @@ extern "C" {
 #include "saxsproperty.h"
 
 enum {
-  SAXS_CURVE_SCATTERING_DATA = 1,
-  SAXS_CURVE_PROBABILITY_DATA,
-  SAXS_CURVE_USER_DATA = 100
+  SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA = 0x1,
+  SAXS_CURVE_THEORETICAL_SCATTERING_DATA = 0x2,
+  SAXS_CURVE_SCATTERING_DATA = SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA
+                                |SAXS_CURVE_THEORETICAL_SCATTERING_DATA,
+  SAXS_CURVE_PROBABILITY_DATA = 0x4,
+  SAXS_CURVE_USER_DATA = 0x10000
 };
 
 

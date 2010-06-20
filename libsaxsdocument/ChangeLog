@@ -1,3 +1,17 @@
+2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.h: Modified enum to be used as bitfield;
+	re-defined SAXS_CURVE_SCATTERING_DATA as combination of
+	experimental and theroretical curves.
+	* saxsdocument.c: (saxs_document_curve_find): Do not check for
+	type match, but bit match.
+	(saxs_curve_find_next): Likewise.
+	* atsas_dat.c (parse_data): Set curve type according to columns.
+	* atsas_fir_fit.c (parse_data): Likewise.
+	* atsas_int.c: Likewise.
+	* atsas_out.c: Likewise.
+	* cansas_xml.c: Likewise.
+
 2009-12-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_out.c (parse_scattering_data): Parse extrapolated part of

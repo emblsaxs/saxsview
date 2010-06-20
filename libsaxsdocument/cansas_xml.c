@@ -3,7 +3,7 @@
  * See also:
  *   http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation
  *
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -48,7 +48,7 @@ static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr rea
       if (xmlStrEqual(name, BAD_CAST("SASdata"))) {
         xmlChar *title = xmlTextReaderGetAttribute(reader, "name");
         curve = saxs_document_add_curve(doc, (const char*)title,
-                                        SAXS_CURVE_SCATTERING_DATA);
+                                        SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
         if (title)
           xmlFree(title);
 

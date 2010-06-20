@@ -1,6 +1,6 @@
 /*
  * Read files in .fir/.fit-formats (e.g. written by DAMMIN, OLIGOMER, ...).
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -53,12 +53,12 @@ static int parse_data(struct saxs_document *doc,
     case 3:
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 1, 1.0, -1, "data",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) != 0)
         return -1;
 
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 2, 1.0, -1, "fit",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
         return -1;
 
       return 0;
@@ -66,12 +66,12 @@ static int parse_data(struct saxs_document *doc,
     case 4:
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 1, 1.0, 2, "data",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) != 0)
         return -1;
 
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 3, 1.0, -1, "fit",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
         return -1;
 
       return 0;
@@ -79,12 +79,12 @@ static int parse_data(struct saxs_document *doc,
     case 5:
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 1, 1.0, 3, "data",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) != 0)
         return -1;
 
       if (saxs_reader_columns_parse(doc, firstline, lastline,
                                     0, 1.0, 2, 1.0, -1, "fit",
-                                    SAXS_CURVE_SCATTERING_DATA) != 0)
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
         return -1;
 
       return 0;

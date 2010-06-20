@@ -1,6 +1,6 @@
 /*
  * Read files in .out-format (e.g. written by GNOM).
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -154,8 +154,8 @@ static int parse_scattering_data(struct saxs_document *doc,
                                  struct line *lastline) {
 
   saxs_curve *curve_exp, *curve_reg;
-  curve_exp = saxs_document_add_curve(doc, "data", SAXS_CURVE_SCATTERING_DATA);
-  curve_reg = saxs_document_add_curve(doc, "fit", SAXS_CURVE_SCATTERING_DATA);
+  curve_exp = saxs_document_add_curve(doc, "data", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+  curve_reg = saxs_document_add_curve(doc, "fit", SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   /*
    * Skip empty and header lines until extrapolated data is
@@ -176,8 +176,7 @@ static int parse_scattering_data(struct saxs_document *doc,
                       &s, &ireg) == 2) {
       saxs_curve_add_data(curve_reg, s, 0.0, ireg, 0.0);
 
-    }  else
-      return -1;
+    }
 
     firstline = firstline->next;
   }

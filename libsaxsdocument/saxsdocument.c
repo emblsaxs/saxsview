@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS document creation and access.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -148,7 +148,7 @@ saxs_curve*
 saxs_document_curve_find(saxs_document *doc, int type) {
   saxs_curve *curve = doc ? doc->doc_curves_head : NULL;
 
-  while (curve && curve->curve_type != type)
+  while (curve && !(curve->curve_type & type))
     curve = curve->next;
 
   return curve;
@@ -159,7 +159,7 @@ saxs_curve_find_next(saxs_curve *curve, int type) {
   if (curve)
     curve = curve->next;
 
-  while (curve && curve->curve_type != type)
+  while (curve && !(curve->curve_type & type))
     curve = curve->next;
 
   return curve;

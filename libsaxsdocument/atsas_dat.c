@@ -1,6 +1,6 @@
 /*
  * Read files in .dat-format (used by EMBL-Hamburg).
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -121,14 +121,14 @@ static int parse_data(struct saxs_document *doc,
                                        firstline, lastline, 
                                        0, 1.0, 1, 1.0, 2,
                                        "data",
-                                       SAXS_CURVE_SCATTERING_DATA) ? -1 : 0;
+                                       SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) ? -1 : 0;
 
     case 2:
       return saxs_reader_columns_parse(doc,
                                        firstline, lastline, 
                                        0, 1.0, 1, 1.0, -1,
                                        "data",
-                                       SAXS_CURVE_SCATTERING_DATA) ? -1 : 0;
+                                       SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) ? -1 : 0;
 
     default:
       return -1;

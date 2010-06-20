@@ -1,6 +1,6 @@
 /*
  * Read files in .int-format (e.g. written by CRYSOL).
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -49,26 +49,26 @@ static int parse_data(struct saxs_document *doc,
   /* s vs I_final */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
                                 0, 1.0, 1, 1.0, -1, "final",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
+                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
 
   /* s vs I_atomic */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
                                 0, 1.0, 2, 1.0, -1, "atomic",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
+                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
 
     return -1;
 
   /* s vs I_excluded_volume */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
                                 0, 1.0, 3, 1.0, -1, "excluded volume",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
+                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
 
   /* s vs I_hydration_shell */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
                                 0, 1.0, 4, 1.0, -1, "hydration shell",
-                                SAXS_CURVE_SCATTERING_DATA) != 0)
+                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
 
   return 0;
