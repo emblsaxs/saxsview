@@ -1,3 +1,16 @@
+2010-06-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewmainwindow.cpp (setupToolBars): Prepare subwindow-specific
+	toolbar.
+	(subWindowActivated): Fill toolbar with subwindow-specific actions.
+	* saxsviewsubwindow.h (saxsviewActions): New.
+	* saxsviewsubwindow.cpp (saxsviewActions): New.
+	* saxsviewplotwindow.h (saxsviewActions): New.
+	(explode): New.
+	* saxsviewplotwindow.cpp (setupActions): New.
+	(saxsviewActions): New.
+	(explode): New.
+
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewmainwindow.cpp (setupMenus): Create 'Settings' before

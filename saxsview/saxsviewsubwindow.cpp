@@ -1,6 +1,6 @@
 /*
  * Interface for view subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -21,13 +21,17 @@
 #include "saxsviewsubwindow.h"
 #include "saxsview_plot.h"
 
-#include <QMessageBox>
+#include <QtGui>
 
 SaxsviewSubWindow::SaxsviewSubWindow(QWidget *parent)
  : QMdiSubWindow(parent) {
 }
 
 SaxsviewSubWindow::~SaxsviewSubWindow() {
+}
+
+QList<QAction*> SaxsviewSubWindow::saxsviewActions() const {
+  return QList<QAction*>();
 }
 
 void SaxsviewSubWindow::configure() {

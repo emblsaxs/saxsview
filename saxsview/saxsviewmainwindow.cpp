@@ -65,7 +65,7 @@ public:
   QMenu *menuPlot, *menuWindow, *menuSettings, *menuHelp;
 
   // toolbars
-  QToolBar *saxsviewToolBar, *plotToolBar;
+  QToolBar *saxsviewToolBar, *plotToolBar, *subwindowToolBar;
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
@@ -307,6 +307,9 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   plotToolBar->addActions(actionGroupZoomMove->actions());
   plotToolBar->addSeparator();
   plotToolBar->addAction(actionConfigurePlot);
+
+  subwindowToolBar = mw->addToolBar("subwindow Toolbar");
+  mw->removeToolBar(subwindowToolBar);
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
@@ -577,6 +580,8 @@ void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
 }
 
 void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
+  removeToolBar(p->subwindowToolBar);
+
   if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(w)) {
     //
     // Synchronize the scale of the subwindow with the local
@@ -592,6 +597,18 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
     //
     p->actionZoom->setChecked(subWindow->zoomEnabled());
     p->actionMove->setChecked(subWindow->moveEnabled());
+
+    //
+    // Add subwindows specifc actions to the corresponding toolbar.
+    //
+    if (!subWindow->saxsviewActions().isEmpty()) {
+      p->subwindowToolBar->clear();
+      foreach (QAction *action, subWindow->saxsviewActions())
+        p->subwindowToolBar->addAction(action);
+
+      addToolBar(p->subwindowToolBar);
+      p->subwindowToolBar->show();
+    }
   }
 
   //

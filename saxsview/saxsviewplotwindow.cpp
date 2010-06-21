@@ -1,6 +1,6 @@
 /*
  * Implementation of 1D-plot subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -26,25 +26,19 @@
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
 
-#include <QDebug>
-#include <QDragEnterEvent>
-#include <QDragMoveEvent>
-#include <QDropEvent>
-#include <QEvent>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QMessageBox>
-#include <QString>
-#include <QUrl>
+#include <QtGui>
 
 class SaxsviewPlotWindow::SaxsviewPlotWindowPrivate {
 public:
   SaxsviewPlotWindowPrivate(SaxsviewPlotWindow *w) : sw(w) {}
 
   void setupUi();
+  void setupActions();
 
   SaxsviewPlotWindow *sw;
   Saxsview::Plot *plot;
+
+  QList<QAction*> actions;
 };
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
@@ -57,10 +51,22 @@ void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
   plot->installEventFilter(sw);
 }
 
+void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupActions() {
+  QAction *action;
+
+  action = new QAction("E&xplode", sw);
+  connect(action, SIGNAL(triggered()),
+          sw, SLOT(explode()));
+
+  actions.push_back(action);
+}
+
 SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewPlotWindowPrivate(this)) {
 
   p->setupUi();
+  p->setupActions();
+
   setScale(Saxsview::Plot::Log10Scale);
 
   static int id = 1;
@@ -86,6 +92,10 @@ bool SaxsviewPlotWindow::zoomEnabled() const {
 
 bool SaxsviewPlotWindow::moveEnabled() const {
   return p->plot->moveEnabled();
+}
+
+QList<QAction*> SaxsviewPlotWindow::saxsviewActions() const {
+  return p->actions;
 }
 
 void SaxsviewPlotWindow::load(const QString& fileName) {
@@ -176,6 +186,25 @@ void SaxsviewPlotWindow::configure() {
   Saxsview::PlotConfigDialog dlg(p->plot, this);
   dlg.exec();
 
+  p->plot->replot();
+}
+
+void SaxsviewPlotWindow::explode() {
+  QStringList fileNames;
+  foreach (Saxsview::PlotCurve *curve, p->plot->curves())
+    fileNames << curve->fileName();
+  fileNames.removeDuplicates();
+
+  double factor = pow(10.0, floor(fileNames.size() / 2.0));
+  foreach (Saxsview::PlotCurve *curve, p->plot->curves())
+    curve->setScalingFactorY(factor / pow(10.0, fileNames.indexOf(curve->fileName())));
+
+  //
+  // When scaling like this, it is not unlikely that curves
+  // have been moved out of the current zoom range. Adjust
+  // accordingly.
+  //
+  p->plot->setZoomBase();
   p->plot->replot();
 }
 

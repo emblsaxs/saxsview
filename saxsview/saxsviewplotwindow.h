@@ -1,6 +1,6 @@
 /*
  * Implementation of 1D-plot subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -37,6 +37,8 @@ public:
   bool zoomEnabled() const;
   bool moveEnabled() const;
 
+  QList<QAction*> saxsviewActions() const;
+
 public slots:
   void load(const QString& fileName);
   void exportAs(const QString& fileName);
@@ -47,6 +49,7 @@ public slots:
   void setMoveEnabled(bool);
   void setScale(int);
   void configure();
+  void explode();
 
 protected:
   bool eventFilter(QObject*, QEvent*);

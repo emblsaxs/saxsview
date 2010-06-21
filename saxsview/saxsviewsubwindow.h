@@ -1,6 +1,6 @@
 /*
  * Interface for view subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -22,6 +22,9 @@
 #define SAXSVIEW_SUBWINDOW_H
 
 #include <QMdiSubWindow>
+#include <QList>
+class Action;
+
 
 class SaxsviewSubWindow : public QMdiSubWindow {
   Q_OBJECT
@@ -33,6 +36,12 @@ public:
   virtual int scale() const = 0;
   virtual bool zoomEnabled() const = 0;
   virtual bool moveEnabled() const = 0;
+
+  //
+  // QWidget::actions() also exists, but it already
+  // contains window-specific actions.
+  //
+  virtual QList<QAction*> saxsviewActions() const;
 
 public slots:
   virtual void load(const QString& fileName) = 0;
