@@ -1,3 +1,10 @@
+2010-06-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_configpage_curve.ui: increased maximum range of scaling
+	spin boxes.
+	* saxsview_configpage_curve.cpp (reset): Display filename without
+	path.
+
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_configpage_curve.ui: Fixed tab order.

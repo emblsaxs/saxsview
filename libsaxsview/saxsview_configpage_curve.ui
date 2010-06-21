@@ -172,7 +172,11 @@
        </widget>
       </item>
       <item row="9" column="1">
-       <widget class="QDoubleSpinBox" name="spinScaleX"/>
+       <widget class="QDoubleSpinBox" name="spinScaleX">
+        <property name="maximum">
+         <double>10000.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="9" column="2">
        <widget class="QLabel" name="lblScaleY">
@@ -185,7 +189,11 @@
        </widget>
       </item>
       <item row="9" column="3">
-       <widget class="QDoubleSpinBox" name="spinScaleY"/>
+       <widget class="QDoubleSpinBox" name="spinScaleY">
+        <property name="maximum">
+         <double>99999999.000000000000000</double>
+        </property>
+       </widget>
       </item>
       <item row="10" column="0" colspan="4">
        <widget class="Line" name="line_3">
@@ -195,7 +203,11 @@
        </widget>
       </item>
       <item row="11" column="1">
-       <widget class="QSpinBox" name="spinEvery"/>
+       <widget class="QSpinBox" name="spinEvery">
+        <property name="suffix">
+         <string> th</string>
+        </property>
+       </widget>
       </item>
       <item row="11" column="0">
        <widget class="QLabel" name="lblEvery">

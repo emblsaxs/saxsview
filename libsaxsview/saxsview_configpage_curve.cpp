@@ -125,7 +125,7 @@ void CurveConfigPage::apply() {
 void CurveConfigPage::reset() {
   foreach (PlotCurve *curve, p->plot->curves()) {
     QList<QStandardItem*> row;
-    row.push_back(new QStandardItem(curve->fileName()));
+    row.push_back(new QStandardItem(QFileInfo(curve->fileName()).fileName()));
     row.push_back(new QStandardItem(curve->title()));
     row[1]->setCheckable(true);
     row[1]->setCheckState(curve->isVisible() ? Qt::Checked : Qt::Unchecked);
