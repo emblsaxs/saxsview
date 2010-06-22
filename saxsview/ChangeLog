@@ -1,3 +1,7 @@
+2010-06-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Specified output location of config.h.
+
 2010-06-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewmainwindow.cpp (setupToolBars): Prepare subwindow-specific

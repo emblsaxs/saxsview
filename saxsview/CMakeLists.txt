@@ -11,7 +11,7 @@ qt4_wrap_cpp (saxsview_moc saxsviewmainwindow.h
                            saxsviewimagewindow.h
                            saxsviewplotwindow.h)
 
-configure_file ("config.h.in" "config.h")
+configure_file (config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 
 add_executable (saxsviewapp
                 main.cpp
