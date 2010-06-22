@@ -64,13 +64,15 @@ Optional dependencies which are used if found on the build system:
 </p>
 <p>Dependecies less commonly found (Qwt, CBFlib) on average systems come 
 together with the <i>saxsview</i> sources.</p>
+<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
+Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
 
-<h3>Building saxsview</h3>
+<h3>Building saxsview from distribution packages</h3>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
 apply for Windows or MacOSX builds:
 <pre>
-  $> tar xfz saxsview-0.1.0.tar.gz
-  $> cd saxsview-0.1.0
+  $> tar xfz saxsview-0.2.0.tar.gz
+  $> cd saxsview-0.2.0
   $> mkdir build && build
   $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
   $> make
@@ -78,8 +80,20 @@ apply for Windows or MacOSX builds:
   $> make install
 </pre>
 </p>
-<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
-Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
+
+<h3>Building saxsview from svn</h3>
+<p>The commands listed here are for a bash-shell on Linux. Similar commands
+apply for Windows or MacOSX builds:
+<pre>
+  $> svn co https://saxsview.svn.sourceforge.net/svnroot/saxsview/trunk saxsview
+  $> cd saxsview
+  $> mkdir build && build
+  $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
+  $> make
+  $> make test      # optional, check that libsaxsdocument works
+  $> make install
+</pre>
+</p>
 
 
 <h2>Licenses</h2>
@@ -96,12 +110,13 @@ LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
 
 <h2>Releases and Milestones</h2>
 <p><ul>
+  <li>2010/06/20 - plot configuration refactored; configurable curve templates and configurable default colors added
   <li>2010/06/08 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.2.0</a> released</li>
   <li>2009/09/27 - initial support for the cansas-XML file format added</li>
   <li>2009/09/23 - support for 32-bit TIFF-files as written by PILATUS detectors added</li>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
 </ul></p>
 
-<p align="center">Last updated 2010-06-08</p>
+<p align="center">Last updated 2010-06-22</p>
 </body>
 </html>
