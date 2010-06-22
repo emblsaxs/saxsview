@@ -1,6 +1,6 @@
 /*
  * Implementation of 2D-images subwindows.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -36,6 +36,8 @@ public:
   int scale() const;
   bool zoomEnabled() const;
   bool moveEnabled() const;
+
+  QList<QAction*> saxsviewActions() const;
 
 public slots:
   void load(const QString& fileName);

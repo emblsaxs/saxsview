@@ -1,5 +1,15 @@
 2010-06-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewimagewindow.h (saxsviewActions): New.
+	* saxsviewimagewindow.cpp (setupActions): New.
+	(updateActions): New.
+	(setupSignalMappers): New.
+	(ctor): Set up image-specific actions and signal mappers.
+	(load): Update previous/next actions after successfull load.
+	(saxsviewActions): New.
+
+2010-06-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Specified output location of config.h.
 
 2010-06-21  Daniel Franke  <dfranke@users.sourceforge.net>

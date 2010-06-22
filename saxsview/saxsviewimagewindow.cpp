@@ -25,17 +25,7 @@
 #include "saxsimage.h"
 #include "saxsimage_format.h"
 
-#include <QDebug>
-#include <QDragEnterEvent>
-#include <QDragMoveEvent>
-#include <QDropEvent>
-#include <QEvent>
-#include <QFileDialog>
-#include <QFileInfo>
-#include <QMessageBox>
-#include <QSharedPointer>
-#include <QString>
-#include <QUrl>
+#include <QtGui>
 
 #include "qwt_color_map.h"
 #include "qwt_plot_layout.h"
@@ -133,6 +123,10 @@ public:
   SaxsviewImageWindowPrivate(SaxsviewImageWindow *w) : sw(w) {}
 
   void setupUi();
+  void setupActions();
+  void updateActions(const QString& fileName);
+  void setupSignalMappers();
+
   void setupImage();
   void setScale(Saxsview::Plot::PlotScale);
 
@@ -140,6 +134,10 @@ public:
   Saxsview::Plot *plot;
   Saxsview::Plot::PlotScale scale;
   Saxsview::Image *image;
+
+  QAction *actionPrevious, *actionNext;
+  QList<QAction*> actions;
+  QSignalMapper *fileNameMapper;
 };
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupUi() {
@@ -147,6 +145,102 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupUi() {
 
   plot = new Saxsview::Plot(sw);
   sw->setWidget(plot);
+}
+
+void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupActions() {
+  QStyle *style = qApp->style();
+  QAction *action;
+
+  actionPrevious = new QAction("&Previous", sw);
+  actionPrevious->setIcon(style->standardIcon(QStyle::SP_ArrowBack));
+  actionPrevious->setMenu(new QMenu);
+  actionPrevious->setEnabled(false);
+
+  actionNext = new QAction("&Next", sw);
+  actionNext->setIcon(style->standardIcon(QStyle::SP_ArrowForward));
+  actionNext->setMenu(new QMenu);
+  actionNext->setEnabled(false);
+
+  actions.push_back(actionPrevious);
+  actions.push_back(actionNext);
+}
+
+void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupSignalMappers() {
+  //
+  // Map previous/next actions to load-slot.
+  //
+  fileNameMapper = new QSignalMapper(sw);
+
+  connect(fileNameMapper, SIGNAL(mapped(const QString&)),
+          sw, SLOT(load(const QString&)));
+
+  connect(actionPrevious, SIGNAL(triggered()),
+          fileNameMapper, SLOT(map()));
+  fileNameMapper->setMapping(actionPrevious, "");
+
+  connect(actionNext, SIGNAL(triggered()),
+          fileNameMapper, SLOT(map()));
+  fileNameMapper->setMapping(actionNext, "");
+}
+
+void SaxsviewImageWindow::SaxsviewImageWindowPrivate::updateActions(const QString& fileName) {
+  QFileInfo fileInfo(fileName);
+  QDir fileDir = fileInfo.dir();
+
+  const QStringList entries = fileDir.entryList(QDir::NoFilter, QDir::Name);
+  const int currentIndex = entries.indexOf(fileInfo.fileName());
+
+  //
+  // Walk the directory entries. For each file that may be shown,
+  // generate a menu entry for the "Previous" action; but 10 at most.
+  // The first entry in the menu gets the shortcut assigned (to make
+  // it show up in the list, otherwise the shortcut could also be
+  // assigned to the actual action).
+  //
+  actionPrevious->menu()->clear();
+  actionPrevious->setToolTip("No previous file.");
+  for (int i = currentIndex - 1, j = 0; i >= 0 && j < 10; --i) {
+    fileInfo.setFile(fileDir, entries[i]);
+    if (canShow(fileInfo.filePath())) {
+      QAction *action = actionPrevious->menu()->addAction(fileInfo.fileName());
+      connect(action, SIGNAL(triggered()),
+              fileNameMapper, SLOT(map()));
+      fileNameMapper->setMapping(action, fileInfo.filePath());
+
+      if (j == 0) {
+        action->setShortcut(QKeySequence::Back);
+        actionPrevious->setToolTip(QString("Previous: %1").arg(fileInfo.fileName()));
+        fileNameMapper->setMapping(actionPrevious, fileInfo.filePath());
+      }
+
+      ++j;
+    }
+  }
+  actionPrevious->setEnabled(!actionPrevious->menu()->isEmpty());
+
+  //
+  // Likewise for "Next".
+  //
+  actionNext->menu()->clear();
+  actionNext->setToolTip("No next file.");
+  for (int i = currentIndex + 1, j = 0; i < entries.size() && j < 10; ++i) {
+    fileInfo.setFile(fileDir, entries[i]);
+    if (canShow(fileInfo.filePath())) {
+      QAction *action = actionNext->menu()->addAction(fileInfo.fileName());
+      connect(action, SIGNAL(triggered()),
+              fileNameMapper, SLOT(map()));
+      fileNameMapper->setMapping(action, fileInfo.filePath());
+
+      if (j == 0) {
+        action->setShortcut(QKeySequence::Forward);
+        actionNext->setToolTip(QString("Next: %1").arg(fileInfo.fileName()));
+        fileNameMapper->setMapping(actionNext, fileInfo.filePath());
+      }
+
+      ++j;
+    }
+  }
+  actionNext->setEnabled(!actionNext->menu()->isEmpty());
 }
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupImage() {
@@ -193,6 +287,8 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setScale(Saxsview::Plot::P
 SaxsviewImageWindow::SaxsviewImageWindow(QWidget *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewImageWindowPrivate(this)) {
   p->setupUi();
+  p->setupActions();
+  p->setupSignalMappers();
   p->setupImage();
 
   setScale(Saxsview::Plot::Log10Scale);
@@ -219,10 +315,16 @@ bool SaxsviewImageWindow::moveEnabled() const {
   return p->plot->moveEnabled();
 }
 
+QList<QAction*> SaxsviewImageWindow::saxsviewActions() const {
+  return p->actions;
+}
+
 void SaxsviewImageWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())
     return;
+
+  setCursor(Qt::WaitCursor);
 
   saxs_image *image = saxs_image_create();
   if (saxs_image_read(image, fileName.toAscii(), 0L) != 0) {
@@ -231,10 +333,13 @@ void SaxsviewImageWindow::load(const QString& fileName) {
                           QString("Could not load file as image:\n"
                                   "'%1'.").arg(fileName));
     saxs_image_free(image);
+
+    unsetCursor();
     return;
   }
 
   setWindowTitle(fileName);
+  p->updateActions(fileName);
 
   p->image->detach();
   p->image->setData(new ImageData(image));
@@ -250,6 +355,8 @@ void SaxsviewImageWindow::load(const QString& fileName) {
 
   p->plot->setZoomBase(p->image->boundingRect());
   p->plot->replot();
+
+  unsetCursor();
 }
 
 void SaxsviewImageWindow::exportAs(const QString& fileName) {
@@ -279,6 +386,3 @@ void SaxsviewImageWindow::setMoveEnabled(bool on) {
 void SaxsviewImageWindow::setScale(int scale) {
   p->setScale((Saxsview::Plot::PlotScale)scale);
 }
-
-// void SaxsviewImageWindow::configure() {
-// }
