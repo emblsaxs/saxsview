@@ -37,8 +37,6 @@ public:
 
   SaxsviewPlotWindow *sw;
   Saxsview::Plot *plot;
-
-  QList<QAction*> actions;
 };
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
@@ -57,8 +55,6 @@ void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupActions() {
   action = new QAction("E&xplode", sw);
   connect(action, SIGNAL(triggered()),
           sw, SLOT(explode()));
-
-  actions.push_back(action);
 }
 
 SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
@@ -92,10 +88,6 @@ bool SaxsviewPlotWindow::zoomEnabled() const {
 
 bool SaxsviewPlotWindow::moveEnabled() const {
   return p->plot->moveEnabled();
-}
-
-QList<QAction*> SaxsviewPlotWindow::saxsviewActions() const {
-  return p->actions;
 }
 
 void SaxsviewPlotWindow::load(const QString& fileName) {

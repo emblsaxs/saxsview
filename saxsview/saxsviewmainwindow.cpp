@@ -580,7 +580,8 @@ void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
 }
 
 void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
-  removeToolBar(p->subwindowToolBar);
+  if (p->subwindowToolBar)
+    removeToolBar(p->subwindowToolBar);
 
   if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(w)) {
     //
@@ -599,15 +600,12 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
     p->actionMove->setChecked(subWindow->moveEnabled());
 
     //
-    // Add subwindows specifc actions to the corresponding toolbar.
+    // Add subwindows specifc toolbar (if any).
     //
-    if (!subWindow->saxsviewActions().isEmpty()) {
-      p->subwindowToolBar->clear();
-      foreach (QAction *action, subWindow->saxsviewActions())
-        p->subwindowToolBar->addAction(action);
-
-      addToolBar(p->subwindowToolBar);
+    p->subwindowToolBar = subWindow->createToolBar();
+    if (p->subwindowToolBar) {
       p->subwindowToolBar->show();
+      addToolBar(p->subwindowToolBar);
     }
   }
 

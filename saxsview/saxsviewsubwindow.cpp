@@ -30,8 +30,8 @@ SaxsviewSubWindow::SaxsviewSubWindow(QWidget *parent)
 SaxsviewSubWindow::~SaxsviewSubWindow() {
 }
 
-QList<QAction*> SaxsviewSubWindow::saxsviewActions() const {
-  return QList<QAction*>();
+QToolBar* SaxsviewSubWindow::createToolBar() {
+  return 0L;
 }
 
 void SaxsviewSubWindow::configure() {

@@ -74,14 +74,14 @@ public:
   QwtDoubleInterval range() const {
     return QwtDoubleInterval(mMin, mMax);
   }
-
-  double value(double x, double y) const {
-    return saxs_image_value(p.data()->image, (int)floor(x), (int)floor(y));
+  void setMin(int n) {
+    mMin = qMax(n, 1);
   }
 
-//   QSize rasterHint(const QwtDoubleRect& rect) const {
-//     return rect.size().toSize();
-//   }
+  double value(double x, double y) const {
+    double z = saxs_image_value(p.data()->image, (int)floor(x), (int)floor(y));
+    return z < mMin ? 0.0 : z;
+  }
 
 private:
   QSharedPointer<ImagePointerHolder> p;
@@ -126,6 +126,7 @@ public:
   void setupActions();
   void updateActions(const QString& fileName);
   void setupSignalMappers();
+  void setupToolBar();
 
   void setupImage();
   void setScale(Saxsview::Plot::PlotScale);
@@ -135,8 +136,9 @@ public:
   Saxsview::Plot::PlotScale scale;
   Saxsview::Image *image;
 
-  QAction *actionPrevious, *actionNext;
-  QList<QAction*> actions;
+  QAction *actionPrevious, *actionNext, *actionThreshold;
+  QSpinBox *spinThreshold;
+  QToolBar *toolBar;
   QSignalMapper *fileNameMapper;
 };
 
@@ -160,9 +162,21 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupActions() {
   actionNext->setIcon(style->standardIcon(QStyle::SP_ArrowForward));
   actionNext->setMenu(new QMenu);
   actionNext->setEnabled(false);
+}
 
-  actions.push_back(actionPrevious);
-  actions.push_back(actionNext);
+void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupToolBar() {
+  spinThreshold = new QSpinBox(sw);
+  spinThreshold->setRange(1, 1e12);
+  spinThreshold->setAccelerated(true);
+  spinThreshold->setSingleStep(1);
+  connect(spinThreshold, SIGNAL(valueChanged(int)),
+          sw, SLOT(setThreshold(int)));
+
+  toolBar = new QToolBar(sw);
+
+  toolBar->addAction(actionPrevious);
+  toolBar->addAction(actionNext);
+  actionThreshold = toolBar->addWidget(spinThreshold);
 }
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupSignalMappers() {
@@ -288,6 +302,7 @@ SaxsviewImageWindow::SaxsviewImageWindow(QWidget *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewImageWindowPrivate(this)) {
   p->setupUi();
   p->setupActions();
+  p->setupToolBar();
   p->setupSignalMappers();
   p->setupImage();
 
@@ -315,8 +330,8 @@ bool SaxsviewImageWindow::moveEnabled() const {
   return p->plot->moveEnabled();
 }
 
-QList<QAction*> SaxsviewImageWindow::saxsviewActions() const {
-  return p->actions;
+QToolBar* SaxsviewImageWindow::createToolBar() {
+  return p->toolBar;
 }
 
 void SaxsviewImageWindow::load(const QString& fileName) {
@@ -348,6 +363,8 @@ void SaxsviewImageWindow::load(const QString& fileName) {
   const QwtDoubleInterval range = p->image->data()->range();
   p->plot->axisWidget(QwtPlot::yRight)->setColorMap(range,
                                                     p->image->colorMap());
+
+  p->spinThreshold->setValue(1);
 
   p->plot->setAxisScale(QwtPlot::yRight,
                         range.minValue(),
@@ -385,4 +402,17 @@ void SaxsviewImageWindow::setMoveEnabled(bool on) {
 
 void SaxsviewImageWindow::setScale(int scale) {
   p->setScale((Saxsview::Plot::PlotScale)scale);
+}
+
+void SaxsviewImageWindow::setThreshold(int n) {
+  QwtScaleWidget *scale = p->plot->axisWidget(QwtPlot::yRight);
+
+  QwtDoubleInterval range = scale->colorBarInterval();
+  range.setMinValue(n);
+
+  scale->setColorMap(range, p->image->colorMap());
+
+  dynamic_cast<ImageData*>(p->image->data())->setMin(n);
+
+  p->plot->replot();
 }

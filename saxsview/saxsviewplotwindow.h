@@ -37,8 +37,6 @@ public:
   bool zoomEnabled() const;
   bool moveEnabled() const;
 
-  QList<QAction*> saxsviewActions() const;
-
 public slots:
   void load(const QString& fileName);
   void exportAs(const QString& fileName);

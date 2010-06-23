@@ -1,3 +1,22 @@
+2010-06-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewsubwindow.h (saxsviewActions): Removed.
+	(createToolBar): New.
+	* saxsviewsubwindow.cpp (saxsviewActions): Removed.
+	(createToolBar): New.
+	* saxsviewplotwindow.h (saxsviewActions): Removed.
+	* saxsviewplotwindow.cpp (saxsviewActions): Removed.
+	* saxsviewimagewindow.h (saxsviewActions): Removed.
+	(createToolBar): New.
+	(setThreshold): New.
+	* saxsviewimagewindow.cpp (saxsviewActions): Removed.
+	(createToolBar): New.
+	(setupToolBar): New.
+	(load): Reset threshold.
+	(setThreshold): New.
+	* saxsviewmainwindow.cpp (subWindowActivated): Add/remove
+	subwindow toolbar.
+
 2010-06-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewimagewindow.h (saxsviewActions): New.

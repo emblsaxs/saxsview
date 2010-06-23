@@ -37,7 +37,7 @@ public:
   bool zoomEnabled() const;
   bool moveEnabled() const;
 
-  QList<QAction*> saxsviewActions() const;
+  QToolBar* createToolBar();
 
 public slots:
   void load(const QString& fileName);
@@ -48,6 +48,9 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(int);
+
+private slots:
+  void setThreshold(int);
 
 private:
   class SaxsviewImageWindowPrivate;

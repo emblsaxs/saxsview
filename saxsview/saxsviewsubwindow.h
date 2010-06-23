@@ -23,8 +23,7 @@
 
 #include <QMdiSubWindow>
 #include <QList>
-class Action;
-
+class QToolBar;
 
 class SaxsviewSubWindow : public QMdiSubWindow {
   Q_OBJECT
@@ -37,11 +36,7 @@ public:
   virtual bool zoomEnabled() const = 0;
   virtual bool moveEnabled() const = 0;
 
-  //
-  // QWidget::actions() also exists, but it already
-  // contains window-specific actions.
-  //
-  virtual QList<QAction*> saxsviewActions() const;
+  virtual QToolBar* createToolBar();
 
 public slots:
   virtual void load(const QString& fileName) = 0;
