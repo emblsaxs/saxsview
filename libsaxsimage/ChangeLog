@@ -1,8 +1,19 @@
-2009-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+2010-06-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.h (saxs_image_value): Changed return value from
+	unsigned to signed.
+	(saxs_image_value_min): Likewise.
+	(saxs_image_value_max): Likewise.
+	* saxsimage.c (saxs_image_value): Changed return value from
+	unsigned to signed.
+	(saxs_image_value_min): Likewise.
+	(saxs_image_value_max): Likewise.
+
+2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Fixed linking on Win32.
 
-2009-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
+2010-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Fixed install file names and location.
 

@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -53,13 +53,13 @@ saxs_image_width(saxs_image *image);
 size_t
 saxs_image_height(saxs_image *image);
 
-size_t
+long
 saxs_image_value(saxs_image *image, int x, int y);
 
-size_t
+long
 saxs_image_value_min(saxs_image *image);
 
-size_t
+long
 saxs_image_value_max(saxs_image *image);
 
 

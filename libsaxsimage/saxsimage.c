@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -108,55 +108,55 @@ saxs_image_height(saxs_image *image) {
            : 0;
 }
 
-size_t
+long
 saxs_image_value(saxs_image *image, int x, int y) {
   return image && image->image_format && image->image_format->value
            ? image->image_format->value(image->image_private_data, x, y)
            : 0;
 }
 
-static size_t
+static long
 image_value_min(saxs_image *image) {
   size_t i, j, min = INT_MAX;
 
-  const int width = saxs_image_width(image);
-  const int height = saxs_image_height(image);
+  const size_t width = saxs_image_width(image);
+  const size_t height = saxs_image_height(image);
 
   for (i = 0; i < width; ++i)
     for (j = 0; j < height; ++j) {
-      size_t value = saxs_image_value(image, i, j);
-      if (min > value)
+      long value = saxs_image_value(image, i, j);
+      if (min > value && value >= 0)
         min = value;
     }
 
   return min;
 }
 
-size_t
+long
 saxs_image_value_min(saxs_image *image) {
   return image && image->image_format && image->image_format->value_min
            ? image->image_format->value_min(image->image_private_data)
            : image_value_min(image);
 }
 
-static size_t
+static long
 image_value_max(saxs_image *image) {
   size_t i, j, max = 0;
 
-  const int width = saxs_image_width(image);
-  const int height = saxs_image_height(image);
+  const size_t width = saxs_image_width(image);
+  const size_t height = saxs_image_height(image);
 
   for (i = 0; i < width; ++i)
     for (j = 0; j < height; ++j) {
-      size_t value = saxs_image_value(image, i, j);
-      if (max < value)
+      long value = saxs_image_value(image, i, j);
+      if (max < value && value >= 0)
         max = value;
     }
 
   return max;
 }
 
-size_t
+long
 saxs_image_value_max(saxs_image *image) {
   return image && image->image_format && image->image_format->value_max
            ? image->image_format->value_max(image->image_private_data)
