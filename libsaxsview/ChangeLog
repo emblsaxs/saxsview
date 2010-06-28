@@ -1,3 +1,10 @@
+2010-06-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	Patch contributed by Alexey Kikhney.
+	* saxsview_config.cpp (curveTemplates): Change initial experimental
+	data template to filled circles.
+	(defaultColors): A more sophisticated default color scheme.
+
 2010-06-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_configpage_curve.ui: increased maximum range of scaling

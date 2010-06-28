@@ -68,13 +68,13 @@ void SaxsviewConfig::curveTemplates(QStandardItemModel *model) const {
   if (model->rowCount() == 0) {
     QList<QStandardItem*> t1, t2;
 
-    t1.push_back(new QStandardItem("open circles w/ errors"));
-    t1.push_back(new QStandardItem(QString::number(Qt::NoPen)));            // line style
-    t1.push_back(new QStandardItem("1"));                                   // line width
-    t1.push_back(new QStandardItem(QString::number(PlotSymbol::Ellipse)));  // symbol style
-    t1.push_back(new QStandardItem("4"));                                   // symbol size
-    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));        // error bar style
-    t1.push_back(new QStandardItem("1"));                                   // error bar width
+    t1.push_back(new QStandardItem("filled circles w/ errors"));
+    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));              // line style
+    t1.push_back(new QStandardItem("1"));                                         // line width
+    t1.push_back(new QStandardItem(QString::number(PlotSymbol::FilledEllipse)));  // symbol style
+    t1.push_back(new QStandardItem("4"));                                         // symbol size
+    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));              // error bar style
+    t1.push_back(new QStandardItem("1"));                                         // error bar width
     model->appendRow(t1);
 
     t2.push_back(new QStandardItem("solid line w/o errors"));
@@ -176,16 +176,25 @@ void SaxsviewConfig::defaultColors(QList<QColor>& lineColor,
   // Defaults
   //
   if (lineColor.isEmpty()) {
-    lineColor.push_back(QColor("red"));
-    lineColor.push_back(QColor("blue"));
-    lineColor.push_back(QColor("lightgreen"));
-    lineColor.push_back(QColor("khaki"));
-    lineColor.push_back(QColor("aqua"));
-    lineColor.push_back(QColor("greenyellow"));
+    lineColor.push_back(QColor( 55, 104, 184));
+    lineColor.push_back(QColor(127, 207, 215));
+    lineColor.push_back(QColor(228,  26,  28));
+    lineColor.push_back(QColor(238, 131, 181));
+    lineColor.push_back(QColor(166,  86,  40));
+    lineColor.push_back(QColor( 52,  47, 145));
+    lineColor.push_back(QColor( 62, 175,  59));
+    lineColor.push_back(QColor(255, 236,   0));
   }
 
   if (errorBarColor.isEmpty()) {
-    errorBarColor.push_back(QColor("lightgray"));
+    errorBarColor.push_back(QColor(196, 219, 255));
+    errorBarColor.push_back(QColor(222, 245, 245));
+    errorBarColor.push_back(QColor(255, 180, 181));
+    errorBarColor.push_back(QColor(255, 217, 236));
+    errorBarColor.push_back(QColor(255, 212, 190));
+    errorBarColor.push_back(QColor(200, 197, 255));
+    errorBarColor.push_back(QColor(201, 255, 199));
+    errorBarColor.push_back(QColor(255, 248, 170));
   }
 }
 
