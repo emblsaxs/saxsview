@@ -23,6 +23,7 @@
 
 #include "columns.h"
 #include "saxsdocument.h"
+#include "saxsdocument_format.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -30,6 +31,29 @@
 #ifndef MIN
   #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
+
+
+/**************************************************************************/
+int atsas_dat_check(const char *filename, const char *formatname);
+int atsas_dat_read(struct saxs_document *doc, const char *filename);
+int atsas_dat_write(struct saxs_document *doc, const char *filename);
+
+void
+saxs_document_format_register_atsas_dat() {
+  saxs_document_format atsas_dat = { "dat",
+                                     "ATSAS experimental data",
+                                     atsas_dat_check,
+                                     atsas_dat_read,
+                                     atsas_dat_write };
+
+  saxs_document_format_register(&atsas_dat);
+}
+
+/**************************************************************************/
+int atsas_dat_check(const char *filename, const char *formatname) {
+  return (!compare_format(formatname, "dat")
+          || !compare_format(suffix(filename), "dat")) ? 1 : 0;
+}
 
 /**************************************************************************/
 static int parse_header(struct saxs_document *doc,
@@ -209,19 +233,4 @@ int atsas_dat_write(struct saxs_document *doc, const char *filename) {
     fclose(fd);
 
   return 0;
-}
-
-
-/**************************************************************************/
-#include "saxsdocument_format.h"
-
-saxs_document_format*
-saxs_document_format_atsas_dat(const char *filename, const char *format) {
-  static saxs_document_format atsas_dat = { atsas_dat_read, atsas_dat_write };
-
-  if (!compare_format(format, "dat")
-      || !compare_format(suffix(filename), "dat"))
-    return &atsas_dat;
-
-  return NULL;
 }

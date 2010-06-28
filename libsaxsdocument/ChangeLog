@@ -1,3 +1,36 @@
+2010-06-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument_format.h (saxs_document_format_create): New.
+	(saxs_document_format_free): New.
+	(saxs_document_format_init): New.
+	(saxs_document_format_register): New.
+	(saxs_document_format_first): New.
+	(saxs_document_format_next): New.
+	* saxsdocument_format.c (compare_format): Handle NULL-filename.
+	(saxs_document_format_create): New.
+	(saxs_document_format_free): New.
+	(saxs_document_format_init): New.
+	(saxs_document_format_register): New.
+	(saxs_document_format_first): New.
+	(saxs_document_format_next): New.
+	* atsas_dat.c (saxs_document_format_register_atsas_dat): New.
+	(atsas_dat_check): New.
+	(saxs_document_format_atsas_dat): Removed.
+	* atsas_fir_fit.c (saxs_document_format_register_atsas_fir_fit): New.
+	(atsas_fir_fit_check): New.
+	(saxs_document_format_atsas_fir_fit): Removed.
+	* atsas_int.c (saxs_document_format_register_atsas_int): New.
+	(atsas_int_check): New.
+	(saxs_document_format_atsas_int): Removed.
+	* atsas_out.c (saxs_document_format_register_atsas_out): New.
+	(atsas_out_check): New.
+	(saxs_document_format_atsas_out): Removed.
+	(parse_scattering_data): Do not skip every second line.
+	* cansas_xml.c (saxs_document_format_register_cansas_xml): New.
+	(cansas_xml_1_0_check): New.
+	(cansas_xml_1_0_write): Removed stub.
+	(saxs_document_format_cansas_xml): Removed.
+
 2010-06-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument.h: Modified enum to be used as bitfield;

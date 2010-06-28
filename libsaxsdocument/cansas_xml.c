@@ -25,10 +25,80 @@
  */
 
 #include "saxsdocument.h"
+#include "saxsdocument_format.h"
 
 #include <stdlib.h>
 
 #include <libxml/xmlreader.h>
+
+
+/**************************************************************************/
+int cansas_xml_1_0_check(const char *filename, const char *format);
+int cansas_xml_1_0_read(struct saxs_document *doc, const char *filename);
+
+saxs_document_format_register_cansas_xml() {
+  saxs_document_format cansas_xml = { "xml",
+                                     "CANSAS Working Group XML v1.0",
+                                     cansas_xml_1_0_check,
+                                     cansas_xml_1_0_read,
+                                     NULL };
+
+  saxs_document_format_register(&cansas_xml);
+}
+
+/**************************************************************************/
+int cansas_xml_1_0_check(const char *filename, const char *format) {
+  xmlTextReaderPtr reader;
+
+  /* See cansas_xml_1_0_read() for an explanation. */
+#if LIBXML_VERSION <= 20703
+  xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
+  if (!xmldoc)
+    return NULL;
+
+  reader = xmlReaderWalker(xmldoc);
+#else
+  reader = xmlNewTextReaderFilename(filename);
+#endif
+
+  if (!reader)
+    return 0;
+
+  while (xmlTextReaderRead(reader) == 1) {
+    /* only check the very first element */
+    if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
+        && xmlTextReaderDepth(reader) == 0) {
+
+      xmlChar *name, *attr;
+
+      name = xmlTextReaderLocalName(reader);
+      if (!xmlStrEqual(name, BAD_CAST("SASroot"))) {
+        xmlFree(name);
+        break;
+      }
+      xmlFree(name);
+
+      attr = xmlTextReaderGetAttribute(reader, "version");
+      if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
+        xmlFree(attr);
+        xmlFreeTextReader(reader);
+#if LIBXML_VERSION <= 20703
+        xmlFreeDoc(xmldoc);
+#endif
+        return 1;
+      }
+      xmlFree(attr);
+
+      break;
+    }
+  }
+
+#if LIBXML_VERSION <= 20703
+  xmlFreeDoc(xmldoc);
+#endif
+  xmlFreeTextReader(reader);
+  return 0;
+}
 
 /**************************************************************************/
 /*
@@ -125,69 +195,4 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
 #endif
 
   return 0;
-}
-
-int cansas_xml_1_0_write(saxs_document *doc, const char *filename) {
-  return -1;
-}
-
-
-/**************************************************************************/
-#include "saxsdocument_format.h"
-
-saxs_document_format*
-saxs_document_format_cansas_xml(const char *filename, const char *format) {
-  static saxs_document_format cansas_xml_1_0 = { cansas_xml_1_0_read,
-                                                 cansas_xml_1_0_write };
-
-  xmlTextReaderPtr reader;
-
-  /* See cansas_xml_1_0_read() for an explanation. */
-#if LIBXML_VERSION <= 20703
-  xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
-  if (!xmldoc)
-    return NULL;
-
-  reader = xmlReaderWalker(xmldoc);
-#else
-  reader = xmlNewTextReaderFilename(filename);
-#endif
-
-  if (!reader)
-    return NULL;
-
-  while (xmlTextReaderRead(reader) == 1) {
-    /* only check the very first element */
-    if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
-        && xmlTextReaderDepth(reader) == 0) {
-
-      xmlChar *name, *attr;
-
-      name = xmlTextReaderLocalName(reader);
-      if (!xmlStrEqual(name, BAD_CAST("SASroot"))) {
-        xmlFree(name);
-        break;
-      }
-      xmlFree(name);
-
-      attr = xmlTextReaderGetAttribute(reader, "version");
-      if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
-        xmlFree(attr);
-        xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20703
-        xmlFreeDoc(xmldoc);
-#endif
-        return &cansas_xml_1_0;
-      }
-      xmlFree(attr);
-
-      break;
-    }
-  }
-
-#if LIBXML_VERSION <= 20703
-  xmlFreeDoc(xmldoc);
-#endif
-  xmlFreeTextReader(reader);
-  return NULL;
 }

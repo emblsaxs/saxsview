@@ -23,11 +23,34 @@
 
 #include "columns.h"
 #include "saxsdocument.h"
+#include "saxsdocument_format.h"
 
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
 
+
+/**************************************************************************/
+int atsas_out_check(const char *filename, const char *format);
+int atsas_out_read(struct saxs_document *doc, const char *filename);
+
+saxs_document_format_register_atsas_out() {
+  saxs_document_format atsas_out = { "out",
+                                     "ATSAS GNOM out files",
+                                     atsas_out_check,
+                                     atsas_out_read,
+                                     NULL };
+
+  saxs_document_format_register(&atsas_out);
+}
+
+/**************************************************************************/
+int atsas_out_check(const char *filename, const char *format) {
+  return (!compare_format(format, "out")
+          || !compare_format(suffix(filename), "out")) ? 1 : 0;
+}
+
+/**************************************************************************/
 /*
  * Find VALUE in "DELIM__VALUE__" where '__' is one or more 
  * whitespace or newline characters.
@@ -165,8 +188,6 @@ static int parse_scattering_data(struct saxs_document *doc,
   while (firstline != lastline) {
     double s, jexp, err, jreg, ireg;
 
-    firstline = firstline->next;
-
     if (sscanf(firstline->line_buffer, "%lf %lf %lf %lf %lf",
                &s, &jexp, &err, &jreg, &ireg) == 5) {
       saxs_curve_add_data(curve_exp, s, 0.0, jexp, err);
@@ -297,19 +318,4 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
 
   lines_free(lines);
   return 0;
-}
-
-
-/**************************************************************************/
-#include "saxsdocument_format.h"
-
-saxs_document_format*
-saxs_document_format_atsas_out(const char *filename, const char *format) {
-  static saxs_document_format atsas_out = { atsas_out_read, NULL };
-
-  if (!compare_format(format, "out")
-      || !compare_format(suffix(filename), "out"))
-    return &atsas_out;
-
-  return NULL;
 }

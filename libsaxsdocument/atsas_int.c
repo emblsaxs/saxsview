@@ -23,9 +23,31 @@
 
 #include "columns.h"
 #include "saxsdocument.h"
+#include "saxsdocument_format.h"
 
 #include <string.h>
 
+/**************************************************************************/
+int atsas_int_check(const char *filename, const char *format);
+int atsas_int_read(struct saxs_document *doc, const char *filename);
+
+saxs_document_format_register_atsas_int() {
+  saxs_document_format atsas_int = { "int",
+                                     "ATSAS theoretical intensities",
+                                     atsas_int_check,
+                                     atsas_int_read,
+                                     NULL };
+
+  saxs_document_format_register(&atsas_int);
+}
+
+/**************************************************************************/
+int atsas_int_check(const char *filename, const char *format) {
+  return  (!compare_format(format, "int")
+           || !compare_format(suffix(filename), "int")) ? 1 : 0;
+}
+
+/**************************************************************************/
 static int parse_header(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
   /*
@@ -99,18 +121,3 @@ int atsas_int_read(struct saxs_document *doc, const char *filename) {
   lines_free(lines);
   return 0;
 }
-
-/**************************************************************************/
-#include "saxsdocument_format.h"
-
-saxs_document_format*
-saxs_document_format_atsas_int(const char *filename, const char *format) {
-  static saxs_document_format atsas_int = { atsas_int_read, NULL };
-
-  if (!compare_format(format, "int")
-      || !compare_format(suffix(filename), "int"))
-    return &atsas_int;
-
-  return NULL;
-}
-

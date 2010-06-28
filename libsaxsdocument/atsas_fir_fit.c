@@ -23,9 +23,43 @@
 
 #include "columns.h"
 #include "saxsdocument.h"
+#include "saxsdocument_format.h"
 
 #include <string.h>
 
+/**************************************************************************/
+int atsas_fir_fit_check(const char *filename, const char *format);
+int atsas_fir_fit_read(struct saxs_document *doc, const char *filename);
+
+
+void saxs_document_format_register_atsas_fir_fit() {
+  saxs_document_format atsas_fir = { "fir",
+                                     "ATSAS fit against experimental data",
+                                     atsas_fir_fit_check,
+                                     atsas_fir_fit_read,
+                                     NULL };
+
+  saxs_document_format atsas_fit = { "fit",
+                                     "ATSAS fit against data",
+                                     atsas_fir_fit_check,
+                                     atsas_fir_fit_read,
+                                     NULL };
+
+  saxs_document_format_register(&atsas_fir);
+  saxs_document_format_register(&atsas_fit);
+}
+
+/**************************************************************************/
+int atsas_fir_fit_check(const char *filename, const char *format) {
+  return (!compare_format(format, "fir")
+          || !compare_format(suffix(filename), "fir")
+          || !compare_format(format, "fit")
+          || !compare_format(suffix(filename), "fit")) ? 1 : 0;
+}
+
+
+
+/**************************************************************************/
 static int parse_header(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
   /*
@@ -120,21 +154,4 @@ int atsas_fir_fit_read(struct saxs_document *doc, const char *filename) {
 
   lines_free(lines);
   return 0;
-}
-
-
-/**************************************************************************/
-#include "saxsdocument_format.h"
-
-saxs_document_format*
-saxs_document_format_atsas_fir_fit(const char *filename, const char *format) {
-  static saxs_document_format atsas_fir_fit = { atsas_fir_fit_read, NULL };
-
-  if (!compare_format(format, "fir")
-      || !compare_format(suffix(filename), "fir")
-      || !compare_format(format, "fit")
-      || !compare_format(suffix(filename), "fit"))
-    return &atsas_fir_fit;
-
-  return NULL;
 }

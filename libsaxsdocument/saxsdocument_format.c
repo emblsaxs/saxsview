@@ -1,6 +1,6 @@
 /*
  * Format handling of SAXS documents.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -29,44 +29,124 @@
 #include <string.h>
 #include <ctype.h>
 
-typedef saxs_document_format* (*format_handler)(const char *, const char*);
-
 saxs_document_format*
-saxs_document_format_atsas_dat(const char *, const char*);
+saxs_document_format_register_atsas_dat();
 saxs_document_format*
-saxs_document_format_atsas_fir_fit(const char *, const char*);
+saxs_document_format_register_atsas_fir_fit();
 saxs_document_format*
-saxs_document_format_atsas_int(const char *, const char*);
+saxs_document_format_register_atsas_int();
 saxs_document_format*
-saxs_document_format_atsas_out(const char *, const char*);
+saxs_document_format_register_atsas_out();
 
 #ifdef HAVE_LIBXML2
 saxs_document_format*
-saxs_document_format_cansas_xml(const char *, const char*);
+saxs_document_format_register_cansas_xml();
 #endif
+
+
+static int saxs_document_format_initialized = 0;
+static saxs_document_format *format_head = 0L, *format_tail = 0L;
+
+
+saxs_document_format*
+saxs_document_format_create() {
+  saxs_document_format *format = malloc(sizeof(saxs_document_format));
+
+  format->name = NULL;
+  format->description = NULL;
+  format->check = NULL;
+  format->read = NULL;
+  format->write = NULL;
+  format->next = NULL;
+
+  return format;
+}
+
+
+void
+saxs_document_format_free(saxs_document_format *format) {
+  if (format->name)
+    free((void*)format->name);
+
+  if (format->description)
+    free((void*)format->description);
+
+  free(format);
+}
+
+
+void
+saxs_document_format_init() {
+  if (saxs_document_format_initialized)
+    return;
+
+  /*
+   * TODO: is there a way (simple) to register known formats in a
+   *       platform independent way without enumerating them?
+   */
+  saxs_document_format_register_atsas_dat();
+  saxs_document_format_register_atsas_fir_fit();
+  saxs_document_format_register_atsas_int();
+  saxs_document_format_register_atsas_out();
+#ifdef HAVE_LIBXML2
+  saxs_document_format_register_cansas_xml;
+#endif
+
+  saxs_document_format_initialized = 1;
+}
+
+
+void
+saxs_document_format_register(const saxs_document_format *format) {
+  saxs_document_format *fmt = saxs_document_format_create();
+
+  if (format->name)
+    fmt->name = strdup(format->name);
+
+  if (format->description)
+    fmt->description = strdup(format->description);
+
+  fmt->check = format->check;
+  fmt->read = format->read;
+  fmt->write = format->write;
+  fmt->next = NULL;
+
+  if (format_tail) {
+    format_tail->next = fmt;
+    format_tail = fmt;
+
+  } else
+    format_head = format_tail = fmt;
+}
+
+
+saxs_document_format*
+saxs_document_format_first() {
+  if (!saxs_document_format_initialized)
+    saxs_document_format_init();
+
+  return format_head;
+}
+
+
+saxs_document_format*
+saxs_document_format_next(saxs_document_format *format) {
+  return format ? format->next : NULL;
+}
+
 
 saxs_document_format*
 saxs_document_format_find(const char *filename,
-                          const char *format) {
+                          const char *formatname) {
 
-  format_handler known_formats[] = {
-    saxs_document_format_atsas_dat,
-    saxs_document_format_atsas_fir_fit,
-    saxs_document_format_atsas_int,
-    saxs_document_format_atsas_out,
-#ifdef HAVE_LIBXML2
-    saxs_document_format_cansas_xml,
-#endif
-    NULL
-  };
+  saxs_document_format *format;
 
-  format_handler *fmt;
+  if (!saxs_document_format_initialized)
+    saxs_document_format_init();
 
-  for (fmt = known_formats; *fmt; ++fmt) {
-    saxs_document_format *handler = (*fmt)(filename, format);
-    if (handler)
-      return handler;
-  }
+  for (format = format_head; format != NULL; format = format->next)
+    if (format->check && format->check(filename, formatname))
+      return format;
 
   return NULL;
 }
@@ -93,6 +173,9 @@ int compare_format(const char *a, const char *b) {
 
 const char* suffix(const char *filename) {
   const char *p;
+
+  if (!filename)
+    return NULL;
 
   if (!strcmp(filename, "-"))
     return NULL;
