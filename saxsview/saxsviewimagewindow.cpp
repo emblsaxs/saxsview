@@ -384,12 +384,8 @@ void SaxsviewImageWindow::print() {
   p->plot->print();
 }
 
-void SaxsviewImageWindow::zoomIn() {
-//   p->plot->zoomIn();
-}
-
-void SaxsviewImageWindow::zoomOut() {
-//   p->plot->zoomOut();
+void SaxsviewImageWindow::zoomFit() {
+  p->plot->setZoomBase(p->image->boundingRect());
 }
 
 void SaxsviewImageWindow::setZoomEnabled(bool on) {

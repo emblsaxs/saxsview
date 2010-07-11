@@ -48,7 +48,7 @@ public:
   QAction *actionAbsScale, *actionLogScale;
   QActionGroup *actionGroupScale;
 
-  QAction *actionZoomIn, *actionZoomOut, *actionZoom, *actionMove;
+  QAction *actionZoomFit, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoomMove;
 
   // "Settings"-menu
@@ -92,28 +92,27 @@ SaxsviewMainWindow::SaxsviewMainWindowPrivate::SaxsviewMainWindowPrivate(Saxsvie
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
-  QStyle *style = qApp->style();
-
   //
   // "File"-menu
   //
   actionCreatePlotWindow = new QAction("&New Plot", mw);
-  actionCreatePlotWindow->setIcon(style->standardIcon(QStyle::SP_FileIcon));
+  actionCreatePlotWindow->setIcon(QIcon(":icons/document-new.png"));
   connect(actionCreatePlotWindow, SIGNAL(triggered()),
           mw, SLOT(createPlotWindow()));
 
   actionCreateImageWindow = new QAction("&New Image", mw);
-  actionCreateImageWindow->setIcon(style->standardIcon(QStyle::SP_FileIcon));
+  actionCreateImageWindow->setIcon(QIcon(":icons/document-new.png"));
   connect(actionCreateImageWindow, SIGNAL(triggered()),
           mw, SLOT(createImageWindow()));
 
   actionLoad = new QAction("&Open", mw);
-  actionLoad->setIcon(style->standardIcon(QStyle::SP_DirIcon));
+  actionLoad->setIcon(QIcon(":icons/document-open.png"));
   actionLoad->setShortcut(QKeySequence::Open);
   connect(actionLoad, SIGNAL(triggered()),
           mw, SLOT(load()));
 
   actionPrint = new QAction("&Print", mw);
+  actionPrint->setIcon(QIcon(":icons/document-print.png"));
   actionPrint->setShortcut(QKeySequence::Print);
   actionPrint->setEnabled(false);
   connect(actionPrint, SIGNAL(triggered()),
@@ -146,23 +145,21 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
   actionGroupScale->addAction(actionLogScale);
   actionGroupScale->setEnabled(false);
 
-  actionZoomIn = new QAction("Zoom &in", mw);
-  actionZoomIn->setEnabled(false);
-  connect(actionZoomIn, SIGNAL(triggered()),
-          mw, SLOT(zoomIn()));
-
-  actionZoomOut = new QAction("Zoom &out", mw);
-  actionZoomOut->setEnabled(false);
-  connect(actionZoomOut, SIGNAL(triggered()),
-          mw, SLOT(zoomOut()));
+  actionZoomFit = new QAction("Fit to Window", mw);
+  actionZoomFit->setIcon(QIcon(":icons/zoom-fit-best.png"));
+  actionZoomFit->setEnabled(false);
+  connect(actionZoomFit, SIGNAL(triggered()),
+          mw, SLOT(zoomFit()));
 
   actionZoom = new QAction("&Zoom", mw);
+  actionZoom->setIcon(QIcon(":icons/page-zoom.png"));
   actionZoom->setCheckable(true);
   actionZoom->setEnabled(false);
   connect(actionZoom, SIGNAL(toggled(bool)),
           mw, SLOT(setZoomEnabled(bool)));
 
   actionMove = new QAction("&Move", mw);
+  actionMove->setIcon(QIcon(":icons/input-mouse.png"));
   actionMove->setCheckable(true);
   actionMove->setChecked(false);
   actionMove->setEnabled(false);
@@ -176,11 +173,13 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupActions() {
 
   // "Settings"-menu
   actionConfigurePlot = new QAction("&Configure Plot", mw);
+  actionConfigurePlot->setIcon(QIcon(":icons/document-edit.png"));
   actionConfigurePlot->setEnabled(false);
   connect(actionConfigurePlot, SIGNAL(triggered()),
           mw, SLOT(configurePlot()));
 
   actionConfigureSaxsview = new QAction("&Configure Saxsview", mw);
+  actionConfigureSaxsview->setIcon(QIcon(":icons/configure.png"));
   connect(actionConfigureSaxsview, SIGNAL(triggered()),
           mw, SLOT(configureSaxsview()));
 
@@ -266,8 +265,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
   menuPlot = new QMenu("&Plot", mw);
   menuPlot->addActions(actionGroupScale->actions());
   menuPlot->addSeparator();
-  menuPlot->addAction(actionZoomIn);
-  menuPlot->addAction(actionZoomOut);
+  menuPlot->addAction(actionZoomFit);
+  menuPlot->addSeparator();
   menuPlot->addActions(actionGroupZoomMove->actions());
   menuBar->addMenu(menuPlot);
 
@@ -294,7 +293,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   mw->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
 
   saxsviewToolBar = mw->addToolBar("saxsview Toolbar");
-  QAction *action = saxsviewToolBar->addAction(qApp->style()->standardIcon(QStyle::SP_FileIcon), "New Plot");
+  QAction *action = saxsviewToolBar->addAction(QIcon(":icons/document-new.png"), "New Plot");
   connect(action, SIGNAL(triggered()),
           mw, SLOT(createPlotWindow()));
 //   action->setMenu(menuCreateSubWindow);
@@ -302,8 +301,8 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   plotToolBar = mw->addToolBar("plot Toolbar");
   plotToolBar->addAction(actionLoad);
   plotToolBar->addAction(actionPrint);
-  plotToolBar->addAction(actionZoomIn);
-  plotToolBar->addAction(actionZoomOut);
+  plotToolBar->addSeparator();
+  plotToolBar->addAction(actionZoomFit);
   plotToolBar->addActions(actionGroupZoomMove->actions());
   plotToolBar->addSeparator();
   plotToolBar->addAction(actionConfigurePlot);
@@ -472,14 +471,9 @@ void SaxsviewMainWindow::print() {
     currentSubWindow()->print();
 }
 
-void SaxsviewMainWindow::zoomIn() {
+void SaxsviewMainWindow::zoomFit() {
   if (currentSubWindow())
-    currentSubWindow()->zoomIn();
-}
-
-void SaxsviewMainWindow::zoomOut() {
-  if (currentSubWindow())
-    currentSubWindow()->zoomOut();
+    currentSubWindow()->zoomFit();
 }
 
 void SaxsviewMainWindow::setZoomEnabled(bool on) {
@@ -615,8 +609,7 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
   const bool on = (w != 0L);
   p->actionPrint->setEnabled(on);
   p->actionGroupScale->setEnabled(on);
-  p->actionZoomIn->setEnabled(on);
-  p->actionZoomOut->setEnabled(on);
+  p->actionZoomFit->setEnabled(on);
   p->actionZoom->setEnabled(on);
   p->actionMove->setEnabled(on);
   p->actionConfigurePlot->setEnabled(on);

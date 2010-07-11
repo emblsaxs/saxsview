@@ -154,12 +154,8 @@ void SaxsviewPlotWindow::print() {
   p->plot->print();
 }
 
-void SaxsviewPlotWindow::zoomIn() {
-//   p->plot->zoomIn();
-}
-
-void SaxsviewPlotWindow::zoomOut() {
-//   p->plot->zoomOut();
+void SaxsviewPlotWindow::zoomFit() {
+  p->plot->setZoomBase();
 }
 
 void SaxsviewPlotWindow::setZoomEnabled(bool on) {

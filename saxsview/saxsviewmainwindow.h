@@ -43,8 +43,7 @@ public slots:
 
   void exportAs(const QString& format);
   void print();
-  void zoomIn();
-  void zoomOut();
+  void zoomFit();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
   void setScale(int);

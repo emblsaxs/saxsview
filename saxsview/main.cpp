@@ -23,6 +23,8 @@
 #include "saxsviewmainwindow.h"
 
 int main(int argc, char **argv) {
+  Q_INIT_RESOURCE(saxsview);
+
   QApplication app(argc, argv);
   app.setOrganizationName("sourceforge");
   app.setOrganizationDomain("sourceforge.net");

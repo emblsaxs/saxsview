@@ -1,3 +1,45 @@
+2010-07-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* icons/: New subdirectory.
+	* icons/configure.png: New.
+	* icons/document-edit.png: New.
+	* icons/document-new.png: New.
+	* icons/document-open.png: New.
+	* icons/document-open-recent.png: New.
+	* icons/document-print.png: New.
+	* icons/document-save-as.png: New.
+	* icons/document-save.png: New.
+	* icons/input-mouse.png: New.
+	* icons/page-zoom.png: New.
+	* icons/window-close.png: New.
+	* icons/window-new.png: New.
+	* icons/zoom-fit-best.png: New.
+	* icons/zoom-in.png: New.
+	* icons/zoom-out.png: New.
+	* icons/README: New.
+	* saxsview.qrc: New.
+	* main.cpp: Initialize resources.
+	* saxsviewmainwindow.h (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewmainwindow.cpp (setupActions): Removed actionZoomIn,
+	actionZoomOut, added actionZoomFit; added icons to actions.
+	(setupMenus): Removed actionZoomIn, actionZoomOut, added
+	actionZoomFit.
+	(setupToolbars): Likewise.
+	(zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewsubwindow.h (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewplotwindow.h (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewplotwindow.cpp (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewimagewindow.h (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* saxsviewimagewindow.cpp (zoomIn, zoomOut): Removed.
+	(zoomFit): New.
+	* CMakeLists.txt: Handle resource file.
+
 2010-06-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewsubwindow.h (saxsviewActions): Removed.
