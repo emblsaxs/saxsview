@@ -1,3 +1,7 @@
+2010-07-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsdocument/lyzexp.exp: Fixed line type id.
+
 2009-08-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Fixed compiler warnings.
