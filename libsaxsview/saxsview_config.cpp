@@ -20,6 +20,9 @@
 #include "saxsview_config.h"
 #include "saxsview_plotcurve.h"
 
+#include "saxsdocument.h"
+#include "saxsdocument_format.h"
+
 #include <QtGui>
 
 namespace Saxsview {
@@ -109,48 +112,111 @@ void SaxsviewConfig::setCurveTemplates(QStandardItemModel *model) {
   settings().endGroup();
 }
 
-int SaxsviewConfig::currentCurveTemplate(int type) {
-  const QString key = "current-curve-template-%1";
+void SaxsviewConfig::fileTypeTemplates(QStandardItemModel *model) const {
+  QStringList column;
+  column << "format"
+         << QString("template-%1").arg(SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA)
+         << QString("template-%1").arg(SAXS_CURVE_THEORETICAL_SCATTERING_DATA)
+         << QString("template-%1").arg(SAXS_CURVE_PROBABILITY_DATA);
 
   settings().beginGroup("Templates");
-  int index = settings().value(key.arg(type)).toInt();
+  int n = settings().beginReadArray("file-type");
+
+  for (int i = 0; i < n; ++i) {
+    settings().setArrayIndex(i);
+    for (int j = 0; j < column.size(); ++j) {
+      QString value = settings().value(column[j]).toString();
+      model->setItem(i, j, new QStandardItem(value));
+    }
+  }
+
+  settings().endArray();
   settings().endGroup();
 
-  return index;
+  if (model->rowCount() == 0) {
+    saxs_document_format *fmt = saxs_document_format_first();
+    while (fmt) {
+      QList<QStandardItem*> row;
+      row.push_back(new QStandardItem(fmt->name));
+      row.push_back(new QStandardItem("0"));  // default for experimental data
+      row.push_back(new QStandardItem("0"));  // default for theoretical data
+      row.push_back(new QStandardItem("0"));  // default for probability data
+      model->appendRow(row);
+
+      fmt = saxs_document_format_next(fmt);
+    }
+  }
 }
 
-void SaxsviewConfig::setCurrentCurveTemplate(int type, int index) {
-  const QString key = "current-curve-template-%1";
+void SaxsviewConfig::setFileTypeTemplates(QStandardItemModel *model) {
+  QStringList column;
+  column << "format"
+         << QString("template-%1").arg(SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA)
+         << QString("template-%1").arg(SAXS_CURVE_THEORETICAL_SCATTERING_DATA)
+         << QString("template-%1").arg(SAXS_CURVE_PROBABILITY_DATA);
 
   settings().beginGroup("Templates");
-  settings().setValue(key.arg(type), index);
-  settings().endGroup();
-}
+  settings().remove("file-type");
+  settings().beginWriteArray("file-type");
 
-void SaxsviewConfig::templateForCurveType(int type, QPen& line,
-                                          PlotSymbol& symbol,
-                                          QPen& errors) {
-
-  int current = currentCurveTemplate(type);
-
-  settings().beginGroup("Templates");
-  settings().beginReadArray("template");
-
-  settings().setArrayIndex(current);
-
-  line.setStyle((Qt::PenStyle) settings().value("line-style", 0).toInt());
-  line.setWidth(settings().value("line-width", 1).toInt());
-
-  symbol.setStyle((Saxsview::PlotSymbol::Style) settings().value("symbol-style", 0).toInt());
-  symbol.setSize(settings().value("symbol-size", 1).toInt());
-
-  errors.setStyle((Qt::PenStyle) settings().value("error-bar-style", 0).toInt());
-  errors.setWidth(settings().value("error-bar-width", 1).toInt());
-  errors.setColor(Qt::lightGray);
+  for (int i = 0; i < model->rowCount(); ++i) {
+    settings().setArrayIndex(i);
+    for (int j = 0; j < column.size(); ++j)
+      settings().setValue(column[j], model->item(i, j)->text());
+  }
 
   settings().endArray();
   settings().endGroup();
 }
+
+/**
+ * Derive the format from curve->fileName() and use curve->type()
+ * to find the template to apply.
+ */
+void SaxsviewConfig::applyTemplate(PlotCurve *curve) const {
+  int n, template_id;
+  saxs_document_format *fmt;
+
+  settings().beginGroup("Templates");
+
+  fmt = saxs_document_format_find(qPrintable(curve->fileName()), 0L);
+  if (!fmt)
+    return;
+
+  n = settings().beginReadArray("file-type");
+  for (int i = 0; i < n; ++i) {
+    settings().setArrayIndex(i);
+    QString format = settings().value("format").toString();
+    if (format.compare(fmt->name, Qt::CaseInsensitive) == 0) {
+      template_id = settings().value(QString("template-%1").arg(curve->type())).toInt();
+      break;
+    }
+  }
+  settings().endArray();
+
+  settings().beginReadArray("template");
+  settings().setArrayIndex(template_id);
+
+  QPen line;
+  line.setStyle((Qt::PenStyle) settings().value("line-style", 0).toInt());
+  line.setWidth(settings().value("line-width", 1).toInt());
+  curve->setPen(line);
+
+  PlotSymbol symbol;
+  symbol.setStyle((Saxsview::PlotSymbol::Style) settings().value("symbol-style", 0).toInt());
+  symbol.setSize(settings().value("symbol-size", 1).toInt());
+  curve->setSymbol(symbol);
+
+  QPen errors;
+  errors.setStyle((Qt::PenStyle) settings().value("error-bar-style", 0).toInt());
+  errors.setWidth(settings().value("error-bar-width", 1).toInt());
+  curve->setErrorBarPen(errors);
+
+  settings().endArray();
+  settings().endGroup();
+}
+
+
 
 void SaxsviewConfig::defaultColors(QList<QColor>& lineColor,
                                    QList<QColor>& errorBarColor) const {

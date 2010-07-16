@@ -59,8 +59,6 @@ public:
 
   void updateLayout();
 
-  void defaultStyle(int, QPen&, PlotSymbol&, QPen&) const;
-
 public slots:
   void replot();
   void blockReplot(bool);

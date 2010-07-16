@@ -41,17 +41,24 @@ enum {
 class CurveTemplateConfigPage::CurveTemplateConfigPagePrivate {
 public:
   CurveTemplateConfigPagePrivate()
-   : model(new QStandardItemModel),
-     mapper(new QDataWidgetMapper) {
+   : templateModel(new QStandardItemModel),
+     templateMapper(new QDataWidgetMapper),
+     fileTypeModel(new QStandardItemModel),
+     fileTypeMapper(new QDataWidgetMapper) {
   }
 
   ~CurveTemplateConfigPagePrivate() {
-    delete mapper;
-    delete model;
+    delete templateMapper;
+    delete templateModel;
+    delete fileTypeModel;
+    delete fileTypeMapper;
   }
 
-  QStandardItemModel *model;
-  QDataWidgetMapper *mapper;
+  QStandardItemModel *templateModel;
+  QDataWidgetMapper *templateMapper;
+
+  QStandardItemModel *fileTypeModel;
+  QDataWidgetMapper *fileTypeMapper;
 };
 
 
@@ -60,34 +67,47 @@ CurveTemplateConfigPage::CurveTemplateConfigPage(QWidget *parent)
 
   setupUi(this);
 
-  templateList->setModel(p->model);
+  templateList->setModel(p->templateModel);
   connect(templateList->selectionModel(),
           SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
-          p->mapper, SLOT(setCurrentModelIndex(const QModelIndex&)));
-  connect(p->mapper, SIGNAL(currentIndexChanged (int)),
-          this, SLOT(setCurrentIndex(int)));
-
-  comboExperimentalCurveTemplate->setModel(p->model);
-  comboTheoreticalCurveTemplate->setModel(p->model);
-  comboProbabilityCurveTemplate->setModel(p->model);
-
-  reset();
-
-  p->mapper->setModel(p->model);
-  p->mapper->addMapping(editName, ColumnName);
-  p->mapper->addMapping(comboLineStyle, ColumnLineStyle, "currentStyle");
-  p->mapper->addMapping(spinLineWidth, ColumnLineWidth);
-  p->mapper->addMapping(comboSymbolStyle, ColumnSymbolStyle, "currentStyle");
-  p->mapper->addMapping(spinSymbolSize, ColumnSymbolSize);
-  p->mapper->addMapping(comboErrorBarStyle, ColumnErrorBarStyle, "currentStyle");
-  p->mapper->addMapping(spinErrorBarWidth, ColumnErrorBarWidth);
-  p->mapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
-  p->mapper->toFirst();
+          p->templateMapper, SLOT(setCurrentModelIndex(const QModelIndex&)));
+  connect(p->templateMapper, SIGNAL(currentIndexChanged(int)),
+          this, SLOT(setCurrentTemplateIndex(int)));
 
   connect(btnAdd, SIGNAL(clicked()),
           this, SLOT(addTemplate()));
   connect(btnRemove, SIGNAL(clicked()),
           this, SLOT(removeTemplate()));
+
+  fileTypeList->setModel(p->fileTypeModel);
+  connect(fileTypeList->selectionModel(),
+          SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+          p->fileTypeMapper, SLOT(setCurrentModelIndex(const QModelIndex&)));
+  connect(p->fileTypeMapper, SIGNAL(currentIndexChanged(int)),
+          this, SLOT(setCurrentFileTypeIndex(int)));
+
+  reset();
+
+  p->templateMapper->setModel(p->templateModel);
+  p->templateMapper->addMapping(editName, ColumnName);
+  p->templateMapper->addMapping(comboLineStyle, ColumnLineStyle, "currentStyle");
+  p->templateMapper->addMapping(spinLineWidth, ColumnLineWidth);
+  p->templateMapper->addMapping(comboSymbolStyle, ColumnSymbolStyle, "currentStyle");
+  p->templateMapper->addMapping(spinSymbolSize, ColumnSymbolSize);
+  p->templateMapper->addMapping(comboErrorBarStyle, ColumnErrorBarStyle, "currentStyle");
+  p->templateMapper->addMapping(spinErrorBarWidth, ColumnErrorBarWidth);
+  p->templateMapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
+  p->templateMapper->toFirst();
+
+  comboExperimentalCurveTemplate->setModel(p->templateModel);
+  comboTheoreticalCurveTemplate->setModel(p->templateModel);
+  comboProbabilityCurveTemplate->setModel(p->templateModel);
+
+  p->fileTypeMapper->setModel(p->fileTypeModel);
+  p->fileTypeMapper->addMapping(comboExperimentalCurveTemplate, 1, "currentIndex");
+  p->fileTypeMapper->addMapping(comboTheoreticalCurveTemplate, 2, "currentIndex");
+  p->fileTypeMapper->addMapping(comboProbabilityCurveTemplate, 3, "currentIndex");
+  p->fileTypeMapper->toFirst();
 }
 
 CurveTemplateConfigPage::~CurveTemplateConfigPage() {
@@ -95,32 +115,15 @@ CurveTemplateConfigPage::~CurveTemplateConfigPage() {
 }
 
 void CurveTemplateConfigPage::apply() {
-  config().setCurveTemplates(p->model);
-
-  config().setCurrentCurveTemplate(SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA,
-                                   comboExperimentalCurveTemplate->currentIndex());
-  config().setCurrentCurveTemplate(SAXS_CURVE_THEORETICAL_SCATTERING_DATA,
-                                   comboTheoreticalCurveTemplate->currentIndex());
-  config().setCurrentCurveTemplate(SAXS_CURVE_PROBABILITY_DATA,
-                                   comboProbabilityCurveTemplate->currentIndex());
+  config().setCurveTemplates(p->templateModel);
+  config().setFileTypeTemplates(p->fileTypeModel);
 }
 
 void CurveTemplateConfigPage::reset() {
-  config().curveTemplates(p->model);
+  config().curveTemplates(p->templateModel);
+  config().fileTypeTemplates(p->fileTypeModel);
 
-  if (p->model->rowCount() > 0) {
-    int index;
-    index = config().currentCurveTemplate(SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-    comboExperimentalCurveTemplate->setCurrentIndex(index);
-
-    index = config().currentCurveTemplate(SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
-    comboTheoreticalCurveTemplate->setCurrentIndex(index);
-
-    index = config().currentCurveTemplate(SAXS_CURVE_PROBABILITY_DATA);
-    comboProbabilityCurveTemplate->setCurrentIndex(index);
-  }
-
-  setEditorEnabled(p->model->rowCount() > 0);
+  setEditorEnabled(p->templateModel->rowCount() > 0);
 }
 
 void CurveTemplateConfigPage::addTemplate() {
@@ -134,10 +137,10 @@ void CurveTemplateConfigPage::addTemplate() {
   row.push_back(new QStandardItem(QString::number(Qt::NoPen)));
   row.push_back(new QStandardItem("1"));
 
-  p->model->appendRow(row);
-  p->mapper->toLast();
+  p->templateModel->appendRow(row);
+  p->templateMapper->toLast();
 
-  setEditorEnabled(p->model->rowCount() > 0);
+  setEditorEnabled(p->templateModel->rowCount() > 0);
 }
 
 void CurveTemplateConfigPage::removeTemplate() {
@@ -147,9 +150,9 @@ void CurveTemplateConfigPage::removeTemplate() {
                             msg.arg(editName->text()),
                             QMessageBox::Yes | QMessageBox::No,
                             QMessageBox::No) == QMessageBox::Yes)
-    p->model->removeRow(p->mapper->currentIndex());
+    p->templateModel->removeRow(p->templateMapper->currentIndex());
 
-  setEditorEnabled(p->model->rowCount() > 0);
+  setEditorEnabled(p->templateModel->rowCount() > 0);
 }
 
 void CurveTemplateConfigPage::setEditorEnabled(bool on) {
@@ -162,6 +165,7 @@ void CurveTemplateConfigPage::setEditorEnabled(bool on) {
   spinSymbolSize->setEnabled(on);
   comboErrorBarStyle->setEnabled(on);
   spinErrorBarWidth->setEnabled(on);
+  groupTemplatesByFileType->setEnabled(on);
 
   if (!on) {
     editName->setText("");
@@ -174,9 +178,15 @@ void CurveTemplateConfigPage::setEditorEnabled(bool on) {
   }
 }
 
-void CurveTemplateConfigPage::setCurrentIndex(int i) {
+void CurveTemplateConfigPage::setCurrentTemplateIndex(int i) {
   QItemSelectionModel *selModel = templateList->selectionModel();
-  selModel->setCurrentIndex(p->model->index(i, templateList->modelColumn()),
+  selModel->setCurrentIndex(p->templateModel->index(i, templateList->modelColumn()),
+                            QItemSelectionModel::ClearAndSelect);
+}
+
+void CurveTemplateConfigPage::setCurrentFileTypeIndex(int i) {
+  QItemSelectionModel *selModel = fileTypeList->selectionModel();
+  selModel->setCurrentIndex(p->fileTypeModel->index(i, fileTypeList->modelColumn()),
                             QItemSelectionModel::ClearAndSelect);
 }
 

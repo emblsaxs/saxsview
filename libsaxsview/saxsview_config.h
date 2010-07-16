@@ -27,7 +27,7 @@ class QStandardItemModel;
 
 namespace Saxsview {
 
-class PlotSymbol;
+class PlotCurve;
 
 
 class SaxsviewConfig {
@@ -35,14 +35,14 @@ public:
   void curveTemplates(QStandardItemModel*) const;
   void setCurveTemplates(QStandardItemModel*);
 
-  int currentCurveTemplate(int type);
-  void setCurrentCurveTemplate(int type, int index);
+  void fileTypeTemplates(QStandardItemModel*) const;
+  void setFileTypeTemplates(QStandardItemModel*);
 
-  void templateForCurveType(int type, QPen&, PlotSymbol&, QPen&);
+  void applyTemplate(PlotCurve* curve) const;
 
   void defaultColors(QList<QColor>&, QList<QColor>&) const;
   void setDefaultColors(const QList<QColor>&, const QList<QColor>&);
-  
+
 private:
   SaxsviewConfig();
   ~SaxsviewConfig();

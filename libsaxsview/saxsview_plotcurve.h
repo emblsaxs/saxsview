@@ -110,6 +110,8 @@ public:
   PlotCurve(int type, QObject *parent = 0L);
   ~PlotCurve();
 
+  int type() const;
+
   void attach(Plot *plot);
   void detach();
 

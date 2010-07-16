@@ -38,7 +38,8 @@ public:
 private slots:
   void addTemplate();
   void removeTemplate();
-  void setCurrentIndex(int);
+  void setCurrentTemplateIndex(int);
+  void setCurrentFileTypeIndex(int);
 
 private:
   void setEditorEnabled(bool);

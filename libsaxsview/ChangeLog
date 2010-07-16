@@ -1,3 +1,36 @@
+2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_config.h (currentCurveTemplate): Removed.
+	(setCurrentCurveTemplate): Removed.
+	(templateForCurveType): Removed.
+	(fileTypeTemplates): New.
+	(setFileTypeTemplates): New.
+	(applyTemplate): New.
+	* saxsview_config.cpp (currentCurveTemplate): Removed.
+	(setCurrentCurveTemplate): Removed.
+	(templateForCurveType): Removed.
+	(fileTypeTemplates): New.
+	(setFileTypeTemplates): New.
+	(applyTemplate): New.
+	* saxsview_plot.h (defaultStyle): Removed.
+	* saxsview_plot.cpp (defaultStyle): Removed.
+	(setStyle): New.
+	(addCurve): Set style of newly added curves.
+	* saxsview_plotcurve.h (type): New.
+	* saxsview_plotcurve.cpp (ctor): Do not apply template.
+	(type): New.
+	* saxsview_configpage_curvetemplate.ui: Moved list of templates
+	into the corresponding group box, added list of file types.
+	* saxsview_configpage_curvetemplate.h (setCurrentIndex): Removed.
+	(setCurrentTemplateIndex): New.
+	(setCurrentFileTypeIndex): New.
+	* saxsview_configpage_curvetemplate.cpp (ctor): Introduced model
+	and signal-mapper for templates-by-file-type.
+	(apply): Set templates and templates-by-file-type in config.
+	(reset): Get templates and templates-by-file-type from config.
+	(setCurrentTemplateIndex): New.
+	(setCurrentFileTypeIndex): New.
+
 2010-06-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	Patch contributed by Alexey Kikhney.

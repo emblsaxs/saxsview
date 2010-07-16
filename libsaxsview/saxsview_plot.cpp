@@ -54,7 +54,7 @@ public:
   void setupScales();
 
   void setupDefaultColors();
-  void defaultStyle(int, QPen&, PlotSymbol&, QPen&) const;
+  void setStyle(PlotCurve *curve);
 
   Plot *plot;
   PlotScale scale;
@@ -67,7 +67,7 @@ public:
   QwtPlotZoomer *zoomer;
   QList<PlotCurve*> curves;
   QList<QColor> defaultLineColor, defaultErrorBarColor;
-  mutable int currentLineColor, currentErrorBarColor;
+  int currentLineColor, currentErrorBarColor;
 };
 
 void Plot::PlotPrivate::setupCanvas() {
@@ -163,23 +163,25 @@ void Plot::PlotPrivate::setupScales() {
 
 void Plot::PlotPrivate::setupDefaultColors() {
   config().defaultColors(defaultLineColor, defaultErrorBarColor);
-  currentLineColor = 0; 
-  currentErrorBarColor = 0;
+  currentLineColor = currentErrorBarColor = 0; 
 }
 
-void Plot::PlotPrivate::defaultStyle(int type, QPen& line,
-                                     PlotSymbol& symbol,
-                                     QPen& errors) const {
-  QColor color;
+void Plot::PlotPrivate::setStyle(PlotCurve *curve) {
+  config().applyTemplate(curve);
 
-  config().templateForCurveType(type, line, symbol, errors);
+  QColor lineColor = defaultLineColor[currentLineColor++ % defaultLineColor.size()];
+  QPen linePen = curve->pen();
+  linePen.setColor(lineColor);
+  curve->setPen(linePen);
 
-  color = defaultLineColor[currentLineColor++ % defaultLineColor.size()];
-  line.setColor(color);
-  symbol.setColor(color);
+  PlotSymbol symbol = curve->symbol();
+  symbol.setColor(lineColor);
+  curve->setSymbol(symbol);
 
-  color = defaultErrorBarColor[currentErrorBarColor++ % defaultErrorBarColor.size()];
-  errors.setColor(color);
+  QColor errorBarColor = defaultErrorBarColor[currentErrorBarColor++ % defaultErrorBarColor.size()];
+  QPen errorPen = curve->errorBarPen();
+  errorPen.setColor(errorBarColor);
+  curve->setErrorBarPen(errorPen);
 }
 
 
@@ -303,6 +305,8 @@ void Plot::configure() {
 
 void Plot::addCurve(PlotCurve *curve) {
   p->curves.push_back(curve);
+  p->setStyle(curve);
+
   curve->attach(this);
 
   updateLayout();
@@ -363,11 +367,6 @@ void Plot::updateLayout() {
     legend()->setGeometry(width() - legendSizeHint.width() - 30, 30,
                           legendSizeHint.width(), legendSizeHint.height());
   }
-}
-
-void Plot::defaultStyle(int type, QPen& line, PlotSymbol& symbol,
-                        QPen& errors) const {
-  p->defaultStyle(type, line, symbol, errors);
 }
 
 void Plot::setZoomBase(const QRectF& rect) {

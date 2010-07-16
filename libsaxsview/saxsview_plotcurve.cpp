@@ -126,8 +126,7 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
  : type(t), curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
    scaleX(1.0), scaleY(1.0), every(1), errorBarsEnabled(true) {
 
-  QPen line, errors;
-  config().templateForCurveType(type, line, curveSymbol, errors);
+  // Template is applied by plot when attaching this curve.
 
   // data points
   curve = new QwtPlotCurve;
@@ -135,17 +134,14 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
   curve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol);
   curve->setLegendAttribute(QwtPlotCurve::LegendShowBrush);
   curve->setSymbol(curveSymbol.qwtSymbol());
-  curve->setPen(line);
 
   // error bars
   QwtIntervalSymbol *errorBar = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
   errorBar->setWidth(1);        // cap width
-  errorBar->setPen(errors);
 
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setItemAttribute(QwtPlotItem::Legend, false);
   errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
-  errorCurve->setSymbol(errorBar);
 }
 
 PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
@@ -181,14 +177,11 @@ PlotCurve::~PlotCurve() {
   delete p;
 }
 
+int PlotCurve::type() const {
+  return p->type;
+}
+
 void PlotCurve::attach(Plot *plot) {
-  QPen line, errors;
-
-  plot->defaultStyle(p->type, line, p->curveSymbol, errors);
-  setPen(line);
-  setSymbol(p->curveSymbol);
-  setErrorBarPen(errors);
-
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
 
