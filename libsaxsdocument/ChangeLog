@@ -1,3 +1,9 @@
+2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument_format.h (saxs_document_format_next): Fixed prototype.
+	* saxsdocument_format.c (saxs_document_format_init): Fixed
+	registration of cansas-xml.
+
 2010-06-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument_format.h (saxs_document_format_create): New.

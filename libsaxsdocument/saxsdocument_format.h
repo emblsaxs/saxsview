@@ -92,7 +92,7 @@ saxs_document_format_first();
 
 
 saxs_document_format*
-saxs_document_format_next();
+saxs_document_format_next(saxs_document_format*);
 
 
 /**

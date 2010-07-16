@@ -89,7 +89,7 @@ saxs_document_format_init() {
   saxs_document_format_register_atsas_int();
   saxs_document_format_register_atsas_out();
 #ifdef HAVE_LIBXML2
-  saxs_document_format_register_cansas_xml;
+  saxs_document_format_register_cansas_xml();
 #endif
 
   saxs_document_format_initialized = 1;
