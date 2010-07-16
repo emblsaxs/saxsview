@@ -1,5 +1,12 @@
 2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview/saxsviewmainwindow.cpp (ctor): Initialize status bar.
+	* saxsview/saxsviewimagewindow.cpp (ImagePicker): New.
+	(setupTracker): New.
+	(ctor): Initialize tracker.
+
+2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* icons/office-chart-line-stacked.png: New.
 	* saxsview.qrc: Include new icon.
 	* saxsviewplotwindow.h (createToolBar); New.

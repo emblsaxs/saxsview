@@ -28,7 +28,10 @@
 #include <QtGui>
 
 #include "qwt_color_map.h"
+#include "qwt_picker_machine.h"
+#include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
+#include "qwt_plot_picker.h"
 #include "qwt_plot_spectrogram.h"
 #include "qwt_raster_data.h"
 #include "qwt_scale_engine.h"
@@ -117,6 +120,28 @@ public:
 };
 
 
+class ImagePicker : public QwtPlotPicker {
+public:
+  ImagePicker(Saxsview::Image *img, QwtPlotCanvas *canvas)
+   : QwtPlotPicker(canvas), image(img) {
+  }
+
+  QwtText trackerTextF(const QPointF &pos) const {
+    static const QString format = "x=%1, y=%2, count=%3";
+    const int x = (int)pos.x(), y = (int)pos.y();
+
+    QStatusTipEvent event(format.arg(x, 4).arg(y, 4).arg(image->data()->value(x, y)));
+    qApp->sendEvent(qApp->activeWindow(), &event);
+
+    return QwtText();
+  }
+
+private:
+  Saxsview::Image *image;
+};
+
+
+
 
 class SaxsviewImageWindow::SaxsviewImageWindowPrivate {
 public:
@@ -127,6 +152,7 @@ public:
   void updateActions(const QString& fileName);
   void setupSignalMappers();
   void setupToolBar();
+  void setupTracker();
 
   void setupImage();
   void setScale(Saxsview::Plot::PlotScale);
@@ -140,6 +166,8 @@ public:
   QSpinBox *spinThreshold;
   QToolBar *toolBar;
   QSignalMapper *fileNameMapper;
+
+  QwtPicker *tracker;
 };
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupUi() {
@@ -177,6 +205,13 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupToolBar() {
   toolBar->addAction(actionPrevious);
   toolBar->addAction(actionNext);
   actionThreshold = toolBar->addWidget(spinThreshold);
+}
+
+
+void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupTracker() {
+  tracker = new ImagePicker(image, plot->canvas());
+  tracker->setStateMachine(new QwtPickerTrackerMachine);
+  tracker->setTrackerMode(QwtPicker::AlwaysOn);
 }
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupSignalMappers() {
@@ -305,6 +340,7 @@ SaxsviewImageWindow::SaxsviewImageWindow(QWidget *parent)
   p->setupToolBar();
   p->setupSignalMappers();
   p->setupImage();
+  p->setupTracker();
 
   setScale(Saxsview::Plot::Log10Scale);
 }

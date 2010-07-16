@@ -361,6 +361,8 @@ SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
   p->setupActions();
   p->setupToolbars();
   p->setupMenus();
+
+  statusBar();
 }
 
 SaxsviewMainWindow::~SaxsviewMainWindow() {
