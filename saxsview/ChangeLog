@@ -1,3 +1,12 @@
+2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* icons/office-chart-line-stacked.png: New.
+	* saxsview.qrc: Include new icon.
+	* saxsviewplotwindow.h (createToolBar); New.
+	* saxsviewplotwindow.cpp (setupToolbar): New.
+	(setupActions): Assign icon to explode-action.
+	(setupToolbar): New.
+
 2010-07-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* icons/: New subdirectory.

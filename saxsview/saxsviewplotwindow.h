@@ -37,6 +37,8 @@ public:
   bool zoomEnabled() const;
   bool moveEnabled() const;
 
+  QToolBar* createToolBar();
+
 public slots:
   void load(const QString& fileName);
   void exportAs(const QString& fileName);

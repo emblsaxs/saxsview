@@ -34,9 +34,14 @@ public:
 
   void setupUi();
   void setupActions();
+  void setupToolBar();
 
   SaxsviewPlotWindow *sw;
   Saxsview::Plot *plot;
+
+  QAction *actionExplode;
+
+  QToolBar *toolBar;
 };
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
@@ -50,18 +55,26 @@ void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
 }
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupActions() {
-  QAction *action;
-
-  action = new QAction("E&xplode", sw);
-  connect(action, SIGNAL(triggered()),
+  actionExplode = new QAction("E&xplode", sw);
+  actionExplode->setIcon(QIcon(":/icons/office-chart-line-stacked.png"));
+  connect(actionExplode, SIGNAL(triggered()),
           sw, SLOT(explode()));
 }
+
+void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupToolBar() {
+  toolBar = new QToolBar(sw);
+
+  toolBar->addAction(actionExplode);
+}
+
+
 
 SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewPlotWindowPrivate(this)) {
 
   p->setupUi();
   p->setupActions();
+  p->setupToolBar();
 
   setScale(Saxsview::Plot::Log10Scale);
 
@@ -88,6 +101,10 @@ bool SaxsviewPlotWindow::zoomEnabled() const {
 
 bool SaxsviewPlotWindow::moveEnabled() const {
   return p->plot->moveEnabled();
+}
+
+QToolBar* SaxsviewPlotWindow::createToolBar() {
+  return p->toolBar;
 }
 
 void SaxsviewPlotWindow::load(const QString& fileName) {
