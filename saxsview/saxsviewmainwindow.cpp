@@ -290,7 +290,7 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupMenus() {
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   mw->setIconSize(QSize(24, 24));
-  mw->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+  mw->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
   saxsviewToolBar = mw->addToolBar("saxsview Toolbar");
   QAction *action = saxsviewToolBar->addAction(QIcon(":icons/document-new.png"), "New Plot");

@@ -1,6 +1,19 @@
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewmainwindow.cpp (setupToolbars): Place text beside icon.
+	* saxsviewimagewindow.h (setThreshold): Removed.
+	(setRange): New.
+	(resetRange): New.
+	* saxsviewimagewindow.cpp (setThreshold): Removed.
+	(setRange): New.
+	(resetRange): New.
+	(setupActions): Add action to reset threshold values.
+	(setupToolBar): Add upper threshold.
+	(load): Properly set threshold range.
+
 2010-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* saxsviewimagewindow.cpp( ImageData::value): Removed
+	* saxsviewimagewindow.cpp (ImageData::value): Removed
 	unnecessary check.
 	(ImagePicker::trackerTextF): Verify that there is a widget
 	to send the event to before actually sending it.

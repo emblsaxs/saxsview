@@ -49,7 +49,8 @@ public slots:
   void setScale(int);
 
 private slots:
-  void setThreshold(int);
+  void setRange();
+  void resetRange();
 
 private:
   class SaxsviewImageWindowPrivate;

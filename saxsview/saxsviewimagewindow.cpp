@@ -78,12 +78,16 @@ public:
     return QwtDoubleInterval(mMin, mMax);
   }
 
-  void setMin(int n) {
-    mMin = qMax(n, 1);
+  void setMin(long n) {
+    mMin = qMax(n, 1L);
+  }
+
+  void setMax(long n) {
+    mMax = qMin(n, saxs_image_value_max(p.data()->image));
   }
 
   double value(double x, double y) const {
-    return saxs_image_value(p.data()->image, (int)floor(x), (int)floor(y));
+    return saxs_image_value(p.data()->image, (int)x, (int)y);
   }
 
 private:
@@ -107,6 +111,14 @@ public:
   }
 
   QRgb rgb(const QwtDoubleInterval& interval, double x) const {
+    //
+    // Due to selectable thresholds it may happen that 'x' is outside the
+    // range. If this is the case, we automatically get color1() if 'x'
+    // is below minValue() and color2() if 'x' is above maxValue().
+    //
+    // I.e. if a lower threshold is defined, all pixels below that value
+    // will be white, all those above an upper threshold will be black.
+    //
     return QwtLinearColorMap::rgb(QwtDoubleInterval(log10(interval.minValue()),
                                                     log10(interval.maxValue())),
                                   log10(x));
@@ -164,8 +176,9 @@ public:
   Saxsview::Plot::PlotScale scale;
   Saxsview::Image *image;
 
-  QAction *actionPrevious, *actionNext, *actionThreshold;
-  QSpinBox *spinThreshold;
+  QAction *actionPrevious, *actionNext;
+  QAction *actionLowerThreshold, *actionUpperThreshold, *actionResetThreshold;
+  QSpinBox *spinLowerThreshold, *spinUpperThreshold;
   QToolBar *toolBar;
   QSignalMapper *fileNameMapper;
 
@@ -193,21 +206,36 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupActions() {
   actionNext->setIcon(style->standardIcon(QStyle::SP_ArrowForward));
   actionNext->setMenu(new QMenu);
   actionNext->setEnabled(false);
+
+  actionResetThreshold = new QAction("&Reset", sw);
+  actionResetThreshold->setToolTip("Reset Thresholds");
+  connect(actionResetThreshold, SIGNAL(triggered()),
+          sw, SLOT(resetRange()));
 }
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupToolBar() {
-  spinThreshold = new QSpinBox(sw);
-  spinThreshold->setRange(1, 1e12);
-  spinThreshold->setAccelerated(true);
-  spinThreshold->setSingleStep(1);
-  connect(spinThreshold, SIGNAL(valueChanged(int)),
-          sw, SLOT(setThreshold(int)));
+  spinLowerThreshold = new QSpinBox(sw);
+  spinLowerThreshold->setToolTip("Minimum Count");
+  spinLowerThreshold->setAccelerated(true);
+  spinLowerThreshold->setSingleStep(1);
+  connect(spinLowerThreshold, SIGNAL(valueChanged(int)),
+          sw, SLOT(setRange()));
+
+  spinUpperThreshold = new QSpinBox(sw);
+  spinUpperThreshold->setToolTip("Maximum Count");
+  spinUpperThreshold->setAccelerated(true);
+  spinUpperThreshold->setSingleStep(1);
+  connect(spinUpperThreshold, SIGNAL(valueChanged(int)),
+          sw, SLOT(setRange()));
 
   toolBar = new QToolBar(sw);
 
   toolBar->addAction(actionPrevious);
   toolBar->addAction(actionNext);
-  actionThreshold = toolBar->addWidget(spinThreshold);
+  toolBar->addSeparator();
+  actionLowerThreshold = toolBar->addWidget(spinLowerThreshold);
+  actionUpperThreshold = toolBar->addWidget(spinUpperThreshold);
+  toolBar->addAction(actionResetThreshold);
 }
 
 
@@ -340,10 +368,10 @@ SaxsviewImageWindow::SaxsviewImageWindow(QWidget *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewImageWindowPrivate(this)) {
   p->setupUi();
   p->setupActions();
-  p->setupToolBar();
   p->setupSignalMappers();
   p->setupImage();
   p->setupTracker();
+  p->setupToolBar();
 
   setScale(Saxsview::Plot::Log10Scale);
 }
@@ -403,7 +431,11 @@ void SaxsviewImageWindow::load(const QString& fileName) {
   p->plot->axisWidget(QwtPlot::yRight)->setColorMap(range,
                                                     p->image->colorMap());
 
-  p->spinThreshold->setValue(1);
+  p->spinLowerThreshold->setRange(range.minValue(), range.maxValue());
+  p->spinLowerThreshold->setValue(1);
+
+  p->spinUpperThreshold->setRange(range.minValue(), range.maxValue());
+  p->spinUpperThreshold->setValue(range.maxValue());
 
   p->plot->setAxisScale(QwtPlot::yRight,
                         range.minValue(),
@@ -439,15 +471,22 @@ void SaxsviewImageWindow::setScale(int scale) {
   p->setScale((Saxsview::Plot::PlotScale)scale);
 }
 
-void SaxsviewImageWindow::setThreshold(int n) {
+void SaxsviewImageWindow::setRange() {
+  const long minValue = p->spinLowerThreshold->value();
+  const long maxValue = p->spinUpperThreshold->value();
+
   QwtScaleWidget *scale = p->plot->axisWidget(QwtPlot::yRight);
+  scale->setColorMap(QwtDoubleInterval(minValue, maxValue),
+                     p->image->colorMap());
 
-  QwtDoubleInterval range = scale->colorBarInterval();
-  range.setMinValue(n);
-
-  scale->setColorMap(range, p->image->colorMap());
-
-  dynamic_cast<ImageData*>(p->image->data())->setMin(n);
+  ImageData *imageData = dynamic_cast<ImageData*>(p->image->data());
+  imageData->setMin(minValue);
+  imageData->setMax(maxValue);
 
   p->plot->replot();
+}
+
+void SaxsviewImageWindow::resetRange() {
+  p->spinLowerThreshold->setValue(p->spinLowerThreshold->minimum());
+  p->spinUpperThreshold->setValue(p->spinLowerThreshold->maximum());
 }
