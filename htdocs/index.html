@@ -1,4 +1,5 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+     "http://www.w3.org/TR/html4/strict.dtd">
 <html>
 <head>
   <title>saxsview</title>
@@ -6,62 +7,111 @@
 </head>
 <body>
 
-<img src="http://sourceforge.net/dbimage.php?id=228762" alt="screenshot of saxsview-0.1.0">
-
 <p>
 <a href="http://sourceforge.net/projects/saxsview/">Project Summary</a>
  | <a href="http://sourceforge.net/projects/saxsview/files/">Download</a>
 </p>
 
-<h1>saxsview</h1>
-<p><i>libsaxsdocument</i> and <i>saxsview</i>; read, convert and view
-1D and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
+<h1>saxsview Project</h1>
+<p><i>libsaxsdocument</i>, <i>libsaxsimage</i> and <i>saxsview</i>; read, convert and view 1D 
+and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
 
-<h2>saxsview</h2>
-<p><i>saxsview</i> is intended as an day-to-day plotting facility for SAXS-data,
-as well as a convenient tool to quickly generate plots ready for publication.</p>
+<p><b>Contents</b></p>
+<ul>
+  <li><a href="#saxsview">saxsview Application</a></li>
+  <li><a href="#libraries">saxsview Libraries</a></li>
+  <li><a href="#building">Building saxsview</a></li>
+  <li><a href="#licenses">Licenses</a></li>
+  <li><a href="#releases">Releases and Milestones</a></li>
+</ul>
 
-<p>Basic plotting of 1D-curves is available (.dat, .int, .fit and .fir formats 
-of the <a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">
-ATSAS package</a>, as well as the 
-<a href="http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation">cansas
-XML format v1.0</a>), so is the display of 2D scattering images in Crystallographic
-Binary Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">
-CBFlib</a>) and the display of 32-bit TIFFs as written by PILATUS detectors.</p>
-
-<p>The program is based on <a href="http://qt.nokia.com/">Qt - A cross-platform
-application and UI framework</a> and <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting
-Widgets for Technical Applications</a>.</p>
-
+<h2><a name="saxsview">saxsview Application</a></h2>
+<table>
+  <tr>
+    <td colspan="3">
+      <p><i>saxsview</i> is intended as an day-to-day plotting facility for
+      SAXS-data, as well as a convenient tool to quickly generate plots ready
+      for publication.</p>
+    </td>
+  </tr>
+  <tr>
+    <td style="width:25%" align="center">
+      <a href="screenshot-saxsview-plot.png">
+      <img width="100%" src="screenshot-saxsview-plot.png"
+           alt="screenshot of saxsview showing a plot"><br>
+      <small>Click to enlarge</small></a>
+    </td>
+    <td colspan="2" align="justify">
+      <p><i>saxsview</i> shows 1D-data in .dat, .int, .fit and .fir formats
+      of the <a href="http://www.embl-hamburg.de/ExternalInfo/Research/Sax/software.html">
+      ATSAS package</a>, as well as the 
+      <a href="http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation">cansas
+      .xml format (v1.0)</a>.</p>
+      <p>The screenshot to the left shows three .fit files. Of the experimental data
+      only every fifth point is shown in black, with error bars in light gray. The respective
+      fits are overlaid as a solid lines. For improved visibility, the fits where stacked 
+      or <i>exploded</i>.</p>
+      <p>Most aspects of the plot are configurable.</p>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="2" align="justify">
+      <p>Also, <i>saxsview</i> can display 2D scattering images in Crystallographic
+      Binary Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">
+      CBFlib</a>) and images stored in 32-bit TIFFs as written by PILATUS detectors.</p>
+      <p>The screenshot to the right shows an image taken by a PILATUS-6M, which is
+      <a href="http://arcib.dowling.edu/software/CBFlib/downloads/version_0.7.9/CBFlib_0.7.9_Data_Files_Input.tar.gz">available for download</a>.</p>
+      <p>In this screenshot, the application shows all pixels with count rate of less
+      than 10 in white, all those with a count rate of 1000 or above in black. Intermediate
+      counts are shown on a logarithmic gray scale. The current x/y position and pixel
+      value (count) are shown in the status bar.</p>
+    </td>
+    <td style="width:25%" align="center">
+      <a href="screenshot-saxsview-image.png">
+      <img width="100%" src="screenshot-saxsview-image.png"
+           alt="screenshot of saxsview showing an image"><br>
+      <small>Click to enlarge</small></a>
+    </td>
+  </tr>
+  <tr>
+    <td colspan="3">
+      <p>The program is based on <a href="http://qt.nokia.com/">Qt -
+      A cross-platform application and UI framework</a> and
+      <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting Widgets
+      for Technical Applications</a> and is thus available for Linux, MacOSX and
+      Microsoft Windows alike.</p>
+    </td>
+  </tr>
+</table>
 <p>Suggestions, bug reports and code contributions are highly welcome!</p>
 
 
-<h2>libsaxsdocument</h2>
-<p><i>libsaxsdocument</i> is the reading and writing workhorse of <i>saxsview</i>.
-It is meant to allow for easy integration of new 1D and 2D-file formats. Further,
-if formats that hold similar information implement reading and writing hooks,
-it becomes very easy to convert between these respective formats, eventually
-simplifying data-transfer between programs.</p>
+<h2><a name="libraries">saxsview Libraries</a></h2>
+<p><i>libsaxsdocument</i> and libsaxsimage are the reading and writing workhorses
+of <i>saxsview</i>. They are meant to allow for easy integration of new 1D and
+2D-file formats respectively. Further, if formats that hold similar information
+implement reading and writing hooks, it becomes very easy to convert between these
+respective formats, eventually simplifying data-transfer between programs.</p>
 
 <p>For later releases, support for the MAR345 file format is planned.</p>
 
 
-<h2>Building saxsview</h2>
+<h2><a name="building">Building saxsview</a></h2>
 <h3>External Dependencies</h3>
 <p>External dependencies so far; version numbers indicate minimum requirements,
 earlier versions may work, but are not guaranteed to work. Later version are
-generally assumed to work:
+generally assumed to work:</p>
 <ul>
   <li>CMake-2.6 (build system)</li>
   <li>Qt-4.4 (UI framework)</li>
   <li>gcc-4.3 (C, C++ and Fortran compilers)</li>
 </ul>
-Optional dependencies which are used if found on the build system:
+<p>Optional dependencies which are used if found on the build system:</p>
 <ul>
   <li><a href="http://www.libtiff.org">LibTIFF</a> (support for 32-bit TIFF images)</li>
   <li><a href="http://www.xmlsoft.org">LibXml2</a> (support for cansas XML file format)</li>
 </ul>
-</p>
+
 <p>Dependecies less commonly found (Qwt, CBFlib) on average systems come 
 together with the <i>saxsview</i> sources.</p>
 <p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
@@ -69,7 +119,7 @@ Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
 
 <h3>Building saxsview from distribution packages</h3>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
-apply for Windows or MacOSX builds:
+apply for Windows or MacOSX builds:</p>
 <pre>
   $> tar xfz saxsview-0.2.0.tar.gz
   $> cd saxsview-0.2.0
@@ -79,11 +129,11 @@ apply for Windows or MacOSX builds:
   $> make test      # optional, check that libsaxsdocument works
   $> make install
 </pre>
-</p>
+
 
 <h3>Building saxsview from svn</h3>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
-apply for Windows or MacOSX builds:
+apply for Windows or MacOSX builds:</p>
 <pre>
   $> svn co https://saxsview.svn.sourceforge.net/svnroot/saxsview/trunk saxsview
   $> cd saxsview
@@ -93,10 +143,9 @@ apply for Windows or MacOSX builds:
   $> make test      # optional, check that libsaxsdocument works
   $> make install
 </pre>
-</p>
 
 
-<h2>Licenses</h2>
+<h2><a name="licenses">Licenses</a></h2>
 <p>The code of the <i>saxsview</i> application is licensed under 
 <a href="http://www.fsf.org/licensing/licenses/gpl.html">GPLv3</a> while the
 libraries, <i>libsaxsview</i> and <i>libsaxsdocument</i> are licensed under the
@@ -108,15 +157,24 @@ available under the <a href="http://www.gnu.org/licenses/old-licenses/lgpl-2.1.h
 LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
 
 
-<h2>Releases and Milestones</h2>
-<p><ul>
+<h2><a name="releases">Releases and Milestones</a></h2>
+<ul>
+  <li>2010/07/16 - in image view, counts of current position are shown status bar</li>
+  <li>2010/07/16 - configurable templates per file type are now available</li>
   <li>2010/06/20 - plot configuration refactored; configurable curve templates and configurable default colors added
   <li>2010/06/08 - <a href="http://sourceforge.net/projects/saxsview/files/">saxsview-0.2.0</a> released</li>
   <li>2009/09/27 - initial support for the cansas-XML file format added</li>
   <li>2009/09/23 - support for 32-bit TIFF-files as written by PILATUS detectors added</li>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
-</ul></p>
+</ul>
 
-<p align="center">Last updated 2010-06-22</p>
+<p style="text-align:center">Last updated 2010-07-18</p>
+
+<p>
+  <a href="http://validator.w3.org/check?uri=referer">
+    <img src="http://www.w3.org/Icons/valid-html401"
+         alt="Valid HTML 4.01 Strict" height="31" width="88">
+  </a>
+</p>
 </body>
 </html>
