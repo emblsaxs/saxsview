@@ -45,7 +45,7 @@
 //
 // http://lists.trolltech.com/pipermail/qt-interest/2009-August/011754.html
 //
-class ImageData: public QwtRasterData {
+class ImageData : public QwtRasterData {
 public:
   class ImagePointerHolder {
   public:
@@ -77,13 +77,13 @@ public:
   QwtDoubleInterval range() const {
     return QwtDoubleInterval(mMin, mMax);
   }
+
   void setMin(int n) {
     mMin = qMax(n, 1);
   }
 
   double value(double x, double y) const {
-    double z = saxs_image_value(p.data()->image, (int)floor(x), (int)floor(y));
-    return z < mMin ? 0.0 : z;
+    return saxs_image_value(p.data()->image, (int)floor(x), (int)floor(y));
   }
 
 private:
@@ -127,11 +127,13 @@ public:
   }
 
   QwtText trackerTextF(const QPointF &pos) const {
-    static const QString format = "x=%1, y=%2, count=%3";
-    const int x = (int)pos.x(), y = (int)pos.y();
+    if (QWidget *w = qApp->activeWindow()) {
+      static const QString format = "x=%1, y=%2, count=%3";
+      const float x = pos.x(), y = pos.y();
 
-    QStatusTipEvent event(format.arg(x, 4).arg(y, 4).arg(image->data()->value(x, y)));
-    qApp->sendEvent(qApp->activeWindow(), &event);
+      QStatusTipEvent event(format.arg((int)x, 4).arg((int)y, 4).arg(image->data()->value(x, y)));
+      qApp->sendEvent(w, &event);
+    }
 
     return QwtText();
   }
@@ -181,6 +183,7 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupActions() {
   QStyle *style = qApp->style();
   QAction *action;
 
+  // FIXME: the menus leak memory
   actionPrevious = new QAction("&Previous", sw);
   actionPrevious->setIcon(style->standardIcon(QStyle::SP_ArrowBack));
   actionPrevious->setMenu(new QMenu);

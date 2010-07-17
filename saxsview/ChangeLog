@@ -1,7 +1,14 @@
+2010-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewimagewindow.cpp( ImageData::value): Removed
+	unnecessary check.
+	(ImagePicker::trackerTextF): Verify that there is a widget
+	to send the event to before actually sending it.
+
 2010-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* saxsview/saxsviewmainwindow.cpp (ctor): Initialize status bar.
-	* saxsview/saxsviewimagewindow.cpp (ImagePicker): New.
+	* saxsviewmainwindow.cpp (ctor): Initialize status bar.
+	* saxsviewimagewindow.cpp (ImagePicker): New.
 	(setupTracker): New.
 	(ctor): Initialize tracker.
 
