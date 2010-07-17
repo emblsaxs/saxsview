@@ -53,6 +53,10 @@ saxs_image_width(saxs_image *image);
 size_t
 saxs_image_height(saxs_image *image);
 
+
+/**
+ * Filters out values below 0.
+ */
 long
 saxs_image_value(saxs_image *image, int x, int y);
 

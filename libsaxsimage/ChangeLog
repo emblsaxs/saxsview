@@ -1,3 +1,9 @@
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.c (saxs_image_value): Map values below 0 to 0.
+	(image_value_min, image_value_max): Make the min/max values
+	a signed type.
+
 2010-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage_format.h (saxs_image_format): Changed member

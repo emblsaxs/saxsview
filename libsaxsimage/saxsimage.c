@@ -110,22 +110,26 @@ saxs_image_height(saxs_image *image) {
 
 long
 saxs_image_value(saxs_image *image, int x, int y) {
-  return image && image->image_format && image->image_format->value
-           ? image->image_format->value(image->image_private_data, x, y)
-           : 0;
+  if (image && image->image_format && image->image_format->value) {
+    const long z = image->image_format->value(image->image_private_data, x, y);
+    return z < 0 ? 0 : z;
+
+  } else
+    return 0;
 }
 
 static long
 image_value_min(saxs_image *image) {
-  size_t i, j, min = INT_MAX;
+  long min = INT_MAX;
 
+  size_t i, j;
   const size_t width = saxs_image_width(image);
   const size_t height = saxs_image_height(image);
 
   for (i = 0; i < width; ++i)
     for (j = 0; j < height; ++j) {
       long value = saxs_image_value(image, i, j);
-      if (min > value && value >= 0)
+      if (min > value)
         min = value;
     }
 
@@ -141,8 +145,9 @@ saxs_image_value_min(saxs_image *image) {
 
 static long
 image_value_max(saxs_image *image) {
-  size_t i, j, max = 0;
+  long max = INT_MIN;
 
+  size_t i, j;
   const size_t width = saxs_image_width(image);
   const size_t height = saxs_image_height(image);
 
