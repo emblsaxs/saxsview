@@ -1,3 +1,15 @@
+2010-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage_format.h (saxs_image_format): Changed member
+	function-pointer 'value' to return a signed value, same for
+	'value_min' and 'value_max'.
+	* saxsimage.c (image_value_max): Removed unnecessary check.
+	* tiff.c (saxs_image_tiff_value): Changed return value type
+	to signed.
+	* cbf.c (saxs_image_cbf_open): Initialize private data members.
+	(saxs_image_cbf_read_high_level): Read signed values.
+	(saxs_image_cbf_value): Changed return value type to signed.
+
 2010-06-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage.h (saxs_image_value): Changed return value from

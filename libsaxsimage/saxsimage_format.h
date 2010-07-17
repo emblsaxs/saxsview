@@ -38,11 +38,11 @@ struct saxs_image_format {
   int (*write)(void *private_data, const char *filename);
   int (*close)(void *private_data);
 
-  size_t (*value)(void *private_data, int x, int y);
+  long (*value)(void *private_data, int x, int y);
   size_t (*width)(void *private_data);
   size_t (*height)(void *private_data);
-  size_t (*value_min)(void *private_data);
-  size_t (*value_max)(void *private_data);
+  long (*value_min)(void *private_data);
+  long (*value_max)(void *private_data);
 };
 typedef struct saxs_image_format saxs_image_format;
 

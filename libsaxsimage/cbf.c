@@ -51,8 +51,11 @@ int saxs_image_cbf_open(void **data) {
 
   assert(!*data);     /* Private data must not be allocated yet. */
 
-  private_data       = malloc(sizeof(image_cbf_private));
-  private_data->data = NULL;
+  private_data         = malloc(sizeof(image_cbf_private));
+  private_data->width  = 0;
+  private_data->height = 0;
+  private_data->bpp    = 0;
+  private_data->data   = NULL;
 
   if (cbf_make_handle(&private_data->cbf))
     return -1;
@@ -75,7 +78,7 @@ saxs_image_cbf_read_high_level(image_cbf_private *p) {
   return cbf_get_image(p->cbf, 0, 0,
                        p->data,
                        sizeof(int),
-                       0,
+                       1,            /* elsign: signed */
                        p->height,
                        p->width);
 }
@@ -172,7 +175,7 @@ size_t saxs_image_cbf_height(void *data) {
   return PRIVATE_DATA(data)->height;
 }
 
-size_t saxs_image_cbf_value(void *data, int x, int y) {
+long saxs_image_cbf_value(void *data, int x, int y) {
   image_cbf_private *p = PRIVATE_DATA(data);
 
   if (x < 0 || x >= p->width

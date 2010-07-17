@@ -102,7 +102,7 @@ size_t saxs_image_tiff_height(void *data) {
   return PRIVATE_DATA(data)->height;
 }
 
-size_t saxs_image_tiff_value(void *data, int x, int y) {
+long saxs_image_tiff_value(void *data, int x, int y) {
   image_tiff_private *p = PRIVATE_DATA(data);
 
   if (x < 0 || x >= p->width

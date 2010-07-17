@@ -149,7 +149,7 @@ image_value_max(saxs_image *image) {
   for (i = 0; i < width; ++i)
     for (j = 0; j < height; ++j) {
       long value = saxs_image_value(image, i, j);
-      if (max < value && value >= 0)
+      if (max < value)
         max = value;
     }
 
