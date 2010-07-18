@@ -1,5 +1,11 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewimagewindow.cpp (load): Block valueChanged-signals
+	of thresholds to avoid useless replots.
+	(resetRange): Likewise.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.cpp (setupToolbars): Place text beside icon.
 	* saxsviewimagewindow.h (setThreshold): Removed.
 	(setRange): New.

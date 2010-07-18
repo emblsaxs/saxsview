@@ -431,11 +431,17 @@ void SaxsviewImageWindow::load(const QString& fileName) {
   p->plot->axisWidget(QwtPlot::yRight)->setColorMap(range,
                                                     p->image->colorMap());
 
+  // avoid useless replots by blocking the valueChanged-signals
+  p->spinLowerThreshold->blockSignals(true);
   p->spinLowerThreshold->setRange(range.minValue(), range.maxValue());
   p->spinLowerThreshold->setValue(1);
+  p->spinLowerThreshold->blockSignals(false);
 
+  // likewise
+  p->spinUpperThreshold->blockSignals(true);
   p->spinUpperThreshold->setRange(range.minValue(), range.maxValue());
   p->spinUpperThreshold->setValue(range.maxValue());
+  p->spinUpperThreshold->blockSignals(false);
 
   p->plot->setAxisScale(QwtPlot::yRight,
                         range.minValue(),
@@ -487,6 +493,16 @@ void SaxsviewImageWindow::setRange() {
 }
 
 void SaxsviewImageWindow::resetRange() {
+  //
+  // Avoid double replot.
+  //
+  p->spinLowerThreshold->blockSignals(true);
   p->spinLowerThreshold->setValue(p->spinLowerThreshold->minimum());
+  p->spinLowerThreshold->blockSignals(false);
+
+  p->spinUpperThreshold->blockSignals(true);
   p->spinUpperThreshold->setValue(p->spinLowerThreshold->maximum());
+  p->spinUpperThreshold->blockSignals(true);
+
+  setRange();
 }
