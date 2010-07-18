@@ -341,4 +341,8 @@ void PlotCurve::setSymbol(const PlotSymbol& symbol) {
 //   p->curve->setSymbol(sym);
 }
 
+int PlotCurve::closestPoint(const QPoint &pos, double *dist) const {
+  return p->curve->closestPoint(pos, dist);
+}
+
 } // end of namespace Saxsview

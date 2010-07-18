@@ -26,7 +26,51 @@
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
 
+#include "qwt_picker_machine.h"
+#include "qwt_plot_picker.h"
+
 #include <QtGui>
+
+
+class PlotPicker : public QwtPlotPicker {
+public:
+  PlotPicker(Saxsview::Plot *p)
+   : QwtPlotPicker(p->canvas()), plot(p) {
+  }
+
+  QwtText trackerText(const QPoint &pos) const {
+    if (QWidget *w = qApp->activeWindow()) {
+      Saxsview::PlotCurve *closestCurve = 0L;
+      int closestPointIndex = -1;
+      double dist = 10000.0;                    // some large number in pixels
+
+      foreach (Saxsview::PlotCurve *curve, plot->curves()) {
+        double d;
+        int index = curve->closestPoint(pos, &d);
+        if (index > 0 && d < dist && d < 10.0) {
+          closestCurve = curve;
+          closestPointIndex = index;
+          dist = d;
+        }
+      }
+
+      QString tip;
+      if (closestCurve) {
+        tip += closestCurve->fileName();
+        if (!closestCurve->title().isEmpty())
+          tip += " (" + closestCurve->title() + ")";
+      }
+      QStatusTipEvent event(tip);
+      qApp->sendEvent(w, &event);
+    }
+
+    return QwtText();
+  }
+
+private:
+  Saxsview::Plot *plot;
+};
+
 
 class SaxsviewPlotWindow::SaxsviewPlotWindowPrivate {
 public:
@@ -35,6 +79,7 @@ public:
   void setupUi();
   void setupActions();
   void setupToolBar();
+  void setupTracker();
 
   SaxsviewPlotWindow *sw;
   Saxsview::Plot *plot;
@@ -42,6 +87,8 @@ public:
   QAction *actionExplode;
 
   QToolBar *toolBar;
+
+  PlotPicker *tracker;
 };
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
@@ -67,6 +114,11 @@ void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupToolBar() {
   toolBar->addAction(actionExplode);
 }
 
+void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupTracker() {
+  tracker = new PlotPicker(plot);
+  tracker->setStateMachine(new QwtPickerTrackerMachine);
+  tracker->setTrackerMode(QwtPicker::AlwaysOn);
+}
 
 
 SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
@@ -75,6 +127,7 @@ SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
   p->setupUi();
   p->setupActions();
   p->setupToolBar();
+  p->setupTracker();
 
   setScale(Saxsview::Plot::Log10Scale);
 

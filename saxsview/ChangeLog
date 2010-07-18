@@ -1,5 +1,11 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewplotwindow.cpp (class PlotPicker): New.
+	(setupTracker): New.
+	(ctor): Initialize plot tracker.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewmainwindow.h (subWindowDestroyed): New slot.
 	* saxsviewmainwindow.cpp (subWindowDestroyed): New.
 	(addSubWindow): Connect destroyed() signal to new slot, append

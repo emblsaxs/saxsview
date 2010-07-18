@@ -138,6 +138,8 @@ public:
   PlotSymbol symbol() const;
   void setSymbol(const PlotSymbol&); 
 
+  int closestPoint(const QPoint &pos, double *dist = NULL) const;
+
 public slots:
   void setFileName(const QString&);
   void setTitle(const QString& title);
