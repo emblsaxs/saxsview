@@ -57,6 +57,7 @@ private slots:
   void prepareRecentFilesMenu();
   void setActiveSubWindow(QWidget*);
   void subWindowActivated(QMdiSubWindow*);
+  void subWindowDestroyed(QObject*);
 
 private:
   class SaxsviewMainWindowPrivate;

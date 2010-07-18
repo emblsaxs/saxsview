@@ -65,7 +65,8 @@ public:
   QMenu *menuPlot, *menuWindow, *menuSettings, *menuHelp;
 
   // toolbars
-  QToolBar *saxsviewToolBar, *plotToolBar, *subwindowToolBar;
+  QToolBar *saxsviewToolBar, *plotToolBar;
+  QMap<SaxsviewSubWindow*, QToolBar*> subWindowToolBars;
 
   QMdiArea *mdiArea;
   QSignalMapper *windowMapper;
@@ -306,9 +307,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupToolbars() {
   plotToolBar->addActions(actionGroupZoomMove->actions());
   plotToolBar->addSeparator();
   plotToolBar->addAction(actionConfigurePlot);
-
-  subwindowToolBar = mw->addToolBar("subwindow Toolbar");
-  mw->removeToolBar(subwindowToolBar);
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
@@ -344,14 +342,22 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
 }
 
 void SaxsviewMainWindow::SaxsviewMainWindowPrivate::addSubWindow(SaxsviewSubWindow *w) {
+  connect(w, SIGNAL(destroyed(QObject*)),
+          mw, SLOT(subWindowDestroyed(QObject*)));
+
   mdiArea->addSubWindow(w);
+
+  if (QToolBar *toolBar = w->createToolBar()) {
+    subWindowToolBars.insert(w, toolBar);
+    mw->addToolBar(toolBar);
+    toolBar->hide();
+  }
 
   if (mdiArea->subWindowList().size() == 1)
     w->showMaximized();
   else
     w->show();
 }
-
 
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
  : QMainWindow(parent), p(new SaxsviewMainWindowPrivate(this)) {
@@ -385,8 +391,10 @@ void SaxsviewMainWindow::createImageWindow() {
 void SaxsviewMainWindow::load() {
   QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...");
 
+  setCursor(Qt::WaitCursor);
   foreach (QString fileName, fileNames)
     load(fileName);
+  unsetCursor();
 }
 
 void SaxsviewMainWindow::load(const QString& fileName) {
@@ -423,6 +431,8 @@ void SaxsviewMainWindow::load(const QString& fileName) {
     // Add to the list of recently opened files;
     // remove duplicates (if any), prepend current
     // filename and remove old ones (if any).
+    //
+    // FIXME: move this to config()
     //
     QSettings settings;
     QStringList recentFiles = settings.value("saxsview/recentfiles").toStringList();
@@ -576,8 +586,9 @@ void SaxsviewMainWindow::setActiveSubWindow(QWidget *w) {
 }
 
 void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
-  if (p->subwindowToolBar)
-    removeToolBar(p->subwindowToolBar);
+  foreach (QToolBar  *toolBar, p->subWindowToolBars)
+    if (toolBar && toolBar->isVisible())
+      toolBar->hide();
 
   if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(w)) {
     //
@@ -596,13 +607,10 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
     p->actionMove->setChecked(subWindow->moveEnabled());
 
     //
-    // Add subwindows specifc toolbar (if any).
+    // Show subwindows specifc toolbar (if any).
     //
-    p->subwindowToolBar = subWindow->createToolBar();
-    if (p->subwindowToolBar) {
-      p->subwindowToolBar->show();
-      addToolBar(p->subwindowToolBar);
-    }
+    if (p->subWindowToolBars.contains(subWindow))
+      p->subWindowToolBars.value(subWindow)->show();
   }
 
   //
@@ -616,4 +624,10 @@ void SaxsviewMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionMove->setEnabled(on);
   p->actionConfigurePlot->setEnabled(on);
   p->menuExportAs->setEnabled(on);
+}
+
+void SaxsviewMainWindow::subWindowDestroyed(QObject *obj) {
+  if (SaxsviewSubWindow *subWindow = qobject_cast<SaxsviewSubWindow*>(obj))
+    if (p->subWindowToolBars.contains(subWindow))
+      p->subWindowToolBars.remove(subWindow);
 }

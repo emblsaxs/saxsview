@@ -1,5 +1,15 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.h (subWindowDestroyed): New slot.
+	* saxsviewmainwindow.cpp (subWindowDestroyed): New.
+	(addSubWindow): Connect destroyed() signal to new slot, append
+	subwindow-specific toolBar to the list f all toolbars.
+	(subWindowActivated): Hide all subwindow-specific toolBars,
+	show only the current one, if any.
+	(load): Set/unset wait cursor while loading.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewimagewindow.cpp (setupActions): Plug memory leak.
 
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
