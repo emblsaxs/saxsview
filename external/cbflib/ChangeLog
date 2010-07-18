@@ -1,3 +1,17 @@
+2009-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Imported v0.8.1 of CBFlib
+	  (http://sourceforge.net/projects/cbflib)
+
+	* cbf.stx.y: Removed.
+	* fcb_atol_wcnt.f90: Removed.
+	* fcb_ci_strncmparr.f90: Removed.
+	* fcb_nblen_array.f90: Removed.
+	* fcb_read_byte.f90: Removed.
+	* fcb_read_line.f90: Removed.
+	* fcb_skip_whitespace.f90: Removed.
+	* CMakeLists.txt: Bumped library version.
+
 2009-06-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Add library version to target properties.

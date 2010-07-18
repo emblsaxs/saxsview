@@ -19,7 +19,7 @@ set (CBFLIB_SOURCES cbf.c cbf_alloc.c cbf_ascii.c cbf_binary.c
 add_library (cbf SHARED ${CBFLIB_SOURCES} ${CBFLIB_HEADERS})
 target_link_libraries(cbf m)
 
-set_target_properties (cbf PROPERTIES VERSION 0.7.9.1)
+set_target_properties (cbf PROPERTIES VERSION 0.8.1)
 
 install (TARGETS cbf
          LIBRARY DESTINATION lib
