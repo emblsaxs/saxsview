@@ -1,5 +1,11 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.cpp (load): Moved code to add recent
+	file to config.
+	(prepareRecentFilesMenu): Use config to access recent files.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewplotwindow.cpp (class PlotPicker): New.
 	(setupTracker): New.
 	(ctor): Initialize plot tracker.

@@ -44,6 +44,26 @@ SaxsviewConfig::SaxsviewConfig() {
 SaxsviewConfig::~SaxsviewConfig() {
 }
 
+QStringList SaxsviewConfig::recentFiles() const {
+  return settings().value("saxsview/recentfiles").toStringList();
+}
+
+void SaxsviewConfig::addRecentFile(const QString& fileName) {
+  //
+  // Add to the list of recently opened files;
+  // remove duplicates (if any), prepend current
+  // filename and remove old ones (if any).
+  //
+  QStringList recent = recentFiles();
+
+  recent.removeAll(fileName);
+  recent.prepend(fileName);
+  while (recent.size() > 10)
+    recent.removeLast();
+
+  settings().setValue("saxsview/recentfiles", recent);
+}
+
 void SaxsviewConfig::curveTemplates(QStandardItemModel *model) const {
   QStringList column;
   column << "name"

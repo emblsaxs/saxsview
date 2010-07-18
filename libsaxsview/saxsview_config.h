@@ -24,6 +24,7 @@
 class QColor;
 class QPen;
 class QStandardItemModel;
+class QStringList;
 
 namespace Saxsview {
 
@@ -32,6 +33,9 @@ class PlotCurve;
 
 class SaxsviewConfig {
 public:
+  QStringList recentFiles() const;
+  void addRecentFile(const QString&);
+
   void curveTemplates(QStandardItemModel*) const;
   void setCurveTemplates(QStandardItemModel*);
 

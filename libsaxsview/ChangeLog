@@ -1,5 +1,12 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_config.h (recentFiles): New.
+	(addRecentFile): New.
+	* saxsview_config.cpp (recentFiles): New.
+	(addRecentFile): New.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotcurve.h (closestPoint): New.
 	* saxsview_plotcurve.cpp (closestPoint): New.
 

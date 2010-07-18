@@ -21,10 +21,14 @@
 #include "saxsviewplotwindow.h"
 #include "saxsviewimagewindow.h"
 #include "saxsview_plot.h"
+#include "saxsview_config.h"
 #include "saxsview_configdialog.h"
 #include "config.h"
 
 #include <QtGui>
+
+using Saxsview::config;
+
 
 class SaxsviewMainWindow::SaxsviewMainWindowPrivate {
 public:
@@ -426,23 +430,7 @@ void SaxsviewMainWindow::load(const QString& fileName) {
 
   if (currentSubWindow()) {
     currentSubWindow()->load(fileName);
-
-    //
-    // Add to the list of recently opened files;
-    // remove duplicates (if any), prepend current
-    // filename and remove old ones (if any).
-    //
-    // FIXME: move this to config()
-    //
-    QSettings settings;
-    QStringList recentFiles = settings.value("saxsview/recentfiles").toStringList();
-
-    recentFiles.removeAll(fileName);
-    recentFiles.prepend(fileName);
-    while (recentFiles.size() > 10)
-      recentFiles.removeLast();
-
-    settings.setValue("saxsview/recentfiles", recentFiles);
+    config().addRecentFile(fileName);
   }
 }
 
@@ -568,11 +556,8 @@ void SaxsviewMainWindow::prepareWindowMenu() {
 }
 
 void SaxsviewMainWindow::prepareRecentFilesMenu() {
-  QSettings settings;
-  QStringList recentFiles = settings.value("saxsview/recentfiles").toStringList();
-
   p->menuRecentFiles->clear();
-  foreach (QString fileName, recentFiles) {
+  foreach (QString fileName, config().recentFiles()) {
     QAction *action = p->menuRecentFiles->addAction(fileName);
     connect(action, SIGNAL(triggered()),
             p->recentFileNameMapper, SLOT(map()));
