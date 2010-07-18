@@ -125,8 +125,6 @@ void Plot::PlotPrivate::setupZoomer() {
   // Ctrl+RightButton: zoom out to full size
   zoomer->setMousePattern(QwtEventPattern::MouseSelect2,
                           Qt::RightButton, Qt::ControlModifier);
-
-//   zoomer->setTrackerMode(QwtPicker::AlwaysOn);
 }
 
 void Plot::PlotPrivate::setupScales() {
@@ -278,11 +276,7 @@ void Plot::print() {
   // FIXME: The indicator of legend-items is not properly
   //        scaled
   //
-
-  QString valueName = QString("%1/printername").arg(qApp->applicationName());
-
-  QSettings settings;
-  QString printerName = settings.value(valueName, "").toString();
+  QString printerName = config().recentPrinter();
 
   QPrinter printer(QPrinter::HighResolution);
   printer.setOrientation(QPrinter::Landscape);
@@ -295,7 +289,7 @@ void Plot::print() {
     renderer.renderTo(this, printer);
   }
 
-  settings.setValue(valueName, printer.printerName());
+  config().setRecentPrinter(printer.printerName());
 }
 
 void Plot::configure() {

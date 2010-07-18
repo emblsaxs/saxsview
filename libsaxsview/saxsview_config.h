@@ -36,6 +36,9 @@ public:
   QStringList recentFiles() const;
   void addRecentFile(const QString&);
 
+  QString recentPrinter() const;
+  void setRecentPrinter(const QString&);
+
   void curveTemplates(QStandardItemModel*) const;
   void setCurveTemplates(QStandardItemModel*);
 

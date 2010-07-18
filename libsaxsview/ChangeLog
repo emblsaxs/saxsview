@@ -1,5 +1,13 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_config.h (recentPrinter): New.
+	(setRecentPrinter): New.
+	* saxsview_config.cpp (recentPrinter): New.
+	(setRecentPrinter): New.
+	* saxsview_plot.cpp (print): Use recentprinter/setRecentPrinter.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_config.h (recentFiles): New.
 	(addRecentFile): New.
 	* saxsview_config.cpp (recentFiles): New.

@@ -32,6 +32,7 @@ SaxsviewConfig& config() {
   return config;
 }
 
+
 QSettings& settings() {
   // uses organization, domain and appname from QCoreApplication
   static QSettings settings;
@@ -45,7 +46,7 @@ SaxsviewConfig::~SaxsviewConfig() {
 }
 
 QStringList SaxsviewConfig::recentFiles() const {
-  return settings().value("saxsview/recentfiles").toStringList();
+  return settings().value("recentFiles").toStringList();
 }
 
 void SaxsviewConfig::addRecentFile(const QString& fileName) {
@@ -61,7 +62,15 @@ void SaxsviewConfig::addRecentFile(const QString& fileName) {
   while (recent.size() > 10)
     recent.removeLast();
 
-  settings().setValue("saxsview/recentfiles", recent);
+  settings().setValue("recentFiles", recent);
+}
+
+QString SaxsviewConfig::recentPrinter() const {
+  return settings().value("recentPrinter").toString();
+}
+
+void SaxsviewConfig::setRecentPrinter(const QString& printer) {
+  settings().setValue("recentPrinter", printer);
 }
 
 void SaxsviewConfig::curveTemplates(QStandardItemModel *model) const {
