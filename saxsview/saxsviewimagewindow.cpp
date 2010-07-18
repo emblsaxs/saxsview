@@ -196,15 +196,14 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupActions() {
   QStyle *style = qApp->style();
   QAction *action;
 
-  // FIXME: the menus leak memory
   actionPrevious = new QAction("&Previous", sw);
   actionPrevious->setIcon(style->standardIcon(QStyle::SP_ArrowBack));
-  actionPrevious->setMenu(new QMenu);
+  actionPrevious->setMenu(new QMenu(sw));
   actionPrevious->setEnabled(false);
 
   actionNext = new QAction("&Next", sw);
   actionNext->setIcon(style->standardIcon(QStyle::SP_ArrowForward));
-  actionNext->setMenu(new QMenu);
+  actionNext->setMenu(new QMenu(sw));
   actionNext->setEnabled(false);
 
   actionResetThreshold = new QAction("&Reset", sw);

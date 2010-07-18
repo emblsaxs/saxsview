@@ -1,5 +1,9 @@
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewimagewindow.cpp (setupActions): Plug memory leak.
+
+2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewimagewindow.cpp (load): Block valueChanged-signals
 	of thresholds to avoid useless replots.
 	(resetRange): Likewise.
