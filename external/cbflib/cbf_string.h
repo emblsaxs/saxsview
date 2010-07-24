@@ -1,7 +1,7 @@
 /**********************************************************************
  * cbf_string.h                                                       *
  *                                                                    *
- * Version 0.8.0 20 July 2008                                         *
+ * Version 0.7.9 30 December 2007                                     *
  *                                                                    *
  *                          Paul Ellis and                            *
  *         Herbert J. Bernstein (yaya@bernstein-plus-sons.com)        *

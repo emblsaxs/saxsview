@@ -1,3 +1,10 @@
+2009-07-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Roll back to v0.7.9.1.
+	Version 0.8.1 requires libregex for Win32 which requires a
+	full installation of MSYS and pulls in dependencies on
+	multiple dlls that are otherwise not required.
+
 2009-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Imported v0.8.1 of CBFlib

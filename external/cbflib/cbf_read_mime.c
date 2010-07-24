@@ -1,7 +1,7 @@
 /**********************************************************************
  * cbf_read_mime -- read MIME-encoded binary sections                 *
  *                                                                    *
- * Version 0.8.0 20 July 2008                                         *
+ * Version 0.7.9 30 December 2007                                     *
  *                                                                    *
  *                          Paul Ellis and                            *
  *         Herbert J. Bernstein (yaya@bernstein-plus-sons.com)        *
@@ -364,7 +364,7 @@ int cbf_mime_temp (cbf_node *column, unsigned int row)
 
     /* Calculate a new digest if necessary */
 
-  if (cbf_is_base64digest (old_digest) && (file->read_headers & (MSG_DIGEST|MSG_DIGESTNOW|MSG_DIGESTWARN) )
+  if (cbf_is_base64digest (old_digest) && (file->read_headers & MSG_DIGEST)
                                        && !checked_digest)
 
     new_digest = digest;
