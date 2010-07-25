@@ -1,3 +1,24 @@
+2010-07-25  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* selectplotwindowdialog.ui: New.
+	* selectplotwindowdialog.h: New.
+	* selectplotwindowdialog.cpp: New.
+	* saxsviewmainwindow.h (addSubWindow): New.
+	* saxsviewmainwindow.cpp (addSubWindow): Moved to visibility
+	from private class.
+	(createPlotWindow): Drop pimpl.
+	(createImageWindow): Likewise.
+	* saxsviewsubwindow.h (ctor): Take only main windows as
+	argument. Likewise for all derived classes.
+	(mainWindow): New.
+	* saxsviewsubwindow.cpp (ctor): Take only main windows as
+	argument. Likewise for all derived classes.
+	(mainWindow): New.
+	* saxsviewplotwindow.h (load): New overload.
+	* saxsviewplotwindow.cpp (load(curve)): Refactored overload.
+	(load(filename)): Handle different curve types.
+	* CMakeLists.txt: Added new files.
+
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewmainwindow.cpp (load): Moved code to add recent

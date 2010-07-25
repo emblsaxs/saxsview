@@ -33,6 +33,7 @@ public:
   SaxsviewMainWindow(QWidget *parent = 0L);
   ~SaxsviewMainWindow();
 
+  void addSubWindow(SaxsviewSubWindow*);
   SaxsviewSubWindow* currentSubWindow() const;
 
 public slots:

@@ -5,11 +5,17 @@ include_directories (${QWT_SOURCE_DIR}
                      ${CMAKE_CURRENT_SOURCE_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR})
 
+link_directories (${LIBSAXSDOCUMENT_BINARY_DIR}
+                  ${LIBSAXSVIEW_BINARY_DIR})
+
 # run moc
 qt4_wrap_cpp (saxsview_moc saxsviewmainwindow.h
                            saxsviewsubwindow.h
                            saxsviewimagewindow.h
-                           saxsviewplotwindow.h)
+                           saxsviewplotwindow.h
+                           selectplotwindowdialog.h)
+
+qt4_wrap_ui (saxsview_uic selectplotwindowdialog.ui)
 
 qt4_add_resources (saxsview_res saxsview.qrc)
 
@@ -19,14 +25,13 @@ configure_file (config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 add_executable (saxsviewapp
                 main.cpp
                 ${saxsview_moc}
+                ${saxsview_uic}
                 ${saxsview_res}
                 saxsviewmainwindow.cpp saxsviewmainwindow.h
                 saxsviewsubwindow.cpp saxsviewsubwindow.h
                 saxsviewplotwindow.cpp saxsviewplotwindow.h
-                saxsviewimagewindow.cpp saxsviewimagewindow.h)
-
-link_directories (${LIBSAXSDOCUMENT_BINARY_DIR}
-                  ${LIBSAXSVIEW_BINARY_DIR})
+                saxsviewimagewindow.cpp saxsviewimagewindow.h
+                selectplotwindowdialog.cpp selectplotwindowdialog.h)
 
 if (WIN32)
   set_target_properties (saxsviewapp PROPERTIES

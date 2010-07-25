@@ -345,24 +345,6 @@ void SaxsviewMainWindow::SaxsviewMainWindowPrivate::setupSignalMappers() {
           mw, SLOT(exportAs(const QString&)));
 }
 
-void SaxsviewMainWindow::SaxsviewMainWindowPrivate::addSubWindow(SaxsviewSubWindow *w) {
-  connect(w, SIGNAL(destroyed(QObject*)),
-          mw, SLOT(subWindowDestroyed(QObject*)));
-
-  mdiArea->addSubWindow(w);
-
-  if (QToolBar *toolBar = w->createToolBar()) {
-    subWindowToolBars.insert(w, toolBar);
-    mw->addToolBar(toolBar);
-    toolBar->hide();
-  }
-
-  if (mdiArea->subWindowList().size() == 1)
-    w->showMaximized();
-  else
-    w->show();
-}
-
 SaxsviewMainWindow::SaxsviewMainWindow(QWidget *parent)
  : QMainWindow(parent), p(new SaxsviewMainWindowPrivate(this)) {
 
@@ -379,17 +361,35 @@ SaxsviewMainWindow::~SaxsviewMainWindow() {
   delete p;
 }
 
+void SaxsviewMainWindow::addSubWindow(SaxsviewSubWindow *w) {
+  connect(w, SIGNAL(destroyed(QObject*)),
+          this, SLOT(subWindowDestroyed(QObject*)));
+
+  p->mdiArea->addSubWindow(w);
+
+  if (QToolBar *toolBar = w->createToolBar()) {
+    p->subWindowToolBars.insert(w, toolBar);
+    addToolBar(toolBar);
+    toolBar->hide();
+  }
+
+  if (p->mdiArea->subWindowList().size() == 1)
+    w->showMaximized();
+  else
+    w->show();
+}
+
 SaxsviewSubWindow* SaxsviewMainWindow::currentSubWindow() const {
   QMdiSubWindow *subWindow = p->mdiArea->currentSubWindow();
   return subWindow ? qobject_cast<SaxsviewSubWindow*>(subWindow) : 0L;
 }
 
 void SaxsviewMainWindow::createPlotWindow() {
-  p->addSubWindow(new SaxsviewPlotWindow(this));
+  addSubWindow(new SaxsviewPlotWindow(this));
 }
 
 void SaxsviewMainWindow::createImageWindow() {
-  p->addSubWindow(new SaxsviewImageWindow(this));
+  addSubWindow(new SaxsviewImageWindow(this));
 }
 
 void SaxsviewMainWindow::load() {

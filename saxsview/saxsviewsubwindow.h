@@ -25,11 +25,13 @@
 #include <QList>
 class QToolBar;
 
+class SaxsviewMainWindow;
+
 class SaxsviewSubWindow : public QMdiSubWindow {
   Q_OBJECT
 
 public:
-  SaxsviewSubWindow(QWidget *parent = 0L);
+  SaxsviewSubWindow(SaxsviewMainWindow *parent = 0L);
   virtual ~SaxsviewSubWindow();
 
   virtual int scale() const = 0;
@@ -47,6 +49,12 @@ public slots:
   virtual void setMoveEnabled(bool) = 0;
   virtual void setScale(int) = 0;
   virtual void configure();
+
+protected:
+  SaxsviewMainWindow* mainWindow() const;
+
+private:
+  SaxsviewMainWindow* mw;
 };
 
 #endif // !SAXSVIEW_SUBWINDOW_H

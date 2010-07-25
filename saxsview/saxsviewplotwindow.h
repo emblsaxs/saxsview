@@ -22,13 +22,16 @@
 #define SAXSVIEW_PLOTWINDOW_H
 
 #include "saxsviewsubwindow.h"
+class SaxsviewMainWindow;
+struct saxs_curve;
+
 class QEvent;
 
 class SaxsviewPlotWindow : public SaxsviewSubWindow {
   Q_OBJECT
 
 public:
-  SaxsviewPlotWindow(QWidget *parent = 0L);
+  SaxsviewPlotWindow(SaxsviewMainWindow *parent = 0L);
   ~SaxsviewPlotWindow();
 
   static bool canShow(const QString& fileName);
@@ -54,6 +57,8 @@ protected:
   bool eventFilter(QObject*, QEvent*);
 
 private:
+  void load(const QString& fileName, saxs_curve *curve);
+
   class SaxsviewPlotWindowPrivate;
   SaxsviewPlotWindowPrivate *p;
 };

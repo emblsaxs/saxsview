@@ -1,6 +1,6 @@
 /*
- * Interface for view subwindows.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * [FIXME]
+ * Copyright (C) 2010 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -18,28 +18,28 @@
  * along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "saxsviewmainwindow.h"
-#include "saxsviewsubwindow.h"
+#ifndef SELECT_PLOT_WINDOW_DIALOG_H
+#define SELECT_PLOT_WINDOW_DIALOG_H
 
-#include <QtGui>
+#include "ui_selectplotwindowdialog.h"
+class SaxsviewPlotWindow;
 
-SaxsviewSubWindow::SaxsviewSubWindow(SaxsviewMainWindow *parent)
- : QMdiSubWindow(parent), mw(parent) {
+#include <QDialog>
+class QAbstractButton;
 
-  setAttribute(Qt::WA_DeleteOnClose);
-}
 
-SaxsviewSubWindow::~SaxsviewSubWindow() {
-}
+class SelectPlotWindowDialog : public QDialog,
+                               private Ui::SelectPlotWindowDialog {
+  Q_OBJECT
 
-QToolBar* SaxsviewSubWindow::createToolBar() {
-  return 0L;
-}
+public:
+  SelectPlotWindowDialog(const QString& caption, QWidget *parent = 0L);
+  ~SelectPlotWindowDialog();
 
-void SaxsviewSubWindow::configure() {
-  QMessageBox::information(this, "Sorry", "Nothing to configure");
-}
+  void addPlotWindow(const QString& label, SaxsviewPlotWindow *w);
+  SaxsviewPlotWindow* selectedPlotWindow() const;
 
-SaxsviewMainWindow* SaxsviewSubWindow::mainWindow() const {
-  return mw;
-}
+  bool tileSubWindows() const;
+};
+
+#endif // !SELECT_PLOT_WINDOW_DIALOG_H

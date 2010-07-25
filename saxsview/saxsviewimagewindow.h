@@ -28,7 +28,7 @@ class SaxsviewImageWindow : public SaxsviewSubWindow {
   Q_OBJECT
 
 public:
-  SaxsviewImageWindow(QWidget *parent = 0L);
+  SaxsviewImageWindow(SaxsviewMainWindow *parent = 0L);
   ~SaxsviewImageWindow();
 
   static bool canShow(const QString& fileName);

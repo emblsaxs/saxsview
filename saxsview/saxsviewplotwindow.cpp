@@ -19,9 +19,11 @@
  */
 
 #include "saxsviewplotwindow.h"
+#include "saxsviewmainwindow.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 #include "saxsview_configdialog.h"
+#include "selectplotwindowdialog.h"
 
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
@@ -92,13 +94,11 @@ public:
 };
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupUi() {
-  sw->setAttribute(Qt::WA_DeleteOnClose);
-
   plot = new Saxsview::Plot(sw);
-  sw->setWidget(plot);
-
   plot->setAcceptDrops(true);
   plot->installEventFilter(sw);
+
+  sw->setWidget(plot);
 }
 
 void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupActions() {
@@ -121,7 +121,7 @@ void SaxsviewPlotWindow::SaxsviewPlotWindowPrivate::setupTracker() {
 }
 
 
-SaxsviewPlotWindow::SaxsviewPlotWindow(QWidget *parent)
+SaxsviewPlotWindow::SaxsviewPlotWindow(SaxsviewMainWindow *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewPlotWindowPrivate(this)) {
 
   p->setupUi();
@@ -160,6 +160,46 @@ QToolBar* SaxsviewPlotWindow::createToolBar() {
   return p->toolBar;
 }
 
+
+void SaxsviewPlotWindow::load(const QString& fileName, saxs_curve *curve) {
+  QFileInfo fileInfo(fileName);
+
+  Saxsview::PlotPointData points;
+  Saxsview::PlotIntervalData intervals;
+
+  saxs_data *data = saxs_curve_data(curve);
+  while (data) {
+    const double x     = saxs_data_x(data);
+    const double y     = saxs_data_y(data);
+    const double y_err = saxs_data_y_err(data);
+
+    data = saxs_data_next(data);
+    if (y - y_err < 1e-6)
+      continue;
+
+    points.push_back(QPointF(x, y));
+    intervals.push_back(QwtIntervalSample(x, y - y_err, y + y_err));
+  }
+
+  Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve(saxs_curve_type(curve));
+  plotCurve->setData(points, intervals);
+  if (plotCurve->boundingRect().isValid()) {
+    QString curveTitle = fileInfo.fileName();
+    if (saxs_curve_title(curve))
+      curveTitle += QString(" (%1)").arg(saxs_curve_title(curve));
+
+    plotCurve->setTitle(curveTitle);
+    plotCurve->setFileName(fileInfo.absoluteFilePath());
+
+    p->plot->addCurve(plotCurve);
+
+    if (saxs_curve_type(curve) & SAXS_CURVE_PROBABILITY_DATA)
+      setScale(Saxsview::Plot::AbsoluteScale);
+
+  } else
+    delete plotCurve;
+}
+
 void SaxsviewPlotWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())
@@ -173,44 +213,84 @@ void SaxsviewPlotWindow::load(const QString& fileName) {
     return;
   }
 
+  //
+  // Get a mask of curve types we already have in this plot
+  //
+  //  -> if the mask is empty, load the first curve) and add
+  //     the respective types to the mask
+  //
+  //  -> for each curve after the first, verify that the
+  //     current type of curve doesn't add any bits, if
+  //     it does, ask whether it really shall be opened
+  //     in the this plot or in another window.
+  //
+
+  int curve_type_mask = 0;
+  foreach (Saxsview::PlotCurve *curve, p->plot->curves())
+    if (curve->type() & SAXS_CURVE_SCATTERING_DATA)
+      curve_type_mask |= SAXS_CURVE_SCATTERING_DATA;
+    else
+      curve_type_mask |= curve->type();
+
   saxs_document *doc = saxs_document_create();
   saxs_document_read(doc, fileName.toAscii(), 0L);
 
-  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  saxs_curve *curve = saxs_document_curve(doc);
   while (curve) {
-    Saxsview::PlotPointData points;
-    Saxsview::PlotIntervalData intervals;
+    SaxsviewPlotWindow *plotWindow = 0L;
 
-    saxs_data *data = saxs_curve_data(curve);
-    while (data) {
-      const double x     = saxs_data_x(data);
-      const double y     = saxs_data_y(data);
-      const double y_err = saxs_data_y_err(data);
+    if (!curve_type_mask || (curve_type_mask & saxs_curve_type(curve))) {
+      plotWindow = this;
 
-      data = saxs_data_next(data);
-      if (y - y_err < 1e-6)
-        continue;
+    } else {
+      QString msg = "The current plot (%1) only contains %2. "
+                    "The next curve to open is a %3. Please select "
+                    "the plot to display the curve or choose "
+                    "'New Window' to open another plot window.";
 
-      points.push_back(QPointF(x, y));
-      intervals.push_back(QwtIntervalSample(x, y - y_err, y + y_err));
+      msg = msg.arg(windowTitle());
+      if (curve_type_mask & SAXS_CURVE_SCATTERING_DATA)
+        msg = msg.arg("scattering curves");
+      else if (curve_type_mask & SAXS_CURVE_PROBABILITY_DATA)
+        msg = msg.arg("probability curves");
+      else
+        msg = msg.arg("unknown data");
+
+      if (saxs_curve_type(curve) & SAXS_CURVE_SCATTERING_DATA)
+        msg = msg.arg("scattering curve");
+      else if (saxs_curve_type(curve) & SAXS_CURVE_PROBABILITY_DATA)
+        msg = msg.arg("probability curve");
+      else
+        msg = msg.arg("unknown data");
+
+      SelectPlotWindowDialog dlg(msg);
+
+      dlg.addPlotWindow("New Window", 0L);
+      foreach (QMdiSubWindow *subWindow, mdiArea()->subWindowList())
+        if (SaxsviewPlotWindow *w = dynamic_cast<SaxsviewPlotWindow*>(subWindow))
+          dlg.addPlotWindow(w->windowTitle(), w);
+
+      if (dlg.exec() == QDialog::Accepted) {
+        plotWindow = dlg.selectedPlotWindow();
+        if (!plotWindow) {
+          plotWindow = new SaxsviewPlotWindow(mainWindow());
+          mainWindow()->addSubWindow(plotWindow);
+        }
+      }
+
+      if (dlg.tileSubWindows())
+        mdiArea()->tileSubWindows();
     }
 
-    Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve(saxs_curve_type(curve));
-    plotCurve->setData(points, intervals);
-    if (plotCurve->boundingRect().isValid()) {
-      QString curveTitle = fileInfo.fileName();
-      if (saxs_curve_title(curve))
-        curveTitle += QString(" (%1)").arg(saxs_curve_title(curve));
+    if (plotWindow) {
+      plotWindow->load(fileName, curve);
+      if (saxs_curve_type(curve) & SAXS_CURVE_SCATTERING_DATA)
+        curve_type_mask |= SAXS_CURVE_SCATTERING_DATA;
+      else
+        curve_type_mask |= saxs_curve_type(curve);
+    }
 
-      plotCurve->setTitle(curveTitle);
-      plotCurve->setFileName(fileInfo.absoluteFilePath());
-
-      p->plot->addCurve(plotCurve);
-
-    } else
-      delete plotCurve;
-
-    curve = saxs_curve_find_next(curve, SAXS_CURVE_SCATTERING_DATA);
+    curve = saxs_curve_next(curve);
   }
 
   saxs_document_free(doc);

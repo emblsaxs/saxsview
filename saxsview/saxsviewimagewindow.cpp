@@ -19,6 +19,7 @@
  */
 
 #include "saxsviewimagewindow.h"
+#include "saxsviewmainwindow.h"
 #include "saxsview_plot.h"
 #include "saxsview_image.h"
 
@@ -186,8 +187,6 @@ public:
 };
 
 void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setupUi() {
-  sw->setAttribute(Qt::WA_DeleteOnClose);
-
   plot = new Saxsview::Plot(sw);
   sw->setWidget(plot);
 }
@@ -363,8 +362,9 @@ void SaxsviewImageWindow::SaxsviewImageWindowPrivate::setScale(Saxsview::Plot::P
   plot->replot();
 }
 
-SaxsviewImageWindow::SaxsviewImageWindow(QWidget *parent)
+SaxsviewImageWindow::SaxsviewImageWindow(SaxsviewMainWindow *parent)
  : SaxsviewSubWindow(parent), p(new SaxsviewImageWindowPrivate(this)) {
+
   p->setupUi();
   p->setupActions();
   p->setupSignalMappers();
