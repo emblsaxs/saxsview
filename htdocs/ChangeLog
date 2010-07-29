@@ -1,3 +1,7 @@
+2010-07-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Fixed build description, aded note about LD_LIBRARY_PATH.
+
 2010-07-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* screenshot-saxsview-plot.png: New.

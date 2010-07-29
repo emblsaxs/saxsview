@@ -114,16 +114,20 @@ generally assumed to work:</p>
 
 <p>Dependecies less commonly found (Qwt, CBFlib) on average systems come 
 together with the <i>saxsview</i> sources.</p>
-<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu) and
-Windows (i686-unknown-mingw), it is to expect that it works on Mac as well.</p>
+<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu), MacOSX
+10.5 (Intel-based) and Windows (i686-unknown-mingw).</p>
 
-<h3>Building saxsview from distribution packages</h3>
+<p>Please note, depending on your installation location, e.g. <tt>/usr/local</tt> in
+Linux, you may need to adjust <tt>LD_LIBRARY_PATH</tt> as well.</p>
+
+
+<h3>Building saxsview from source packages</h3>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
 apply for Windows or MacOSX builds:</p>
 <pre>
   $> tar xfz saxsview-0.2.0.tar.gz
   $> cd saxsview-0.2.0
-  $> mkdir build && build
+  $> mkdir build && cd build
   $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
   $> make
   $> make test      # optional, check that libsaxsdocument works
@@ -137,7 +141,7 @@ apply for Windows or MacOSX builds:</p>
 <pre>
   $> svn co https://saxsview.svn.sourceforge.net/svnroot/saxsview/trunk saxsview
   $> cd saxsview
-  $> mkdir build && build
+  $> mkdir build && cd build
   $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
   $> make
   $> make test      # optional, check that libsaxsdocument works
@@ -159,6 +163,7 @@ LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
 
 <h2><a name="releases">Releases and Milestones</a></h2>
 <ul>
+  <li>2010/07/25 - distance distributions from .out files are now properly handled</li>
   <li>2010/07/16 - in image view, counts of current position are shown status bar</li>
   <li>2010/07/16 - configurable templates per file type are now available</li>
   <li>2010/06/20 - plot configuration refactored; configurable curve templates and configurable default colors added
@@ -168,7 +173,7 @@ LGPLv2.1</a>, which is compatible to the LGPLv3.</p>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
 </ul>
 
-<p style="text-align:center">Last updated 2010-07-18</p>
+<p style="text-align:center">Last updated 2010-07-29</p>
 
 <p>
   <a href="http://validator.w3.org/check?uri=referer">
