@@ -321,12 +321,6 @@ void QwtPlotRenderer::render(QwtPlot *plot,
         renderTitle(painter, plot->plotLayout()->titleRect());
     }
 
-    if ( !(d_data->discardFlags & DiscardLegend)
-        && plot->legend() && !plot->legend()->isEmpty() )
-    {
-        renderLegend(painter, plot->plotLayout()->legendRect());
-    }
-
     for ( axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
     {
         QwtScaleWidget *scaleWidget = plot->axisWidget(axisId);
@@ -391,6 +385,12 @@ void QwtPlotRenderer::render(QwtPlot *plot,
 
     // canvas 
     renderCanvas(painter, canvasRect, map);
+
+    if ( !(d_data->discardFlags & DiscardLegend)
+        && plot->legend() && !plot->legend()->isEmpty() )
+    {
+        renderLegend(painter, plot->plotLayout()->legendRect());
+    }
 
     plot->plotLayout()->invalidate();
 
@@ -651,4 +651,8 @@ void QwtPlotRenderer::renderCanvas(QPainter *painter,
 
     painter->setClipRect(canvasRect);
     d_data->plot->drawItems(painter, canvasRect, map);
+}
+
+QwtPlot* QwtPlotRenderer::plot() const {
+  return d_data->plot;
 }

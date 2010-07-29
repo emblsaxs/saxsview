@@ -104,6 +104,9 @@ protected:
 
     virtual void renderLegend(QPainter *, const QRectF &) const;
 
+    // to be used by derived classes that overload protected functions
+    QwtPlot* plot() const;
+    
 private:
     class PrivateData;
     PrivateData *d_data;

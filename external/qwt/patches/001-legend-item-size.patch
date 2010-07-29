@@ -1,0 +1,13 @@
+Index: qwt_plot_curve.cpp
+===================================================================
+--- qwt_plot_curve.cpp	(revision 95)
++++ qwt_plot_curve.cpp	(working copy)
+@@ -864,7 +864,7 @@ void QwtPlotCurve::updateLegend(QwtLegen
+         if ( lgdItem && lgdItem->inherits("QwtLegendItem") )
+         {
+             QwtLegendItem *l = (QwtLegendItem *)lgdItem;
+-            l->setIdentifierSize(d_data->symbol->boundingSize());
++            l->setIdentifierSize(d_data->symbol->boundingSize().expandedTo(l->identifierSize()));
+         }
+     }
+ 

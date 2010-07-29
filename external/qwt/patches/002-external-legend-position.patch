@@ -1,0 +1,52 @@
+Index: qwt_plot_renderer.cpp
+===================================================================
+--- qwt_plot_renderer.cpp	(revision 95)
++++ qwt_plot_renderer.cpp	(working copy)
+@@ -321,12 +321,6 @@ void QwtPlotRenderer::render(QwtPlot *pl
+         renderTitle(painter, plot->plotLayout()->titleRect());
+     }
+ 
+-    if ( !(d_data->discardFlags & DiscardLegend)
+-        && plot->legend() && !plot->legend()->isEmpty() )
+-    {
+-        renderLegend(painter, plot->plotLayout()->legendRect());
+-    }
+-
+     for ( axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+     {
+         QwtScaleWidget *scaleWidget = plot->axisWidget(axisId);
+@@ -392,6 +386,12 @@ void QwtPlotRenderer::render(QwtPlot *pl
+     // canvas 
+     renderCanvas(painter, canvasRect, map);
+ 
++    if ( !(d_data->discardFlags & DiscardLegend)
++        && plot->legend() && !plot->legend()->isEmpty() )
++    {
++        renderLegend(painter, plot->plotLayout()->legendRect());
++    }
++
+     plot->plotLayout()->invalidate();
+ 
+     // reset all widgets with their original attributes.
+@@ -652,3 +652,7 @@ void QwtPlotRenderer::renderCanvas(QPain
+     painter->setClipRect(canvasRect);
+     d_data->plot->drawItems(painter, canvasRect, map);
+ }
++
++QwtPlot* QwtPlotRenderer::plot() const {
++  return d_data->plot;
++}
+Index: qwt_plot_renderer.h
+===================================================================
+--- qwt_plot_renderer.h	(revision 95)
++++ qwt_plot_renderer.h	(working copy)
+@@ -104,6 +104,9 @@ protected:
+ 
+     virtual void renderLegend(QPainter *, const QRectF &) const;
+ 
++    // to be used by derived classes that overload protected functions
++    QwtPlot* plot() const;
++    
+ private:
+     class PrivateData;
+     PrivateData *d_data;

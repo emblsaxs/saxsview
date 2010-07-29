@@ -1,0 +1,31 @@
+
+Local patches to Qwt Sources
+============================
+This directory tracks the patches applied to the vanilla qwt-sources otherwise
+provided. As cmake-2.8.0 does not yet provide easy means to apply patches at
+the users side, patches are applied directly to the repository.
+
+The remainder of this README describes the patches in some detail.
+
+
+
+001-legend-item-size.patch
+--------------------------
+In qwt_plot_curve.cpp, the identifier size of a curve's legend symbol is set 
+to the size of the symbol - discarding any (larger) size already set by the 
+user.
+
+See also:
+http://sourceforge.net/mailarchive/forum.php?thread_name=201006061913.25315.franke.daniel%40gmail.com&forum_name=qwt-interest
+
+
+
+002-external-legend-position.patch
+----------------------------------
+In qwt_plot.h (current trunk) one finds:
+
+        \note In case of ExternalLegend, the legend is not 
+              handled by QwtPlotRenderer
+
+See also:
+http://sourceforge.net/mailarchive/forum.php?thread_name=201007232238.41892.franke.daniel%40gmail.com&forum_name=qwt-interest

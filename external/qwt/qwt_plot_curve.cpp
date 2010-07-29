@@ -864,7 +864,7 @@ void QwtPlotCurve::updateLegend(QwtLegend *legend) const
         if ( lgdItem && lgdItem->inherits("QwtLegendItem") )
         {
             QwtLegendItem *l = (QwtLegendItem *)lgdItem;
-            l->setIdentifierSize(d_data->symbol->boundingSize());
+            l->setIdentifierSize(d_data->symbol->boundingSize().expandedTo(l->identifierSize()));
         }
     }
 
