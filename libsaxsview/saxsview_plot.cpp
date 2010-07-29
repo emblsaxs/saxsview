@@ -40,6 +40,29 @@
 
 namespace Saxsview {
 
+/* An external legend, i.e. a legend shown on top of the
+   plot canvas, needs to be positioned properly. */
+class PlotRenderer : public QwtPlotRenderer {
+protected:
+  void renderLegend(QPainter *painter, const QRectF &r) const {
+    QRectF rect = r;
+
+    if (!rect.isValid()) {
+      QRectF canvasRect = plot()->plotLayout()->canvasRect();
+      QSize legendSizeHint = plot()->legend()->sizeHint();
+
+      rect.setTop(30);
+      rect.setLeft(canvasRect.right() - legendSizeHint.width() - 30);
+      rect.setWidth(legendSizeHint.width());
+      rect.setHeight(legendSizeHint.height());
+    }
+
+    QwtPlotRenderer::renderLegend(painter, rect);
+  }
+};
+
+
+
 class Plot::PlotPrivate {
 public:
   PlotPrivate(Plot *p)
@@ -264,7 +287,8 @@ void Plot::exportAs(const QString& fileName) {
     // FIXME: there's no "do you want to overwrite" dialog if a
     //        file already exists?!
     //
-    QwtPlotRenderer renderer;
+    PlotRenderer renderer;
+    renderer.setLayoutFlag(QwtPlotRenderer::KeepMargins);
     renderer.renderDocument(this, fileName, size()*25.4/85, 600);
 
   } else
@@ -272,10 +296,6 @@ void Plot::exportAs(const QString& fileName) {
 }
 
 void Plot::print() {
-  //
-  // FIXME: The indicator of legend-items is not properly
-  //        scaled
-  //
   QString printerName = config().recentPrinter();
 
   QPrinter printer(QPrinter::HighResolution);
@@ -285,7 +305,7 @@ void Plot::print() {
 
   QPrintDialog dlg(&printer, this);
   if (dlg.exec() == QDialog::Accepted) {
-    QwtPlotRenderer renderer;
+    PlotRenderer renderer;
     renderer.renderTo(this, printer);
   }
 
