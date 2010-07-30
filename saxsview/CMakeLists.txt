@@ -38,11 +38,18 @@ if (WIN32)
                          WIN32_EXECUTABLE TRUE)
 endif (WIN32)
 
+#
+# renaming a target on install does not work, hence redefine the output
+# name to get a saxsview[.exe] application.
+#
+set_target_properties (saxsviewapp PROPERTIES
+                       OUTPUT_NAME saxsview)
+
+
 target_link_libraries (saxsviewapp
                        saxsview
                        saxsdocument
                        saxsimage)
 
 install (TARGETS saxsviewapp
-         RUNTIME DESTINATION bin
-         RENAME saxsview)
+         RUNTIME DESTINATION bin)
