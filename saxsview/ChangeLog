@@ -1,5 +1,16 @@
 2010-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewmainwindow.cpp (exportAs): Do no add format as extension
+	if not provided, instead, pass on format indicator.
+	* saxsviewsubwindow.h (exportAs): Add 'format' argument.
+	* saxsviewplotwindow.h (exportAs): Likewise.
+	* saxsviewplotwindow.cpp (exportAs): Add 'format' argument, pass it on.
+	* saxsviewimagewindow.h (exportAs): Add 'format' argument.
+	* saxsviewimagewindow.cpp (exportAs): Add 'format' argument,
+	pass it on.
+
+2010-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Fixed renaming of saxsviewapp target.
 
 2010-07-25  Daniel Franke  <dfranke@users.sourceforge.net>

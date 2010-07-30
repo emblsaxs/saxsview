@@ -1,3 +1,8 @@
+2010-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.h (exportAs): Add 'format' argument.
+	* saxsview_plot.cpp (exportAs): Add 'format' argument, pass it on.
+
 2010-07-29  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.cpp (class PlotRenderer): New.

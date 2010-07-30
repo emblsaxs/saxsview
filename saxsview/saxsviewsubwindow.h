@@ -42,7 +42,7 @@ public:
 
 public slots:
   virtual void load(const QString& fileName) = 0;
-  virtual void exportAs(const QString& fileName) = 0;
+  virtual void exportAs(const QString& fileName, const QString& format) = 0;
   virtual void print() = 0;
   virtual void zoomFit() = 0;
   virtual void setZoomEnabled(bool) = 0;

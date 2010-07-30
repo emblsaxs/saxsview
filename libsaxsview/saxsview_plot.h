@@ -65,7 +65,7 @@ public slots:
 
   void clear();
   void exportAs();
-  void exportAs(const QString&);
+  void exportAs(const QString& fileName, const QString& format = QString());
   void print();
   void configure();
   void setZoomBase(const QRectF& rect = QRectF());

@@ -452,8 +452,9 @@ void SaxsviewImageWindow::load(const QString& fileName) {
   unsetCursor();
 }
 
-void SaxsviewImageWindow::exportAs(const QString& fileName) {
-  p->plot->exportAs(fileName);
+void SaxsviewImageWindow::exportAs(const QString& fileName,
+                                   const QString& format) {
+  p->plot->exportAs(fileName, format);
 }
 
 void SaxsviewImageWindow::print() {

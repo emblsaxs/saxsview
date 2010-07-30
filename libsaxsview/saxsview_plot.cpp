@@ -275,24 +275,19 @@ void Plot::exportAs() {
   exportAs(fileName);
 }
 
-void Plot::exportAs(const QString& fileName) {
+void Plot::exportAs(const QString& fileName, const QString& format) {
   if (fileName.isEmpty())
     return;
 
-  QString ext = QFileInfo(fileName).completeSuffix();
+  QString ext = format.isEmpty() ? QFileInfo(fileName).completeSuffix() : format;
 
   if (ext == "ps" || ext == "pdf" || ext == "svg") {
-
-    //
-    // FIXME: there's no "do you want to overwrite" dialog if a
-    //        file already exists?!
-    //
     PlotRenderer renderer;
     renderer.setLayoutFlag(QwtPlotRenderer::KeepMargins);
-    renderer.renderDocument(this, fileName, size()*25.4/85, 600);
+    renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
 
   } else
-    QPixmap::grabWidget(this).save(fileName);
+    QPixmap::grabWidget(this).save(fileName, qPrintable(ext));
 }
 
 void Plot::print() {

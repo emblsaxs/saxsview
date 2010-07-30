@@ -296,8 +296,9 @@ void SaxsviewPlotWindow::load(const QString& fileName) {
   saxs_document_free(doc);
 }
 
-void SaxsviewPlotWindow::exportAs(const QString& fileName) {
-  p->plot->exportAs(fileName);
+void SaxsviewPlotWindow::exportAs(const QString& fileName,
+                                  const QString& format) {
+  p->plot->exportAs(fileName, format);
 }
 
 void SaxsviewPlotWindow::print() {

@@ -41,7 +41,7 @@ public:
 
 public slots:
   void load(const QString& fileName);
-  void exportAs(const QString& fileName);
+  void exportAs(const QString& fileName, const QString& format);
   void print();
   void zoomFit();
   void setZoomEnabled(bool);

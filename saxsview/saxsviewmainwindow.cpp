@@ -453,17 +453,8 @@ void SaxsviewMainWindow::exportAs(const QString& format) {
                                                   filter,
                                                   &selectedFilter);
 
-  if (fileName.isEmpty())
-    return;
-
-  // append selected extension if the user didn't enter one
-  QString ext = QFileInfo(fileName).completeSuffix();
-  if (ext.isEmpty()) {
-    fileName += "." + format;
-    ext = format;
-  }
-
-  currentSubWindow()->exportAs(fileName);
+  if (!fileName.isEmpty())
+    currentSubWindow()->exportAs(fileName, format);
 }
 
 void SaxsviewMainWindow::print() {
