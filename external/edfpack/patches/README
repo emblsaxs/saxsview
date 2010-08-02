@@ -1,0 +1,15 @@
+
+Local patches to edfpack Sources
+================================
+This directory tracks the patches applied to the vanilla edfpack-sources
+otherwise provided. As cmake-2.8.0 does not yet provide easy means to
+apply patches at the users side, patches are applied directly to the
+repository.
+
+The remainder of this README describes the patches in some detail.
+
+
+
+001-format-descriptor.patch
+---------------------------
+Fix compiler warnings about incorrect format descriptors on 32-bit platforms.
