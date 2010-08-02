@@ -1,5 +1,9 @@
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Added subdirectory external/edfpack.
+
+2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* external/edfpack: New subdirectory.
 	* COPYING.edfpack: New.
 

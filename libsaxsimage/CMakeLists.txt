@@ -4,7 +4,8 @@ find_package (TIFF)
 
 set (SOURCES saxsimage.c
              saxsimage_format.c
-             cbf.c)
+             cbf.c
+             edf.c)
 
 set (HEADERS saxsimage.h
              saxsimage_format.h)
@@ -17,8 +18,8 @@ endif (TIFF_FOUND)
 
 add_library (saxsimage SHARED ${SOURCES} ${HEADERS})
 
-include_directories(${CBFLIB_SOURCE_DIR})
-target_link_libraries (saxsimage saxsdocument cbf)
+include_directories(${CBFLIB_SOURCE_DIR} ${EDFPACK_SOURCE_DIR})
+target_link_libraries (saxsimage saxsdocument cbf edf)
 
 # conditional include directories and libraries
 if (TIFF_FOUND)
