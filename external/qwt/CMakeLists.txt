@@ -72,5 +72,3 @@ target_link_libraries (qwt ${QT_LIBRARIES})
 install (TARGETS qwt
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
-install (FILES ${HEADERS}
-         DESTINATION include/qwt)

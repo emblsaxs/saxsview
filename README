@@ -3,8 +3,9 @@ libsaxsdocument and saxsview
 
 Read, convert and view files related to Small Angle X-ray Scattering (SAXS).
 
-The libraries, libsaxsdocument and libsaxsview, are released under the LGPLv3,
-saxsview under the GPLv3. See the respective COPYING-files for details.
+The libraries, libsaxsimage, libsaxsdocument and libsaxsview, are released
+under the LGPLv3, the saxsview application under the GPLv3. See the respective
+COPYING-files for details.
 
 In the initial proof-of-concept implementation, file formats of the ATSAS
 programs are implemented. However, the scope of libsaxsdocument is to integrate
@@ -18,17 +19,8 @@ the Fortran bindings for libsaxsdocument, gcc-4.3 or later will be necessary.
 Without these, an earlier version should be fine.
 
 The code is plain C for libsaxsdocument and based on Qt/Qwt for saxsview. It
-should be possible to compile it on any recent Linux, Windows or Mac platform.
-I'd consider it a bug otherwise.
+has been successfully compiled for Linux, MacOSX 10.5 and MinGW.
 
-To build (bash):
-    $> mkdir build; cd build
-    $> cmake .. -DCMAKE_INSTALL_PREFIX=[install-path]
-    $> make all test
-    $> make install
-
-
-2009/08/09
+2010/08/02
 
 	Daniel Franke
-

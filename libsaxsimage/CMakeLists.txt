@@ -31,7 +31,3 @@ endif (TIFF_FOUND)
 install (TARGETS saxsimage
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
-
-install (FILES saxsimage.h
-         DESTINATION include/saxsimage)
-

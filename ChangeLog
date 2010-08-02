@@ -1,5 +1,12 @@
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* cmake/: New subdirectory.
+	* CMakeLists.txt: Include cmake-directory in module search path.
+	Move packaging related information to cmake/packaging.cmake.
+	* README: Updated.
+
+2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Added subdirectory external/edfpack.
 
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>

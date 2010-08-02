@@ -34,7 +34,3 @@ endif (LIBXML2_FOUND)
 install (TARGETS saxsdocument
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
-
-install (FILES saxsdocument.h
-         DESTINATION include/saxsdocument)
-

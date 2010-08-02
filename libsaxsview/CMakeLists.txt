@@ -69,5 +69,3 @@ target_link_libraries (saxsview
 install (TARGETS saxsview
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
-install (FILES ${HEADERS}
-         DESTINATION include/saxsview)
