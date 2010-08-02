@@ -33,6 +33,9 @@ class PlotCurve;
 
 class SaxsviewConfig {
 public:
+  QString recentDirectory() const;
+  void setRecentDirectory(const QString&);
+
   QStringList recentFiles() const;
   void addRecentFile(const QString&);
 

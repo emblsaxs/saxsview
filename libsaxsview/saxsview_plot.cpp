@@ -270,7 +270,7 @@ void Plot::clear() {
 
 void Plot::exportAs() {
   QString fileName = QFileDialog::getSaveFileName(this, "Export As",
-                                                  QDir::currentPath(),
+                                                  config().recentDirectory(),
                                                   "All files (*.*)");
   exportAs(fileName);
 }

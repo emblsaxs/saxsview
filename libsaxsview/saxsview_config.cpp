@@ -45,6 +45,14 @@ SaxsviewConfig::SaxsviewConfig() {
 SaxsviewConfig::~SaxsviewConfig() {
 }
 
+QString SaxsviewConfig::recentDirectory() const {
+  return settings().value("recentDirectory", QDir::currentPath()).toString();
+}
+
+void SaxsviewConfig::setRecentDirectory(const QString& path) {
+  settings().setValue("recentDirectory", QFileInfo(path).absolutePath());
+}
+
 QStringList SaxsviewConfig::recentFiles() const {
   return settings().value("recentFiles").toStringList();
 }

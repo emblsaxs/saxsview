@@ -1,5 +1,14 @@
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_config.h (recentDirectory): New.
+	(setRecentDirectory): New.
+	* saxsview_config.cpp (recentDirectory): New.
+	(setRecentDirectory): New.
+	* saxsview_plot.cpp (exportAs): Use recent directory, not
+	current directory as a starting point for the save file name.
+
+2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Do not install include files.
 
 2010-07-30  Daniel Franke  <dfranke@users.sourceforge.net>

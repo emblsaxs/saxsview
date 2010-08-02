@@ -393,7 +393,8 @@ void SaxsviewMainWindow::createImageWindow() {
 }
 
 void SaxsviewMainWindow::load() {
-  QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...");
+  QStringList fileNames = QFileDialog::getOpenFileNames(this, "Open file ...",
+                                                        config().recentDirectory());
 
   setCursor(Qt::WaitCursor);
   foreach (QString fileName, fileNames)
@@ -431,6 +432,7 @@ void SaxsviewMainWindow::load(const QString& fileName) {
   if (currentSubWindow()) {
     currentSubWindow()->load(fileName);
     config().addRecentFile(fileName);
+    config().setRecentDirectory(fileName);
   }
 }
 
@@ -449,12 +451,14 @@ void SaxsviewMainWindow::exportAs(const QString& format) {
                                        .arg(format);
 
   QString fileName = QFileDialog::getSaveFileName(this, "Export As",
-                                                  QDir::currentPath(),
+                                                  config().recentDirectory(),
                                                   filter,
                                                   &selectedFilter);
 
-  if (!fileName.isEmpty())
+  if (!fileName.isEmpty()) {
     currentSubWindow()->exportAs(fileName, format);
+    config().setRecentDirectory(fileName);
+  }
 }
 
 void SaxsviewMainWindow::print() {
