@@ -1,6 +1,10 @@
 project (LIBSAXSIMAGE C)
 
-find_package (TIFF)
+find_package (TIFF QUIET)
+if (NOT TIFF_FOUND)
+  message (STATUS "Optional package libtiff not found, TIFF image format disabled.")
+endif (NOT TIFF_FOUND)
+
 
 set (SOURCES saxsimage.c
              saxsimage_format.c

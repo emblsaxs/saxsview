@@ -1,6 +1,10 @@
 project (LIBSAXSDOCUMENT C)
 
-find_package (LibXml2)
+find_package (LibXml2 QUIET)
+if (NOT LIBXML2_FOUND)
+  message (STATUS "Optional package libxml2 not found, CANSAS-XML document format disabled.")
+endif (NOT LIBXML2_FOUND)
+
 
 set (SOURCES saxsproperty.c
              saxsdocument.c
