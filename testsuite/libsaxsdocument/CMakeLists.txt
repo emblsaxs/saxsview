@@ -13,20 +13,23 @@ target_link_libraries (doctest saxsdocument)
 #
 
 # a non-existant file should be flagged as such
-add_test (read-nosuchfile doctest nosuchfile)
+add_test (NAME read-nosuchfile
+          COMMAND $<TARGET_FILE:doctest> nosuchfile)
 set_property (TEST read-nosuchfile PROPERTY WILL_FAIL TRUE)
 
 # read-only tests for .dat-files
 set (DATTESTS "empty;whitespace;columns;bsa;long-lines")
 foreach (test ${DATTESTS})
-  add_test (read-dat-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+  add_test (NAME read-dat-${test}
+            COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 endforeach (test)
 
 # read-write tests
 set (DATTESTS "columns;bsa;")
 foreach (test ${DATTESTS})
-  add_test (read-write-dat-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
+  add_test (NAME read-write-dat-${test}
+            COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat
                                            ${CMAKE_CURRENT_BINARY_DIR}/${test}.dat
                                            ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 endforeach (test)
@@ -34,8 +37,9 @@ endforeach (test)
 # read-only tests for .out-files
 set (OUTTESTS "lyzexp;")
 foreach (test ${OUTTESTS})
-  add_test (read-out-${test} doctest ${CMAKE_CURRENT_SOURCE_DIR}/${test}.out
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+  add_test (NAME read-out-${test}
+            COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.out
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 endforeach (test)
 
 
