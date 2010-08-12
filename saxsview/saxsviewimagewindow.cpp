@@ -38,20 +38,36 @@
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
 
-//
-// In Qt-4.5.x, maybe earlier ones as well, it's not possible to store
-// an opaque pointer as a QSharedPointer<T>. As a workaround, the opaque
-// pointer is held in a separate class, which then can be used with a
-// QSharedPointer<T>. See also:
-//
-// http://lists.trolltech.com/pipermail/qt-interest/2009-August/011754.html
-//
 class ImageData : public QwtRasterData {
 public:
-  class ImagePointerHolder {
+  //
+  // Share the image pointer between instances.
+  // Only free if the last instance goes out of scope.
+  //
+  // Qt-4.5 also provides QSharedDataPointer which would
+  // simplify things a bit, but
+  //  (a) it's not available in Qt-4.4
+  //  (b) in Qt-4.5 it's not possible to store an opaque
+  //      pointer as a QSharedPointer<T>. As a workaround,
+  //      the opaque pointer may be held in a separate class,
+  //      which then could be used with a QSharedPointer<T>.
+  //      This was fixed for Qt-4.6. See also:
+  //      http://lists.trolltech.com/pipermail/qt-interest/2009-August/011754.html
+  //
+  // @sa copy
+  //
+  class ImagePointerHolder : public QSharedData {
   public:
-    ImagePointerHolder(saxs_image *img) : image(img) { }
+    ImagePointerHolder(saxs_image *img)
+     : image(img) {
+    }
+
+    ImagePointerHolder(const ImagePointerHolder& other)
+     : QSharedData(other), image(other.image) {
+    }
+
     ~ImagePointerHolder() { saxs_image_free(image);}
+
     saxs_image *image;
   };
 
@@ -59,7 +75,7 @@ public:
    : QwtRasterData(QRectF(0.0, 0.0,
                           saxs_image_width(image) - 1,
                           saxs_image_height(image) - 1)),
-     p(QSharedPointer<ImagePointerHolder>(new ImagePointerHolder(image))),
+     p(new ImagePointerHolder(image)),
      mMin(qMax((int)saxs_image_value_min(image), 1)),
      mMax(saxs_image_value_max(image)) {
   }
@@ -92,7 +108,7 @@ public:
   }
 
 private:
-  QSharedPointer<ImagePointerHolder> p;
+  QSharedDataPointer<ImagePointerHolder> p;
   size_t mMin, mMax;
 };
 

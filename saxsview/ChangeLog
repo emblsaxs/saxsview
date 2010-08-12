@@ -1,5 +1,11 @@
 2010-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsviewimagewindow.cpp (class ImageData): Avoid usage of
+	class QSharedPointer only available in Qt-4.5, use QSharedData
+	and QSharedDataPointer instead.
+
+2010-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsviewplotwindow.cpp (explode): Avoid function only available
 	in Qt-4.5 and later.
 
