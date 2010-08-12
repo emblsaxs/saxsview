@@ -331,9 +331,15 @@ void SaxsviewPlotWindow::configure() {
 void SaxsviewPlotWindow::explode() {
   QStringList fileNames;
   foreach (Saxsview::PlotCurve *curve, p->plot->curves())
-    fileNames << curve->fileName();
-  fileNames.removeDuplicates();
+    if (!fileNames.contains(curve->fileName()))
+      fileNames << curve->fileName();
 
+  //
+  // NOTE: scaling by a factor of 10 is usually sufficient to separate
+  // curves, but it is not necessarily the case. Maybe one could/should
+  // check the overlap of adjacent curves and increase the scaling factor
+  // if too close?
+  //
   double factor = pow(10.0, floor(fileNames.size() / 2.0));
   foreach (Saxsview::PlotCurve *curve, p->plot->curves())
     curve->setScalingFactorY(factor / pow(10.0, fileNames.indexOf(curve->fileName())));
