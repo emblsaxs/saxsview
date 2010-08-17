@@ -1,3 +1,8 @@
+2010-08-18  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_configpage_plot.cpp (apply): Do not apply a minimum
+	intensity of 0.0 in log-plots.
+
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_config.h (recentDirectory): New.

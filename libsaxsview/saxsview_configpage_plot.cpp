@@ -83,9 +83,20 @@ void PlotConfigPage::apply() {
                          checkYTickLabels->isChecked());
   plot->setAxisFont(QwtPlot::yLeft, ticksFont);
 
-  // update the zoomBase, then zoom to it
+  //
+  // Update the zoomBase, then zoom to it.
+  // Sanity check: If the data has really small values, the spin box
+  //               can't show it and rounds to 0.0 - which is a problem
+  //               in log-plots. If the lower bound (spinRangeYFrom) is
+  //               less than the minimum step of the spin box, re-use
+  //               the current lower bound.
+  //
   QRectF r(QPointF(spinXRangeFrom->value(), spinYRangeFrom->value()),
            QPointF(spinXRangeTo->value(), spinYRangeTo->value()));
+
+  if (plot->scale() == Plot::Log10Scale
+      && spinYRangeFrom->value() < 1.0/pow(10.0, spinYRangeFrom->decimals()))
+    r.setTop(plot->zoomBase().top());
 
   plot->setZoomBase(r);
   plot->zoom(r);
