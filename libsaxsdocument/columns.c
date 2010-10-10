@@ -255,3 +255,48 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   return 0;
 }
+
+
+int saxs_reader_columns_count_file(const char *filename) {
+  struct line *lines, *header, *data, *footer;
+  int count;
+
+  if (lines_read(&lines, filename) != 0)
+    return -1;
+
+  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
+    return -1;
+
+  count = saxs_reader_columns_count(data);
+
+  lines_free(lines);
+  return count;
+}
+
+
+int saxs_reader_columns_parse_file(struct saxs_document *doc,
+                                   const char *filename,
+                                   int (*parse_header)(struct saxs_document*,
+                                                       struct line *,
+                                                       struct line *),
+                                   int (*parse_data)(struct saxs_document*,
+                                                     struct line *,
+                                                     struct line *),
+                                   int (*parse_footer)(struct saxs_document*,
+                                                       struct line *,
+                                                       struct line *)) {
+  struct line *lines, *header, *data, *footer;
+
+  if (lines_read(&lines, filename) != 0)
+    return -1;
+
+  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
+    return -1;
+
+  parse_header(doc, header, data);
+  parse_data(doc, data, footer);
+  parse_footer(doc, footer, NULL);
+
+  lines_free(lines);
+  return 0;
+}

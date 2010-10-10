@@ -34,30 +34,9 @@
 
 
 /**************************************************************************/
-int atsas_dat_check(const char *filename, const char *formatname);
-int atsas_dat_read(struct saxs_document *doc, const char *filename);
-int atsas_dat_write(struct saxs_document *doc, const char *filename);
-
-void
-saxs_document_format_register_atsas_dat() {
-  saxs_document_format atsas_dat = { "dat",
-                                     "ATSAS experimental data",
-                                     atsas_dat_check,
-                                     atsas_dat_read,
-                                     atsas_dat_write };
-
-  saxs_document_format_register(&atsas_dat);
-}
-
-/**************************************************************************/
-int atsas_dat_check(const char *filename, const char *formatname) {
-  return (!compare_format(formatname, "dat")
-          || !compare_format(suffix(filename), "dat")) ? 1 : 0;
-}
-
-/**************************************************************************/
-static int parse_header(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+static int
+atsas_dat_parse_header(struct saxs_document *doc,
+                       struct line *firstline, struct line *lastline) {
 
   /*
    * The first non-empty line is the 'title' of the file.
@@ -122,115 +101,135 @@ static int parse_header(struct saxs_document *doc,
   }
 
   /*
-   * All other lines/information (if any) is ignored for now.
+   * All other lines/information (if any) are ignored for now.
    */
 
   return 0;
 }
 
-static int parse_data(struct saxs_document *doc,
-                      struct line *firstline, struct line *lastline) {
-
-  /*
-   * A four-column .dat-file has two different error
-   * estimates: the first based on Poisson-statistics,
-   * the second are Gaussian error estimates.
-   *
-   * Here we read and handle the Poisson-statistics.
-   */
-  switch (saxs_reader_columns_count(firstline)) {
-    case 4:
-    case 3:
-      return saxs_reader_columns_parse(doc,
-                                       firstline, lastline, 
-                                       0, 1.0, 1, 1.0, 2,
-                                       "data",
-                                       SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) ? -1 : 0;
-
-    case 2:
-      return saxs_reader_columns_parse(doc,
-                                       firstline, lastline, 
-                                       0, 1.0, 1, 1.0, -1,
-                                       "data",
-                                       SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA) ? -1 : 0;
-
-    default:
-      return -1;
-  }
-
-}
-
-static int parse_footer(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+static int
+atsas_dat_parse_footer(struct saxs_document *doc,
+                       struct line *firstline, struct line *lastline) {
   /*
    * Anything useful here?
    */
   return 0;
 }
 
-int atsas_dat_read(struct saxs_document *doc, const char *filename) {
-  struct line *lines, *header, *data, *footer;
 
-  if (lines_read(&lines, filename) != 0)
-    return -1;
+/**************************************************************************/
+static int
+atsas_dat_3_column_parse_data(struct saxs_document *doc,
+                              struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse(doc,
+                                   firstline, lastline, 
+                                   0, 1.0, 1, 1.0, 2,
+                                   "data",
+                                   SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+}
 
-  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
-    return -1;
+int
+atsas_dat_3_column_check(const char *filename) {
+  return saxs_reader_columns_count_file(filename) == 3;
+}
 
-  parse_header(doc, header, data);
-  parse_data(doc, data, footer);
-  parse_footer(doc, footer, NULL);
-
-  lines_free(lines);
-  return 0;
+int
+atsas_dat_3_column_read(struct saxs_document *doc, const char *filename) {
+  return saxs_reader_columns_parse_file(doc, filename,
+                                        atsas_dat_parse_header,
+                                        atsas_dat_3_column_parse_data,
+                                        atsas_dat_parse_footer);
 }
 
 
 /**************************************************************************/
-static void write_header(FILE *fd, saxs_document *doc) {
-  saxs_property *title = saxs_document_property_find_first(doc, "title");
-  saxs_property *desc = saxs_document_property_find_first(doc, "sample-description");
-  saxs_property *code = saxs_document_property_find_first(doc, "sample-code");
-  saxs_property *conc = saxs_document_property_find_first(doc, "sample-concentration");
-
-  if (title && saxs_property_value(title))
-    fprintf(fd, "%s", saxs_property_value(title));
-  fprintf(fd, "\n");
-
-  if (desc && saxs_property_value(desc)
-      && code && saxs_property_value(code)
-      && conc && saxs_property_value(conc))
-    fprintf(fd, "Sample: %15s c= %s mg/ml code: %s\n",
-            saxs_property_value(desc), saxs_property_value(conc),
-            saxs_property_value(code));
+static int
+atsas_dat_4_column_parse_data(struct saxs_document *doc,
+                              struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse(doc,
+                                   firstline, lastline, 
+                                   0, 1.0, 1, 1.0, 2,
+                                   "data",
+                                   SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 }
 
-static void write_data(FILE* fd, saxs_document *doc) {
-  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
-
-  saxs_data *data = saxs_curve_data(curve);
-  while (data) {
-    fprintf(fd, "%14e %14e %14e\n",
-            saxs_data_x(data), saxs_data_y(data), saxs_data_y_err(data));
-    data = saxs_data_next(data);
-  }
+int
+atsas_dat_4_column_check(const char *filename) {
+  return saxs_reader_columns_count_file(filename) == 4;
 }
 
-static void write_footer(FILE *fd, saxs_document *doc) {
+int
+atsas_dat_4_column_read(struct saxs_document *doc, const char *filename) {
+  return saxs_reader_columns_parse_file(doc, filename,
+                                        atsas_dat_parse_header,
+                                        atsas_dat_4_column_parse_data,
+                                        atsas_dat_parse_footer);
 }
 
-int atsas_dat_write(struct saxs_document *doc, const char *filename) {
-  FILE *fd;
-  fd = !strcmp(filename, "-") ? stdout : fopen(filename, "w");
-  if (!fd)
-    return -1;
 
-  write_header(fd, doc);
-  write_data(fd, doc);
-  write_footer(fd, doc);
+/**************************************************************************/
+static int
+atsas_dat_n_column_parse_data(struct saxs_document *doc,
+                              struct line *firstline, struct line *lastline) {
 
-  if (fd != stdout)
-    fclose(fd);
+  int i, n = saxs_reader_columns_count(firstline);
+
+  for (i = 1; i < n; ++i)
+    if (saxs_reader_columns_parse(doc,
+                                  firstline, lastline, 
+                                  0, 1.0, i, 1.0, -1,
+                                  "data",
+                                  SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
+      return -1;
 
   return 0;
+}
+
+int
+atsas_dat_n_column_check(const char *filename) {
+  return saxs_reader_columns_count_file(filename) > 1;
+}
+
+int
+atsas_dat_n_column_read(struct saxs_document *doc, const char *filename) {
+  return saxs_reader_columns_parse_file(doc, filename,
+                                        atsas_dat_parse_header,
+                                        atsas_dat_n_column_parse_data,
+                                        atsas_dat_parse_footer);
+}
+
+
+/**************************************************************************/
+void
+saxs_document_format_register_atsas_dat() {
+  /*
+   * ATSAS .dat files come in multiple flavours.
+   * There are files with three columns (s, I, poisson-error), four
+   * columns (s, I, poisson-error, gaussian-error) and N columns,
+   * including N=3 and N=4, without any errors (s, I1, ..., IN).
+   *
+   * The N-column case is often used as input file for programs
+   * like OLIGOMER.
+   */
+  saxs_document_format atsas_dat_3_column = {
+     "dat", "atsas-dat-3-column",
+     "ATSAS experimental data, one data set with Poisson errors",
+     atsas_dat_3_column_check, atsas_dat_3_column_read, NULL
+  };
+
+  saxs_document_format atsas_dat_4_column = {
+     "dat", "atsas-dat-4-column",
+     "ATSAS experimental data, one data set with Poisson and Gaussian errors",
+     atsas_dat_4_column_check, atsas_dat_4_column_read, NULL
+  };
+
+  saxs_document_format atsas_dat_n_column = {
+     "dat", "atsas-dat-n-column",
+     "ATSAS experimental data, multiple data sets, no errors",
+     atsas_dat_n_column_check, atsas_dat_n_column_read, NULL
+  };
+
+  saxs_document_format_register(&atsas_dat_3_column);
+  saxs_document_format_register(&atsas_dat_4_column);
+  saxs_document_format_register(&atsas_dat_n_column);
 }

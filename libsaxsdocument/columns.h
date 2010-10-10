@@ -83,6 +83,40 @@ saxs_reader_columns_parse(struct saxs_document *doc,
 int
 saxs_reader_columns_count(struct line *l);
 
+
+/**
+ * @brief Count the number of data values in a file.
+ *
+ * Convenience function.
+ *
+ * Scans a file, splits it in header, data, footer and counts the
+ * data columns.
+ */
+int
+saxs_reader_columns_count_file(const char *filename);
+
+
+/**
+ * @brief Count the number of data values in a file.
+ *
+ * Convenience function.
+ *
+ * Scans a file, splits it in header, data, footer and counts the
+ * data columns.
+ */
+int
+saxs_reader_columns_parse_file(struct saxs_document *doc,
+                               const char *filename,
+                               int (*parse_header)(struct saxs_document*,
+                                                   struct line *,
+                                                   struct line *),
+                               int (*parse_data)(struct saxs_document*,
+                                                 struct line *,
+                                                 struct line *),
+                               int (*parse_footer)(struct saxs_document*,
+                                                   struct line *,
+                                                   struct line *));
+
 #ifdef __cplusplus
 }
 #endif

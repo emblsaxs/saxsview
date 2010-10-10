@@ -77,8 +77,8 @@ saxs_document_create();
  *
  * @param doc     A non-NULL document-pointer created by @ref saxs_document_create.
  * @param infile  Input-filename; reads from stdin if @c -.
- * @param format  A known format (e.g. "dat"). An attempt is made to deduce
- *                the format from the input filename if NULL.
+ * @param format  A known format (e.g. "atsas-dat-3-column"). An attempt is
+ *                made to deduce the format from the input filename if NULL.
  *
  * @returns -1 on error, 0 otherwise.
  */

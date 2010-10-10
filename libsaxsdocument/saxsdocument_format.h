@@ -35,22 +35,29 @@ struct saxs_document;
  */
 struct saxs_document_format {
   /**
-   * The name of the format, most often the filename
-   * extension, e.g. @a dat.
+   * The filename extension of the format, if any.
+   * Example: @a dat.
+   */
+  const char *extension;
+
+  /**
+   * A short descriptive and unique name for the format.
+   * If multiple format descriptions have the same extension,
+   * a particular one can be picked by name.
    */
   const char *name;
 
-  /** Free form descriptive text. */
+  /** Free form descriptive text, e.g. to be used in a GUI. */
   const char *description;
 
   /**
-   * @returns 1 if the @a filename or the @a formatname can be
-   * handled by this descriptor, 0 otherwise.
+   * @returns 1 if the @a filename be handled by this descriptor,
+   * 0 otherwise.
    *
-   * Aformat descriptor without a @a check function will never
+   * A format descriptor without a @a check function will never
    * be used.
    */
-  int (*check)(const char *filename, const char *formatname);
+  int (*check)(const char *filename);
 
   /**
    * @returns 0 if read successfully, -1 on error.
@@ -84,6 +91,12 @@ saxs_document_format_free(saxs_document_format*);
 void
 saxs_document_format_init();
 
+/**
+ * De-register all registered formats, frees all allocated memory.
+ */
+void
+saxs_document_format_clear();
+
 void
 saxs_document_format_register(const saxs_document_format *format);
 
@@ -100,12 +113,18 @@ saxs_document_format_next(saxs_document_format*);
  *
  * Convenience Function.
  *
+ * The @a formatname takes precedence over the @a filename as the
+ * @a filename uses the @a extension field to determine a suitable
+ * format. If a @a formatname is specified, the format descriptor
+ * with this name will be returned. If no such format descriptor
+ * is found, the @a filename extension will be examined and the
+ * first match will be returned.
+ *
  * @param filename    A filename, may be NULL.
  * @param formatname  The name of a format, may be NULL.
- * 
+ *
  * @returns A format description or NULL if no format could be found.
  */
-
 saxs_document_format*
 saxs_document_format_find(const char *filename,
                           const char *formatname);

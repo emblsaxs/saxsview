@@ -30,25 +30,6 @@
 #include <ctype.h>
 
 
-/**************************************************************************/
-int atsas_out_check(const char *filename, const char *format);
-int atsas_out_read(struct saxs_document *doc, const char *filename);
-
-saxs_document_format_register_atsas_out() {
-  saxs_document_format atsas_out = { "out",
-                                     "ATSAS GNOM out files",
-                                     atsas_out_check,
-                                     atsas_out_read,
-                                     NULL };
-
-  saxs_document_format_register(&atsas_out);
-}
-
-/**************************************************************************/
-int atsas_out_check(const char *filename, const char *format) {
-  return (!compare_format(format, "out")
-          || !compare_format(suffix(filename), "out")) ? 1 : 0;
-}
 
 /**************************************************************************/
 /*
@@ -170,8 +151,6 @@ static int parse_header(struct saxs_document *doc,
   return 0;
 }
 
-
-
 static int parse_scattering_data(struct saxs_document *doc,
                                  struct line *firstline,
                                  struct line *lastline) {
@@ -217,7 +196,7 @@ static int parse_probability_data(struct saxs_document *doc,
 
   /* distance distribution (r vs. P(r)) */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
-                                0, 1.0, 1, 1.0, 2, "distance distribution",
+                                0, 1.0, 1, 1.0, 2, "P(r)",
                                 SAXS_CURVE_PROBABILITY_DATA) != 0)
     return -1;
 
@@ -259,6 +238,10 @@ static int parse_footer(struct saxs_document *doc,
 
 }
 
+
+int atsas_out_check(const char *filename) {
+  return !compare_format(suffix(filename), "out") ? 1 : 0;
+}
 
 int atsas_out_read(struct saxs_document *doc, const char *filename) {
   struct line *lines, *current;
@@ -318,4 +301,15 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
 
   lines_free(lines);
   return 0;
+}
+
+
+/**************************************************************************/
+saxs_document_format_register_atsas_out() {
+  saxs_document_format atsas_int = {
+     "out", "atsas-out", "ATSAS P(r) files (by GNOM)",
+     atsas_out_check, atsas_out_read, NULL
+  };
+
+  saxs_document_format_register(&atsas_int);
 }

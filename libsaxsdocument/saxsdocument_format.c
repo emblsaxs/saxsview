@@ -45,7 +45,7 @@ saxs_document_format_register_cansas_xml();
 
 
 static int saxs_document_format_initialized = 0;
-static saxs_document_format *format_head = 0L, *format_tail = 0L;
+static saxs_document_format *format_head = NULL, *format_tail = NULL;
 
 
 saxs_document_format*
@@ -65,6 +65,9 @@ saxs_document_format_create() {
 
 void
 saxs_document_format_free(saxs_document_format *format) {
+  if (format->extension)
+    free((void*)format->extension);
+
   if (format->name)
     free((void*)format->name);
 
@@ -93,12 +96,37 @@ saxs_document_format_init() {
 #endif
 
   saxs_document_format_initialized = 1;
+
+  /* Clean out on library unloading or application exit. */
+  atexit(saxs_document_format_clear);
+}
+
+void
+saxs_document_format_clear() {
+  saxs_document_format *fmt;
+
+  if (!saxs_document_format_initialized)
+    return;
+
+  fmt = saxs_document_format_first();
+  while (fmt) {
+    saxs_document_format *tmp = fmt;
+    fmt = saxs_document_format_next(fmt);
+
+    saxs_document_format_free(tmp);
+  }
+
+  format_head = format_tail = NULL;
+  saxs_document_format_initialized = 0;
 }
 
 
 void
 saxs_document_format_register(const saxs_document_format *format) {
   saxs_document_format *fmt = saxs_document_format_create();
+
+  if (format->extension)
+    fmt->extension = strdup(format->extension);
 
   if (format->name)
     fmt->name = strdup(format->name);
@@ -144,9 +172,24 @@ saxs_document_format_find(const char *filename,
   if (!saxs_document_format_initialized)
     saxs_document_format_init();
 
-  for (format = format_head; format != NULL; format = format->next)
-    if (format->check && format->check(filename, formatname))
-      return format;
+  /* Try to find the named format first. */
+  if (formatname)
+    for (format = format_head; format != NULL; format = format->next)
+      if (!compare_format(format->name, formatname)
+           && format->check
+           && format->check(filename))
+        return format;
+
+  /* If the name was not specified or not found, try to find
+     a format that matches the extension. */
+  if (filename) {
+    const char *extension = suffix(filename);
+    for (format = format_head; format != NULL; format = format->next)
+      if (!compare_format(format->extension, extension)
+          && format->check
+          && format->check(filename))
+         return format;
+  }
 
   return NULL;
 }

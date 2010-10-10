@@ -28,28 +28,9 @@
 #include <string.h>
 
 /**************************************************************************/
-int atsas_int_check(const char *filename, const char *format);
-int atsas_int_read(struct saxs_document *doc, const char *filename);
-
-saxs_document_format_register_atsas_int() {
-  saxs_document_format atsas_int = { "int",
-                                     "ATSAS theoretical intensities",
-                                     atsas_int_check,
-                                     atsas_int_read,
-                                     NULL };
-
-  saxs_document_format_register(&atsas_int);
-}
-
-/**************************************************************************/
-int atsas_int_check(const char *filename, const char *format) {
-  return  (!compare_format(format, "int")
-           || !compare_format(suffix(filename), "int")) ? 1 : 0;
-}
-
-/**************************************************************************/
-static int parse_header(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+static int
+atsas_int_parse_header(struct saxs_document *doc,
+                       struct line *firstline, struct line *lastline) {
   /*
    * .int-files may have a 'title', but we simply ignore any 
    * information that might be available for now ...
@@ -57,16 +38,9 @@ static int parse_header(struct saxs_document *doc,
   return 0;
 }
 
-static int parse_data(struct saxs_document *doc,
-                      struct line *firstline, struct line *lastline) {
-
-  /*
-   * .int-files are usually written by CRYSOL and contain 5 columns:
-   *   s, I_final, I_atomic, I_excluded_volume, I_hydration_shell
-   * where I_final is a function of the others.
-   */
-  if (saxs_reader_columns_count(firstline) != 5)
-    return -1;
+static int
+atsas_int_parse_data(struct saxs_document *doc,
+                     struct line *firstline, struct line *lastline) {
 
   /* s vs I_final */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
@@ -96,28 +70,41 @@ static int parse_data(struct saxs_document *doc,
   return 0;
 }
 
-static int parse_footer(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+static int
+atsas_int_parse_footer(struct saxs_document *doc,
+                       struct line *firstline, struct line *lastline) {
   /*
    * This should be empty?
    */
   return 0;
 }
 
+int
+atsas_int_check(const char *filename) {
+  return saxs_reader_columns_count_file(filename) == 5;
+}
 
-int atsas_int_read(struct saxs_document *doc, const char *filename) {
-  struct line *lines, *header, *data, *footer;
+int
+atsas_int_read(struct saxs_document *doc, const char *filename) {
+  return saxs_reader_columns_parse_file(doc, filename,
+                                        atsas_int_parse_header,
+                                        atsas_int_parse_data,
+                                        atsas_int_parse_footer);
+}
 
-  if (lines_read(&lines, filename) != 0)
-    return -1;
 
-  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
-    return -1;
+/**************************************************************************/
+void
+saxs_document_format_register_atsas_int() {
+  /*
+   * .int-files are usually written by CRYSOL and contain 5 columns:
+   *   s, I_final, I_atomic, I_excluded_volume, I_hydration_shell
+   * where I_final is a function of the others.
+   */
+  saxs_document_format atsas_int = {
+     "int", "atsas-int", "ATSAS theoretical intensities (by CRYSOL)",
+     atsas_int_check, atsas_int_read, NULL
+  };
 
-  parse_header(doc, header, data);
-  parse_data(doc, data, footer);
-  parse_footer(doc, footer, NULL);
-
-  lines_free(lines);
-  return 0;
+  saxs_document_format_register(&atsas_int);
 }

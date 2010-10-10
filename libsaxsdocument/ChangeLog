@@ -1,3 +1,68 @@
+2010-10-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument_format.h (struct saxs_document_format): Added member
+	'extension', updated prototype of 'check' callback; updated all users.
+	(saxs_document_format_clear): New.
+	* saxsdocument_format.c (saxs_document_format_free): Free extension
+	if set.
+	(saxs_document_format_register): Copy extension if set.
+	(saxs_document_format_clear): New.
+	* saxsdocument.h: Updated documentation.
+	* columns.h (saxs_reader_columns_count_file): New.
+	(saxs_reader_columns_parse_file): New.
+	* columns.c (saxs_reader_columns_count_file): New.
+	(saxs_reader_columns_parse_file): New.
+	* atsas_dat.c (saxs_document_format_register_atsas_dat): Register
+	multiple .dat formats.
+	(atsas_dat_check): Removed.
+	(parse_header): Renamed to ...
+	(atsas_dat_parse_header): ... this.
+	(parse_data): Removed.
+	(parse_footer): Renamed to ...
+	(atsas_dat_parse_footer): ... this.
+	(atsas_dat_read): Removed.
+	(atsas_dat_3_column_parse_data): New.
+	(atsas_dat_3_column_check): New.
+	(atsas_dat_3_column_read): New.
+	(atsas_dat_4_column_parse_data): New.
+	(atsas_dat_4_column_check): New.
+	(atsas_dat_4_column_read): New.
+	(atsas_dat_n_column_parse_data): New.
+	(atsas_dat_n_column_check): New.
+	(atsas_dat_n_column_read): New.
+	(writer_header): Removed.
+	(write_data): Removed.
+	(atsas_dat_write): Removed.
+	* atsas_fir_fit.c (saxs_document_format_register_atsas_fir_fit):
+	Register multiple .fir/.fit formats.
+	(atsas_fir_fit_check): Removed.
+	(parse_header): Renamed to ...
+	(atsas_fir_fit_parse_header): ... this.
+	(parse_data): Removed.
+	(parse_footer): Renamed to ...
+	(atsas_fir_fit_parse_footer): ... this.
+	(atsas_fir_fit_read): Removed.
+	(atsas_fir_4_column_parse_data): New.
+	(atsas_fir_4_column_check): New.
+	(atsas_fir_4_column_read): New.
+	(atsas_fit_3_column_parse_data): New.
+	(atsas_fit_3_column_check): New.
+	(atsas_fit_3_column_read): New.
+	(atsas_fit_4_column_parse_data): New.
+	(atsas_fit_4_column_check): New.
+	(atsas_fit_4_column_read): New.
+	(atsas_fit_5_column_parse_data): New.
+	(atsas_fit_5_column_check): New.
+	(atsas_fit_5_column_read): New.
+	* atsas_int.c
+	(parse_header): Renamed to ...
+	(atsas_int_parse_header): ... this.
+	(parse_data): Renamed to ...
+	(atsas_int_parse_data): ... this.
+	(parse_footer): Renamed to ...
+	(atsas_int_parse_footer): ... this.
+	(atsas_int_read): Use new columns convenience function.
+
 2010-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Display a more detailed message if libxml2

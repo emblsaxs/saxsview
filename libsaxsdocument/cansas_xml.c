@@ -33,21 +33,7 @@
 
 
 /**************************************************************************/
-int cansas_xml_1_0_check(const char *filename, const char *format);
-int cansas_xml_1_0_read(struct saxs_document *doc, const char *filename);
-
-saxs_document_format_register_cansas_xml() {
-  saxs_document_format cansas_xml = { "xml",
-                                     "CANSAS Working Group XML v1.0",
-                                     cansas_xml_1_0_check,
-                                     cansas_xml_1_0_read,
-                                     NULL };
-
-  saxs_document_format_register(&cansas_xml);
-}
-
-/**************************************************************************/
-int cansas_xml_1_0_check(const char *filename, const char *format) {
+int cansas_xml_1_0_check(const char *filename) {
   xmlTextReaderPtr reader;
 
   /* See cansas_xml_1_0_read() for an explanation. */
@@ -195,4 +181,14 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
 #endif
 
   return 0;
+}
+
+/**************************************************************************/
+saxs_document_format_register_cansas_xml() {
+  saxs_document_format cansas_xml = {
+     "xml", "cansas-xml-v1.0", "CANSAS Working Group XML v1.0",
+     cansas_xml_1_0_check, cansas_xml_1_0_read, NULL
+  };
+
+  saxs_document_format_register(&cansas_xml);
 }
