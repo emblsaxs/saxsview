@@ -1,3 +1,8 @@
+2010-10-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* tiff.c (saxs_image_tiff_read): If a TIFF image does not
+	have TIFFTAG_SAMPLESPERPIXEL, set spp to 1.
+
 2010-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Display a more detailed message if libtiff

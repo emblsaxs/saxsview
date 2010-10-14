@@ -59,7 +59,7 @@ int saxs_image_tiff_read(void *data, const char *filename) {
   tstrip_t strip;
   TIFF *tiff;
   uint16 samplesPerPixel = 0;
-  
+
   /* open() should have allocated memory already ... */
   assert(p);
 
@@ -71,7 +71,9 @@ int saxs_image_tiff_read(void *data, const char *filename) {
   TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &p->width);
   TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &p->height);
   TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &p->bpp);
-  TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &p->spp);
+
+  if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &p->spp) == 0)
+    p->spp = 1;
 
   p->data = _TIFFmalloc(p->width * p->height * p->bpp/8 * p->spp);
 
