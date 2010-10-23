@@ -1,3 +1,7 @@
+2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsviewplotwindow.cpp (explode): Do not scale invisible curves.
+
 2010-08-12  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewimagewindow.cpp (class ImageData): Avoid usage of

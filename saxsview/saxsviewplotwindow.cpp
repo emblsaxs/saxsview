@@ -331,7 +331,7 @@ void SaxsviewPlotWindow::configure() {
 void SaxsviewPlotWindow::explode() {
   QStringList fileNames;
   foreach (Saxsview::PlotCurve *curve, p->plot->curves())
-    if (!fileNames.contains(curve->fileName()))
+    if (curve->isVisible() && !fileNames.contains(curve->fileName()))
       fileNames << curve->fileName();
 
   //
@@ -342,7 +342,8 @@ void SaxsviewPlotWindow::explode() {
   //
   double factor = pow(10.0, floor(fileNames.size() / 2.0));
   foreach (Saxsview::PlotCurve *curve, p->plot->curves())
-    curve->setScalingFactorY(factor / pow(10.0, fileNames.indexOf(curve->fileName())));
+    if (curve->isVisible())
+      curve->setScalingFactorY(factor / pow(10.0, fileNames.indexOf(curve->fileName())));
 
   //
   // When scaling like this, it is not unlikely that curves
