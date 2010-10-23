@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>569</width>
-    <height>466</height>
+    <height>530</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,6 +22,18 @@
      <layout class="QGridLayout" name="gridLayout">
       <item row="0" column="0">
        <widget class="QLabel" name="lblTitle">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Title</string>
         </property>
@@ -42,6 +54,18 @@
       </item>
       <item row="2" column="0">
        <widget class="QLabel" name="lblTitleFont">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Title Font</string>
         </property>
@@ -95,6 +119,18 @@
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
        <widget class="QLabel" name="lblXLabel">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>X Label</string>
         </property>
@@ -108,6 +144,18 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="lblYLabel">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Y Label</string>
         </property>
@@ -132,6 +180,18 @@
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="lblLabelFont">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Label Font</string>
         </property>
@@ -185,6 +245,18 @@
      <layout class="QGridLayout" name="gridLayout_3">
       <item row="0" column="0">
        <widget class="QLabel" name="lblXRange">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>X Range</string>
         </property>
@@ -221,6 +293,18 @@
       </item>
       <item row="1" column="0">
        <widget class="QLabel" name="lblYRange">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Y Range</string>
         </property>
@@ -278,6 +362,18 @@
       </item>
       <item row="3" column="0">
        <widget class="QLabel" name="lblTicksFont">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
         <property name="text">
          <string>Ticks Font</string>
         </property>
@@ -324,6 +420,41 @@
         </property>
         <property name="text">
          <string>Italic</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupMisc">
+     <property name="title">
+      <string>Misc</string>
+     </property>
+     <layout class="QGridLayout" name="gridLayout_4">
+      <item row="0" column="0">
+       <widget class="QLabel" name="lblRendering">
+        <property name="minimumSize">
+         <size>
+          <width>70</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>70</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Rendering</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QCheckBox" name="checkAntiAliased">
+        <property name="text">
+         <string>Anti-Aliased</string>
         </property>
        </widget>
       </item>

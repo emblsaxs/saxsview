@@ -103,9 +103,9 @@ void PlotConfigPage::apply() {
   plot->setZoomBase(r);
 
   // other
-//   const bool antiAliased = checkAntiAliased->isChecked();
-//   foreach (QwtPlotItem* item, plot->itemList())
-//     item->setRenderHint(QwtPlotItem::RenderAntialiased, antiAliased);
+  const bool antiAliased = checkAntiAliased->isChecked();
+  foreach (QwtPlotItem* item, plot->itemList())
+    item->setRenderHint(QwtPlotItem::RenderAntialiased, antiAliased);
 }
 
 void PlotConfigPage::reset() {
@@ -155,11 +155,11 @@ void PlotConfigPage::reset() {
   spinYRangeTo->setValue(zoomBase.bottom());
 
   // other
-//   if (!plot->itemList().isEmpty()) {
-//     QwtPlotItem* item = plot->itemList().first();
-//     checkAntiAliased->setChecked(item->testRenderHint(QwtPlotItem::RenderAntialiased));
-//   } else
-//     checkAntiAliased->setChecked(false);
+  if (!plot->itemList().isEmpty()) {
+    QwtPlotItem* item = plot->itemList().first();
+    checkAntiAliased->setChecked(item->testRenderHint(QwtPlotItem::RenderAntialiased));
+  } else
+    checkAntiAliased->setChecked(false);
 }
 
 } // end of namespace Saxsview

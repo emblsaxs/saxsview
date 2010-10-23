@@ -1,5 +1,12 @@
 2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_configpage_plot.ui: Re-add check box for anti-aliased
+	plotting.
+	* saxsview_configpage_plot.cpp (apply, reset): Re-enable anti-aliased
+	plotting
+
+2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_configpage_curve.cpp (apply): Replot after changes
 	where applied (not sure why this is necessary).
 
