@@ -203,19 +203,25 @@
        </widget>
       </item>
       <item row="11" column="1">
-       <widget class="QSpinBox" name="spinEvery">
-        <property name="suffix">
-         <string> th</string>
+       <widget class="QSpinBox" name="spinMerge">
+        <property name="accelerated">
+         <bool>true</bool>
+        </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
+        <property name="maximum">
+         <number>9999</number>
         </property>
        </widget>
       </item>
       <item row="11" column="0">
-       <widget class="QLabel" name="lblEvery">
+       <widget class="QLabel" name="lblMerge">
         <property name="text">
-         <string>Every</string>
+         <string>Merge</string>
         </property>
         <property name="buddy">
-         <cstring>spinEvery</cstring>
+         <cstring>spinMerge</cstring>
         </property>
        </widget>
       </item>
@@ -379,7 +385,7 @@
   <tabstop>btnApplyTemplate</tabstop>
   <tabstop>spinScaleX</tabstop>
   <tabstop>spinScaleY</tabstop>
-  <tabstop>spinEvery</tabstop>
+  <tabstop>spinMerge</tabstop>
  </tabstops>
  <resources/>
  <connections/>

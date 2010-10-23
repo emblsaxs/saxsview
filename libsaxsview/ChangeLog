@@ -1,3 +1,18 @@
+2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_configpage_curve.ui: Relabel "Every" to "Merge", updated
+	all usages of the respective spin box.
+	* saxsview_plotcurve.h (every): Renamed to ...
+	(merge): ... this.
+	(setEvery): Renamed to ...
+	(setMerge): ... this.
+	* saxsview_plotcurve.cpp (scale): Instead of skipping intermediate
+	data points, merge, aka average, them.
+	(every): Renamed to ...
+	(merge): ... this.
+	(setEvery): Renamed to ...
+	(setMerge): ... this.
+
 2010-08-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_configpage_plot.cpp (apply): Do not apply a minimum

@@ -75,7 +75,7 @@ CurveConfigPage::CurveConfigPage(Plot *plot, QWidget *parent)
   p->mapper->addMapping(btnErrorBarStyleColor, 10, "color");
   p->mapper->addMapping(spinScaleX, 11);
   p->mapper->addMapping(spinScaleY, 12);
-  p->mapper->addMapping(spinEvery, 13);
+  p->mapper->addMapping(spinMerge, 13);
   p->mapper->setSubmitPolicy(QDataWidgetMapper::AutoSubmit);
   p->mapper->toFirst();
 
@@ -118,7 +118,7 @@ void CurveConfigPage::apply() {
 
     curve[i]->setScalingFactorX(p->model->item(i, 11)->text().toDouble());
     curve[i]->setScalingFactorY(p->model->item(i, 12)->text().toDouble());
-    curve[i]->setEvery(p->model->item(i, 13)->text().toInt());
+    curve[i]->setMerge(p->model->item(i, 13)->text().toInt());
   }
 }
 
@@ -147,7 +147,7 @@ void CurveConfigPage::reset() {
 
     row.push_back(new QStandardItem(QString::number(curve->scalingFactorX())));
     row.push_back(new QStandardItem(QString::number(curve->scalingFactorY())));
-    row.push_back(new QStandardItem(QString::number(curve->every())));
+    row.push_back(new QStandardItem(QString::number(curve->merge())));
 
     p->model->appendRow(row);
   }

@@ -116,7 +116,7 @@ public:
   PlotPointData *pointData;
   PlotIntervalData *intervalData;
   double scaleX, scaleY;
-  int every;
+  int merge;
 
   bool errorBarsEnabled;
   QString fileName;
@@ -124,7 +124,7 @@ public:
 
 PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
  : type(t), curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
-   scaleX(1.0), scaleY(1.0), every(1), errorBarsEnabled(true) {
+   scaleX(1.0), scaleY(1.0), merge(1), errorBarsEnabled(true) {
 
   // Template is applied by plot when attaching this curve.
 
@@ -154,18 +154,40 @@ PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
 
 void PlotCurve::PlotCurvePrivate::scale() {
   PlotPointData scaledPoints;
-  for (int i = 0 ; i < pointData->size(); i += every)
-    scaledPoints.push_back(QPointF(pointData->at(i).x() * scaleX,
-                                   pointData->at(i).y() * scaleY));
-  curve->setSamples(scaledPoints);
-
   PlotIntervalData scaledIntervals;
-  for (int i = 0 ; i < intervalData->size(); i += every) {
-    QwtIntervalSample is = intervalData->at(i);
-    scaledIntervals.push_back(QwtIntervalSample(is.value * scaleX,
-                                                is.interval.minValue() * scaleY,
-                                                is.interval.maxValue() * scaleY));
+
+  //
+  // When merging N points, average them.
+  // Error propagation:
+  //
+  //   \sigma* = \sqrt{\sum_{i=1}^{n} \sigma_i^2} / n
+  //
+  for (int i = 0 ; i < pointData->size(); i += merge) {
+    double x = 0.0;
+    double y = 0.0, y_lower_err = 0.0, y_upper_err = 0.0;
+    double n = 0;
+
+    for (int j = i; j < i + merge && j < pointData->size(); ++j) {
+      const double& curx = pointData->at(j).x();
+      const double& cury = pointData->at(j).y();
+      const QwtIntervalSample& is = intervalData->at(i);
+
+      x           += curx;
+      y           += cury;
+      y_upper_err += pow(is.interval.maxValue() - cury, 2);
+      y_lower_err += pow(cury - is.interval.minValue(), 2);
+      n           += 1.0;
+    }
+    x /= n;
+    y /= n;
+
+    scaledPoints.push_back(QPointF(x * scaleX, y * scaleY));
+    scaledIntervals.push_back(QwtIntervalSample(x * scaleX,
+                                                (y - sqrt(y_lower_err)/n) * scaleY,
+                                                (y + sqrt(y_upper_err)/n) * scaleY));
   }
+
+  curve->setSamples(scaledPoints);
   errorCurve->setSamples(scaledIntervals);
 }
 
@@ -206,7 +228,7 @@ void PlotCurve::setData(const PlotPointData& points,
 
   p->scaleX = 1.0;
   p->scaleY = 1.0;
-  p->every  = 1;
+  p->merge  = 1;
 
   p->curve->setSamples(points);
   p->errorCurve->setSamples(intervals);
@@ -300,12 +322,12 @@ void PlotCurve::setScalingFactorY(double scale) {
   p->scale();
 }
 
-int PlotCurve::every() const {
-  return p->every;
+int PlotCurve::merge() const {
+  return p->merge;
 }
 
-void PlotCurve::setEvery(int every) {
-  p->every = every;
+void PlotCurve::setMerge(int merge) {
+  p->merge = merge;
   p->scale();
 }
 
