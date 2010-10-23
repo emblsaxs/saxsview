@@ -120,6 +120,8 @@ void CurveConfigPage::apply() {
     curve[i]->setScalingFactorY(p->model->item(i, 12)->text().toDouble());
     curve[i]->setMerge(p->model->item(i, 13)->text().toInt());
   }
+
+  p->plot->replot();
 }
 
 void CurveConfigPage::reset() {
