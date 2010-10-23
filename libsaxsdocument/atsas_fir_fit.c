@@ -101,7 +101,7 @@ atsas_fit_3_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_fit_3_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 4;
+  return saxs_reader_columns_count_file(filename) == 3;
 }
 
 int
