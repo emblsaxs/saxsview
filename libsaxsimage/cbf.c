@@ -178,8 +178,8 @@ size_t saxs_image_cbf_height(void *data) {
 long saxs_image_cbf_value(void *data, int x, int y) {
   image_cbf_private *p = PRIVATE_DATA(data);
 
-  if (x < 0 || x >= p->width
-      || y < 0 || y > p->height)
+  if (x < 0 || x >= (signed)p->width
+      || y < 0 || y > (signed)p->height)
     return 0;
 
   return *(p->data + y * p->width + x);

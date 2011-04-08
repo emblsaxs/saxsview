@@ -58,7 +58,6 @@ int saxs_image_tiff_read(void *data, const char *filename) {
   image_tiff_private *p = PRIVATE_DATA(data);
   tstrip_t strip;
   TIFF *tiff;
-  uint16 samplesPerPixel = 0;
 
   /* open() should have allocated memory already ... */
   assert(p);
@@ -107,8 +106,8 @@ size_t saxs_image_tiff_height(void *data) {
 long saxs_image_tiff_value(void *data, int x, int y) {
   image_tiff_private *p = PRIVATE_DATA(data);
 
-  if (x < 0 || x >= p->width
-      || y < 0 || y > p->height)
+  if (x < 0 || x >= (signed)p->width
+      || y < 0 || y > (signed)p->height)
     return 0;
 
   if (p->spp == 4) {

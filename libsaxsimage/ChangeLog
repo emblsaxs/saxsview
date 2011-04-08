@@ -1,3 +1,9 @@
+2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* cbf.c (saxs_image_cbf_value): Fixed signedness in comparison.
+	* tiff.c (saxs_image_tiff_value): Likewise.
+	(saxs_image_tiff_read): Removed unused variable.
+
 2010-10-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* tiff.c (saxs_image_tiff_read): If a TIFF image does not
