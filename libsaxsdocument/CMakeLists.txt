@@ -1,10 +1,9 @@
-project (LIBSAXSDOCUMENT C)
+project (LIBSAXSDOCUMENT C Fortran)
 
 find_package (LibXml2 QUIET)
 if (NOT LIBXML2_FOUND)
   message (STATUS "Optional package libxml2 not found, CANSAS-XML document format disabled.")
 endif (NOT LIBXML2_FOUND)
-
 
 set (SOURCES saxsproperty.c
              saxsdocument.c
@@ -35,6 +34,11 @@ if (LIBXML2_FOUND)
 endif (LIBXML2_FOUND)
 
 
-install (TARGETS saxsdocument
+# Fortran bindings for libsaxsdocument
+add_library (fsaxsdocument STATIC saxsdocument.f90)
+target_link_libraries (fsaxsdocument saxsdocument)
+
+install (TARGETS saxsdocument fsaxsdocument
+         ARCHIVE DESTINATION lib
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)

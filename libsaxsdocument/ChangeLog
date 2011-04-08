@@ -1,3 +1,8 @@
+2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.f90: New.
+	* CMakeListst.txt: Added Fortran bindings library.
+
 2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_fir_fit.c (atsas_fit_3_column_check): Fixed condition.
