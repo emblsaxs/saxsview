@@ -214,19 +214,19 @@ saxs_document_format_register_atsas_dat() {
   saxs_document_format atsas_dat_3_column = {
      "dat", "atsas-dat-3-column",
      "ATSAS experimental data, one data set with Poisson errors",
-     atsas_dat_3_column_check, atsas_dat_3_column_read, NULL
+     atsas_dat_3_column_check, atsas_dat_3_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_dat_4_column = {
      "dat", "atsas-dat-4-column",
      "ATSAS experimental data, one data set with Poisson and Gaussian errors",
-     atsas_dat_4_column_check, atsas_dat_4_column_read, NULL
+     atsas_dat_4_column_check, atsas_dat_4_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_dat_n_column = {
      "dat", "atsas-dat-n-column",
      "ATSAS experimental data, multiple data sets, no errors",
-     atsas_dat_n_column_check, atsas_dat_n_column_read, NULL
+     atsas_dat_n_column_check, atsas_dat_n_column_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_dat_3_column);

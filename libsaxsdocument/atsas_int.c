@@ -72,7 +72,8 @@ atsas_int_parse_data(struct saxs_document *doc,
 
 static int
 atsas_int_parse_footer(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       struct line *firstline,
+                       struct line *lastline) {
   /*
    * This should be empty?
    */
@@ -103,7 +104,7 @@ saxs_document_format_register_atsas_int() {
    */
   saxs_document_format atsas_int = {
      "int", "atsas-int", "ATSAS theoretical intensities (by CRYSOL)",
-     atsas_int_check, atsas_int_read, NULL
+     atsas_int_check, atsas_int_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_int);

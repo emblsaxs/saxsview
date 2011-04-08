@@ -305,10 +305,10 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
 
 
 /**************************************************************************/
-saxs_document_format_register_atsas_out() {
+void saxs_document_format_register_atsas_out() {
   saxs_document_format atsas_int = {
      "out", "atsas-out", "ATSAS P(r) files (by GNOM)",
-     atsas_out_check, atsas_out_read, NULL
+     atsas_out_check, atsas_out_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_int);

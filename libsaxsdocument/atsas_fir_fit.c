@@ -193,25 +193,25 @@ saxs_document_format_register_atsas_fir_fit() {
   saxs_document_format atsas_fir_4_column = {
      "fir", "atsas-fir-4-column",
      "ATSAS fit against experimental data",
-     atsas_fir_4_column_check, atsas_fir_4_column_read, NULL
+     atsas_fir_4_column_check, atsas_fir_4_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_3_column = {
      "fit", "atsas-fit-3-column",
      "ATSAS fit against data (3 column; DAMMIN, DAMMIF, ...)",
-     atsas_fit_3_column_check, atsas_fit_3_column_read, NULL
+     atsas_fit_3_column_check, atsas_fit_3_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_4_column = {
      "fit", "atsas-fit-4-column",
      "ATSAS fit against data (4 column; SASREF, ...)",
-     atsas_fit_4_column_check, atsas_fit_4_column_read, NULL
+     atsas_fit_4_column_check, atsas_fit_4_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_5_column = {
      "fit", "atsas-fit-5-column",
      "ATSAS fit against data (5 column; OLIGOMER, ...)",
-     atsas_fit_5_column_check, atsas_fit_5_column_read, NULL
+     atsas_fit_5_column_check, atsas_fit_5_column_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_fir_4_column);

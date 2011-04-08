@@ -78,7 +78,7 @@ int lines_read(struct line **lines, const char *filename) {
     }
 
     /* If necessary, increase line length. */
-    if (line_ptr - tail->line_buffer == tail->line_length) {
+    if (line_ptr - tail->line_buffer == (signed)tail->line_length) {
       int old_line_length = tail->line_length;
       tail->line_length *= 2;
       tail->line_buffer = realloc(tail->line_buffer, tail->line_length);

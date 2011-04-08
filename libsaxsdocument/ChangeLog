@@ -1,5 +1,13 @@
 2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* atsas_dat.c (saxs_document_format_register_atsas_dat): Fixed initializer.
+	* atsas_fir_fit.c (saxs_document_format_register_atsas_fir_fit): Likewise.
+	* atsas_int.c (saxs_document_format_register_atsas_int): Likewise.
+	* atsas_out.c (saxs_document_format_register_atsas_out): Likewise.
+	* columns.c (lines_read): Fixed signedness of comparisons.
+
+2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsdocument.f90: New.
 	* CMakeListst.txt: Added Fortran bindings library.
 
