@@ -1,3 +1,12 @@
+2011-04-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* tiff.c (dectris_custom_fields): New.
+	(tiff_default_directory): New.
+	(tiff_initialize): New.
+	(saxs_image_tiff_open): Initialize TIFF library.
+	(saxs_image_tiff_read): Use the CHAR_BIT macro to determine
+	the bytes per pixel for malloc.
+
 2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* cbf.c (saxs_image_cbf_value): Fixed signedness in comparison.

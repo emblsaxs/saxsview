@@ -27,8 +27,100 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <limits.h>
 #include <assert.h>
 
+/*
+ * Define a set of custom fields.
+ * See:
+ *    http://remotesensing.org/libtiff/addingtags.html
+ */
+#ifndef TRUE
+#define TRUE  1
+#endif
+#ifndef FALSE
+#define FALSE 0
+#endif
+
+/* Custom fields defined and written by DECTRIS camserver */
+#define DECTRIS_OFFSET                 0x9000
+#define DECTRIS_TITLE_TAG              (DECTRIS_OFFSET + 0x0000)
+#define DECTRIS_NUM_EXPOSURE_TAG       (DECTRIS_OFFSET + 0x0001)
+#define DECTRIS_NUM_BACKGROUND_TAG     (DECTRIS_OFFSET + 0x0002)
+#define DECTRIS_EXPOSURE_TIME_TAG      (DECTRIS_OFFSET + 0x0003)
+#define DECTRIS_BACKGROUND_TIME_TAG    (DECTRIS_OFFSET + 0x0004)
+#define DECTRIS_TELEMETRY_TAG          (DECTRIS_OFFSET + 0x0006)
+#define DECTRIS_BLACK_LEVEL_TAG        (DECTRIS_OFFSET + 0x000c)
+#define DECTRIS_DARK_CURRENT_TAG       (DECTRIS_OFFSET + 0x000d)
+#define DECTRIS_READ_NOISE_TAG         (DECTRIS_OFFSET + 0x000e)
+#define DECTRIS_DARK_CURRENT_NOISE_TAG (DECTRIS_OFFSET + 0x000f)
+#define DECTRIS_BEAM_MONITOR_TAG       (DECTRIS_OFFSET + 0x0010)
+#define DECTRIS_USER_VARIABLES_TAG     (DECTRIS_OFFSET + 0x0100)
+
+static const TIFFFieldInfo dectris_custom_fields[12] = {
+  { DECTRIS_TITLE_TAG, TIFF_VARIABLE, TIFF_VARIABLE, TIFF_ASCII,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisTitleTag" },
+  { DECTRIS_NUM_EXPOSURE_TAG, 1, 1, TIFF_LONG,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisNumExposureTag" },
+  { DECTRIS_NUM_BACKGROUND_TAG, 1, 1, TIFF_LONG,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisNumBackgroundTag" },
+  { DECTRIS_EXPOSURE_TIME_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisExposureTimeTag" },
+  { DECTRIS_BACKGROUND_TIME_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisBackgroundTimeTag" },
+  { DECTRIS_TELEMETRY_TAG, TIFF_VARIABLE, TIFF_VARIABLE, TIFF_ASCII,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisTelemetryTag" },
+  { DECTRIS_BLACK_LEVEL_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisBlackLevelTag" },
+  { DECTRIS_DARK_CURRENT_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisDarkCurrentTag" },
+  { DECTRIS_READ_NOISE_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisReadNoiseTag" },
+  { DECTRIS_DARK_CURRENT_NOISE_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisDarkCurrentNoiseTag" },
+  { DECTRIS_BEAM_MONITOR_TAG, 1, 1, TIFF_FLOAT,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisBeamMonitorTag" },
+  { DECTRIS_USER_VARIABLES_TAG, 20, 20, TIFF_LONG,
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisUserVariablesTag" }
+};
+
+static TIFFExtendProc tiff_parent_extender = NULL;
+
+static void tiff_default_directory(TIFF *tiff) {
+  /* Install the extended Tag field info */
+  TIFFMergeFieldInfo(tiff, dectris_custom_fields, 12);
+
+  /*
+   * Since an XTIFF client module may have overridden
+   * the default directory method, we call it now to
+   * allow it to set up the rest of its own methods.
+   */
+
+  if (tiff_parent_extender) 
+    (*tiff_parent_extender)(tiff);
+}
+
+static void tiff_initialize(void) {
+  static int first_time = 1;
+
+  if (first_time) {
+    /* Grab the inherited method and install */
+    tiff_parent_extender = TIFFSetTagExtender(tiff_default_directory);
+
+    /*
+     * Even with the definition of the PILATUS specific custom
+     * fields, a bunch of warnings is printed to stdout whenever
+     * a TIFF is opened. As the warnings are the same for every
+     * image, they are meaningless - ignore them.
+     */
+    TIFFSetWarningHandler(NULL);
+
+    first_time = 0;
+  }
+}
+
+
+/**************************************************************************/
 typedef struct image_tiff_private {
   uint32 width;
   uint32 height;
@@ -40,8 +132,9 @@ typedef struct image_tiff_private {
 
 #define PRIVATE_DATA(p) ((image_tiff_private*)(p))
 
-
 /**************************************************************************/
+
+
 int saxs_image_tiff_open(void **data) {
   image_tiff_private *private_data;
 
@@ -51,6 +144,8 @@ int saxs_image_tiff_open(void **data) {
   private_data->data = NULL;
 
   *data = private_data;
+
+  tiff_initialize();
   return 0;
 }
 
@@ -74,7 +169,7 @@ int saxs_image_tiff_read(void *data, const char *filename) {
   if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &p->spp) == 0)
     p->spp = 1;
 
-  p->data = _TIFFmalloc(p->width * p->height * p->bpp/8 * p->spp);
+  p->data = _TIFFmalloc(p->width * p->height * p->bpp/CHAR_BIT * p->spp);
 
   for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)
     TIFFReadEncodedStrip(tiff,
