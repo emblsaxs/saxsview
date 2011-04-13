@@ -21,6 +21,8 @@ if (TIFF_FOUND)
 endif (TIFF_FOUND)
 
 add_library (saxsimage SHARED ${SOURCES} ${HEADERS})
+set_target_properties (saxsimage PROPERTIES
+                       VERSION 1)
 
 include_directories(${CBFLIB_SOURCE_DIR} ${EDFPACK_SOURCE_DIR})
 target_link_libraries (saxsimage saxsdocument cbf edf)
