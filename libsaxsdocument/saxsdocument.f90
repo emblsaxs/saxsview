@@ -22,7 +22,7 @@
 !
 MODULE libsaxsdocument
   USE ISO_C_BINDING
-  USE kinds
+  INTEGER, PARAMETER :: DBL = SELECTED_REAL_KIND(p=13, r=200)
 
   TYPE :: saxs_document
     TYPE(C_PTR) :: c_ptr

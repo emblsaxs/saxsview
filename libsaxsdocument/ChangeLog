@@ -1,3 +1,7 @@
+2011-04-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.f90: Fixed definition of DBL-kind.
+
 2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (saxs_document_format_register_atsas_dat): Fixed initializer.
