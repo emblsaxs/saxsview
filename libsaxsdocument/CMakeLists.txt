@@ -26,6 +26,8 @@ if (LIBXML2_FOUND)
 endif (LIBXML2_FOUND)
 
 add_library (saxsdocument SHARED ${SOURCES} ${HEADERS})
+set_target_properties (saxsdocument PROPERTIES
+                       VERSION 1)
 
 # conditional include directories and libraries
 if (LIBXML2_FOUND)
