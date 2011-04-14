@@ -1,4 +1,4 @@
-project (LIBSAXSIMAGE C)
+project (LIBSAXSIMAGE C Fortran)
 
 find_package (TIFF QUIET)
 if (NOT TIFF_FOUND)
@@ -33,7 +33,13 @@ if (TIFF_FOUND)
   target_link_libraries (saxsimage ${TIFF_LIBRARIES})
 endif (TIFF_FOUND)
 
+# Fortran bindings for libsaxsimage
+add_library (fsaxsimage STATIC saxsimage.f90)
+target_link_libraries (fsaxsimage saxsimage)
 
-install (TARGETS saxsimage
+
+install (TARGETS saxsimage fsaxsimage
+         ARCHIVE DESTINATION lib
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
+
