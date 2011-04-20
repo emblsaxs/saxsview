@@ -9,7 +9,8 @@ endif (NOT TIFF_FOUND)
 set (SOURCES saxsimage.c
              saxsimage_format.c
              cbf.c
-             edf.c)
+             edf.c
+             msk.c)
 
 set (HEADERS saxsimage.h
              saxsimage_format.h)

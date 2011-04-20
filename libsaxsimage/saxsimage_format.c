@@ -28,15 +28,17 @@
 #include <stdlib.h>
 #include <string.h>
 
-typedef saxs_image_format* (*format_handler)(const char *, const char*);
+typedef saxs_image_format* (*format_handler)(const char*, const char*);
 
 saxs_image_format*
-saxs_image_format_cbf(const char *, const char*);
+saxs_image_format_cbf(const char*, const char*);
 saxs_image_format*
-saxs_image_format_edf(const char *, const char*);
+saxs_image_format_edf(const char*, const char*);
+saxs_image_format*
+saxs_image_format_msk(const char*, const char*);
 #ifdef HAVE_TIFF
 saxs_image_format*
-saxs_image_format_tiff(const char *, const char*);
+saxs_image_format_tiff(const char*, const char*);
 #endif
 
 saxs_image_format*
@@ -45,6 +47,7 @@ saxs_image_format_find(const char *filename, const char *format) {
   format_handler known_formats[] = {
     saxs_image_format_cbf,
     saxs_image_format_edf,
+    saxs_image_format_msk,
 #ifdef HAVE_TIFF
     saxs_image_format_tiff,
 #endif
