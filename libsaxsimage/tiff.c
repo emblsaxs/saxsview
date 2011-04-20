@@ -1,6 +1,7 @@
 /*
  * Read files in 32-bit .tiff-format.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010, 2011
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -95,7 +96,6 @@ static void tiff_default_directory(TIFF *tiff) {
    * the default directory method, we call it now to
    * allow it to set up the rest of its own methods.
    */
-
   if (tiff_parent_extender) 
     (*tiff_parent_extender)(tiff);
 }
@@ -110,8 +110,8 @@ static void tiff_initialize(void) {
     /*
      * Even with the definition of the PILATUS specific custom
      * fields, a bunch of warnings is printed to stdout whenever
-     * a TIFF is opened. As the warnings are the same for every
-     * image, they are meaningless - ignore them.
+     * a PILATUS TIFF is opened. As the warnings are the same 
+     * for every image, they are meaningless - ignore them.
      */
     TIFFSetWarningHandler(NULL);
 
@@ -208,7 +208,6 @@ long saxs_image_tiff_value(void *data, int x, int y) {
   if (p->spp == 4) {
     unsigned char *rgba = (unsigned char *)(p->data + y * p->width + x);
     return (rgba[0]*11 + rgba[1]*16 + rgba[2]*5)/32;
-/*  return (rgba[3]*11 + rgba[2]*16 + rgba[1]*5)/32; */
 
   } else
     return *(p->data + y * p->width + x);

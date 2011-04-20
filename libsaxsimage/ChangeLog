@@ -1,5 +1,9 @@
 2011-04-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* tiff.c: Fixed copyright years, updated comments, removed dead code.
+
+2011-04-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* msk.c: New.
 	* saxsimage_format.c: Registered new format.
 	* CMakeLists.txt: Updated list of sources.
