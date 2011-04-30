@@ -7,6 +7,6 @@ Connection Settings
 Host:        web.sourceforge.net
 Protocol:    SFTP
 Port:        22
-Username:    username,saxsview
+Username:    username
 Password:    <your_sourceforge_password>
-Upload path: /home/groups/s/sa/saxsview/htdocs
+Upload path: /home/project-web/fooproject/htdocs

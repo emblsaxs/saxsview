@@ -44,9 +44,9 @@ and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
     <td colspan="2" align="justify">
       <p><i>saxsview</i> shows 1D-data in .dat, .int, .fit and .fir formats
       of the <a href="http://www.embl-hamburg.de/biosaxs/software.html">
-      ATSAS package</a>, as well as the
+      ATSAS package</a>, the
       <a href="http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation">cansas
-      .xml format (v1.0)</a>.</p>
+      .xml format (v1.0)</a>, as well as .csv files.</p>
       <p>The screenshot to the left shows three .fit files. Of the experimental data
       only every fifth point is shown in black, with error bars in light gray. The respective
       fits are overlaid as a solid lines. For improved visibility, the fits where stacked
@@ -88,7 +88,7 @@ and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
 
 
 <h2><a name="libraries">saxsview Libraries</a></h2>
-<p><i>libsaxsdocument</i> and libsaxsimage are the reading and writing workhorses
+<p><i>libsaxsdocument</i> and <i>libsaxsimage</i> are the reading and writing workhorses
 of <i>saxsview</i>. They are meant to allow for easy integration of new 1D and
 2D-file formats respectively. Further, if formats that hold similar information
 implement reading and writing hooks, it becomes very easy to convert between these
@@ -165,6 +165,11 @@ LGPLv3 directly.</p>
 
 <h2><a name="releases">Releases and Milestones</a></h2>
 <ul>
+  <li>2011/04/30 - initial support comma separated value (.csv) files was added</li>
+
+  <li>2011/04/20 - initial support for mask files (.msk) as written by <a href="http://www.esrf.eu/computing/scientific/FIT2D/" target="new">Fit2D</a> was added</li>
+  <li>2011/04/14 - Fortran bindings for libsaxsdocument and libsaxsimage where added</li>
+  <li>2011/04/10 - Read out custom header fields from PILATUS TIFF files</li>
   <li>2010/08/02 - initial support for the ESRF data format (.edf, via edfpack) was added</li>
   <li>2010/07/25 - distance distributions from .out files are now properly handled</li>
   <li>2010/07/16 - in image view, counts of current position are shown status bar</li>
@@ -176,7 +181,7 @@ LGPLv3 directly.</p>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
 </ul>
 
-<p style="text-align:center">Last updated 2010-08-02</p>
+<p style="text-align:center">Last updated 2011-04-30</p>
 
 <p>
   <a href="http://validator.w3.org/check?uri=referer">
