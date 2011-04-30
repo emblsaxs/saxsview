@@ -37,6 +37,8 @@ saxs_document_format*
 saxs_document_format_register_atsas_int();
 saxs_document_format*
 saxs_document_format_register_atsas_out();
+saxs_document_format*
+saxs_document_format_register_csv();
 
 #ifdef HAVE_LIBXML2
 saxs_document_format*
@@ -91,6 +93,7 @@ saxs_document_format_init() {
   saxs_document_format_register_atsas_fir_fit();
   saxs_document_format_register_atsas_int();
   saxs_document_format_register_atsas_out();
+  saxs_document_format_register_csv();
 #ifdef HAVE_LIBXML2
   saxs_document_format_register_cansas_xml();
 #endif

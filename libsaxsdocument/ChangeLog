@@ -1,3 +1,14 @@
+2011-04-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* csv.c: New.
+	* columns.c (issep): New.
+	(columns_parse): Include check for likely column separators.
+	(saxs_reader_columns_count): Likewise.
+	(saxs_reader_columns_parse_file): Check if a valid function pointer
+	was provided before calling it.
+	* saxsdocument_format.c: Register CSV format.
+	* CMakeLists.txt: Added new file.
+
 2011-04-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Set library API version to 1 to simplify coexistance
@@ -18,7 +29,7 @@
 2011-04-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument.f90: New.
-	* CMakeListst.txt: Added Fortran bindings library.
+	* CMakeLists.txt: Added Fortran bindings library.
 
 2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
 

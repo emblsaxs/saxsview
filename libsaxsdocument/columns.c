@@ -1,6 +1,6 @@
 /*
  * Common code to read columnized data in text files.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -28,6 +28,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+
+/* Similar to the POSIX "character classification routines";
+   check if the argument 'c' is a column separator. */
+static int issep(int c) {
+  return c == ',' || c == ';';
+}
 
 
 int lines_read(struct line **lines, const char *filename) {
@@ -122,7 +129,7 @@ int saxs_reader_columns_count(struct line *l) {
      * Skip leading whitespace before skipping 
      * the value up to the next whitespace.
      */
-    while (*p && isspace(*p)) ++p;
+    while (*p && (isspace(*p) || issep(*p))) ++p;
     while (*p && !isspace(*p)) ++p;
   }
 
@@ -208,7 +215,7 @@ static int columns_parse(struct line *l, double *values) {
     cnt += 1;
 
     ++value;
-    while (*p && isspace(*p)) ++p;
+    while (*p && (isspace(*p) || issep(*p))) ++p;
     while (*p && !isspace(*p)) ++p;
   }
 
@@ -293,9 +300,14 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
   if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
     return -1;
 
-  parse_header(doc, header, data);
-  parse_data(doc, data, footer);
-  parse_footer(doc, footer, NULL);
+  if (parse_header)
+    parse_header(doc, header, data);
+
+  if (parse_data)
+    parse_data(doc, data, footer);
+
+  if (parse_footer)
+    parse_footer(doc, footer, NULL);
 
   lines_free(lines);
   return 0;

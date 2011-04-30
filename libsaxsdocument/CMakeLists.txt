@@ -9,6 +9,7 @@ set (SOURCES saxsproperty.c
              saxsdocument.c
              saxsdocument_format.c
              columns.c
+             csv.c
              atsas_dat.c
              atsas_fir_fit.c
              atsas_int.c
