@@ -1,3 +1,7 @@
+2011-05-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.f90 (saxs_image_data): Fixed image dimensions and access.
+
 2011-04-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* tiff.c: Fixed copyright years, updated comments, removed dead code.

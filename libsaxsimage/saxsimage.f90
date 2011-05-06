@@ -141,13 +141,13 @@ CONTAINS
     END INTERFACE
 
     width = saxs_image_width(img)
-    height = saxs_image_width(img)
+    height = saxs_image_height(img)
 
     ALLOCATE(data(width, height))
 
     DO i = 1, width
       DO j = 1, height
-        data(i,j) = c_saxs_image_value(img%c_ptr, i, j)
+        data(i,j) = c_saxs_image_value(img%c_ptr, i-1, j-1)
       END DO
     ENDDO
   END SUBROUTINE
