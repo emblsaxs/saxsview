@@ -111,6 +111,17 @@ static int parse_header(struct saxs_document *doc,
     else if (strstr(firstline->line_buffer, "Condition P(rmax)"))
       saxs_document_add_property(doc, "condition-r-max-zero", "true");
 
+
+    /*
+     * Example lines:
+     * "Number of real space points  is too large! Modified to NR = 215"
+     *                                                              ^^^
+     * If the number of points was not modified, no line is printed.
+     */
+    else if (strstr(firstline->line_buffer, "Number of real space points"))
+      saxs_document_add_property(doc, "real-space-points",
+                                 extract(firstline, "="));
+
     /*
      * Example line:
      * " Warning: Dmax*Smin =  4.090   is greater than Pi"
@@ -194,7 +205,7 @@ static int parse_probability_data(struct saxs_document *doc,
   while (saxs_reader_columns_count(firstline) != 3)
     firstline = firstline->next;
 
-  /* distance distribution (r vs. P(r)) */
+  /* distance distribution (r vs. P(r), r vs GammaC(r)) */
   if (saxs_reader_columns_parse(doc, firstline, lastline, 
                                 0, 1.0, 1, 1.0, 2, "P(r)",
                                 SAXS_CURVE_PROBABILITY_DATA) != 0)
@@ -272,11 +283,11 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
 
   /*
    * Scattering data ends with:
-   *     "Distance distribution  function of particle"
+   *     "Distance distribution  function of particle"      (gnom jobtype 0)
+   *     "Distance distribution function of cross-section"  (gnom jobtype 4)
    */
   while (current
-         && !strstr(current->line_buffer,
-                    "Distance distribution  function of particle"))
+         && !strstr(current->line_buffer, "Distance distribution"))
     current = current->next;
 
   probability_begin = current;

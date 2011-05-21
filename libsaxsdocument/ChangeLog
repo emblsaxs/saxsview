@@ -1,3 +1,10 @@
+2011-05-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_out.c (parse_header): Recognize reduced number of points
+	in real space.
+	(atsas_out_read): Recognize gnom job type 4; cross section of
+	rod-like particles.
+
 2011-04-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* csv.c: New.
