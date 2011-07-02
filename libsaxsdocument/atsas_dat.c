@@ -187,7 +187,8 @@ atsas_dat_n_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_n_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) > 1;
+  const int n = saxs_reader_columns_count_file(filename);
+  return n == 0 || n > 1;
 }
 
 int
