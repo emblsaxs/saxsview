@@ -1,7 +1,7 @@
 document; lyzexp.out; 3; 12;
 curve; data; 1; 196;
 curve; fit; 2; 213;
-curve; distance distribution; 4; 101;
+curve; P(r); 4; 101;
 property; creator; GNOM;
 property; creator-version; 4.5a;
 property; parent; LYZEXP.DAT;
