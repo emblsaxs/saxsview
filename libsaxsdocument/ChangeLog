@@ -1,3 +1,7 @@
+2011-07-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_out.c (atsas_out_read): Handle job type 3 (particle thickness).
+
 2011-07-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_dat_n_column_check): Also accept empty .dat files.
