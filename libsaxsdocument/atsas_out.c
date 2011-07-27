@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -33,7 +33,7 @@
 
 /**************************************************************************/
 /*
- * Find VALUE in "DELIM__VALUE__" where '__' is one or more 
+ * Find VALUE in "DELIM__VALUE__" where '__' is one or more
  * whitespace or newline characters.
  *
  * Note: not reentrant, uses static buffer for convenience.
@@ -206,7 +206,7 @@ static int parse_probability_data(struct saxs_document *doc,
     firstline = firstline->next;
 
   /* distance distribution (r vs. P(r), r vs GammaC(r)) */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
+  if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, 2, "P(r)",
                                 SAXS_CURVE_PROBABILITY_DATA) != 0)
     return -1;

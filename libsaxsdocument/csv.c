@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -36,7 +36,7 @@ csv_parse_data(struct saxs_document *doc,
 
   for (i = 1; i < n; ++i)
     if (saxs_reader_columns_parse(doc,
-                                  firstline, lastline, 
+                                  firstline, lastline,
                                   0, 1.0, i, 1.0, -1,
                                   "data",
                                   SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))

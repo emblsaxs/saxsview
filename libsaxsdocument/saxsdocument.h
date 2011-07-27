@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -61,7 +61,7 @@ typedef struct saxs_data saxs_data;
  * A document is either populated by reading a file in a specified format
  * (@ref saxs_document_read), or by adding properties pairs
  * (@ref saxs_document_add_property) and curves (@ref saxs_document_add_curve)
- * manually. Modified documents may be written in a specfied format by 
+ * manually. Modified documents may be written in a specfied format by
  * @ref saxs_document_write.
  *
  * @returns An opaque pointer to a newly allocated document. The pointer
@@ -72,7 +72,7 @@ saxs_document_create();
 
 /**
  * @brief Read data from a file or stdin.
- * 
+ *
  * Reads data from a named file or stdin into the specified document.
  *
  * @param doc     A non-NULL document-pointer created by @ref saxs_document_create.
@@ -88,7 +88,7 @@ saxs_document_read(saxs_document *doc, const char *infile,
 
 /**
  * @brief Write data to a file or stdout.
- * 
+ *
  * Writes the specfied document to a named file or stdout.
  *
  * @param doc      A non-NULL document-pointer created by @ref saxs_document_create.
@@ -111,7 +111,7 @@ saxs_document_free(saxs_document *doc);
 
 /**
  * @brief The document's file name.
- * 
+ *
  * @param doc A non-NULL document-pointer created by @ref saxs_document_create.
  *
  * @returns NULL if no file was read with @ref saxs_document_read or written with
@@ -136,7 +136,7 @@ saxs_document_filename(saxs_document *doc);
  * To access the properties fields, use @ref saxs_property_name and
  * @ref saxs_property_value.
  *
- * Depending on the output format, properties may be written into a 
+ * Depending on the output format, properties may be written into a
  * file with @ref saxs_document_write.
  *
  * @param doc    A non-NULL document-pointer created by @ref saxs_document_create.

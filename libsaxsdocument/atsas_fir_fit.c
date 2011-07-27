@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -33,7 +33,7 @@ static int
 atsas_fir_fit_parse_header(struct saxs_document *doc,
                            struct line *firstline, struct line *lastline) {
   /*
-   * .fir-files may have a 'title', but we simply ignore any 
+   * .fir-files may have a 'title', but we simply ignore any
    * information that might be available for now ...
    */
   return 0;

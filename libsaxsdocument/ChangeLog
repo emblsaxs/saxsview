@@ -1,3 +1,21 @@
+2011-07-27  Al Kikhney  <plmnnk@users.sourceforge.net>
+
+	* atsas_dat.c: Trailing spaces removed.
+	* atsas_fir_fit.c: Likewise.
+	* atsas_int.c: Likewise.
+	* atsas_out.c: Likewise.
+	* cansas_xml.c: Likewise.
+	* columns.c: Likewise.
+	* columns.h: Likewise.
+	* csv.c: Likewise.
+	* saxsdocument.c: Likewise.
+	* saxsdocument.f90: Likewise.
+	* saxsdocument.h: Likewise.
+	* saxsdocument_format.c: Likewise.
+	* saxsdocument_format.h: Likewise.
+	* saxsproperty.c: Likewise.
+	* saxsproperty.h: Likewise.
+
 2011-07-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_out.c (atsas_out_read): Handle job type 3 (particle thickness).

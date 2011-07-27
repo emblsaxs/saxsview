@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -126,7 +126,7 @@ int saxs_reader_columns_count(struct line *l) {
     cnt += 1;
 
     /*
-     * Skip leading whitespace before skipping 
+     * Skip leading whitespace before skipping
      * the value up to the next whitespace.
      */
     while (*p && (isspace(*p) || issep(*p))) ++p;

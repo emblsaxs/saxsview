@@ -4,7 +4,7 @@
  *
  * This file is part of libsaxsdocument.
  *
- * libsaxsdocument is free software: you can redistribute it 
+ * libsaxsdocument is free software: you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General
  * Public License as published by the Free Software Foundation,
  * either version 3 of the License, or (at your option) any
@@ -32,7 +32,7 @@ static int
 atsas_int_parse_header(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
   /*
-   * .int-files may have a 'title', but we simply ignore any 
+   * .int-files may have a 'title', but we simply ignore any
    * information that might be available for now ...
    */
   return 0;
@@ -43,26 +43,26 @@ atsas_int_parse_data(struct saxs_document *doc,
                      struct line *firstline, struct line *lastline) {
 
   /* s vs I_final */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
+  if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, -1, "final",
                                 SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
 
   /* s vs I_atomic */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
+  if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 2, 1.0, -1, "atomic",
                                 SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
 
     return -1;
 
   /* s vs I_excluded_volume */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
+  if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 3, 1.0, -1, "excluded volume",
                                 SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
 
   /* s vs I_hydration_shell */
-  if (saxs_reader_columns_parse(doc, firstline, lastline, 
+  if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 4, 1.0, -1, "hydration shell",
                                 SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
     return -1;
