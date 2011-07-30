@@ -140,7 +140,7 @@ SaxsviewPlotWindow::~SaxsviewPlotWindow() {
 }
 
 bool SaxsviewPlotWindow::canShow(const QString& fileName) {
-  saxs_document_format *format = saxs_document_format_find(fileName.toAscii(), 0L);
+  saxs_document_format *format = saxs_document_format_find_first(fileName.toAscii(), 0L);
   return format && format->read;
 }
 

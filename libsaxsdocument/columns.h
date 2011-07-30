@@ -1,6 +1,6 @@
 /*
  * Common code to read columnized data in text files.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -26,6 +26,7 @@
 
 #include <sys/types.h>
 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,27 +34,39 @@ extern "C" {
 struct saxs_document;
 
 struct line {
-  size_t line_number;
   size_t line_length;
   char *line_buffer;
 
   struct line *next;
 };
 
+struct line*
+lines_create();
+
+int
+lines_printf(struct line *l, const char *fmt, ...);
+
+void
+lines_append(struct line **lines, struct line *l);
+
+
 /**
  * @brief Copy the contents of a file to a list of lines.
  * The lines are allocated by the function and must be free'd by @ref lines_free.
  *
- * @param filename
  * @param lines
+ * @param filename
  *
  * @returns 0 on success, -1 otherwise.
  */
 int
-lines_read(struct line **l, const char *filename);
+lines_read(struct line **lines, const char *filename);
+
+int
+lines_write(struct line *lines, const char *filename);
 
 void
-lines_free(struct line *l);
+lines_free(struct line *lines);
 
 
 /**
@@ -108,14 +121,25 @@ int
 saxs_reader_columns_parse_file(struct saxs_document *doc,
                                const char *filename,
                                int (*parse_header)(struct saxs_document*,
-                                                   struct line *,
-                                                   struct line *),
+                                                   struct line*,
+                                                   struct line*),
                                int (*parse_data)(struct saxs_document*,
-                                                 struct line *,
-                                                 struct line *),
+                                                 struct line*,
+                                                 struct line*),
                                int (*parse_footer)(struct saxs_document*,
-                                                   struct line *,
-                                                   struct line *));
+                                                   struct line*,
+                                                   struct line*));
+
+int
+saxs_writer_columns_write_file(struct saxs_document *doc,
+                               const char *filename,
+                               int (*write_header)(struct saxs_document*,
+                                                   struct line **),
+                               int (*write_data)(struct saxs_document*,
+                                                 struct line **),
+                               int (*write_footer)(struct saxs_document*,
+                                                   struct line **));
+
 
 #ifdef __cplusplus
 }

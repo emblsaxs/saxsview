@@ -46,11 +46,6 @@ csv_parse_data(struct saxs_document *doc,
 }
 
 int
-csv_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) > 1;
-}
-
-int
 csv_read(struct saxs_document *doc, const char *filename) {
   return saxs_reader_columns_parse_file(doc, filename,
                                         NULL, csv_parse_data, NULL);
@@ -62,7 +57,7 @@ saxs_document_format_register_csv() {
   saxs_document_format csv = {
      "csv", "comma separated values",
      "Columns of data, separated by a common separator",
-     csv_check, csv_read, NULL, NULL
+     csv_read, NULL, NULL
   };
 
   saxs_document_format_register(&csv);

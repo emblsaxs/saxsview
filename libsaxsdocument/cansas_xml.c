@@ -33,60 +33,6 @@
 
 
 /**************************************************************************/
-int cansas_xml_1_0_check(const char *filename) {
-  xmlTextReaderPtr reader;
-
-  /* See cansas_xml_1_0_read() for an explanation. */
-#if LIBXML_VERSION <= 20703
-  xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
-  if (!xmldoc)
-    return NULL;
-
-  reader = xmlReaderWalker(xmldoc);
-#else
-  reader = xmlNewTextReaderFilename(filename);
-#endif
-
-  if (!reader)
-    return 0;
-
-  while (xmlTextReaderRead(reader) == 1) {
-    /* only check the very first element */
-    if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
-        && xmlTextReaderDepth(reader) == 0) {
-
-      xmlChar *name, *attr;
-
-      name = xmlTextReaderLocalName(reader);
-      if (!xmlStrEqual(name, BAD_CAST("SASroot"))) {
-        xmlFree(name);
-        break;
-      }
-      xmlFree(name);
-
-      attr = xmlTextReaderGetAttribute(reader, "version");
-      if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
-        xmlFree(attr);
-        xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20703
-        xmlFreeDoc(xmldoc);
-#endif
-        return 1;
-      }
-      xmlFree(attr);
-
-      break;
-    }
-  }
-
-#if LIBXML_VERSION <= 20703
-  xmlFreeDoc(xmldoc);
-#endif
-  xmlFreeTextReader(reader);
-  return 0;
-}
-
-/**************************************************************************/
 /*
  * Node names are based on r32 of
  *   http://svn.smallangles.net/trac/canSAS/browser/1dwg/trunk/cansas1d.xsd
@@ -102,7 +48,7 @@ static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr rea
     case XML_READER_TYPE_ELEMENT:
       name = xmlTextReaderLocalName(reader);
       if (xmlStrEqual(name, BAD_CAST("SASdata"))) {
-        xmlChar *title = xmlTextReaderGetAttribute(reader, "name");
+        xmlChar *title = xmlTextReaderGetAttribute(reader, BAD_CAST("name"));
         curve = saxs_document_add_curve(doc, (const char*)title,
                                         SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
         if (title)
@@ -172,6 +118,37 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
   if (!reader)
     return -1;
 
+  /* Check the first node that this is the right document version. */
+  while (xmlTextReaderRead(reader) == 1) {
+    /* only check the very first element */
+    if (xmlTextReaderNodeType(reader) == XML_READER_TYPE_ELEMENT
+        && xmlTextReaderDepth(reader) == 0) {
+
+      xmlChar *name, *attr;
+
+      name = xmlTextReaderLocalName(reader);
+      if (!xmlStrEqual(name, BAD_CAST("SASroot"))) {
+        xmlFree(name);
+        break;
+      }
+      xmlFree(name);
+
+      attr = xmlTextReaderGetAttribute(reader, BAD_CAST("version"));
+      if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
+        xmlFree(attr);
+        xmlFreeTextReader(reader);
+#if LIBXML_VERSION <= 20703
+        xmlFreeDoc(xmldoc);
+#endif
+        return -1;
+      }
+      xmlFree(attr);
+
+      break;
+    }
+  }
+
+  /* Ok, now read all the nodes. */
   while (xmlTextReaderRead(reader) == 1)
     cansas_xml_1_0_process_node(doc, reader);
 
@@ -184,10 +161,11 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
 }
 
 /**************************************************************************/
+void
 saxs_document_format_register_cansas_xml() {
   saxs_document_format cansas_xml = {
      "xml", "cansas-xml-v1.0", "CANSAS Working Group XML v1.0",
-     cansas_xml_1_0_check, cansas_xml_1_0_read, NULL
+     cansas_xml_1_0_read, NULL, NULL
   };
 
   saxs_document_format_register(&cansas_xml);

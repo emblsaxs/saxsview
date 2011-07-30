@@ -1,3 +1,61 @@
+2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
+            Al Kikhney  <plmnnk@users.sourceforge.net>
+
+	* saxsdocument_format.h (struct saxs_document_format): Removed
+	check function; removed all usages.
+	(saxs_document_format_find): Renamed to ...
+	(saxs_document_format_find_first): ... this.
+	(saxs_document_format_find_next): New.
+	* saxsdocument_format.c (saxs_document_format_find): Renamed to ...
+	(saxs_document_format_find_first): ... this. Updated all users.
+	(saxs_document_format_find_next): New.
+	* saxsdocument.c (saxs_document_read): Walk potential format
+	handler for a file until one successfully read it.
+	(saxs_document_write): Likewise for writing.
+	* columns.h (struct line): Removed line_number.
+	(lines_create): New.
+	(lines_printf): New.
+	(lines_append): New.
+	(lines_write): New.
+	(saxs_writer_columns_write_file): New.
+	* columns.c (lines_create): New.
+	(lines_printf): New.
+	(lines_append): New.
+	(lines_read): Handle '-' as indicator to read from stdin;
+	use new functions.
+	(lines_write): New.
+	(saxs_reader_columns_parse_file): Improved propagation of error values.
+	(saxs_writer_columns_write_file): New.
+	* atsas_dat.c (atsas_dat_parse_header): Attempt to extract some values.
+	(atsas_dat_write_header): New.
+	(atsas_dat_write_footer): New.
+	(atsas_dat_3_column_check): Removed.
+	(atsas_dat_3_column_parse_data): Check number of available data columns.
+	(atsas_dat_3_column_write_data): New.
+	(atsas_dat_3_column_write): New.
+	(atsas_dat_4_column_check): Removed.
+	(atsas_dat_4_column_parse_data): Check number of available data columns.
+	(atsas_dat_4_column_write_data): New.
+	(atsas_dat_4_column_write): New.
+	(atsas_dat_n_column_check): Removed.
+	* atsas_fir_fit.c (atsas_fir_4_column_check): Removed.
+	(atsas_fir_4_column_parse_data): Check number of available data columns.
+	(atsas_fit_3_column_check): Removed.
+	(atsas_fit_3_column_parse_data): Check number of available data columns.
+	(atsas_fit_4_column_check): Removed.
+	(atsas_fit_4_column_parse_data): Check number of available data columns.
+	(atsas_fit_5_column_check): Removed.
+	(atsas_fit_5_column_parse_data): Check number of available data columns.
+	* atsas_int.c (atsas_int_check): Removed.
+	(atsas_int_parse_data): Check number of available data columns.
+	* atsas_out.c (atsas_out_check): Removed.
+	(saxs_document_format_register_atsas_out): Fixed typo in variable name.
+	* cansas_xml.c (cansas_xml_1_0_check): Removed.
+	(cansas_xml_1_0_read): Check file version.
+	* csv.c (csv_check): Removed.
+	* saxsproperty.c (saxs_property_find_next): Fixed.
+	* saxsdocument.f90 (saxs_document_add_data): Fixed C-binding.
+
 2011-07-27  Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* atsas_dat.c: Trailing spaces removed.

@@ -205,9 +205,9 @@ static int parse_probability_data(struct saxs_document *doc,
   while (saxs_reader_columns_count(firstline) != 3)
     firstline = firstline->next;
 
-  /* distance distribution (r vs. P(r), r vs GammaC(r)) */
+  /* distance distribution (r vs. p(r), r vs GammaC(r)) */
   if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, 2, "P(r)",
+                                0, 1.0, 1, 1.0, 2, "p(r)",
                                 SAXS_CURVE_PROBABILITY_DATA) != 0)
     return -1;
 
@@ -247,11 +247,6 @@ static int parse_footer(struct saxs_document *doc,
 
   return 0;
 
-}
-
-
-int atsas_out_check(const char *filename) {
-  return !compare_format(suffix(filename), "out") ? 1 : 0;
 }
 
 int atsas_out_read(struct saxs_document *doc, const char *filename) {
@@ -319,11 +314,15 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
 
 
 /**************************************************************************/
-void saxs_document_format_register_atsas_out() {
-  saxs_document_format atsas_int = {
-     "out", "atsas-out", "ATSAS P(r) files (by GNOM)",
-     atsas_out_check, atsas_out_read, NULL, NULL
+void
+saxs_document_format_register_atsas_out() {
+  /*
+   * .out-files are usually written by GNOM, DATGNOM or AUTOGNOM.
+   */
+  saxs_document_format atsas_out = {
+     "out", "atsas-out", "ATSAS p(r) files (by GNOM)",
+     atsas_out_read, NULL, NULL
   };
 
-  saxs_document_format_register(&atsas_int);
+  saxs_document_format_register(&atsas_out);
 }

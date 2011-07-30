@@ -59,6 +59,7 @@ saxs_property_next(saxs_property *property) {
 
 saxs_property*
 saxs_property_find_next(saxs_property *property, const char *name) {
+  property = property ? property->next : NULL;
   while (property && (strcmp(property->name, name) != 0))
     property = property->next;
 

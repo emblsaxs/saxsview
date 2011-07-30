@@ -51,15 +51,6 @@ struct saxs_document_format {
   const char *description;
 
   /**
-   * @returns 1 if the @a filename be handled by this descriptor,
-   * 0 otherwise.
-   *
-   * A format descriptor without a @a check function will never
-   * be used.
-   */
-  int (*check)(const char *filename);
-
-  /**
    * @returns 0 if read successfully, -1 on error.
    */
   int (*read)(struct saxs_document *doc, const char *filename);
@@ -85,8 +76,8 @@ saxs_document_format_free(saxs_document_format*);
  * application.
  *
  * Or, shall be called by one of @ref saxs_document_format_first,
- * @ref saxs_document_format_next or @ref saxs_document_format_find
- * if the list of formats is empty.
+ * @ref saxs_document_format_next, @ref saxs_document_format_find_first
+ * or @ref saxs_document_format_find_next if the list of formats is empty.
  */
 void
 saxs_document_format_init();
@@ -126,8 +117,14 @@ saxs_document_format_next(saxs_document_format*);
  * @returns A format description or NULL if no format could be found.
  */
 saxs_document_format*
-saxs_document_format_find(const char *filename,
-                          const char *formatname);
+saxs_document_format_find_first(const char *filename,
+                                const char *formatname);
+
+
+saxs_document_format*
+saxs_document_format_find_next(saxs_document_format*,
+                               const char *filename,
+                               const char *formatname);
 
 
 /**

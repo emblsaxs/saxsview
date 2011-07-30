@@ -72,16 +72,42 @@ saxs_document* saxs_document_create() {
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
-  saxs_document_format* handler = saxs_document_format_find(filename, format);
+  int res = -1;
+  saxs_document_format* handler = saxs_document_format_find_first(filename, format);
+  while (handler) {
+    if (handler->read) {
+      res = handler->read(doc, filename);
+      if (res == 0)
+        break;
+    }
+    handler = saxs_document_format_find_next(handler, filename, format);
+  }
 
-  doc->doc_filename = strdup(filename);
-  return handler && handler->read ? handler->read(doc, filename) : -1;
+  if (res == 0)
+    doc->doc_filename = strdup(filename);
+
+  return res;
 }
 
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
-  saxs_document_format* handler = saxs_document_format_find(filename, format);
-  return handler && handler->write ? handler->write(doc, filename) : -1;
+  int res = -1;
+
+  saxs_document_format* handler = saxs_document_format_find_first(filename, format);
+  while (handler) {
+    if (handler->write) {
+      res = handler->write(doc, filename);
+      if (res == 0)
+        break;
+    }
+    handler = saxs_document_format_find_next(handler, filename, format);
+  }
+
+  /* FIXME: this leaks the previous filename, if any */
+  if (res == 0)
+    doc->doc_filename = strdup(filename);
+
+  return res;
 }
 
 void saxs_document_free(saxs_document *doc) {

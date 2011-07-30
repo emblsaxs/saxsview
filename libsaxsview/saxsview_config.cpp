@@ -216,7 +216,7 @@ void SaxsviewConfig::applyTemplate(PlotCurve *curve) const {
 
   settings().beginGroup("Templates");
 
-  fmt = saxs_document_format_find(qPrintable(curve->fileName()), 0L);
+  fmt = saxs_document_format_find_first(qPrintable(curve->fileName()), 0L);
   if (!fmt)
     return;
 

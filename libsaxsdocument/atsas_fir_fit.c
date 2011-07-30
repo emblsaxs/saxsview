@@ -54,6 +54,9 @@ static int
 atsas_fir_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
+  if (saxs_reader_columns_count(firstline) != 4)
+    return -1;
+
   if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, 2, "data",
                                 SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
@@ -65,11 +68,6 @@ atsas_fir_4_column_parse_data(struct saxs_document *doc,
     return -1;
 
   return 0;
-}
-
-int
-atsas_fir_4_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 4;
 }
 
 int
@@ -86,6 +84,9 @@ static int
 atsas_fit_3_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
+  if (saxs_reader_columns_count(firstline) != 3)
+    return -1;
+
   if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, -1, "data",
                                 SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
@@ -97,11 +98,6 @@ atsas_fit_3_column_parse_data(struct saxs_document *doc,
     return -1;
 
   return 0;
-}
-
-int
-atsas_fit_3_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 3;
 }
 
 int
@@ -118,6 +114,9 @@ static int
 atsas_fit_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
+  if (saxs_reader_columns_count(firstline) != 4)
+    return -1;
+
   if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, 2, "data",
                                 SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
@@ -129,11 +128,6 @@ atsas_fit_4_column_parse_data(struct saxs_document *doc,
     return -1;
 
   return 0;
-}
-
-int
-atsas_fit_4_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 4;
 }
 
 int
@@ -150,6 +144,9 @@ static int
 atsas_fit_5_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
+  if (saxs_reader_columns_count(firstline) != 5)
+    return -1;
+
   if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, 3, "data",
                                 SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
@@ -161,11 +158,6 @@ atsas_fit_5_column_parse_data(struct saxs_document *doc,
     return -1;
 
   return 0;
-}
-
-int
-atsas_fit_5_column_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 5;
 }
 
 int
@@ -193,25 +185,25 @@ saxs_document_format_register_atsas_fir_fit() {
   saxs_document_format atsas_fir_4_column = {
      "fir", "atsas-fir-4-column",
      "ATSAS fit against experimental data",
-     atsas_fir_4_column_check, atsas_fir_4_column_read, NULL, NULL
+     atsas_fir_4_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_3_column = {
      "fit", "atsas-fit-3-column",
      "ATSAS fit against data (3 column; DAMMIN, DAMMIF, ...)",
-     atsas_fit_3_column_check, atsas_fit_3_column_read, NULL, NULL
+     atsas_fit_3_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_4_column = {
      "fit", "atsas-fit-4-column",
      "ATSAS fit against data (4 column; SASREF, ...)",
-     atsas_fit_4_column_check, atsas_fit_4_column_read, NULL, NULL
+     atsas_fit_4_column_read, NULL, NULL
   };
 
   saxs_document_format atsas_fit_5_column = {
      "fit", "atsas-fit-5-column",
      "ATSAS fit against data (5 column; OLIGOMER, ...)",
-     atsas_fit_5_column_check, atsas_fit_5_column_read, NULL, NULL
+     atsas_fit_5_column_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_fir_4_column);

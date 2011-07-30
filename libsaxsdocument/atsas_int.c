@@ -42,6 +42,9 @@ static int
 atsas_int_parse_data(struct saxs_document *doc,
                      struct line *firstline, struct line *lastline) {
 
+  if (saxs_reader_columns_count(firstline) != 5)
+    return -1;
+
   /* s vs I_final */
   if (saxs_reader_columns_parse(doc, firstline, lastline,
                                 0, 1.0, 1, 1.0, -1, "final",
@@ -81,11 +84,6 @@ atsas_int_parse_footer(struct saxs_document *doc,
 }
 
 int
-atsas_int_check(const char *filename) {
-  return saxs_reader_columns_count_file(filename) == 5;
-}
-
-int
 atsas_int_read(struct saxs_document *doc, const char *filename) {
   return saxs_reader_columns_parse_file(doc, filename,
                                         atsas_int_parse_header,
@@ -104,7 +102,7 @@ saxs_document_format_register_atsas_int() {
    */
   saxs_document_format atsas_int = {
      "int", "atsas-int", "ATSAS theoretical intensities (by CRYSOL)",
-     atsas_int_check, atsas_int_read, NULL, NULL
+     atsas_int_read, NULL, NULL
   };
 
   saxs_document_format_register(&atsas_int);

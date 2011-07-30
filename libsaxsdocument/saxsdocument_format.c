@@ -29,20 +29,14 @@
 #include <string.h>
 #include <ctype.h>
 
-saxs_document_format*
-saxs_document_format_register_atsas_dat();
-saxs_document_format*
-saxs_document_format_register_atsas_fir_fit();
-saxs_document_format*
-saxs_document_format_register_atsas_int();
-saxs_document_format*
-saxs_document_format_register_atsas_out();
-saxs_document_format*
-saxs_document_format_register_csv();
+void saxs_document_format_register_atsas_dat();
+void saxs_document_format_register_atsas_fir_fit();
+void saxs_document_format_register_atsas_int();
+void saxs_document_format_register_atsas_out();
+void saxs_document_format_register_csv();
 
 #ifdef HAVE_LIBXML2
-saxs_document_format*
-saxs_document_format_register_cansas_xml();
+void saxs_document_format_register_cansas_xml();
 #endif
 
 
@@ -56,7 +50,6 @@ saxs_document_format_create() {
 
   format->name = NULL;
   format->description = NULL;
-  format->check = NULL;
   format->read = NULL;
   format->write = NULL;
   format->next = NULL;
@@ -137,7 +130,6 @@ saxs_document_format_register(const saxs_document_format *format) {
   if (format->description)
     fmt->description = strdup(format->description);
 
-  fmt->check = format->check;
   fmt->read = format->read;
   fmt->write = format->write;
   fmt->next = NULL;
@@ -167,31 +159,40 @@ saxs_document_format_next(saxs_document_format *format) {
 
 
 saxs_document_format*
-saxs_document_format_find(const char *filename,
-                          const char *formatname) {
-
-  saxs_document_format *format;
+saxs_document_format_find_first(const char *filename,
+                                const char *formatname) {
 
   if (!saxs_document_format_initialized)
     saxs_document_format_init();
 
+  return saxs_document_format_find_next(NULL, filename, formatname);
+}
+
+saxs_document_format*
+saxs_document_format_find_next(saxs_document_format *head,
+                               const char *filename,
+                               const char *formatname) {
+
+  saxs_document_format *format;
+  if (head)
+    head = head->next;
+  else
+    head = format_head;
+
   /* Try to find the named format first. */
-  if (formatname)
-    for (format = format_head; format != NULL; format = format->next)
-      if (!compare_format(format->name, formatname)
-           && format->check
-           && format->check(filename))
+  if (formatname) {
+    for (format = head; format; format = format->next)
+      if (!compare_format(format->name, formatname))
         return format;
+  }
 
   /* If the name was not specified or not found, try to find
      a format that matches the extension. */
   if (filename) {
     const char *extension = suffix(filename);
-    for (format = format_head; format != NULL; format = format->next)
-      if (!compare_format(format->extension, extension)
-          && format->check
-          && format->check(filename))
-         return format;
+    for (format = head; format; format = format->next)
+      if (!compare_format(format->extension, extension))
+        return format;
   }
 
   return NULL;
@@ -216,6 +217,7 @@ int compare_format(const char *a, const char *b) {
 
   return 1;
 }
+
 
 const char* suffix(const char *filename) {
   const char *p;

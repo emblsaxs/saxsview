@@ -26,6 +26,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
 
@@ -37,21 +38,59 @@ static int issep(int c) {
 }
 
 
+struct line* lines_create() {
+  struct line *line;
+
+  line = malloc(sizeof(struct line));
+  line->line_length = 80;
+  line->line_buffer = malloc(line->line_length);
+  line->next        = NULL;
+
+  memset(line->line_buffer, 0, line->line_length);
+  return line;
+}
+
+
+void
+lines_append(struct line **lines, struct line *l) {
+  if (l) {
+    if (*lines) {
+      struct line *tail = *lines;
+      while (tail->next)
+        tail = tail->next;
+
+      tail->next = l;
+
+    } else {
+      *lines = l;
+    }
+  }
+}
+
+
+int lines_printf(struct line *l, const char *fmt, ...) {
+  int res;
+
+  va_list va;
+  va_start(va, fmt);
+  res = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+  va_end(va);
+
+  return res;
+}
+
+
 int lines_read(struct line **lines, const char *filename) {
   struct line *head, *tail;
   int c;
   char *line_ptr;
 
-  FILE *fd = fopen(filename, "r");
+  FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
   if (!fd)
     return -1;
 
-  head = tail = malloc(sizeof(struct line));
-  head->line_number = 1;
-  head->line_length = 80;
-  head->line_buffer = line_ptr = malloc(head->line_length);
-  memset(head->line_buffer, 0, head->line_length);
-  head->next   = NULL;
+  head = tail =  lines_create();
+  line_ptr = tail->line_buffer;
 
   while (!feof(fd)) {
     c = fgetc(fd);
@@ -70,14 +109,9 @@ int lines_read(struct line **lines, const char *filename) {
       case '\n':
         *line_ptr++ = '\0';
 
-        tail->next = malloc(sizeof(struct line));
-        tail->next->line_number = tail->line_number + 1;
-
+        tail->next = lines_create();
         tail = tail->next;
-        tail->line_length = 80;
-        tail->line_buffer = line_ptr = malloc(tail->line_length);
-        memset(tail->line_buffer, 0, tail->line_length);
-        tail->next = NULL;
+        line_ptr = tail->line_buffer;
         break;
 
       default:
@@ -93,11 +127,30 @@ int lines_read(struct line **lines, const char *filename) {
     }
   }
 
-  fclose(fd);
+  if (strcmp(filename, "-") != 0)
+    fclose(fd);
+
   *lines = head;
 
   return 0;
 }
+
+int lines_write(struct line *lines, const char *filename) {
+  struct line *line;
+
+  FILE *fd = strcmp(filename, "-") ? fopen(filename, "w") : stdout;
+  if (!fd)
+    return -1;
+
+  for (line = lines; line; line = line->next)
+    fprintf(fd, "%s\n", line->line_buffer);
+
+  if (strcmp(filename, "-") != 0)
+    fclose(fd);
+
+  return 0;
+}
+
 
 void lines_free(struct line *lines) {
   struct line *line = lines, *oldline;
@@ -295,20 +348,56 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
   struct line *lines, *header, *data, *footer;
 
   if (lines_read(&lines, filename) != 0)
-    return -1;
+    goto error;
 
   if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
-    return -1;
+    goto error;
 
-  if (parse_header)
-    parse_header(doc, header, data);
+  if (parse_header && parse_header(doc, header, data) != 0)
+    goto error;
 
-  if (parse_data)
-    parse_data(doc, data, footer);
+  if (parse_data && parse_data(doc, data, footer) != 0)
+    goto error;
 
-  if (parse_footer)
-    parse_footer(doc, footer, NULL);
+  if (parse_footer && parse_footer(doc, footer, NULL) != 0)
+    goto error;
 
   lines_free(lines);
   return 0;
+
+error:
+  lines_free(lines);
+  return -1;
+}
+
+
+
+int saxs_writer_columns_write_file(struct saxs_document *doc,
+                                   const char *filename,
+                                   int (*write_header)(struct saxs_document*,
+                                                       struct line **),
+                                   int (*write_data)(struct saxs_document*,
+                                                     struct line **),
+                                   int (*write_footer)(struct saxs_document*,
+                                                       struct line **)) {
+  struct line *lines = NULL;
+
+  if (write_header && write_header(doc, &lines) != 0)
+    goto error;
+
+  if (write_data && write_data(doc, &lines) != 0)
+    goto error;
+
+  if (write_footer && write_footer(doc, &lines) != 0)
+    goto error;
+
+  if (lines_write(lines, filename) != 0)
+    goto error;
+
+  lines_free(lines);
+  return 0;
+
+error:
+  lines_free(lines);
+  return -1;
 }

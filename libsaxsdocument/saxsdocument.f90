@@ -379,19 +379,15 @@ CONTAINS
     END INTERFACE
 
     INTERFACE
-      SUBROUTINE c_saxs_curve_add_data(curve, data) &
+      SUBROUTINE c_saxs_curve_add_data(curve, x, x_err, y, y_err) &
                  BIND(C, NAME="saxs_curve_add_data")
-        IMPORT C_PTR
-        TYPE(C_PTR), VALUE :: curve
-        TYPE(C_PTR), VALUE :: data
+        IMPORT C_PTR, C_DOUBLE
+        TYPE(C_PTR),    VALUE :: curve
+        REAL(C_DOUBLE), VALUE :: x, x_err, y, y_err
       END SUBROUTINE
     END INTERFACE
 
 
-    TYPE, BIND(C) :: saxs_data
-      REAL(C_DOUBLE) :: x, y, y_err
-    END TYPE
-    TYPE(saxs_data), TARGET :: data
     INTEGER :: k
 
     TYPE(C_PTR) :: curve
@@ -406,8 +402,7 @@ CONTAINS
     END IF
 
     DO k = 1, MIN(size(x), size(y), size(y_err))
-      data = saxs_data(x(k), y(k), y_err(k))
-      CALL c_saxs_curve_add_data(curve, C_LOC(data))
+      CALL c_saxs_curve_add_data(curve, x(k), 0.0_C_DOUBLE, y(k), y_err(k))
     END DO
   END SUBROUTINE
 
