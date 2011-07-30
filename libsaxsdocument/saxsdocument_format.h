@@ -1,6 +1,7 @@
 /*
  * Format handling of SAXS documents.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010, 2011
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -51,12 +52,14 @@ struct saxs_document_format {
   const char *description;
 
   /**
-   * @returns 0 if read successfully, -1 on error.
+   * @returns 0 if read successfully, an error code on error.
+   *          Shall return ENOTSUP if the file can not be read.
    */
   int (*read)(struct saxs_document *doc, const char *filename);
 
   /**
-   * @returns 0 if written successfully, -1 on error.
+   * @returns 0 if written successfully, an error code on error.
+   *          Shall return ENOTSUP if the file can not be written.
    */
   int (*write)(struct saxs_document *doc, const char *filename);
 

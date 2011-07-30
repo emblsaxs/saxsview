@@ -327,10 +327,12 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   values = malloc(colcnt * sizeof(double));
   while (firstline != lastline) {
-    if (columns_parse(firstline, values) == colcnt)
+    if (saxs_reader_columns_count(firstline) == colcnt) {
+      columns_parse(firstline, values);
       saxs_curve_add_data (curve, values[xcol] * xfactor, 0.0,
                            values[ycol] * yfactor,
                            y_errcol >= 0 ? values[y_errcol] : 0.0);
+    }
 
     firstline = firstline->next;
   }

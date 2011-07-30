@@ -35,12 +35,10 @@ csv_parse_data(struct saxs_document *doc,
   int i, n = saxs_reader_columns_count(firstline);
 
   for (i = 1; i < n; ++i)
-    if (saxs_reader_columns_parse(doc,
-                                  firstline, lastline,
-                                  0, 1.0, i, 1.0, -1,
-                                  "data",
-                                  SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-      return -1;
+    saxs_reader_columns_parse(doc, firstline, lastline,
+                              0, 1.0, i, 1.0, -1,
+                              "data",
+                              SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
   return 0;
 }

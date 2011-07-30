@@ -1,5 +1,33 @@
 2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsdocument.h: Updated documentation.
+	* saxsdocument.c (saxs_document_create): Added error checking.
+	(saxs_document_read): Provide a more meaningful error return.
+	(saxs_document_write): Likewise.
+	* saxsdocument_format.h: Updated documentation.
+	* columns.h: Likewise.
+	* columns.c (saxs_reader_columns_parse): Verify number of
+	columns before attempting to parse them.
+	* atsas_dat.c (atsas_dat_parse_header): Fixed typo.
+	(atsas_dat_3_column_parse_data): Provide a more meaningful
+	error return.
+	(atsas_dat_3_column_write): Likewise.
+	(atsas_dat_4_column_parse_data): Likewise.
+	(atsas_dat_4_column_write): Likewise.
+	(atsas_dat_n_column_parse_data): Removed superfluous error check.
+	* atsas_fir_fit.c (atsas_fir_4_column_parse_data): Provide a more
+	meaningful error return; removed superfluous error checks.
+	(atsas_fit_3_column_parse_data): Likewise.
+	(atsas_fit_4_column_parse_data): Likewise.
+	(atsas_fit_5_column_parse_data): Likewise.
+	* atsas_int.c (atsas_int_parse_data): Likewise.
+	* atsas_out.c (parse_probability_data): Likewise.
+	(atsas_out_read): Provide a more meaningful error return.
+	* cansas_xml.c (cansas_xml_1_0_read): Likewise.
+	* csv.c (csv_parse_data): Likewise.
+
+2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* columns.h: Added doxygen documentation.
 	* columns.c (lines_create): Added error checking.
 	(lines_printf): If the current line is too short, dynamically

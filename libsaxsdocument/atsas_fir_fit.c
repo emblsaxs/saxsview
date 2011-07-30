@@ -1,6 +1,7 @@
 /*
  * Read files in .fir/.fit-formats (e.g. written by DAMMIN, OLIGOMER, ...).
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010, 2011
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -26,6 +27,7 @@
 #include "saxsdocument_format.h"
 
 #include <string.h>
+#include <errno.h>
 
 
 /**************************************************************************/
@@ -55,17 +57,15 @@ atsas_fir_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 4)
-    return -1;
+    return ENOTSUP;
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, 2, "data",
-                                SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, 2, "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 3, 1.0, -1, "fit",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 3, 1.0, -1, "fit",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   return 0;
 }
@@ -85,17 +85,15 @@ atsas_fit_3_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 3)
-    return -1;
+    return ENOTSUP;
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, -1, "data",
-                                SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, -1, "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 2, 1.0, -1, "fit",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 2, 1.0, -1, "fit",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   return 0;
 }
@@ -115,17 +113,15 @@ atsas_fit_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 4)
-    return -1;
+    return ENOTSUP;
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, 2, "data",
-                                SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, 2, "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 3, 1.0, -1, "fit",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 3, 1.0, -1, "fit",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   return 0;
 }
@@ -145,17 +141,15 @@ atsas_fit_5_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 5)
-    return -1;
+    return ENOTSUP;
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, 3, "data",
-                                SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, 3, "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 2, 1.0, -1, "fit",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA))
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 2, 1.0, -1, "fit",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   return 0;
 }

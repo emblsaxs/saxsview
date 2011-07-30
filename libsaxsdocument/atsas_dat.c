@@ -1,6 +1,7 @@
 /*
- * Read files in .dat-format (used by EMBL-Hamburg).
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Read/write files in .dat-format (used by EMBL-Hamburg).
+ * Copyright (C) 2009, 2010, 2011
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -27,6 +28,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 #ifndef MIN
   #define MIN(a,b) ((a) < (b) ? (a) : (b))
@@ -144,7 +146,7 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
     lines_printf(line, "%s", saxs_property_value(title));
   lines_append(lines, line);
 
-  /* Second line, if concentration, code and concentration
+  /* Second line, if any of description, code or concentration
      are not available, this line is skipped. */
   description   = saxs_document_property_find_first(doc, "sample-description");
   code          = saxs_document_property_find_first(doc, "sample-code");
@@ -182,7 +184,7 @@ static int
 atsas_dat_3_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 3)
-    return -1;
+    return ENOTSUP;
 
   return saxs_reader_columns_parse(doc,
                                    firstline, lastline,
@@ -220,7 +222,7 @@ atsas_dat_3_column_write_data(struct saxs_document *doc,
 int
 atsas_dat_3_column_write(struct saxs_document *doc, const char *filename) {
   if (saxs_document_curve_count(doc) != 1)
-    return -1;
+    return ENOTSUP;
 
   return saxs_writer_columns_write_file(doc, filename,
                                         atsas_dat_write_header,
@@ -233,13 +235,21 @@ static int
 atsas_dat_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 4)
-    return -1;
+    return ENOTSUP;
 
-  return saxs_reader_columns_parse(doc,
-                                   firstline, lastline,
-                                   0, 1.0, 1, 1.0, 2,
-                                   "data",
-                                   SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+  saxs_reader_columns_parse(doc,
+                            firstline, lastline,
+                            0, 1.0, 1, 1.0, 2,
+                            "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+
+  saxs_reader_columns_parse(doc,
+                            firstline, lastline,
+                            0, 1.0, 1, 1.0, 3,
+                            "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+
+  return 0;
 }
 
 int
@@ -276,7 +286,7 @@ atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
 int
 atsas_dat_4_column_write(struct saxs_document *doc, const char *filename) {
   if (saxs_document_curve_count(doc) != 2)
-    return -1;
+    return ENOTSUP;
 
   return saxs_writer_columns_write_file(doc, filename,
                                         atsas_dat_write_header,
@@ -295,12 +305,11 @@ atsas_dat_n_column_parse_data(struct saxs_document *doc,
   int i, n = saxs_reader_columns_count(firstline);
 
   for (i = 1; i < n; ++i)
-    if (saxs_reader_columns_parse(doc,
-                                  firstline, lastline,
-                                  0, 1.0, i, 1.0, -1,
-                                  "data",
-                                  SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA))
-      return -1;
+    saxs_reader_columns_parse(doc,
+                              firstline, lastline,
+                              0, 1.0, i, 1.0, -1,
+                              "data",
+                              SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
   return 0;
 }

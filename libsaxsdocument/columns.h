@@ -125,6 +125,10 @@ saxs_reader_columns_scan(struct line *lines,
 /**
  * @brief Parse specified columns into a list of lines.
  *
+ * The first data line is used as a template. If any other data
+ * line has more or less data values than the first line, that
+ * line is ignored.
+ *
  * @param doc
  * @param firstline
  * @param lastline

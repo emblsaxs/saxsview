@@ -206,10 +206,9 @@ static int parse_probability_data(struct saxs_document *doc,
     firstline = firstline->next;
 
   /* distance distribution (r vs. p(r), r vs GammaC(r)) */
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, 2, "p(r)",
-                                SAXS_CURVE_PROBABILITY_DATA) != 0)
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, 2, "p(r)",
+                            SAXS_CURVE_PROBABILITY_DATA);
 
   return 0;
 }
@@ -250,6 +249,7 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 int atsas_out_read(struct saxs_document *doc, const char *filename) {
+  int res;
   struct line *lines, *current;
   struct line *header, *scattering_begin, *probability_begin, *footer;
 
@@ -261,8 +261,8 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
    * probability data, footer) to be parsed later.
    */
 
-  if (lines_read(&lines, filename) != 0)
-    return -1;
+  if ((res = lines_read(&lines, filename)) != 0)
+    return res;
 
   /*
    * The header starts at the first line and ends with:

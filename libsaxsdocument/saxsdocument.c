@@ -27,6 +27,7 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 struct saxs_document {
   char *doc_filename;
@@ -61,51 +62,53 @@ struct saxs_data {
 saxs_document* saxs_document_create() {
   saxs_document *doc = malloc(sizeof(saxs_document));
 
-  doc->doc_filename = NULL;
-  doc->doc_properties  = saxs_property_list_create();
-  doc->doc_curve_count = 0;
-  doc->doc_curves_head = NULL;
-  doc->doc_curves_tail = NULL;
+  if (doc) {
+    doc->doc_filename = NULL;
+    doc->doc_properties  = saxs_property_list_create();
+    doc->doc_curve_count = 0;
+    doc->doc_curves_head = NULL;
+    doc->doc_curves_tail = NULL;
+  }
 
   return doc;
 }
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
-  int res = -1;
+  int res = ENOTSUP;
+
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->read) {
       res = handler->read(doc, filename);
-      if (res == 0)
+      if (res == 0) {
+        if (doc->doc_filename) free(doc->doc_filename);
+        doc->doc_filename = strdup(filename);
         break;
+      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
-
-  if (res == 0)
-    doc->doc_filename = strdup(filename);
 
   return res;
 }
 
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
-  int res = -1;
+  int res = ENOTSUP;
 
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->write) {
       res = handler->write(doc, filename);
-      if (res == 0)
+      if (res == 0) {
+        if (doc->doc_filename) free(doc->doc_filename);
+        doc->doc_filename = strdup(filename);
         break;
+      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
-
-  /* FIXME: this leaks the previous filename, if any */
-  if (res == 0)
-    doc->doc_filename = strdup(filename);
 
   return res;
 }

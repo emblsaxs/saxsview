@@ -28,6 +28,7 @@
 #include "saxsdocument_format.h"
 
 #include <stdlib.h>
+#include <errno.h>
 
 #include <libxml/xmlreader.h>
 
@@ -140,7 +141,7 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
 #if LIBXML_VERSION <= 20703
         xmlFreeDoc(xmldoc);
 #endif
-        return -1;
+        return ENOTSUP;
       }
       xmlFree(attr);
 

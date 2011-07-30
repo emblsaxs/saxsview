@@ -26,6 +26,7 @@
 #include "saxsdocument_format.h"
 
 #include <string.h>
+#include <errno.h>
 
 /**************************************************************************/
 static int
@@ -43,32 +44,27 @@ atsas_int_parse_data(struct saxs_document *doc,
                      struct line *firstline, struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 5)
-    return -1;
+    return ENOTSUP;
 
   /* s vs I_final */
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 1, 1.0, -1, "final",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, -1, "final",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   /* s vs I_atomic */
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 2, 1.0, -1, "atomic",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
-
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 2, 1.0, -1, "atomic",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   /* s vs I_excluded_volume */
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 3, 1.0, -1, "excluded volume",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 3, 1.0, -1, "excluded volume",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   /* s vs I_hydration_shell */
-  if (saxs_reader_columns_parse(doc, firstline, lastline,
-                                0, 1.0, 4, 1.0, -1, "hydration shell",
-                                SAXS_CURVE_THEORETICAL_SCATTERING_DATA) != 0)
-    return -1;
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 4, 1.0, -1, "hydration shell",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   return 0;
 }
