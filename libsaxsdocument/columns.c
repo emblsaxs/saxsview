@@ -29,6 +29,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 
 /* Similar to the POSIX "character classification routines";
@@ -42,11 +43,20 @@ struct line* lines_create() {
   struct line *line;
 
   line = malloc(sizeof(struct line));
-  line->line_length = 80;
-  line->line_buffer = malloc(line->line_length);
-  line->next        = NULL;
+  if (line) {
+    line->line_length = 80;
+    line->line_buffer = malloc(line->line_length);
+    line->next        = NULL;
 
-  memset(line->line_buffer, 0, line->line_length);
+    if (line->line_buffer) {
+      memset(line->line_buffer, 0, line->line_length);
+
+    } else {
+      free(line);
+      line = NULL;
+    }
+  }
+
   return line;
 }
 
@@ -69,14 +79,19 @@ lines_append(struct line **lines, struct line *l) {
 
 
 int lines_printf(struct line *l, const char *fmt, ...) {
-  int res;
+  int n;
 
   va_list va;
   va_start(va, fmt);
-  res = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+  n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+  if (n >= (signed)l->line_length) {
+    l->line_length = n + 1;
+    l->line_buffer = realloc(l->line_buffer, l->line_length);
+    n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+  }
   va_end(va);
 
-  return res;
+  return n;
 }
 
 
@@ -87,7 +102,7 @@ int lines_read(struct line **lines, const char *filename) {
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
   if (!fd)
-    return -1;
+    return errno;
 
   head = tail =  lines_create();
   line_ptr = tail->line_buffer;
@@ -127,7 +142,7 @@ int lines_read(struct line **lines, const char *filename) {
     }
   }
 
-  if (strcmp(filename, "-") != 0)
+  if (strcmp(filename, "-"))
     fclose(fd);
 
   *lines = head;
@@ -140,12 +155,12 @@ int lines_write(struct line *lines, const char *filename) {
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "w") : stdout;
   if (!fd)
-    return -1;
+    return errno;
 
   for (line = lines; line; line = line->next)
     fprintf(fd, "%s\n", line->line_buffer);
 
-  if (strcmp(filename, "-") != 0)
+  if (strcmp(filename, "-"))
     fclose(fd);
 
   return 0;
@@ -169,9 +184,13 @@ void lines_free(struct line *lines) {
 
 int saxs_reader_columns_count(struct line *l) {
   int cnt = 0;
-  char *p = l->line_buffer;
+  char *p;
   double value;
 
+  if (!l || strlen(l->line_buffer) == 0)
+    return 0;
+
+  p = l->line_buffer;
   while (*p) {
     if (sscanf(p, "%lf", &value) != 1)
       break;
@@ -258,9 +277,13 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
 
 static int columns_parse(struct line *l, double *values) {
   int cnt = 0;
-  char *p = l->line_buffer;
+  char *p;
   double *value = values;
 
+  if (!l || !l->line_buffer)
+    return 0;
+
+  p = l->line_buffer;
   while (*p) {
     if (sscanf(p, "%lf", value) != 1)
       break;
@@ -298,7 +321,7 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
   if (xcol < 0
       || ycol < 0
       || (colcnt < xcol || colcnt < ycol || colcnt < y_errcol))
-    return -1;
+    return EINVAL;
 
   curve = saxs_document_add_curve(doc, title, type);
 
@@ -319,18 +342,22 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
 int saxs_reader_columns_count_file(const char *filename) {
   struct line *lines, *header, *data, *footer;
-  int count;
+  int count, res;
 
-  if (lines_read(&lines, filename) != 0)
-    return -1;
+  if ((res = lines_read(&lines, filename)) != 0)
+    goto error;
 
-  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
-    return -1;
+  if ((res = saxs_reader_columns_scan(lines, &header, &data, &footer)) != 0)
+    goto error;
 
   count = saxs_reader_columns_count(data);
 
   lines_free(lines);
   return count;
+
+error:
+  lines_free(lines);
+  return -res;
 }
 
 
@@ -345,21 +372,22 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
                                    int (*parse_footer)(struct saxs_document*,
                                                        struct line *,
                                                        struct line *)) {
+  int res;
   struct line *lines, *header, *data, *footer;
 
-  if (lines_read(&lines, filename) != 0)
+  if ((res = lines_read(&lines, filename)) != 0)
     goto error;
 
-  if (saxs_reader_columns_scan(lines, &header, &data, &footer) != 0)
+  if ((res = saxs_reader_columns_scan(lines, &header, &data, &footer)) != 0)
     goto error;
 
-  if (parse_header && parse_header(doc, header, data) != 0)
+  if ((res = parse_header && parse_header(doc, header, data)) != 0)
     goto error;
 
-  if (parse_data && parse_data(doc, data, footer) != 0)
+  if ((res = parse_data && parse_data(doc, data, footer)) != 0)
     goto error;
 
-  if (parse_footer && parse_footer(doc, footer, NULL) != 0)
+  if ((res = parse_footer && parse_footer(doc, footer, NULL)) != 0)
     goto error;
 
   lines_free(lines);
@@ -367,9 +395,8 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
 
 error:
   lines_free(lines);
-  return -1;
+  return res;
 }
-
 
 
 int saxs_writer_columns_write_file(struct saxs_document *doc,
@@ -380,18 +407,19 @@ int saxs_writer_columns_write_file(struct saxs_document *doc,
                                                      struct line **),
                                    int (*write_footer)(struct saxs_document*,
                                                        struct line **)) {
+  int res;
   struct line *lines = NULL;
 
-  if (write_header && write_header(doc, &lines) != 0)
+  if ((res = write_header && write_header(doc, &lines)) != 0)
     goto error;
 
-  if (write_data && write_data(doc, &lines) != 0)
+  if ((res = write_data && write_data(doc, &lines)) != 0)
     goto error;
 
-  if (write_footer && write_footer(doc, &lines) != 0)
+  if ((res = write_footer && write_footer(doc, &lines)) != 0)
     goto error;
 
-  if (lines_write(lines, filename) != 0)
+  if ((res = lines_write(lines, filename)) != 0)
     goto error;
 
   lines_free(lines);
@@ -399,5 +427,5 @@ int saxs_writer_columns_write_file(struct saxs_document *doc,
 
 error:
   lines_free(lines);
-  return -1;
+  return res;
 }

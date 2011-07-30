@@ -40,37 +40,81 @@ struct line {
   struct line *next;
 };
 
+/**
+ * @brief Allocate and initialize a new line.
+ * @returns a pointer to the allocated memory or NULL if out of memory.
+ */
 struct line*
 lines_create();
 
-int
-lines_printf(struct line *l, const char *fmt, ...);
 
+/**
+ * @brief 
+ * @param lines 
+ * @param l
+ */
 void
 lines_append(struct line **lines, struct line *l);
 
 
 /**
+ * @brief Formatted output to line, similar to printf.
+ *
+ * If the current line length is too short, the line buffer is increased
+ * to hold the full output.
+ *
+ * @returns The number of characters printed to the line.
+ */
+int
+lines_printf(struct line *l, const char *fmt, ...);
+
+
+/**
  * @brief Copy the contents of a file to a list of lines.
+ *
  * The lines are allocated by the function and must be free'd by @ref lines_free.
  *
  * @param lines
- * @param filename
+ * @param filename The target file name. If the filename is '-', the
+ *                 input will be read from stdin.
  *
- * @returns 0 on success, -1 otherwise.
+ * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
  */
 int
 lines_read(struct line **lines, const char *filename);
 
+
+/**
+ * @brief Write a list of lines into a named file.
+ *
+ * @param lines
+ * @param filename The target file name. Any existing file will
+ *                 be overwritten. If the filename is '-', the
+ *                 output will be redirected to stdout.
+ *
+ * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
+ */
 int
 lines_write(struct line *lines, const char *filename);
 
+
+/**
+ * @brief Free the set of lines.
+ * @param lines A pointer to the first lines, also free's all following lines.
+ */
 void
 lines_free(struct line *lines);
 
 
 /**
  * @brief Separate header, data and footer in a previously filled list of lines.
+ *
+ * @param lines
+ * @param header
+ * @param data
+ * @param footer
+ *
+ * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
  */
 int
 saxs_reader_columns_scan(struct line *lines,
@@ -79,7 +123,20 @@ saxs_reader_columns_scan(struct line *lines,
                          struct line **footer);
 
 /**
- * @brief Parse identified columns in a list of lines.
+ * @brief Parse specified columns into a list of lines.
+ *
+ * @param doc
+ * @param firstline
+ * @param lastline
+ * @param scol
+ * @param sfactor
+ * @param icol
+ * @param ifactor
+ * @param errcol
+ * @param title
+ * @param type
+ *
+ * @returns 0 on success, EINVAL on invalid column selection.
  */
 int
 saxs_reader_columns_parse(struct saxs_document *doc,
@@ -92,6 +149,8 @@ saxs_reader_columns_parse(struct saxs_document *doc,
 
 /**
  * @brief Count the number of data values in a given line.
+ * @param l
+ * @returns The number of data values in line @a l.
  */
 int
 saxs_reader_columns_count(struct line *l);
@@ -104,6 +163,10 @@ saxs_reader_columns_count(struct line *l);
  *
  * Scans a file, splits it in header, data, footer and counts the
  * data columns.
+ *
+ * @param filename
+ * @returns If positive, the number of columns in the data section,
+ *          a negative error number (i.e. @a -errno) otherwise.
  */
 int
 saxs_reader_columns_count_file(const char *filename);
@@ -116,6 +179,14 @@ saxs_reader_columns_count_file(const char *filename);
  *
  * Scans a file, splits it in header, data, footer and counts the
  * data columns.
+ *
+ * @param doc
+ * @param filename
+ * @param parse_header
+ * @param parse_data
+ * @param parse_footer
+ *
+ * @returns
  */
 int
 saxs_reader_columns_parse_file(struct saxs_document *doc,
@@ -130,6 +201,17 @@ saxs_reader_columns_parse_file(struct saxs_document *doc,
                                                    struct line*,
                                                    struct line*));
 
+/**
+ * @brief 
+ *
+ * @param doc
+ * @param filename
+ * @param write_header
+ * @param write_data
+ * @param write_footer
+ *
+ * @returns
+ */
 int
 saxs_writer_columns_write_file(struct saxs_document *doc,
                                const char *filename,

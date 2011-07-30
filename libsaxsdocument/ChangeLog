@@ -1,4 +1,19 @@
 2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* columns.h: Added doxygen documentation.
+	* columns.c (lines_create): Added error checking.
+	(lines_printf): If the current line is too short, dynamically
+	increase line length.
+	(lines_read): Provide a more meaningful error return.
+	(lines_write): Likewise.
+	(saxs_reader_columns_count): Check for NULL lines.
+	(columns_parse): Likewise.
+	(saxs_reader_columns_count_file): Provide a more meaningful
+	error return.
+	(saxs_reader_columns_parse_file): Likewise.
+	(saxs_writer_columns_write_file): Likewise.
+
+2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
             Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* saxsdocument_format.h (struct saxs_document_format): Removed
