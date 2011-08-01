@@ -375,7 +375,7 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
                                                        struct line *,
                                                        struct line *)) {
   int res;
-  struct line *lines, *header, *data, *footer;
+  struct line *lines = NULL, *header = NULL, *data = NULL, *footer = NULL;
 
   if ((res = lines_read(&lines, filename)) != 0)
     goto error;
