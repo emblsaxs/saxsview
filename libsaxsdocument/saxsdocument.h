@@ -28,6 +28,14 @@
 extern "C" {
 #endif
 
+/*
+ * Windows platforms do not define ENOTSUP (Operation not supported),
+ * use ENOSYS (Function not implemented) instead.
+ */
+#ifndef ENOTSUP
+#define ENOTSUP ENOSYS
+#endif
+
 #include "saxsproperty.h"
 
 enum {

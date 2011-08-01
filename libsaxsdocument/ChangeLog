@@ -1,3 +1,7 @@
+2011-08-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.h: Make sure ENOTSUP is defined.
+
 2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument.h: Updated documentation.
