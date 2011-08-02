@@ -1,3 +1,10 @@
+2011-08-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_fir_fit (atsas_fit_4_column_parse_monsa_data): New.
+	(atsas_fit_4_column_parse_data): Moved validity	check to ...
+	(atsas_fit_4_column_read): ... here. If a monsa file, call
+	specialized parser.
+
 2011-08-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* columns.c (saxs_reader_columns_parse_file): Initialise 'lines' to avoid 
