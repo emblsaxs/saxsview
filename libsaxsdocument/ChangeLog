@@ -1,3 +1,12 @@
+2011-08-05  Al Kikhney  <plmnnk@users.sourceforge.net>
+
+	* atsas_dat.c: "title" property removed. 
+	(atsas_dat_parse_header): Read description and concentration from the first
+	line.
+	(atsas_dat_parse_footer): Try to read same information as in header.
+	(atsas_dat_write_header): Write parent(s). 
+	Write header even if some of the properties are not present.
+
 2011-08-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_fir_fit (atsas_fit_4_column_parse_monsa_data): New.

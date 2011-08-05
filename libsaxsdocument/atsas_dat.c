@@ -26,6 +26,8 @@
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
 
+#include <stdlib.h>
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -41,30 +43,42 @@ atsas_dat_parse_header(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
 
   /*
-   * The first non-empty line is the 'title' of the file.
-   * Titles are often formatted as:
-   *   "text with whitespaces: filename(s)"
-   *
-   * If available, the filenames usually correspond to the parents
-   * of the current file.
-   *
-   * Historically, filenames are separated by whitespaces ^^
+   * The first non-empty line may contain the 'description' of the data.
+   * Examples:
+   *    "Description:                            Bovine Serum Al"
+   *    "Sample description:                     Bovine Serum Albumin"
    */
   while (firstline != lastline && strlen(firstline->line_buffer) == 0)
     firstline = firstline->next;
 
   if (firstline != lastline) {
-  /*
-   * TODO: everything after the last "/" (if present) should be treated as
-   *       concentration (overridden by "c="). Example:
-   * " 02-Mar-2009       (al_011.dat - 1.0*Aver(al_010.dat,al_012.dat) /  4.37"
-   *
-   * TODO: should read "description" if present. Examples:
-   *    "Description:                            Bovine Serum Al"
-   *    "Sample description:                     Bovine Serum Albumin"
-   */
 
-    saxs_document_add_property(doc, "title", firstline->line_buffer);
+    /* Trim trailing whitespaces */
+    char *q;
+    q = firstline->line_buffer + firstline->line_length;
+    while (q > firstline->line_buffer && !isalnum(*q))
+      *q-- = '\0';
+
+    if (strstr(firstline->line_buffer, "Description:")
+        || strstr(firstline->line_buffer, "Sample description:")) {
+      char *p = strchr(firstline->line_buffer, ':') + 1;
+      while (isspace(*p)) ++p;
+      saxs_document_add_property(doc, "sample-description", p);
+    }
+    else {
+      /*
+       * If the first line does not contain the 'description' then everything after 
+       * the last "/" (if present) should be treated as concentration.
+       * Example:
+       * " 02-Mar-2009       (al_011.dat - 1.0*Aver(al_010.dat,al_012.dat) /  4.37"
+       */
+      char *p = strrchr(firstline->line_buffer, '/');
+      if (p) {
+        ++p;
+        while (isspace(*p)) ++p;
+        saxs_document_add_property(doc, "sample-concentration", p);
+      }
+    }
     firstline = firstline->next;
   }
 
@@ -124,8 +138,15 @@ static int
 atsas_dat_parse_footer(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
   /*
-   * TODO: read the description and code
+   * The footer often consists of headers of parent files.
+   * The header of the first parent contains the information about the sample.
    */
+  
+  if (firstline != lastline) {
+    /* Skip "======" footer separator */
+    firstline = firstline->next;
+    atsas_dat_parse_header(doc, firstline, lastline);
+  }
   return 0;
 }
 
@@ -135,28 +156,37 @@ static int
 atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   struct line *line;
 
-  saxs_property *title;
   saxs_property *description, *code, *concentration;
   saxs_property *parent;
 
-  /* First line, if no title is available, this line is empty. */
-  title = saxs_document_property_find_first(doc, "title");
-  line = lines_create();
-  if (title)
-    lines_printf(line, "%s", saxs_property_value(title));
-  lines_append(lines, line);
-
-  /* Second line, if any of description, code or concentration
-     are not available, this line is skipped. */
   description   = saxs_document_property_find_first(doc, "sample-description");
   code          = saxs_document_property_find_first(doc, "sample-code");
   concentration = saxs_document_property_find_first(doc, "sample-concentration");
-  if (description && code && concentration) {
+
+  /* First line, if no description is available, this line is empty. */
+  line = lines_create();
+  if (description)
+    lines_printf(line, "Sample description: %s", saxs_property_value(description));
+  lines_append(lines, line);
+
+  /* Second line, if neither code nor concentration
+     are available, this line is skipped. */
+  if (code || concentration) {
     line = lines_create();
-    lines_printf(line, "Sample: %15s c= %s mg/ml Code: %8s",
-                 saxs_property_value(description),
-                 saxs_property_value(concentration),
-                 saxs_property_value(code));
+
+    if (description) {
+      lines_printf(line, "Sample: %.15s", saxs_property_value(description));
+    }
+    if (concentration) {
+      char *oldline = strdup(line->line_buffer);
+      lines_printf(line, "%s  c= %s mg/ml", oldline, saxs_property_value(concentration));
+      free(oldline);
+    }
+    if (code) {
+      char *oldline = strdup(line->line_buffer);
+      lines_printf(line, "%s  Code: %.8s", oldline, saxs_property_value(code));
+      free(oldline);
+    }
     lines_append(lines, line);
   }
 
@@ -164,10 +194,13 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   parent = saxs_document_property_find_first(doc, "parent");
   if (parent) {
     line = lines_create();
-    lines_printf(line, "Parent(s): TODO");
-
-    /* FIXME */
-
+    lines_printf(line, "Parent(s):");
+    while (parent) {
+      char *oldline = strdup(line->line_buffer);
+      lines_printf(line, "%s %s", oldline, saxs_property_value(parent));
+      free(oldline);
+      parent = saxs_property_find_next(parent, "parent");
+    }
     lines_append(lines, line);
   }
 
