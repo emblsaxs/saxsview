@@ -22,8 +22,11 @@ find_package (Qt4 4.4.0)
 set (QT_USE_QTSVG TRUE)
 include (${QT_USE_FILE})
 
+configure_file (config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+include_directories(${SAXSVIEW_BINARY_DIR})
 
 add_subdirectory (external/qwt)
+add_subdirectory (external/qtsolutions)
 add_subdirectory (external/cbflib)
 add_subdirectory (external/edfpack)
 add_subdirectory (libsaxsdocument)

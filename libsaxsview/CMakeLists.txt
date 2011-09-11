@@ -46,6 +46,8 @@ qt4_wrap_ui (UIC saxsview_configpage_plot.ui
                  saxsview_configpage_curvetemplate.ui
                  saxsview_configpage_defaultcolors.ui)
 
+qt4_add_resources (RES resources/saxsview.qrc)
+
 # out-of-source builds need to include the ${CMAKE_CURRENT_*_DIR}
 include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
                      ${CMAKE_CURRENT_SOURCE_DIR}
