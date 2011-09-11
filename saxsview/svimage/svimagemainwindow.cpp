@@ -22,7 +22,6 @@
 #include "svimagepropertydockwidget.h"
 #include "saxsview_plot.h"
 #include "saxsview_config.h"
-#include "saxsview_configdialog.h"
 #include "config.h"
 
 #include <QtGui>

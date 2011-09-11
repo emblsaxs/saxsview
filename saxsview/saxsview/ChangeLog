@@ -1,3 +1,34 @@
+2011-09-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* icons/: Removed.
+	* saxsview.qrc: Removed.
+	* saxsview_colorbutton.cpp: Moved here from libsaxsview.
+	* saxsview_colorbutton.h: Likewise.
+	* saxsview_configdialog.cpp: Likewise.
+	* saxsview_configdialog.h: Likewise.
+	* saxsview_configpage.cpp: Likewise.
+	* saxsview_configpage_curve.cpp: Likewise.
+	* saxsview_configpage_curve.h: Likewise.
+	* saxsview_configpage_curvetemplate.cpp: Likewise.
+	* saxsview_configpage_curvetemplate.h: Likewise.
+	* saxsview_configpage_curvetemplate.ui: Likewise.
+	* saxsview_configpage_curve.ui: Likewise.
+	* saxsview_configpage_defaultcolors.cpp: Likewise.
+	* saxsview_configpage_defaultcolors.h: Likewise.
+	* saxsview_configpage_defaultcolors.ui: Likewise.
+	* saxsview_configpage.h: Likewise.
+	* saxsview_configpage_legend.cpp: Likewise.
+	* saxsview_configpage_legend.ui: Likewise.
+	* saxsview_configpage_plot.cpp: Likewise.
+	* saxsview_configpage_plot.ui: Likewise.
+	* saxsview_legendpositioncombo.cpp: Likewise.
+	* saxsview_legendpositioncombo.h: Likewise.
+	* saxsview_linestylecombo.cpp: Likewise.
+	* saxsview_linestylecombo.h: Likewise.
+	* saxsview_symbolstylecombo.cpp: Likewise.
+	* saxsview_symbolstylecombo.h: Likewise.
+	* CMakeLists.txt: Updated sources list.
+
 2010-10-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewplotwindow.cpp (explode): Do not scale invisible curves.
