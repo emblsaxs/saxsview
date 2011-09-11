@@ -1,10 +1,8 @@
 include_directories (${QWT_SOURCE_DIR}
                      ${LIBSAXSDOCUMENT_SOURCE_DIR}
-                     ${LIBSAXSVIEW_SOURCE_DIR}
                      ${LIBSAXSIMAGE_SOURCE_DIR}
                      ${CMAKE_CURRENT_SOURCE_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR})
-
 
 set (saxsview_headers saxsviewmainwindow.h
                       saxsviewsubwindow.h
@@ -19,7 +17,11 @@ set (saxsview_headers saxsviewmainwindow.h
                       saxsview_symbolstylecombo.h
                       saxsview_legendpositioncombo.h
                       saxsview_linestylecombo.h
-                      saxsview_colorbutton.h)
+                      saxsview_colorbutton.h
+                      saxsview_plot.h
+                      saxsview_plotcurve.h
+                      saxsview_image.h
+                      saxsview_config.h)
 
 set (saxsview_sources main.cpp
                       saxsviewmainwindow.cpp
@@ -37,7 +39,11 @@ set (saxsview_sources main.cpp
                       saxsview_symbolstylecombo.cpp
                       saxsview_legendpositioncombo.cpp
                       saxsview_linestylecombo.cpp
-                      saxsview_colorbutton.cpp)
+                      saxsview_colorbutton.cpp
+                      saxsview_plot.cpp
+                      saxsview_plotcurve.cpp
+                      saxsview_image.cpp
+                      saxsview_config.cpp)
 
 # run moc
 qt4_wrap_cpp (saxsview_moc ${saxsview_headers})
