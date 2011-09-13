@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -17,34 +17,102 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef SAXSVIEW_PLOTIMAGE_H
-#define SAXSVIEW_PLOTIMAGE_H
+#ifndef SAXSVIEWIMAGE_H
+#define SAXSVIEWIMAGE_H
 
 #include <QObject>
+class QString;
 
-#include <qwt_plot_spectrogram.h>
+#include "qwt_plot.h"
+#include "qwt_plot_spectrogram.h"
+#include "qwt_raster_data.h"
+
+#include "saxsview.h"
+class SaxsviewFrame;
+class SaxsviewFrameData;
 
 
-namespace Saxsview {
-
-class Image : public QObject,
-              public QwtPlotSpectrogram {
+class SaxsviewImage : public QwtPlot {
   Q_OBJECT
+  Q_PROPERTY(bool aspectRatioFixed READ isAspectRatioFixed WRITE setAspectRatioFixed)
+  Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
+
+  // Defined in QwtPlot
+  // TODO: QwtTextPropertyManager + extension of QtVariantPropertyManager
+//   Q_PROPERTY(QwtText title READ title WRITE setTitle)
 
 public:
-  Image(QObject *parent = 0L);
-  ~Image();
+  SaxsviewImage(QWidget *parent = 0L);
+  ~SaxsviewImage();
 
-  QString fileName() const;
+  SaxsviewFrame* frame() const;
+
+  QRectF zoomBase() const;
+  void zoom(const QRectF&);
+
+  bool isZoomEnabled() const;
+  bool isMoveEnabled() const;
+  bool isAspectRatioFixed() const;
+
+  Saxsview::Scale scale() const;
 
 public slots:
-  void setFileName(const QString&);
+  void setFrame(SaxsviewFrame *frame);
+  void setZoomBase(const QRectF& rect = QRectF());
+  void setZoomEnabled(bool);
+  void setMoveEnabled(bool);
+  void setAspectRatioFixed(bool);
+  void setScale(Saxsview::Scale);
 
 private:
-  class ImagePrivate;
-  ImagePrivate *p;
+  class Private;
+  Private *p;
 };
 
-} // end of namespace Saxsview
 
-#endif // !SAXSVIEW_PLOTIMAGE_H
+class SaxsviewFrame : public QObject,
+                      public QwtPlotSpectrogram {
+  Q_OBJECT
+  Q_PROPERTY(QSize  size     READ size)
+  Q_PROPERTY(double minValue READ minValue WRITE setMinValue)
+  Q_PROPERTY(double maxValue READ maxValue WRITE setMaxValue)
+
+public:
+  SaxsviewFrame(QObject *parent = 0L);
+  ~SaxsviewFrame();
+
+  QSize size() const;
+
+  double minValue() const;
+  double maxValue() const;
+
+public slots:
+  void setMinValue(double);
+  void setMaxValue(double);
+
+private:
+  class Private;
+  Private *p;
+};
+
+
+class SaxsviewFrameData : public QwtRasterData {
+public:
+  explicit SaxsviewFrameData(const QString& fileName);
+  SaxsviewFrameData(const SaxsviewFrameData& other);
+  ~SaxsviewFrameData();
+
+  SaxsviewFrameData *copy() const;
+
+  void setMinValue(double x);
+  void setMaxValue(double x);
+  QwtDoubleInterval range() const;
+
+  double value(double x, double y) const;
+
+private:
+  class Private;
+  Private *p;
+};
+
+#endif // !SAXSVIEWIMAGE_H

@@ -1,3 +1,12 @@
+2011-09-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview.h: New.
+	* saxsview_property.h: New.
+	* saxsview_property.cpp: New.
+	* saxsview_image.h: Effectively new.
+	* saxsview_image.cpp: Likewise.
+	* CMakeLists.txt: Updated sources, include and link qtpropertybrowser.
+
 2011-09-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_colorbutton.cpp: Moved to saxsview/saxsview.
