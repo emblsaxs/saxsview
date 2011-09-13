@@ -34,15 +34,9 @@ public:
 public slots:
   void subWindowActivated(QMdiSubWindow*);
 
-private slots:
-  void aspectRatioChanged(const QVariant&);
-  void scaleChanged(const QVariant&);
-  void lowerThresholdChanged(const QVariant&);
-  void upperThresholdChanged(const QVariant&);
-
 private:
-  class SVImagePropertyDockWidgetPrivate;
-  SVImagePropertyDockWidgetPrivate *p;
+  class Private;
+  Private *p;
 };
 
 #endif // !SVIMAGEPROPERTYDOCKWIDGET_H

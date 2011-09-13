@@ -1,3 +1,23 @@
+2011-09-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimageproperty.h: Removed.
+	* svimageproperty.cpp: Removed.
+	* svimagesubwindow.h (isAspectRatioFixed): Removed.
+	(scale): Removed.
+	(setAspectRatioFixed): Removed.
+	(setScale): Removed.
+	* svimagesubwindow.cpp: Moved setup of image canvas and
+	file loading to libsaxsview.
+	(isAspectRatioFixed): Removed.
+	(scale): Removed.
+	(setAspectRatioFixed): Removed.
+	(setScale): Removed.
+	* svimagepropertydockwidget.h (*Changed): Removed.
+	* svimagepropertydockwidget.cpp (*Changed): Removed.
+	(ctor): Use SaxsviewProperty to build property dock.
+	* main.cpp: Added reminder comment.
+	* CMakeLists.txt: Updated sources list.
+
 2011-09-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagemainwindow.h: Removed unneded include.

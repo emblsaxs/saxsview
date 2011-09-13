@@ -20,6 +20,8 @@
 #ifndef SVIMAGEIMAGEWINDOW_H
 #define SVIMAGEIMAGEWINDOW_H
 
+class SaxsviewImage;
+
 #include <QMdiSubWindow>
 class QEvent;
 
@@ -30,10 +32,10 @@ public:
   SVImageSubWindow(QWidget *parent = 0L);
   ~SVImageSubWindow();
 
+  SaxsviewImage *image() const;
+
   QString& fileName() const;
 
-  bool isAspectRatioFixed() const;
-  int scale() const;
   bool zoomEnabled() const;
   bool moveEnabled() const;
 
@@ -48,14 +50,12 @@ public slots:
   void zoomFit();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
-  void setAspectRatioFixed(bool);
-  void setScale(int);
   void setLowerThreshold(double);
   void setUpperThreshold(double);
 
 private:
-  class SVImageSubWindowPrivate;
-  SVImageSubWindowPrivate *p;
+  class Private;
+  Private *p;
 };
 
 #endif // !SVIMAGEIMAGEWINDOW_H

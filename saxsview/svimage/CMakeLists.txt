@@ -1,3 +1,4 @@
+
 include_directories (${QWT_SOURCE_DIR}
                      ${QTPROPERTYBROWSER_SOURCE_DIR}
                      ${LIBSAXSDOCUMENT_SOURCE_DIR}
@@ -6,14 +7,12 @@ include_directories (${QWT_SOURCE_DIR}
 
 set (svimage_header svimagemainwindow.h
                     svimagesubwindow.h
-                    svimagepropertydockwidget.h
-                    svimageproperty.h)
+                    svimagepropertydockwidget.h)
 
 set (svimage_sources main.cpp
                      svimagemainwindow.cpp
                      svimagesubwindow.cpp
-                     svimagepropertydockwidget.cpp
-                     svimageproperty.cpp)
+                     svimagepropertydockwidget.cpp)
 
 qt4_wrap_cpp (svimage_moc ${svimage_header})
 
@@ -30,7 +29,6 @@ if (WIN32)
 endif (WIN32)
 
 target_link_libraries (svimage
-                       qtpropertybrowser
                        saxsview
                        saxsimage)
 

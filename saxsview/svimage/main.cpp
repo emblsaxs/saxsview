@@ -20,9 +20,11 @@
 #include <QtGui>
 
 #include "svimagemainwindow.h"
+#include "saxsview.h"
 
 int main(int argc, char **argv) {
   Q_INIT_RESOURCE(saxsview);
+//   qRegisterMetaType<QwtText>("QwtText");    // is this needed?
 
   QApplication app(argc, argv);
   app.setOrganizationName("sourceforge");
