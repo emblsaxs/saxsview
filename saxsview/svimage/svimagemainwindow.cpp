@@ -99,7 +99,7 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
           mw, SLOT(load()));
 
   actionReload = new QAction("&Reload", mw);
-  actionReload->setIcon(QIcon(":icons/document-reload.png"));
+  actionReload->setIcon(QIcon(":icons/view-refresh.png"));
   actionReload->setShortcut(QKeySequence::Refresh);
   actionReload->setEnabled(false);
   connect(actionReload, SIGNAL(triggered()),
