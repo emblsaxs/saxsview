@@ -34,6 +34,12 @@ MODULE libsaxsdocument
     ENUMERATOR :: SAXS_CURVE_USER_DATA = 100
   END ENUM
 
+  INTERFACE saxs_document_add_property
+    MODULE PROCEDURE saxs_document_add_real_property
+    MODULE PROCEDURE saxs_document_add_int_property
+    MODULE PROCEDURE saxs_document_add_string_property
+  END INTERFACE
+
   PRIVATE
   PUBLIC :: SAXS_CURVE_SCATTERING_DATA
   PUBLIC :: SAXS_CURVE_PROBABILITY_DATA
@@ -343,7 +349,27 @@ CONTAINS
     END DO
   END SUBROUTINE
 
-  SUBROUTINE saxs_document_add_property(doc, name, value)
+  SUBROUTINE saxs_document_add_real_property(doc, name, value)
+    TYPE(saxs_document), INTENT(inout) :: doc
+    CHARACTER(len=*), INTENT(in)       :: name
+    REAL(DBL), INTENT(in)              :: value
+
+    CHARACTER(len=128) :: buf
+    WRITE (buf, FMT="(F0.4)") value
+    CALL saxs_document_add_string_property(doc, name, ADJUSTL(buf))
+  END SUBROUTINE
+
+  SUBROUTINE saxs_document_add_int_property(doc, name, value)
+    TYPE(saxs_document), INTENT(inout) :: doc
+    CHARACTER(len=*), INTENT(in)       :: name
+    INTEGER, INTENT(in)                :: value
+
+    CHARACTER(len=128) :: buf
+    WRITE (buf, *) value
+    CALL saxs_document_add_string_property(doc, name, ADJUSTL(buf))
+  END SUBROUTINE
+
+  SUBROUTINE saxs_document_add_string_property(doc, name, value)
     TYPE(saxs_document), INTENT(inout) :: doc
     CHARACTER(len=*), INTENT(in)       :: name, value
 

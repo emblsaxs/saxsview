@@ -243,6 +243,10 @@ saxs_document_add_property(saxs_document *doc,
   if (!doc)
     return NULL;
 
+  if (!name || strlen(name) == 0
+      || !value || strlen(value) == 0)
+    return NULL;
+
   saxs_property *property = saxs_property_create(name, value);
   if (!property)
     return NULL;

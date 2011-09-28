@@ -1,3 +1,13 @@
+2011-09-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument.c (saxs_document_add_property): Verify that name/value
+	are not empty.
+	* saxsdocument.f90 (saxs_document_add_property): Now a generic
+	interface for ...
+	(saxs_document_add_string_property): ... this ...
+	(saxs_document_add_int_property): ... this ...
+	(saxs_document_add_real_property): and this.
+
 2011-08-05  Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* atsas_dat.c: "title" property removed. 
