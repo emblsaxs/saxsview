@@ -1,5 +1,15 @@
 2011-09-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* atsas_dat.c (atsas_dat_write_footer): Dump all properties to footer.
+	(atsas_dat_3_column_write): Check that at least on curve is available,
+	not exactly one curve.
+	(atsas_dat_4_column_write): Likewise for two.
+	(atsas_dat_3_column_write_data): Verify that intensity is greater 0.0,
+	drop value if not.
+	(atsas_dat_4_column_write_data): Likewise.
+
+2011-09-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsdocument.c (saxs_document_add_property): Verify that name/value
 	are not empty.
 	* saxsdocument.f90 (saxs_document_add_property): Now a generic
