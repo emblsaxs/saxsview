@@ -96,11 +96,11 @@ public:
   }
 
   void setMin(long n) {
-    mMin = qMax(n, 1L);
+    mMin = qMax(n, 0L);
   }
 
   void setMax(long n) {
-    mMax = qMin(n, saxs_image_value_max(p.data()->image));
+    mMax = qMin(n, (long)saxs_image_value_max(p.data()->image));
   }
 
   double value(double x, double y) const {
