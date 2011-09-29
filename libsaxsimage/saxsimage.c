@@ -65,7 +65,7 @@ saxs_image_update_cache(saxs_image *image) {
         double value = saxs_image_value(image, i, j);
         if (image->cache_min_value > value)
           image->cache_min_value = value;
-        if (image->cache_max_value > value)
+        if (image->cache_max_value < value)
           image->cache_max_value = value;
       }
 

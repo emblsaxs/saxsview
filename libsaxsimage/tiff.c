@@ -140,8 +140,6 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &spp) == 0)
     spp = 1;
 
-printf ("width: %d, height: %d, bpp: %d, spp: %d\n", width, height, bpp, spp);
-
   data = _TIFFmalloc(width * height * bpp/CHAR_BIT * spp);
 
   for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)

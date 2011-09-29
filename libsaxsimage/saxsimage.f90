@@ -32,9 +32,12 @@ MODULE saxsimage
   PUBLIC saxs_image
   PUBLIC saxs_image_create
   PUBLIC saxs_image_read
+  PUBLIC saxs_image_write
   PUBLIC saxs_image_free
   PUBLIC saxs_image_width
   PUBLIC saxs_image_height
+  PUBLIC saxs_image_value
+  PUBLIC saxs_image_set_value
   PUBLIC saxs_image_data
 
 CONTAINS
@@ -75,6 +78,34 @@ CONTAINS
       result = c_saxs_image_read(img%c_ptr, TRIM(filename) // C_NULL_CHAR, TRIM(fmt) // C_NULL_CHAR)
     ELSE
       result = c_saxs_image_read(img%c_ptr, TRIM(filename) // C_NULL_CHAR, C_NULL_CHAR)
+    END IF
+
+    IF (PRESENT(status)) status = result
+  END SUBROUTINE
+
+  SUBROUTINE saxs_image_write(img, filename, fmt, status)
+    TYPE(saxs_image), INTENT(inout)        :: img
+    CHARACTER(len=*), INTENT(in)           :: filename
+    CHARACTER(len=*), INTENT(in), OPTIONAL :: fmt
+    INTEGER, INTENT(out), OPTIONAL         :: status
+
+    INTERFACE
+      FUNCTION c_saxs_image_write(img, filename, fmt) &
+               BIND(C, NAME="saxs_image_write")
+        IMPORT C_PTR, C_INT, C_CHAR
+        INTEGER(C_INT)                :: c_saxs_image_write
+        TYPE(C_PTR), VALUE            :: img
+        CHARACTER(len=1, kind=C_CHAR) :: filename
+        CHARACTER(len=1, kind=C_CHAR) :: fmt
+      END FUNCTION
+    END INTERFACE
+
+    INTEGER :: result
+
+    IF (PRESENT(fmt)) THEN
+      result = c_saxs_image_write(img%c_ptr, TRIM(filename) // C_NULL_CHAR, TRIM(fmt) // C_NULL_CHAR)
+    ELSE
+      result = c_saxs_image_write(img%c_ptr, TRIM(filename) // C_NULL_CHAR, C_NULL_CHAR)
     END IF
 
     IF (PRESENT(status)) status = result
@@ -124,31 +155,57 @@ CONTAINS
     saxs_image_height = c_saxs_image_height(img%c_ptr)
   END FUNCTION
 
+  FUNCTION saxs_image_value(img, x, y)
+    TYPE(saxs_image), INTENT(inout) :: img
+    INTEGER, INTENT(in)             :: x, y
+    REAL(DBL)                       :: saxs_image_value
+
+    INTERFACE
+      FUNCTION c_saxs_image_value(img, x, y) &
+                 BIND(C, NAME="saxs_image_value")
+        IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
+        REAL(C_DOUBLE)        :: c_saxs_image_value
+        TYPE(C_PTR), VALUE    :: img
+        INTEGER(C_INT), VALUE :: x, y
+      END FUNCTION
+    END INTERFACE
+
+    saxs_image_value = c_saxs_image_value(img%c_ptr, x, y)
+  END FUNCTION
+
+  SUBROUTINE saxs_image_set_value(img, x, y, value)
+    TYPE(saxs_image), INTENT(inout) :: img
+    INTEGER, INTENT(in)             :: x, y
+    REAL(DBL), INTENT(in)           :: value
+
+    INTERFACE
+      SUBROUTINE c_saxs_image_set_value(img, x, y, value) &
+                 BIND(C, NAME="saxs_image_set_value")
+        IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
+        INTEGER(C_LONG)       :: c_saxs_image_value
+        TYPE(C_PTR), VALUE    :: img
+        INTEGER(C_INT), VALUE :: x, y
+        REAL(C_DOUBLE), VALUE :: value
+      END SUBROUTINE
+    END INTERFACE
+
+    CALL c_saxs_image_set_value(img%c_ptr, x, y, value)
+  END SUBROUTINE
+
   SUBROUTINE saxs_image_data(img, data)
     TYPE(saxs_image), INTENT(inout)                   :: img
     INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(out) :: data
 
     INTEGER :: i, j, width, height
 
-    INTERFACE
-      FUNCTION c_saxs_image_value(img, x, y) &
-                 BIND(C, NAME="saxs_image_value")
-        IMPORT C_INT, C_LONG, C_PTR
-        INTEGER(C_LONG)       :: c_saxs_image_value
-        TYPE(C_PTR), VALUE    :: img
-        INTEGER(C_INT), VALUE :: x, y
-      END FUNCTION
-    END INTERFACE
-
     width = saxs_image_width(img)
     height = saxs_image_height(img)
-
     ALLOCATE(data(width, height))
 
     DO i = 1, width
       DO j = 1, height
-        data(i,j) = c_saxs_image_value(img%c_ptr, i-1, j-1)
+        data(i,j) = saxs_image_value(img, i-1, j-1)
       END DO
-    ENDDO
+    END DO
   END SUBROUTINE
 END MODULE
