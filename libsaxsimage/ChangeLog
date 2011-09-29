@@ -1,3 +1,54 @@
+2011-09-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage_format.h (struct saxs_image_format): Removed all but
+	read/write members.
+	* saxsimage.h (saxs_image_copy): New.
+	(saxs_image_set_size): New.
+	(saxs_image_set_value): New.
+	(saxs_image_value): Changed return type to 'double'.
+	(saxs_image_value_min): Likewise.
+	(saxs_image_value_max): Likewise.
+	* saxsimage.c (struct saxs_image): Keep size information and
+	cache min/max data values.
+	(saxs_image_update_cache): New.
+	(saxs_image_copy): New.
+	(saxs_image_set_size): New.
+	(saxs_image_set_value): New.
+	(saxs_image_value): Changed return type to 'double'.
+	(saxs_image_value_min): Likewise. Use cached value if available.
+	(saxs_image_value_max): Likewise.
+	(saxs_image_create): Initialize new members.
+	(saxs_image_read): Simplified.
+	(saxs_image_write): Implemented.
+	(saxs_image_free): Do not 'close' any more, free data.
+	(saxs_image_width): Simplified using 'width'-member.
+	(saxs_image_height): Simplified using 'height'-member.
+	* tiff.c (saxs_image_tiff_open): Removed.
+	(saxs_image_tiff_close): Removed.
+	(saxs_image_tiff_width): Removed.
+	(saxs_image_tiff_height): Removed.
+	(saxs_image_tiff_value): Removed.
+	(saxs_image_tiff_write): New.
+	(saxs_image_tiff_read): Set data values via saxs_image interface.
+	* edf.c (saxs_image_edf_open): Removed.
+	(saxs_image_edf_close): Removed.
+	(saxs_image_edf_width): Removed.
+	(saxs_image_edf_height): Removed.
+	(saxs_image_edf_value): Removed.
+	(saxs_image_edf_read): Set data values via saxs_image interface.
+	* cbf.c (saxs_image_cbf_open): Removed.
+	(saxs_image_cbf_close): Removed.
+	(saxs_image_cbf_width): Removed.
+	(saxs_image_cbf_height): Removed.
+	(saxs_image_cbf_value): Removed.
+	(saxs_image_cbf_read): Set data values via saxs_image interface.
+	* msk.c (saxs_image_msk_open): Removed.
+	(saxs_image_msk_close): Removed.
+	(saxs_image_msk_width): Removed.
+	(saxs_image_msk_height): Removed.
+	(saxs_image_msk_value): Removed.
+	(saxs_image_msk_read): Set data values via saxs_image interface.
+
 2011-05-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage.f90 (saxs_image_data): Fixed image dimensions and access.

@@ -38,6 +38,9 @@ typedef struct saxs_image saxs_image;
 saxs_image*
 saxs_image_create();
 
+saxs_image*
+saxs_image_copy(saxs_image* image);
+
 int
 saxs_image_read(saxs_image *image, const char *filename, const char *format);
 
@@ -53,17 +56,22 @@ saxs_image_width(saxs_image *image);
 size_t
 saxs_image_height(saxs_image *image);
 
+void
+saxs_image_set_size(saxs_image *image, size_t width, size_t height);
 
 /**
  * Filters out values below 0.
  */
-long
+double
 saxs_image_value(saxs_image *image, int x, int y);
 
-long
+void
+saxs_image_set_value(saxs_image *image, int x, int y, double value);
+
+double
 saxs_image_value_min(saxs_image *image);
 
-long
+double
 saxs_image_value_max(saxs_image *image);
 
 

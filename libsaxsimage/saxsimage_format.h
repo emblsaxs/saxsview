@@ -1,6 +1,6 @@
 /*
  * Format handling of SAXS images.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -33,16 +33,8 @@ extern "C" {
 struct saxs_image;
 
 struct saxs_image_format {
-  int (*open)(void **private_data);
-  int (*read)(void *private_data, const char *filename);
-  int (*write)(void *private_data, const char *filename);
-  int (*close)(void *private_data);
-
-  long (*value)(void *private_data, int x, int y);
-  size_t (*width)(void *private_data);
-  size_t (*height)(void *private_data);
-  long (*value_min)(void *private_data);
-  long (*value_max)(void *private_data);
+  int (*read)(struct saxs_image*, const char *filename);
+  int (*write)(struct saxs_image*, const char *filename);
 };
 typedef struct saxs_image_format saxs_image_format;
 

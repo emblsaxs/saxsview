@@ -1,6 +1,7 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2010, 2011
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -29,59 +30,120 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <float.h>
 
 struct saxs_image {
   char *image_filename;
 
-  saxs_property_list *image_properties;
+  size_t image_width;
+  size_t image_height;
+  double *image_data;
 
   /* Callback functions to deal with the current format. */
   saxs_image_format *image_format;
 
-  /* Private data, handled completely by the format callbacks. */
-  void *image_private_data;
+  saxs_property_list *image_properties;
+
+  /* pre computed and cached values */
+  int cache_valid;
+  double cache_min_value, cache_max_value;
 };
+
+
+static void
+saxs_image_update_cache(saxs_image *image) {
+  if (!image->cache_valid) {
+    size_t i, j;
+    const size_t width = saxs_image_width(image);
+    const size_t height = saxs_image_height(image);
+
+    image->cache_min_value = DBL_MAX;
+    image->cache_max_value = DBL_MIN;
+
+    for (i = 0; i < width; ++i)
+      for (j = 0; j < height; ++j) {
+        double value = saxs_image_value(image, i, j);
+        if (image->cache_min_value > value)
+          image->cache_min_value = value;
+        if (image->cache_max_value > value)
+          image->cache_max_value = value;
+      }
+
+    image->cache_valid = 1;
+  }
+}
+
+
 
 saxs_image*
 saxs_image_create() {
   saxs_image *image = malloc(sizeof(saxs_image));
 
+  image->image_filename   = NULL;
+  image->image_width      = 0;
+  image->image_height     = 0;
+  image->image_data       = NULL;
+  image->cache_valid      = 0;
+  image->cache_min_value  = DBL_MAX;
+  image->cache_max_value  = DBL_MIN;
+  image->image_format     = NULL;
   image->image_properties = saxs_property_list_create();
-  image->image_filename = NULL;
-  image->image_format = NULL;
-  image->image_private_data = NULL;
 
   return image;
+}
+
+saxs_image*
+saxs_image_copy(saxs_image *image) {
+  saxs_image *copy = malloc(sizeof(saxs_image));
+
+  copy->image_filename   = strdup(image->image_filename);
+  copy->image_data       = NULL;
+  copy->image_format     = NULL;
+  copy->cache_valid      = image->cache_valid;
+  copy->cache_min_value  = image->cache_min_value;
+  copy->cache_max_value  = image->cache_max_value;
+  copy->image_properties = saxs_property_list_create();
+
+  saxs_image_set_size(copy, image->image_width, image->image_height);
+  memcpy(copy->image_data, image->image_data, sizeof(image->image_data));
+
+  return copy;
 }
 
 int
 saxs_image_read(saxs_image *image, const char *filename, const char *format) {
   saxs_image_format* handler = saxs_image_format_find(filename, format);
-  if (!handler)
+  if (!handler || !handler->read)
     return -1;
 
+  free(image->image_filename);
   image->image_filename = strdup(filename);
-  image->image_format = handler;
+  image->image_format   = handler;
 
-  if (image->image_format->open(&(image->image_private_data)) != 0)
-    return -1;
-
-  return image->image_format->read(image->image_private_data, filename);
+  return image->image_format->read(image, filename);
 }
 
 int
 saxs_image_write(saxs_image *image, const char *filename, const char *format) {
-  return -1;
+  saxs_image_format* handler = saxs_image_format_find(filename, format);
+  if (!handler || !handler->write)
+    return -1;
+
+  free(image->image_filename);
+  image->image_filename = strdup(filename);
+  image->image_format   = handler;
+
+  return image->image_format->write(image, filename);
 }
 
 void
 saxs_image_free(saxs_image *image) {
   if (image) {
-    if (image->image_format)
-      image->image_format->close(image->image_private_data);
-
     if (image->image_filename)
       free(image->image_filename);
+
+    if (image->image_data)
+      free(image->image_data);
 
     saxs_property_list_free(image->image_properties);
 
@@ -96,77 +158,63 @@ saxs_image_filename(saxs_image *image) {
 
 size_t
 saxs_image_width(saxs_image *image) {
-  return image && image->image_format && image->image_format->width
-           ? image->image_format->width(image->image_private_data)
-           : 0;
+  return image ? image->image_width : 0;
 }
 
 size_t
 saxs_image_height(saxs_image *image) {
-  return image && image->image_format && image->image_format->height
-           ? image->image_format->height(image->image_private_data)
-           : 0;
+  return image ? image->image_height : 0;
 }
 
-long
+void
+saxs_image_set_size(saxs_image *image, size_t width, size_t height) {
+  if (image->image_data)
+    free(image->image_data);
+
+  image->image_width  = width;
+  image->image_height = height;
+  image->image_data   = (double*) calloc(width * height, sizeof(double));
+}
+
+
+
+double
 saxs_image_value(saxs_image *image, int x, int y) {
-  if (image && image->image_format && image->image_format->value) {
-    const long z = image->image_format->value(image->image_private_data, x, y);
-    return z < 0 ? 0 : z;
+  if (image && image->image_data
+      && x >= 0 && x < (signed)image->image_width
+      && y >= 0 && y < (signed)image->image_height) {
+    return *(image->image_data + y * image->image_width + x);
 
   } else
-    return 0;
+    return 0.0;
 }
 
-static long
-image_value_min(saxs_image *image) {
-  long min = INT_MAX;
+void
+saxs_image_set_value(saxs_image *image, int x, int y, double value) {
+  if (image && image->image_data
+      && x >= 0 && x < (signed)image->image_width
+      && y >= 0 && y < (signed)image->image_height) {
+    *(image->image_data + y * image->image_width + x) = value;
 
-  size_t i, j;
-  const size_t width = saxs_image_width(image);
-  const size_t height = saxs_image_height(image);
-
-  for (i = 0; i < width; ++i)
-    for (j = 0; j < height; ++j) {
-      long value = saxs_image_value(image, i, j);
-      if (min > value)
-        min = value;
-    }
-
-  return min;
+    if (image->cache_valid)
+      image->cache_valid = 0;
+  }
 }
 
-long
+
+double
 saxs_image_value_min(saxs_image *image) {
-  return image && image->image_format && image->image_format->value_min
-           ? image->image_format->value_min(image->image_private_data)
-           : image_value_min(image);
+  saxs_image_update_cache(image);
+  return image->cache_min_value;
 }
 
-static long
-image_value_max(saxs_image *image) {
-  long max = INT_MIN;
-
-  size_t i, j;
-  const size_t width = saxs_image_width(image);
-  const size_t height = saxs_image_height(image);
-
-  for (i = 0; i < width; ++i)
-    for (j = 0; j < height; ++j) {
-      long value = saxs_image_value(image, i, j);
-      if (max < value)
-        max = value;
-    }
-
-  return max;
-}
-
-long
+double
 saxs_image_value_max(saxs_image *image) {
-  return image && image->image_format && image->image_format->value_max
-           ? image->image_format->value_max(image->image_private_data)
-           : image_value_max(image);
+  saxs_image_update_cache(image);
+  return image->cache_max_value;
 }
+
+
 
 saxs_property*
 saxs_image_add_property(saxs_image *image, const char *name, const char *value) {

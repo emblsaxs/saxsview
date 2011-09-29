@@ -26,42 +26,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <assert.h>
 #include <errno.h>
 #include <string.h>
 
 
-typedef struct image_msk_private {
-  int width;
-  int height;
-  int padding;    /* rows are padded to align on 32-bit boundaries */
-  char *data;
-
-} image_msk_private;
-
-#define PRIVATE_DATA(p) ((image_msk_private*)(p))
-
-
-/**************************************************************************/
-int saxs_image_msk_open(void **data) {
-  image_msk_private *private_data;
-
-  assert(!*data);     /* Private data must not be allocated yet. */
-
-  private_data         = malloc(sizeof(image_msk_private));
-  private_data->data   = NULL;
-  private_data->width  = 0;
-  private_data->height = 0;
-
-  *data = private_data;
-  return 0;
-}
-
-int saxs_image_msk_read(void *data, const char *filename) {
+int saxs_image_msk_read(saxs_image *image, const char *filename) {
+  int width, height, padding;
   int row, col, bit, tmp;
-  char *dp;
-
-  image_msk_private *p = PRIVATE_DATA(data);
 
   FILE *fd = fopen(filename, "rb");
   if (!fd) {
@@ -76,70 +47,33 @@ int saxs_image_msk_read(void *data, const char *filename) {
 
   /*
    * Next three four-byte blocks are width, height
-   * and (possibly) the number of bits of padding.
+   * and (probably) the number of bits of padding.
    */
-  fread(&p->width, sizeof(p->width), 1, fd);
-  fread(&p->height, sizeof(p->height), 1, fd);
-  fread(&p->padding, sizeof(p->padding), 1, fd);
+  fread(&width, sizeof(width), 1, fd);
+  fread(&height, sizeof(height), 1, fd);
+  fread(&padding, sizeof(padding), 1, fd);
 
   /*
    * Data starts with an offset of 1024 bytes.
    */
   fseek(fd, 1024, SEEK_SET);
 
-  if (p->data)
-    free (p->data);
-
   /*
-   * Read and keep the padding bits, but do not report 
-   * them as width. This simplifies reading as no special
-   * boundary conditions need to be checked.
+   * Read the padding bits, but short-circuit the column loop;
+   * this simplifies reading as no further special boundary
+   * conditions need to be checked.
    */
-  p->data = (char*)malloc((p->width + p->padding) * p->height * sizeof(char));
-
-  for (row = 0; row < p->height; ++row)
-    for (col = 0; col < p->width; col += sizeof(tmp) * CHAR_BIT) {
+  saxs_image_set_size(image, width, height);
+  for (row = 0; row < height; ++row)
+    for (col = 0; col < width; col += sizeof(tmp) * CHAR_BIT) {
       fread(&tmp, sizeof(tmp), 1, fd);
 
-      dp = p->data + row * (p->width + p->padding) + col;
-      for (bit = 0; bit < sizeof(tmp) * CHAR_BIT; ++bit)
-        dp[bit] = (tmp & (1 << bit)) ? 0x01 : 0x00;
+      for (bit = 0; (unsigned)bit < sizeof(tmp) * CHAR_BIT && col + bit < width; ++bit)
+        saxs_image_set_value(image, col + bit, row, (tmp & (1 << bit)) ? 1.0 : 0.0);
     }
 
   fclose(fd);
   return 0;
-}
-
-int saxs_image_msk_close(void *data) {
-  image_msk_private *p = PRIVATE_DATA(data);
-
-  free(p->data);
-  free(p);
-
-  return 0;
-}
-
-size_t saxs_image_msk_width(void *data) {
-  image_msk_private *p = PRIVATE_DATA(data);
-  return p->width;
-}
-
-size_t saxs_image_msk_height(void *data) {
-  image_msk_private *p = PRIVATE_DATA(data);
-  return p->height;
-}
-
-long saxs_image_msk_value(void *data, int x, int y) {
-  image_msk_private *p = PRIVATE_DATA(data);
-  return *(p->data + y * (p->width + p->padding) + x) ? 1 : 0;
-}
-
-long saxs_image_msk_value_min(void *data) {
-  return 0;
-}
-
-long saxs_image_msk_value_max(void *data) {
-  return 1;
 }
 
 
@@ -148,34 +82,30 @@ long saxs_image_msk_value_max(void *data) {
 
 saxs_image_format*
 saxs_image_format_msk(const char *filename, const char *format) {
-  static saxs_image_format image_msk = { saxs_image_msk_open,
-                                         saxs_image_msk_read,
-                                         NULL, /* write */
-                                         saxs_image_msk_close,
-                                         saxs_image_msk_value,
-                                         saxs_image_msk_width,
-                                         saxs_image_msk_height,
-                                         saxs_image_msk_value_min,
-                                         saxs_image_msk_value_max };
+  static saxs_image_format image_msk = { saxs_image_msk_read, NULL };
 
   int header[4];
 
-  FILE *fd = fopen(filename, "rb");
-  if (!fd)
-    return NULL;
+  if (!compare_format(format, "msk")
+      || !compare_format(suffix(filename), "msk")) {
 
-  fread(header, sizeof(int), 4, fd);
-  fclose(fd);
+    FILE *fd = fopen(filename, "rb");
+    if (!fd)
+      return NULL;
 
-  /*
-   * The first four times four bytes shall contain
-   * the characters 'MASK':
-   */
-  if (   header[0] == 'M'
-      && header[1] == 'A'
-      && header[2] == 'S'
-      && header[3] == 'K')
-    return &image_msk;
+    fread(header, sizeof(int), 4, fd);
+    fclose(fd);
+
+    /*
+     * The first four times four bytes shall contain
+     * the characters 'MASK':
+     */
+    if (   header[0] == 'M'
+        && header[1] == 'A'
+        && header[2] == 'S'
+        && header[3] == 'K')
+      return &image_msk;
+  }
 
   return NULL;
 }

@@ -1,7 +1,6 @@
 /*
- * Read files in 32-bit .tiff-format.
- * Copyright (C) 2009, 2010, 2011
- * Daniel Franke <dfranke@users.sourceforge.net>
+ * Read/write files in 32-bit .tiff-format.
+ * Copyright (C) 2009, 2010, 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -119,115 +118,109 @@ static void tiff_initialize(void) {
   }
 }
 
-
 /**************************************************************************/
-typedef struct image_tiff_private {
-  uint32 width;
-  uint32 height;
-  uint16 bpp;           /* bits per pixel */
-  uint16 spp;           /* samples per pixel */
-  unsigned int *data;
-
-} image_tiff_private;
-
-#define PRIVATE_DATA(p) ((image_tiff_private*)(p))
-
-/**************************************************************************/
-
-
-int saxs_image_tiff_open(void **data) {
-  image_tiff_private *private_data;
-
-  assert(!*data);     /* Private data must not be allocated yet. */
-
-  private_data       = malloc(sizeof(image_tiff_private));
-  private_data->data = NULL;
-
-  *data = private_data;
+int saxs_image_tiff_read(saxs_image *image, const char *filename) {
+  TIFF *tiff;
+  tstrip_t strip;
+  uint16 bpp, spp;
+  uint32 width, height, x, y;
+  int *data;
 
   tiff_initialize();
-  return 0;
-}
-
-int saxs_image_tiff_read(void *data, const char *filename) {
-  image_tiff_private *p = PRIVATE_DATA(data);
-  tstrip_t strip;
-  TIFF *tiff;
-
-  /* open() should have allocated memory already ... */
-  assert(p);
 
   /* The 'b' is required for windows, overwise reading fails. */
   tiff = TIFFOpen(filename, "rb");
   if (!tiff)
     return -1;
 
-  TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &p->width);
-  TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &p->height);
-  TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &p->bpp);
+  TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
+  TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
+  TIFFGetField(tiff, TIFFTAG_BITSPERSAMPLE, &bpp);
 
-  if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &p->spp) == 0)
-    p->spp = 1;
+  if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &spp) == 0)
+    spp = 1;
 
-  p->data = _TIFFmalloc(p->width * p->height * p->bpp/CHAR_BIT * p->spp);
+printf ("width: %d, height: %d, bpp: %d, spp: %d\n", width, height, bpp, spp);
+
+  data = _TIFFmalloc(width * height * bpp/CHAR_BIT * spp);
 
   for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)
     TIFFReadEncodedStrip(tiff,
                          strip,
-                         ((char*)p->data) + strip * TIFFStripSize(tiff),
+                         ((char*)data) + strip * TIFFStripSize(tiff),
                          (tsize_t) -1);
 
+  saxs_image_set_size(image, width, height);
+  for (x = 0; x < width; ++x)
+    for (y = 0; y < height; ++y)
+      if (spp == 1) {
+        saxs_image_set_value(image, x, y, *(data + y * width + x) * 1.0);
+//      saxs_image_set_value(image, x, y, *((char *)(data) + y * width + x));
+
+      } else if (spp == 3) {
+        unsigned char *rgb = (char *)(data) + (y * width + x)*3;
+        saxs_image_set_value(image, x, y, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
+      }
+
   TIFFClose(tiff);
-  return 0;
-}
-
-int saxs_image_tiff_close(void *data) {
-  image_tiff_private *p = PRIVATE_DATA(data);
-
-  _TIFFfree(p->data);
-  free(p);
+  _TIFFfree(data);
 
   return 0;
 }
 
-size_t saxs_image_tiff_width(void *data) {
-  return PRIVATE_DATA(data)->width;
+int saxs_image_tiff_write(saxs_image *image, const char *filename) {
+  TIFF *tiff;
+  tstrip_t strip;
+  uint32 width, height, x, y;
+  unsigned int *data;
+
+  tiff_initialize();
+
+  tiff = TIFFOpen(filename, "wb");
+  if (!tiff)
+    return -1;
+
+  width  = saxs_image_width(image);
+  height = saxs_image_height(image);
+
+  data = _TIFFmalloc(width * height * 4 * 1);
+  for (x = 0; x < width; ++x)
+    for (y = 0; y < height; ++y)
+      *(data + y * width + x) = saxs_image_value(image, x, y);
+
+  /*
+   * Tags need to be sorted in ascending order.
+   *
+   * Do not compress as Fit2D can not handle compressed images ...
+   * TIFFSetField(tiff, TIFFTAG_COMPRESSION, COMPRESSION_LZW );
+   */
+  TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, width);
+  TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, height);
+  TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, 32);
+  TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, 1);
+  TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, height);
+  TIFFSetField(tiff, TIFFTAG_XRESOLUTION, 0.0);
+  TIFFSetField(tiff, TIFFTAG_YRESOLUTION, 0.0);
+
+  for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)
+    TIFFWriteEncodedStrip(tiff,
+                          strip,
+                          ((char*)data) + strip * TIFFStripSize(tiff),
+                          height * width * 4);
+
+  TIFFClose(tiff);
+  _TIFFfree(data);
+
+  return 0;
 }
-
-size_t saxs_image_tiff_height(void *data) {
-  return PRIVATE_DATA(data)->height;
-}
-
-long saxs_image_tiff_value(void *data, int x, int y) {
-  image_tiff_private *p = PRIVATE_DATA(data);
-
-  if (x < 0 || x >= (signed)p->width
-      || y < 0 || y > (signed)p->height)
-    return 0;
-
-  if (p->spp == 4) {
-    unsigned char *rgba = (unsigned char *)(p->data + y * p->width + x);
-    return (rgba[0]*11 + rgba[1]*16 + rgba[2]*5)/32;
-
-  } else
-    return *(p->data + y * p->width + x);
-}
-
 
 /**************************************************************************/
 #include "saxsimage_format.h"
 
 saxs_image_format*
 saxs_image_format_tiff(const char *filename, const char *format) {
-  static saxs_image_format image_tiff = { saxs_image_tiff_open,
-                                          saxs_image_tiff_read,
-                                          NULL, /* write */
-                                          saxs_image_tiff_close,
-                                          saxs_image_tiff_value,
-                                          saxs_image_tiff_width,
-                                          saxs_image_tiff_height,
-                                          NULL, /* value_min */
-                                          NULL  /* value_max */ };
+  static saxs_image_format image_tiff = { saxs_image_tiff_read,
+                                          saxs_image_tiff_write };
 
   if (!compare_format(format, "tiff")
       || !compare_format(suffix(filename), "tiff")
