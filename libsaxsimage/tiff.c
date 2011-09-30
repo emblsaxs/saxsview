@@ -128,8 +128,7 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
 
   tiff_initialize();
 
-  /* The 'b' is required for windows, overwise reading fails. */
-  tiff = TIFFOpen(filename, "rb");
+  tiff = TIFFOpen(filename, "r");
   if (!tiff)
     return -1;
 
@@ -174,7 +173,14 @@ int saxs_image_tiff_write(saxs_image *image, const char *filename) {
 
   tiff_initialize();
 
-  tiff = TIFFOpen(filename, "wb");
+  /*
+   * Do NOT pass a "binary mode 'b'" here as for other formats (see cbf.c)
+   * the 'b' does have a different meaning for TIFF, namely:
+   * "When creating a new file force information be written with Big-Endian
+   *  byte order (but see below). By default the library will create new
+   *  files using the native CPU byte order." (man TiffOpen)
+   */
+  tiff = TIFFOpen(filename, "w");
   if (!tiff)
     return -1;
 
