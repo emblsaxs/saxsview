@@ -33,10 +33,8 @@ add_library (saxsview SHARED
              ${RES})
 
 target_link_libraries (saxsview
-                       saxsdocument
-                       qwt
-                       qtpropertybrowser
-                       ${QT_LIBRARIES})
+                       saxsdocument saxsimage
+                       qwt qtpropertybrowser ${QT_LIBRARIES})
 
 install (TARGETS saxsview
          LIBRARY DESTINATION lib
