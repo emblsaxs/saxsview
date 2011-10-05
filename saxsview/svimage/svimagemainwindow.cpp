@@ -113,7 +113,11 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
           mw, SLOT(print()));
 
   actionQuit = new QAction("&Quit", mw);
+#if QT_VERSION >= 0x040600
   actionQuit->setShortcut(QKeySequence::Quit);
+#else
+  actionQuit->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_Q));
+#endif
   connect(actionQuit, SIGNAL(triggered()),
           mw, SLOT(close()));
 
