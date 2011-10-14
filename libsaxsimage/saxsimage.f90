@@ -193,8 +193,8 @@ CONTAINS
   END SUBROUTINE
 
   SUBROUTINE saxs_image_data(img, data)
-    TYPE(saxs_image), INTENT(inout)                   :: img
-    INTEGER, DIMENSION(:,:), ALLOCATABLE, INTENT(out) :: data
+    TYPE(saxs_image), INTENT(inout)     :: img
+    REAL(DBL), ALLOCATABLE, INTENT(out) :: data(:,:)
 
     INTEGER :: i, j, width, height
 
