@@ -55,7 +55,7 @@ atsas_dat_parse_header(struct saxs_document *doc,
 
     /* Trim trailing whitespaces */
     char *q;
-    q = firstline->line_buffer + firstline->line_length;
+    q = firstline->line_buffer + firstline->line_length - 1;
     while (q > firstline->line_buffer && !isalnum(*q))
       *q-- = '\0';
 

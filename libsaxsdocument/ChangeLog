@@ -1,3 +1,7 @@
+2011-10-24  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (atsas_dat_parse_header): Fixed out of bounds access.
+
 2011-09-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_dat_write_footer): Dump all properties to footer.
