@@ -252,12 +252,10 @@ atsas_dat_3_column_write_data(struct saxs_document *doc,
   saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
   saxs_data *data = saxs_curve_data(curve);
   while (data) {
-    if (saxs_data_y(data) > 0.0) {
-      struct line *l = lines_create();
-      lines_printf(l, "%14e %14e %14e",
-                   saxs_data_x(data), saxs_data_y(data), saxs_data_y_err(data));
-      lines_append(lines, l);
-    }
+    struct line *l = lines_create();
+    lines_printf(l, "%14e %14e %14e",
+                 saxs_data_x(data), saxs_data_y(data), saxs_data_y_err(data));
+    lines_append(lines, l);
 
     data = saxs_data_next(data);
   }
@@ -316,13 +314,11 @@ atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
   saxs_data *data2 = saxs_curve_data(curve2);
 
   while (data1 && data2) {
-    if (saxs_data_y(data1) > 0.0) {
-      struct line *l = lines_create();
-      lines_printf(l, "%14e %14e %14e %14e",
-                   saxs_data_x(data1), saxs_data_y(data1),
-                   saxs_data_y_err(data1), saxs_data_y_err(data2));
-      lines_append(lines, l);
-    }
+    struct line *l = lines_create();
+    lines_printf(l, "%14e %14e %14e %14e",
+                 saxs_data_x(data1), saxs_data_y(data1),
+                 saxs_data_y_err(data1), saxs_data_y_err(data2));
+    lines_append(lines, l);
 
     data1 = saxs_data_next(data1);
     data2 = saxs_data_next(data2);
