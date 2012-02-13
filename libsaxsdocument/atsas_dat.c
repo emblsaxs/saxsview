@@ -101,6 +101,7 @@ atsas_dat_parse_header(struct saxs_document *doc,
   if (firstline != lastline) {
     char *colon_pos = strchr(firstline->line_buffer, ':');
     char *conc_pos  = strstr(firstline->line_buffer, "c=");
+    char *p;
 
     if (conc_pos) {
       char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
@@ -121,7 +122,11 @@ atsas_dat_parse_header(struct saxs_document *doc,
 
       saxs_document_add_property(doc, "sample-description", desc);
       saxs_document_add_property(doc, "sample-concentration", conc);
-      saxs_document_add_property(doc, "sample-code", code);
+
+      /* Skip whitespaces before the code. */
+      p = code;
+      while (isspace(*p)) ++p;
+      saxs_document_add_property(doc, "sample-code", p);
     }
 
     firstline = firstline->next;
