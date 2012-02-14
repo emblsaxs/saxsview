@@ -1,6 +1,5 @@
-document; bsa.dat; 1; 4;
+document; bsa.dat; 1; 3;
 curve; data; 1; 2096;
-property; title; Sample description:                     BSA buffer;
 property; sample-description; BSA buffer;
 property; sample-concentration; 0.000;
 property; sample-code; BSA;

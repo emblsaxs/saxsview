@@ -18,7 +18,7 @@ add_test (NAME read-nosuchfile
 set_property (TEST read-nosuchfile PROPERTY WILL_FAIL TRUE)
 
 # read-only tests for .dat-files
-set (DATTESTS "empty;whitespace;columns;bsa;long-lines")
+set (DATTESTS "empty;whitespace;columns;bsa;bsa-sub;long-lines")
 foreach (test ${DATTESTS})
   add_test (NAME read-dat-${test}
             COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.dat

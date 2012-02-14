@@ -1,3 +1,11 @@
+2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsdocument/bsa-sub.dat: New testcase (subtracted data).
+	* libsaxsdocument/bsa-sub.exp: New.
+	* libsaxsdocument/bsa.exp: Updated expected values.
+	* libsaxsdocument/long-lines.exp: Likewise.
+	* libsaxsdocument/CMakeLists.txt: Added new testcase.
+
 2011-07-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* libsaxsdocument/lyzexp.exp: Fixed upper/lower case.
