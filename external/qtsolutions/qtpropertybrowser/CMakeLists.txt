@@ -60,7 +60,7 @@ special_moc (qttreepropertybrowser.cpp   qttreepropertybrowser.moc         qttre
 
 qt4_add_resources (RES qtpropertybrowser.qrc)
 
-add_library (qtpropertybrowser STATIC ${HEADERS} ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp)
+add_library (qtpropertybrowser SHARED ${HEADERS} ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp)
 set_target_properties (qtpropertybrowser PROPERTIES VERSION 2.5.1)
 
 target_link_libraries (qtpropertybrowser ${QT_LIBRARIES})
