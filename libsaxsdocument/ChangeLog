@@ -1,5 +1,10 @@
 2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* atsas_dat.c (atsas_dat_parse_footer): Try to make sense out of
+	footer lines in various .dat formats.
+
+2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* columns.c (lines_printf): Fixed crash on overly long lines.
 
 2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>

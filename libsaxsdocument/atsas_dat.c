@@ -159,8 +159,63 @@ atsas_dat_parse_footer(struct saxs_document *doc,
    * Try to read the basic information from there, the sample usually
    * comes first.
    */
+  if (!saxs_document_property_find_first(doc, "sample-description")) {
+    while (firstline != lastline)
+      parse_basic_information(doc, firstline);
+
+    return 0;
+  }
+
+  /*
+   * Alternatively, especially in raw frame data, there may be key-value
+   * pairs of some kind. Keys and values are separated by ':' and a key
+   * may be any string.
+   */
   while (firstline != lastline) {
-    parse_basic_information(doc, firstline);
+    char *colon_pos = strchr(firstline->line_buffer, ':');
+    if (colon_pos) {
+      char *key, *value;
+
+      key = malloc(firstline->line_length);
+      memset(key, 0, firstline->line_length);
+      strncpy(key, firstline->line_buffer, colon_pos - firstline->line_buffer);
+
+      colon_pos += 1;
+      while (isspace(*colon_pos))
+        colon_pos += 1;
+
+      value = malloc(firstline->line_length);
+      memset(value, 0, firstline->line_length);
+      strncpy(value, colon_pos, firstline->line_buffer + firstline->line_length - colon_pos);
+
+      saxs_document_add_property(doc, key, value);
+
+      free(value);
+      free(key);
+    }
+
+    /*
+     * In averaged raw data sets there may be a line indicating how many frames
+     * where used to compute this data set. Something like:
+     *
+     * Example:
+     *   Channels from 1 to 2449 Number of frames averaged =    8 from total    8 frames
+     */
+    if (strstr(firstline->line_buffer, "frames averaged =")) {
+      int averaged, total;
+      char *equal_pos = strchr(firstline->line_buffer, '=') + 1;
+
+      if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
+        char buffer[64] = { '\0' };
+
+        sprintf(buffer, "%d", averaged);
+        saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
+
+        sprintf(buffer, "%d", total);
+        saxs_document_add_property(doc, "total-number-of-frames", buffer);
+      }
+    }
+
     firstline = firstline->next;
   }
 
