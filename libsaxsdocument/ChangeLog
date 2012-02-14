@@ -1,3 +1,10 @@
+2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (parse_basic_information): New, extracted from ...
+	(atsas_dat_parse_header): ... here.
+	(atsas_dat_parse_footer): If basic information wasn't found before,
+	try to get it from footer.
+
 2012-02-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_dat_parse_header): :Skip leading whitespace

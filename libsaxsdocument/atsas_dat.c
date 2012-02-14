@@ -36,6 +36,68 @@
   #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
+static void
+parse_basic_information(struct saxs_document *doc, struct line *l) {
+  /*
+   * Basic Information:
+   *
+   * Example:
+   *    "Sample:           water  c=  0.000 mg/ml Code:      h2o"
+   *
+   * Here, "water" is the description, "h2o" the code and "0.000"
+   * the concentration in mg/ml.
+   *
+   * The description may contain whitespaces, thus, anything between
+   * the first ':' and the last 'c=' is assumed to be the description.
+   */
+
+  char *colon_pos = strchr(l->line_buffer, ':');
+  char *conc_pos  = strstr(l->line_buffer, "c=");
+  char *p;
+
+  if (conc_pos) {
+    char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
+
+  if (colon_pos)
+      strncpy(desc, colon_pos + 1,
+              MIN(conc_pos - colon_pos - 1, 64));
+
+    /* Skip "c=". */
+    sscanf(conc_pos + 2, "%s", conc);
+    /* TODO: read concentration units */
+
+    colon_pos = strstr(conc_pos, ":");
+    if (colon_pos)
+      strncpy(code, colon_pos + 1,
+              MIN(64, l->line_length -
+                  (colon_pos - l->line_buffer - 1)));
+
+
+    /*
+     * If there is a description in line 1, do not add a (possibly truncated)
+     * second description here.
+     */
+    if (!saxs_document_property_find_first(doc, "sample-description")) {
+      p = desc;
+      while (isspace(*p)) ++p;
+      saxs_document_add_property(doc, "sample-description", p);
+    }
+
+    if (!saxs_document_property_find_first(doc, "sample-concentration")) {
+      p = conc;
+      while (isspace(*p)) ++p;
+      saxs_document_add_property(doc, "sample-concentration", p);
+    }
+
+    if (!saxs_document_property_find_first(doc, "sample-code")) {
+      p = code;
+      while (isspace(*p)) ++p;
+      saxs_document_add_property(doc, "sample-code", p);
+    }
+  }
+}
+
+
 
 /**************************************************************************/
 static int
@@ -65,70 +127,19 @@ atsas_dat_parse_header(struct saxs_document *doc,
       while (isspace(*p)) ++p;
       saxs_document_add_property(doc, "sample-description", p);
     }
-    else {
-      /*
-       * If the first line does not contain the 'description' then everything after 
-       * the last "/" (if present) should be treated as concentration.
-       * Example:
-       * " 02-Mar-2009       (al_011.dat - 1.0*Aver(al_010.dat,al_012.dat) /  4.37"
-       */
-      char *p = strrchr(firstline->line_buffer, '/');
-      if (p) {
-        ++p;
-        while (isspace(*p)) ++p;
-        saxs_document_add_property(doc, "sample-concentration", p);
-      }
-    }
+
     firstline = firstline->next;
   }
 
   /*
    * If the file is a raw data file, then the second non-empty line
    * holds the description, the code and the sample concentration.
-   *
-   * Example:
-   *    "Sample:           water  c=  0.000 mg/ml Code:      h2o"
-   *
-   * Here, "water" is the description, "h2o" the code and "0.000"
-   * the concentration in mg/ml.
-   *
-   * The description may contain whitespaces, thus, anything between
-   * the first ':' and the last 'c=' is assumed to be the description.
    */
   while (firstline != lastline && strlen(firstline->line_buffer) == 0)
     firstline = firstline->next;
 
   if (firstline != lastline) {
-    char *colon_pos = strchr(firstline->line_buffer, ':');
-    char *conc_pos  = strstr(firstline->line_buffer, "c=");
-    char *p;
-
-    if (conc_pos) {
-      char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
-
-      if (colon_pos)
-        strncpy(desc, colon_pos + 1,
-                MIN(conc_pos - colon_pos - 1, 64));
-
-      /* Skip "c=". */
-      sscanf(conc_pos + 2, "%s", conc);
-      /* TODO: read concentration units */
-
-      colon_pos = strstr(conc_pos, ":");
-      if (colon_pos)
-        strncpy(code, colon_pos + 1,
-                MIN(64, firstline->line_length -
-                    (colon_pos - firstline->line_buffer - 1)));
-
-      saxs_document_add_property(doc, "sample-description", desc);
-      saxs_document_add_property(doc, "sample-concentration", conc);
-
-      /* Skip whitespaces before the code. */
-      p = code;
-      while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-code", p);
-    }
-
+    parse_basic_information(doc, firstline);
     firstline = firstline->next;
   }
 
@@ -142,16 +153,17 @@ atsas_dat_parse_header(struct saxs_document *doc,
 static int
 atsas_dat_parse_footer(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
-  /*
-   * The footer often consists of headers of parent files.
-   * The header of the first parent contains the information about the sample.
-   */
 
-  if (firstline != lastline) {
-    /* Skip "======" footer separator */
+  /*
+   * In subtracted files, the "real" information is in the footer.
+   * Try to read the basic information from there, the sample usually
+   * comes first.
+   */
+  while (firstline != lastline) {
+    parse_basic_information(doc, firstline);
     firstline = firstline->next;
-    atsas_dat_parse_header(doc, firstline, lastline);
   }
+
   return 0;
 }
 
