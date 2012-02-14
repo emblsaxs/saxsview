@@ -85,8 +85,12 @@ int lines_printf(struct line *l, const char *fmt, ...) {
   va_start(va, fmt);
   n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
   if (n >= (signed)l->line_length) {
+    va_end(va);
+
     l->line_length = n + 1;
     l->line_buffer = realloc(l->line_buffer, l->line_length);
+
+    va_start(va, fmt);
     n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
   }
   va_end(va);
