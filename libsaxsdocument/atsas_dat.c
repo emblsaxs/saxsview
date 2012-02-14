@@ -160,8 +160,10 @@ atsas_dat_parse_footer(struct saxs_document *doc,
    * comes first.
    */
   if (!saxs_document_property_find_first(doc, "sample-description")) {
-    while (firstline != lastline)
+    while (firstline != lastline) {
       parse_basic_information(doc, firstline);
+      firstline = firstline->next;
+    }
 
     return 0;
   }
@@ -285,10 +287,19 @@ atsas_dat_write_footer(struct saxs_document *doc, struct line **lines) {
 
   saxs_property *property = saxs_document_property_first(doc);
   while (property) {
-    line = lines_create();
-    lines_printf(line, "%-40s: %s", saxs_property_name(property),
-                                    saxs_property_value(property));
-    lines_append(lines, line);
+    const char *name  = saxs_property_name(property);
+    const char *value = saxs_property_value(property);
+  
+    if (strcmp(name, "sample-description")
+         && strcmp(name, "sample-code")
+         && strcmp(name, "sample-concentration")) {
+
+      line = lines_create();
+      /* FIXME: columns should be aligned on output */
+      lines_printf(line, "%s: %s", name, value);
+      lines_append(lines, line);
+    }
+
     property = saxs_property_next(property);
   }
 
