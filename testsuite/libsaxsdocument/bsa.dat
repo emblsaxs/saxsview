@@ -2139,14 +2139,14 @@ Reflected beam [V] (first):             63.573
 Reflected beam [V] (last):              62.253
 Reflected beam [V] (mean):              64.794
 Reflected beam [V] (sd):                1.265
-Crystal temperature [캜] (first):       69.902
-Crystal temperature [캜] (last):        69.845
-Crystal temperature [캜] (mean):        69.866
-Crystal temperature [캜] (sd):          0.023
-Sample temperature [캜] (first):        10.89
-Sample temperature [캜] (last):         11.01
-Sample temperature [캜] (mean):         10.965
-Sample temperature [캜] (sd):           0.049
+Crystal temperature [째C] (first):       69.902
+Crystal temperature [째C] (last):        69.845
+Crystal temperature [째C] (mean):        69.866
+Crystal temperature [째C] (sd):          0.023
+Sample temperature [째C] (first):        10.89
+Sample temperature [째C] (last):         11.01
+Sample temperature [째C] (mean):         10.965
+Sample temperature [째C] (sd):           0.049
 Timestamp (begin):                      Fri Jul 17 13:03:56 2009
 Timestamp (end):                        Fri Jul 17 13:05:56 2009
 Accumulated pixel count:                3.47437e+08

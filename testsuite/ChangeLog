@@ -1,5 +1,11 @@
 2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* libsaxsdocument/bsa.dat: Fixed unprintable characters in
+	properties list.
+	* libsaxsdocument/bsa.exp: Updated expected number of properties.
+
+2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* libsaxsdocument/bsa-sub.dat: New testcase (subtracted data).
 	* libsaxsdocument/bsa-sub.exp: New.
 	* libsaxsdocument/bsa.exp: Updated expected values.
