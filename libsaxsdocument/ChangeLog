@@ -1,3 +1,12 @@
+2012-02-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (atsas_dat_parse_footer): Moved key-value pair
+	parsing ...
+	(parse_key_value_pair): ... to here.
+	(atsas_header_txt_read): New.
+	(saxs_document_format_register_atsas_dat): Register new format
+	'atsas_header_txt' to parse header files.
+
 2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_dat_parse_footer): Fixed infinite loop.

@@ -98,6 +98,56 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
 }
 
 
+static void
+parse_key_value_pair(struct saxs_document *doc, struct line *l) {
+  /*
+   * Keys and values are separated by ':' and a key may be any string.
+   */
+  char *colon_pos = strchr(l->line_buffer, ':');
+  if (colon_pos) {
+    char *key, *value;
+
+    key = malloc(l->line_length);
+    memset(key, 0, l->line_length);
+    strncpy(key, l->line_buffer, colon_pos - l->line_buffer);
+
+    colon_pos += 1;
+    while (isspace(*colon_pos))
+      colon_pos += 1;
+
+    value = malloc(l->line_length);
+    memset(value, 0, l->line_length);
+    strncpy(value, colon_pos, l->line_buffer + l->line_length - colon_pos);
+
+    saxs_document_add_property(doc, key, value);
+
+    free(value);
+    free(key);
+  }
+
+  /*
+   * In averaged raw data sets there may be a line indicating how many frames
+   * where used to compute this data set. Something like:
+   *
+   * Example:
+   *   Channels from 1 to 2449 Number of frames averaged =    8 from total    8 frames
+   */
+  if (strstr(l->line_buffer, "frames averaged =")) {
+    int averaged, total;
+    char *equal_pos = strchr(l->line_buffer, '=') + 1;
+
+    if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
+      char buffer[64] = { '\0' };
+
+      sprintf(buffer, "%d", averaged);
+      saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
+
+      sprintf(buffer, "%d", total);
+      saxs_document_add_property(doc, "total-number-of-frames", buffer);
+    }
+  }
+}
+
 
 /**************************************************************************/
 static int
@@ -170,54 +220,10 @@ atsas_dat_parse_footer(struct saxs_document *doc,
 
   /*
    * Alternatively, especially in raw frame data, there may be key-value
-   * pairs of some kind. Keys and values are separated by ':' and a key
-   * may be any string.
+   * pairs of some kind. 
    */
   while (firstline != lastline) {
-    char *colon_pos = strchr(firstline->line_buffer, ':');
-    if (colon_pos) {
-      char *key, *value;
-
-      key = malloc(firstline->line_length);
-      memset(key, 0, firstline->line_length);
-      strncpy(key, firstline->line_buffer, colon_pos - firstline->line_buffer);
-
-      colon_pos += 1;
-      while (isspace(*colon_pos))
-        colon_pos += 1;
-
-      value = malloc(firstline->line_length);
-      memset(value, 0, firstline->line_length);
-      strncpy(value, colon_pos, firstline->line_buffer + firstline->line_length - colon_pos);
-
-      saxs_document_add_property(doc, key, value);
-
-      free(value);
-      free(key);
-    }
-
-    /*
-     * In averaged raw data sets there may be a line indicating how many frames
-     * where used to compute this data set. Something like:
-     *
-     * Example:
-     *   Channels from 1 to 2449 Number of frames averaged =    8 from total    8 frames
-     */
-    if (strstr(firstline->line_buffer, "frames averaged =")) {
-      int averaged, total;
-      char *equal_pos = strchr(firstline->line_buffer, '=') + 1;
-
-      if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
-        char buffer[64] = { '\0' };
-
-        sprintf(buffer, "%d", averaged);
-        saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
-
-        sprintf(buffer, "%d", total);
-        saxs_document_add_property(doc, "total-number-of-frames", buffer);
-      }
-    }
-
+    parse_key_value_pair(doc, firstline);
     firstline = firstline->next;
   }
 
@@ -451,6 +457,25 @@ atsas_dat_n_column_read(struct saxs_document *doc, const char *filename) {
 
 
 /**************************************************************************/
+int
+atsas_header_txt_read(struct saxs_document *doc, const char *filename) {
+  struct line *lines;
+  int res;
+
+  if ((res = lines_read(&lines, filename)) == 0) {
+    struct line *l = lines;
+    while (l) {
+      parse_key_value_pair(doc, l);
+      l = l->next;
+    }
+  }
+
+  lines_free(lines);
+  return res;
+}
+
+
+/**************************************************************************/
 void
 saxs_document_format_register_atsas_dat() {
   /*
@@ -480,7 +505,18 @@ saxs_document_format_register_atsas_dat() {
      atsas_dat_n_column_read, NULL, NULL
   };
 
+  /*
+   * Header information for raw radially averaged data files.
+   * Information may be added to processed .dat files.
+   */
+  saxs_document_format atsas_header_txt = {
+     "txt", "atsas-header-txt",
+     "ATSAS header information for experimental data",
+     atsas_header_txt_read, NULL, NULL
+  };
+
   saxs_document_format_register(&atsas_dat_3_column);
   saxs_document_format_register(&atsas_dat_4_column);
   saxs_document_format_register(&atsas_dat_n_column);
+  saxs_document_format_register(&atsas_header_txt);
 }
