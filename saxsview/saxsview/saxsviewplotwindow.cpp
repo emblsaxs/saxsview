@@ -174,11 +174,14 @@ void SaxsviewPlotWindow::load(const QString& fileName, saxs_curve *curve) {
     const double y_err = saxs_data_y_err(data);
 
     data = saxs_data_next(data);
-    if (y - y_err < 1e-6)
+    if (y < 1e-6)
       continue;
 
+    double lbound = y - y_err < 1e-6 ? 1e-6 : y - y_err;
+    double ubound = y + y_err;
+
     points.push_back(QPointF(x, y));
-    intervals.push_back(QwtIntervalSample(x, y - y_err, y + y_err));
+    intervals.push_back(QwtIntervalSample(x, lbound, ubound));
   }
 
   Saxsview::PlotCurve *plotCurve = new Saxsview::PlotCurve(saxs_curve_type(curve));
