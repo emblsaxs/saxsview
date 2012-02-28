@@ -64,7 +64,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename) {
    * conditions need to be checked.
    */
   saxs_image_set_size(image, width, height);
-  for (row = 0; row < height; ++row)
+  for (row = height-1; row >= 0; --row)
     for (col = 0; col < width; col += sizeof(tmp) * CHAR_BIT) {
       fread(&tmp, sizeof(tmp), 1, fd);
 

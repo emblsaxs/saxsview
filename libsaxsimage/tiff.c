@@ -169,7 +169,7 @@ int saxs_image_tiff_write(saxs_image *image, const char *filename) {
   TIFF *tiff;
   tstrip_t strip;
   uint32 width, height, x, y;
-  unsigned int *data;
+  int *data;
 
   tiff_initialize();
 

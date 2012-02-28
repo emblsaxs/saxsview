@@ -1,3 +1,9 @@
+2012-02-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* tiff.c (saxs_image_tiff_read): Do not read unsigned, but signed values.
+	* msk.c (saxs_image_msk_read): Flip the rows, mask files are written
+	"upside down".
+
 2011-10-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage.f90 (saxs_image_data): Fixed data type.
