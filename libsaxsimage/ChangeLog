@@ -1,3 +1,8 @@
+2012-03-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.c (saxs_image_set_value): Invert rows to match layout of
+	Fit2D.
+
 2012-02-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* tiff.c (saxs_image_tiff_read): Do not read unsigned, but signed values.
