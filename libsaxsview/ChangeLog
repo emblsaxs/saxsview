@@ -1,3 +1,10 @@
+2012-03-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_image.cpp (setFrame): Do not invert axis to be compatible
+	with Fit2D coordinates.
+	* saxsimage.c (saxs_image_set_value): Invert rows to match layout of
+	Fit2D.
+
 2011-10-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Explicitly link libsaxsimage for windows builds.

@@ -230,16 +230,6 @@ void SaxsviewImage::setFrame(SaxsviewFrame *frame) {
   p->frame = frame;
   frame->attach(this);
 
-  //
-  // Invert the left-hand axis to bring origin of images
-  // to the upper-left corner.
-  //
-  // NOTE: This should be in setupScales() instead, but detach/attach
-  //       of a frame makes QwtPlot forget that it should keep the
-  //       left axis inverted. Thus we restate the fact here.
-  //
-  axisScaleDiv(QwtPlot::yLeft)->invert();
-
   const QwtDoubleInterval range = p->frame->data()->range();
   axisWidget(QwtPlot::yRight)->setColorMap(range, p->frame->colorMap());
 
