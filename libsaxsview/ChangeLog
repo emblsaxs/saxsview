@@ -1,5 +1,15 @@
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.cpp (setLegendEnabled): Implemented.
+	(legendEnabled): Likewise.
+	(setLegendPosition): Update layout after change.
+	(setLegendSpacing): Likewise, really set spacing.
+	(setLegendMargin): Likewise, really set margin.
+	(setLegendFont): Implemented.
+	(legendFont): Implemented.
+
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_config.h (setDefaultCurveTemplates): New.
 	(setDefaultFileTypeTemplates): New.
 	(defaultColors): Renamed to ...

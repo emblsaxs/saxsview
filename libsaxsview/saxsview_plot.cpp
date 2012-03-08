@@ -523,12 +523,17 @@ QFont SaxsviewPlot::ticksFont() const {
   return axisFont(QwtPlot::xBottom);
 }
 
-void SaxsviewPlot::setLegendEnabled(bool) {
-  
+void SaxsviewPlot::setLegendEnabled(bool on) {
+  foreach(QWidget *w, legend()->legendItems())
+    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w)) {
+      item->setVisible(on);
+    }
+
+  updateLayout();
 }
 
 bool SaxsviewPlot::legendEnabled() const {
-  
+  return legend()->width() > 0;
 }
 
 void SaxsviewPlot::setLegendPosition(SaxsviewPlot::LegendPosition pos) {
@@ -544,6 +549,7 @@ void SaxsviewPlot::setLegendColumnCount(int n) {
   QLayout *layout = legend()->contentsWidget()->layout();
   QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
   ll->setMaxCols(n);
+  updateLayout();
 }
 
 int SaxsviewPlot::legendColumnCount() const {
@@ -555,7 +561,8 @@ int SaxsviewPlot::legendColumnCount() const {
 void SaxsviewPlot::setLegendSpacing(int n) {
   QLayout *layout = legend()->contentsWidget()->layout();
   QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setMaxCols(n);
+  ll->setSpacing(n);
+  updateLayout();
 }
 
 int SaxsviewPlot::legendSpacing() const {
@@ -567,7 +574,8 @@ int SaxsviewPlot::legendSpacing() const {
 void SaxsviewPlot::setLegendMargin(int n) {
   QLayout *layout = legend()->contentsWidget()->layout();
   QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setMaxCols(n);
+  ll->setMargin(n);
+  updateLayout();
 }
 
 int SaxsviewPlot::legendMargin() const {
@@ -577,8 +585,20 @@ int SaxsviewPlot::legendMargin() const {
 }
 
 void SaxsviewPlot::setLegendFont(const QFont& font) {
+  foreach(QWidget *w, legend()->legendItems())
+    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w)) {
+      QwtText text = item->text();
+      text.setFont(font);
+      item->setText(text);
+    }
+
+  updateLayout();
 }
 
 QFont SaxsviewPlot::legendFont() const {
+  foreach(QWidget *w, legend()->legendItems())
+    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w))
+      return item->text().font();
+
   return QFont();
 }
