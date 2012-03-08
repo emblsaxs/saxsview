@@ -26,8 +26,6 @@
 
 #include <QtGui>
 
-using Saxsview::config;
-
 
 class SVImageMainWindow::SVImageMainWindowPrivate {
 public:

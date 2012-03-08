@@ -1,3 +1,7 @@
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimagemainwindow.cpp: Removed usage of namespace Saxsview.
+
 2011-10-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagemainwindow.cpp (setupActions): QKeySequence::Quit is only defined
