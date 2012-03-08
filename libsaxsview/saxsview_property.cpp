@@ -115,6 +115,14 @@ void SaxsviewProperty::setValue(QObject *obj) {
     } else
       mProperty = mManager->addProperty(metaProperty.type(), mPropertyLabel);
 
+    mManager->blockSignals(true);
+    QMapIterator<QString, QVariant> attr(mAttributes);
+    while (attr.hasNext()) {
+      attr.next();
+      mProperty->setAttribute(attr.key(), attr.value());
+    }
+    mManager->blockSignals(false);
+
     if (mParentProperty)
       mParentProperty->mProperty->addSubProperty(mProperty);
     else
@@ -138,4 +146,21 @@ void SaxsviewProperty::setValue(QObject *obj) {
 
 void SaxsviewProperty::valueChanged(QtProperty*, const QVariant& value) {
   mObj->setProperty(qPrintable(mPropertyName), value);
+}
+
+void SaxsviewProperty::setMinimum(const QVariant& value) {
+  //
+  // Attributes need to be collected and stored for later application.
+  // At this point the 'mProperty' member doesn't exist yet.
+  //
+  mAttributes.insert("minimum", value);
+}
+
+void SaxsviewProperty::setMaximum(const QVariant& value) {
+  mAttributes.insert("maximum", value);
+}
+
+void SaxsviewProperty::setRange(const QVariant& min, const QVariant& max) {
+  setMinimum(min);
+  setMaximum(max);
 }

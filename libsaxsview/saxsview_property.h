@@ -22,6 +22,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QMap>
 
 class QtProperty;
 class QtVariantProperty;
@@ -45,6 +46,10 @@ public:
 
   void setValue(QObject *o);
 
+  void setMinimum(const QVariant&);
+  void setMaximum(const QVariant&);
+  void setRange(const QVariant&, const QVariant&);
+
 public slots:
   void valueChanged(QtProperty*, const QVariant& value);
 
@@ -56,6 +61,7 @@ private:
   QString mPropertyLabel;
   QString mPropertyName;
   QObject *mObj;
+  QMap<QString,QVariant> mAttributes;
   SaxsviewProperty *mParentProperty;
 };
 
