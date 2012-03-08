@@ -215,6 +215,7 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupUi() {
 
 void SVPlotMainWindow::SVPlotMainWindowPrivate::setupMenus() {
   menuRecentFiles = new QMenu("Open &Recent", mw);
+  menuRecentFiles->setEnabled(!config().recentFiles().isEmpty());
   connect(menuRecentFiles, SIGNAL(aboutToShow()),
           mw, SLOT(prepareRecentFilesMenu()));
 
@@ -363,6 +364,10 @@ void SVPlotMainWindow::load(const QString& fileName) {
 
   config().addRecentFile(fileName);
   config().setRecentDirectory(fileName);
+
+  // In case there were no recent files yet, the menu may be disabled
+  if (!p->menuRecentFiles->isEnabled())
+    p->menuRecentFiles->setEnabled(true);
 }
 
 void SVPlotMainWindow::reload() {
@@ -498,7 +503,7 @@ void SVPlotMainWindow::subWindowActivated(QMdiSubWindow *w) {
   // 0L if and only if the last subwindow was closed.
   //
   const bool on = (currentSubWindow() != 0L);
-  p->actionReload->setEnabled(on);
+//   p->actionReload->setEnabled(on);          // FIXME enable reload
   p->actionPrint->setEnabled(on);
   p->actionZoomFit->setEnabled(on);
   p->actionZoom->setEnabled(on);
