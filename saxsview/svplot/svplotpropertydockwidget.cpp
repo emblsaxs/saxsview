@@ -58,51 +58,48 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties() {
 
   SaxsviewProperty *plotGroup = new SaxsviewProperty("Plot", browser);
   properties.append(new SaxsviewProperty("Scale", "scale",
-                                             browser, plotGroup));
+                                         browser, plotGroup));
   groups.append(plotGroup);
 
   SaxsviewProperty *titleGroup = new SaxsviewProperty("Title", browser);
   properties.append(new SaxsviewProperty("Text", "plotTitle",
-                                             browser, titleGroup));
+                                         browser, titleGroup));
   properties.append(new SaxsviewProperty("Font", "plotTitleFont",
-                                             browser, titleGroup));
+                                         browser, titleGroup));
   groups.append(titleGroup);
 
   SaxsviewProperty *axisGroup = new SaxsviewProperty("Axis", browser);
   properties.append(new SaxsviewProperty("X Text", "axisTitleX",
-                                             browser, axisGroup));
+                                         browser, axisGroup));
   properties.append(new SaxsviewProperty("Y Text", "axisTitleY",
-                                             browser, axisGroup));
+                                         browser, axisGroup));
   properties.append(new SaxsviewProperty("Font", "axisTitleFont",
-                                             browser, axisGroup));
+                                         browser, axisGroup));
   groups.append(axisGroup);
 
   SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);
   properties.append(new SaxsviewProperty("X Ticks Enabled", "ticksEnabledX",
-                                             browser, ticksGroup));
+                                         browser, ticksGroup));
   properties.append(new SaxsviewProperty("Y Ticks Enabled", "ticksEnabledY",
-                                             browser, ticksGroup));
+                                         browser, ticksGroup));
   properties.append(new SaxsviewProperty("Font", "ticksFont",
-                                             browser, ticksGroup));
+                                         browser, ticksGroup));
   groups.append(ticksGroup);
 
-    // FIXME if this is enabled, we crash when switching between plot and curve properties
-//     SaxsviewProperty *legendGroup = new SaxsviewProperty("Legend", browser);
-//     properties.append(new SaxsviewProperty("Enabled", "legendEnabled",
-//                                                browser, legendGroup));
-//     properties.append(new SaxsviewProperty("Position", "legendPosition",
-//                                                browser, legendGroup));
-//     properties.append(new SaxsviewProperty("Columns", "legendColumnsCount",
-//                                                browser, legendGroup));
-//     properties.append(new SaxsviewProperty("Spacing", "legendSpacing",
-//                                                browser, legendGroup));
-//     properties.append(new SaxsviewProperty("Margin", "legendMargin",
-//                                                browser, legendGroup));
-//     properties.append(new SaxsviewProperty("Font", "legendFont",
-//                                                browser, legendGroup));
-//   groups.append(legendGroup);
-
-
+  SaxsviewProperty *legendGroup = new SaxsviewProperty("Legend", browser);
+  properties.append(new SaxsviewProperty("Enabled", "legendEnabled",
+                                         browser, legendGroup));
+  properties.append(new SaxsviewProperty("Position", "legendPosition",
+                                         browser, legendGroup));
+  properties.append(new SaxsviewProperty("Columns", "legendColumnsCount",
+                                         browser, legendGroup));
+  properties.append(new SaxsviewProperty("Spacing", "legendSpacing",
+                                         browser, legendGroup));
+  properties.append(new SaxsviewProperty("Margin", "legendMargin",
+                                         browser, legendGroup));
+  properties.append(new SaxsviewProperty("Font", "legendFont",
+                                         browser, legendGroup));
+  groups.append(legendGroup);
 }
 
 void SVPlotPropertyDockWidget::Private::setupCurveProperties() {

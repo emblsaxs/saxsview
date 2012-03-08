@@ -1,5 +1,10 @@
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotpropertydockwidget.cpp (setupPlotProperties): Added
+	legend properties. Whitespace fixes.
+
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotmainwindow.cpp (setupMenus): Set correct state for recent
 	files menu.
 	(load): Enable recent files menu after first successful load.
