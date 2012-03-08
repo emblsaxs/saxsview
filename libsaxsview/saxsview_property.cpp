@@ -59,6 +59,12 @@ SaxsviewProperty::SaxsviewProperty(const QString& propertyLabel,
    mParentProperty(parent) {
 }
 
+SaxsviewProperty::~SaxsviewProperty() {
+  mObj = 0L;
+  delete mProperty;
+  delete mManager;
+}
+
 void SaxsviewProperty::setValue(QObject *obj) {
   if (!mProperty) {
     //
@@ -88,6 +94,12 @@ void SaxsviewProperty::setValue(QObject *obj) {
       QStringList enumNames;
       QMetaEnum metaEnum = metaProperty.enumerator();
 
+      //
+      // WARNING: This only builds a  list of names in the order
+      //          as defined. The combobox to display these names
+      //          provides the selected index, not the actual enum
+      //          value.
+      //
       for (int i = 0; i < metaEnum.keyCount(); ++i)
         enumNames << metaEnum.key(i);
 
@@ -113,10 +125,9 @@ void SaxsviewProperty::setValue(QObject *obj) {
     // The property list would become unusable long as e.g. each font adds
     // another seven subitems.
     //
-    // NOTE: Works only with QtTreePropertyBrowser - downcast?
-    //
-//     foreach (QtBrowserItem *item, mBrowser->items(mProperty))
-//       mBrowser->setExpanded(item, false);
+    if (QtTreePropertyBrowser *treeBrowser = qobject_cast<QtTreePropertyBrowser*>(mBrowser))
+      foreach (QtBrowserItem *item, treeBrowser->items(mProperty))
+        treeBrowser->setExpanded(item, false);
   }
 
   if (obj) {

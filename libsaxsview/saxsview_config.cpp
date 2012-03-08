@@ -25,8 +25,6 @@
 
 #include <QtGui>
 
-namespace Saxsview {
-
 SaxsviewConfig& config() {
   static SaxsviewConfig config;
   return config;
@@ -108,19 +106,19 @@ void SaxsviewConfig::curveTemplates(QStandardItemModel *model) const {
   if (model->rowCount() == 0) {
     QList<QStandardItem*> t1, t2;
 
-    t1.push_back(new QStandardItem("filled circles w/ errors"));
-    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));              // line style
-    t1.push_back(new QStandardItem("1"));                                         // line width
-    t1.push_back(new QStandardItem(QString::number(PlotSymbol::FilledEllipse)));  // symbol style
-    t1.push_back(new QStandardItem("4"));                                         // symbol size
-    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));              // error bar style
-    t1.push_back(new QStandardItem("1"));                                         // error bar width
+    t1.push_back(new QStandardItem("circles w/ errors"));
+    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));      // line style
+    t1.push_back(new QStandardItem("1"));                                 // line width
+    t1.push_back(new QStandardItem(QString::number(Saxsview::Ellipse)));  // symbol style
+    t1.push_back(new QStandardItem("4"));                                 // symbol size
+    t1.push_back(new QStandardItem(QString::number(Qt::SolidLine)));      // error bar style
+    t1.push_back(new QStandardItem("1"));                                 // error bar width
     model->appendRow(t1);
 
     t2.push_back(new QStandardItem("solid line w/o errors"));
     t2.push_back(new QStandardItem(QString::number(Qt::SolidLine)));
     t2.push_back(new QStandardItem("2"));
-    t2.push_back(new QStandardItem(QString::number(PlotSymbol::NoSymbol)));
+    t2.push_back(new QStandardItem(QString::number(Saxsview::NoSymbol)));
     t2.push_back(new QStandardItem("1"));
     t2.push_back(new QStandardItem(QString::number(Qt::NoPen)));
     t2.push_back(new QStandardItem("1"));
@@ -210,7 +208,7 @@ void SaxsviewConfig::setFileTypeTemplates(QStandardItemModel *model) {
  * Derive the format from curve->fileName() and use curve->type()
  * to find the template to apply.
  */
-void SaxsviewConfig::applyTemplate(PlotCurve *curve) const {
+void SaxsviewConfig::applyTemplate(SaxsviewPlotCurve *curve) const {
   int n, template_id;
   saxs_document_format *fmt;
 
@@ -234,20 +232,14 @@ void SaxsviewConfig::applyTemplate(PlotCurve *curve) const {
   settings().beginReadArray("template");
   settings().setArrayIndex(template_id);
 
-  QPen line;
-  line.setStyle((Qt::PenStyle) settings().value("line-style", 0).toInt());
-  line.setWidth(settings().value("line-width", 1).toInt());
-  curve->setPen(line);
+  curve->setLineStyle((Saxsview::LineStyle) settings().value("line-style", 0).toInt());
+  curve->setLineWidth(settings().value("line-width", 1).toInt());
 
-  PlotSymbol symbol;
-  symbol.setStyle((Saxsview::PlotSymbol::Style) settings().value("symbol-style", 0).toInt());
-  symbol.setSize(settings().value("symbol-size", 1).toInt());
-  curve->setSymbol(symbol);
+  curve->setSymbolStyle((Saxsview::SymbolStyle) settings().value("symbol-style", 0).toInt());
+  curve->setSymbolSize(settings().value("symbol-size", 1).toInt());
 
-  QPen errors;
-  errors.setStyle((Qt::PenStyle) settings().value("error-bar-style", 0).toInt());
-  errors.setWidth(settings().value("error-bar-width", 1).toInt());
-  curve->setErrorBarPen(errors);
+  curve->setErrorLineStyle((Saxsview::LineStyle) settings().value("error-bar-style", 0).toInt());
+  curve->setErrorLineWidth(settings().value("error-bar-width", 1).toInt());
 
   settings().endArray();
   settings().endGroup();
@@ -322,5 +314,3 @@ void SaxsviewConfig::setDefaultColors(const QList<QColor>& lineColor,
   settings().endArray();
   settings().endGroup();
 }
-
-} // end of namespace Saxsview

@@ -17,6 +17,7 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "saxsview.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 #include "saxsview_config.h"
@@ -34,15 +35,14 @@
 #include "qwt_plot_renderer.h"
 #include "qwt_plot_scaleitem.h"
 #include "qwt_plot_zoomer.h"
+#include "qwt_scale_draw.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
 
 
-namespace Saxsview {
-
 /* An external legend, i.e. a legend shown on top of the
    plot canvas, needs to be positioned properly. */
-class PlotRenderer : public QwtPlotRenderer {
+class SaxsviewPlotRenderer : public QwtPlotRenderer {
 protected:
   void renderLegend(QPainter *painter, const QRectF &r) const {
     QRectF rect = r;
@@ -63,10 +63,10 @@ protected:
 
 
 
-class Plot::PlotPrivate {
+class SaxsviewPlot::Private {
 public:
-  PlotPrivate(Plot *p)
-   : plot(p), scale(Log10Scale), blockReplot(false),
+  Private(SaxsviewPlot *p)
+   : plot(p), scale(Saxsview::Log10Scale), blockReplot(false),
      legend(0L), marker(0L), panner(0L), zoomer(0L) {
   }
 
@@ -77,10 +77,10 @@ public:
   void setupScales();
 
   void setupDefaultColors();
-  void setStyle(PlotCurve *curve);
+  void setStyle(SaxsviewPlotCurve *curve);
 
-  Plot *plot;
-  PlotScale scale;
+  SaxsviewPlot *plot;
+  Saxsview::Scale scale;
 
   bool blockReplot;
 
@@ -88,12 +88,12 @@ public:
   QwtPlotMarker *marker;
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
-  QList<PlotCurve*> curves;
+  QList<SaxsviewPlotCurve*> curves;
   QList<QColor> defaultLineColor, defaultErrorBarColor;
   int currentLineColor, currentErrorBarColor;
 };
 
-void Plot::PlotPrivate::setupCanvas() {
+void SaxsviewPlot::Private::setupCanvas() {
   // initial background color
   plot->setAutoFillBackground(true);
   plot->setPalette(Qt::white);
@@ -104,7 +104,7 @@ void Plot::PlotPrivate::setupCanvas() {
   plot->canvas()->installEventFilter(plot);
 }
 
-void Plot::PlotPrivate::setupLegend() {
+void SaxsviewPlot::Private::setupLegend() {
   legend = new QwtLegend(plot->canvas());
 
   QLayout *layout = legend->contentsWidget()->layout();
@@ -120,7 +120,7 @@ void Plot::PlotPrivate::setupLegend() {
   plot->insertLegend(legend, QwtPlot::RightLegend);
 }
 
-void Plot::PlotPrivate::setupPanner() {
+void SaxsviewPlot::Private::setupPanner() {
   //
   // QwtPanner:
   //   "QwtPanner grabs the content of the widget into a pixmap and moves
@@ -137,7 +137,7 @@ void Plot::PlotPrivate::setupPanner() {
   panner->setEnabled(false);
 }
 
-void Plot::PlotPrivate::setupZoomer() {
+void SaxsviewPlot::Private::setupZoomer() {
   zoomer = new QwtPlotZoomer(plot->canvas());
   zoomer->setEnabled(true);
 
@@ -150,7 +150,7 @@ void Plot::PlotPrivate::setupZoomer() {
                           Qt::RightButton, Qt::ControlModifier);
 }
 
-void Plot::PlotPrivate::setupScales() {
+void SaxsviewPlot::Private::setupScales() {
   QwtPlotScaleItem *yRight = new QwtPlotScaleItem(QwtScaleDraw::LeftScale);
   yRight->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   yRight->attach(plot);
@@ -182,36 +182,27 @@ void Plot::PlotPrivate::setupScales() {
   plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 }
 
-void Plot::PlotPrivate::setupDefaultColors() {
+void SaxsviewPlot::Private::setupDefaultColors() {
   config().defaultColors(defaultLineColor, defaultErrorBarColor);
   currentLineColor = currentErrorBarColor = 0; 
 }
 
-void Plot::PlotPrivate::setStyle(PlotCurve *curve) {
+void SaxsviewPlot::Private::setStyle(SaxsviewPlotCurve *curve) {
   config().applyTemplate(curve);
 
   QColor lineColor = defaultLineColor[currentLineColor++ % defaultLineColor.size()];
-  QPen linePen = curve->pen();
-  linePen.setColor(lineColor);
-  curve->setPen(linePen);
-
-  PlotSymbol symbol = curve->symbol();
-  symbol.setColor(lineColor);
-  curve->setSymbol(symbol);
+  curve->setLineColor(lineColor);
+  curve->setSymbolColor(lineColor);
 
   QColor errorBarColor = defaultErrorBarColor[currentErrorBarColor++ % defaultErrorBarColor.size()];
-  QPen errorPen = curve->errorBarPen();
-  errorPen.setColor(errorBarColor);
-  curve->setErrorBarPen(errorPen);
+  curve->setErrorLineColor(errorBarColor);
 }
 
 
 
 
-Plot::Plot(QWidget *parent)
- : QwtPlot(parent), p(new PlotPrivate(this)) {
-
-//   Q_INIT_RESOURCE(libsaxsview);
+SaxsviewPlot::SaxsviewPlot(QWidget *parent)
+ : QwtPlot(parent), p(new Private(this)) {
 
   // margin around the plot
   plotLayout()->setMargin(12);
@@ -225,19 +216,19 @@ Plot::Plot(QWidget *parent)
   p->setupDefaultColors();
 }
 
-Plot::~Plot() {
+SaxsviewPlot::~SaxsviewPlot() {
   clear();
   delete p->marker;
   delete p->legend;
   delete p;
 }
 
-void Plot::replot() {
+void SaxsviewPlot::replot() {
   if (!replotBlocked())
     QwtPlot::replot();
 }
 
-void Plot::blockReplot(bool blocked) {
+void SaxsviewPlot::blockReplot(bool blocked) {
   //
   // When lifiting the blockage, do a replot
   // to show all changes.
@@ -252,14 +243,14 @@ void Plot::blockReplot(bool blocked) {
   }
 }
 
-bool Plot::replotBlocked() const {
+bool SaxsviewPlot::replotBlocked() const {
   return p->blockReplot;
 }
 
-void Plot::clear() {
+void SaxsviewPlot::clear() {
   // FIXME: is this equivalent to QwtPlotDict::detachItems() ?
 
-  foreach (PlotCurve *curve, p->curves) {
+  foreach (SaxsviewPlotCurve *curve, p->curves) {
     curve->detach();
     delete curve;
   }
@@ -268,21 +259,21 @@ void Plot::clear() {
   replot();
 }
 
-void Plot::exportAs() {
+void SaxsviewPlot::exportAs() {
   QString fileName = QFileDialog::getSaveFileName(this, "Export As",
                                                   config().recentDirectory(),
                                                   "All files (*.*)");
   exportAs(fileName);
 }
 
-void Plot::exportAs(const QString& fileName, const QString& format) {
+void SaxsviewPlot::exportAs(const QString& fileName, const QString& format) {
   if (fileName.isEmpty())
     return;
 
   QString ext = format.isEmpty() ? QFileInfo(fileName).completeSuffix() : format;
 
   if (ext == "ps" || ext == "pdf" || ext == "svg") {
-    PlotRenderer renderer;
+    SaxsviewPlotRenderer renderer;
     renderer.setLayoutFlag(QwtPlotRenderer::KeepMargins);
     renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
 
@@ -290,7 +281,7 @@ void Plot::exportAs(const QString& fileName, const QString& format) {
     QPixmap::grabWidget(this).save(fileName, qPrintable(ext));
 }
 
-void Plot::print() {
+void SaxsviewPlot::print() {
   QString printerName = config().recentPrinter();
 
   QPrinter printer(QPrinter::HighResolution);
@@ -300,19 +291,19 @@ void Plot::print() {
 
   QPrintDialog dlg(&printer, this);
   if (dlg.exec() == QDialog::Accepted) {
-    PlotRenderer renderer;
+    SaxsviewPlotRenderer renderer;
     renderer.renderTo(this, printer);
   }
 
   config().setRecentPrinter(printer.printerName());
 }
 
-void Plot::configure() {
+void SaxsviewPlot::configure() {
 //   PlotProperties config(this);
 //   config.exec();
 }
 
-void Plot::addCurve(PlotCurve *curve) {
+void SaxsviewPlot::addCurve(SaxsviewPlotCurve *curve) {
   p->curves.push_back(curve);
   p->setStyle(curve);
 
@@ -322,7 +313,7 @@ void Plot::addCurve(PlotCurve *curve) {
   setZoomBase();
 }
 
-void Plot::removeCurve(PlotCurve *curve) {
+void SaxsviewPlot::removeCurve(SaxsviewPlotCurve *curve) {
   int i = p->curves.indexOf(curve);
 
   if (i >= 0) {
@@ -332,11 +323,11 @@ void Plot::removeCurve(PlotCurve *curve) {
   }
 }
 
-QList<PlotCurve*> Plot::curves() const {
+QList<SaxsviewPlotCurve*> SaxsviewPlot::curves() const {
   return p->curves;
 }
 
-bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
+bool SaxsviewPlot::eventFilter(QObject *watchedObj, QEvent *e) {
   //
   // Open a context menu on the legend to allow selection of curves.
   //
@@ -352,7 +343,7 @@ bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
     if (QMouseEvent *me = dynamic_cast<QMouseEvent*>(e)) {
       if (me->button() == Qt::RightButton) {
         QMenu contextMenu(this);
-        foreach (PlotCurve *curve, p->curves) {
+        foreach (SaxsviewPlotCurve *curve, p->curves) {
           QAction *action = contextMenu.addAction(curve->title());
           action->setCheckable(true);
           action->setChecked(curve->isVisible());
@@ -368,7 +359,7 @@ bool Plot::eventFilter(QObject *watchedObj, QEvent *e) {
   return QwtPlot::eventFilter(watchedObj, e);
 }
 
-void Plot::updateLayout() {
+void SaxsviewPlot::updateLayout() {
   QwtPlot::updateLayout();
 
   if (plotLayout()->legendPosition() == QwtPlot::ExternalLegend) {
@@ -378,7 +369,7 @@ void Plot::updateLayout() {
   }
 }
 
-void Plot::setZoomBase(const QRectF& rect) {
+void SaxsviewPlot::setZoomBase(const QRectF& rect) {
   QRectF r = rect;
 
   //
@@ -386,7 +377,7 @@ void Plot::setZoomBase(const QRectF& rect) {
   // rect of all visible curves.
   //
   if (!r.isValid()) {
-    foreach (PlotCurve *curve, p->curves)
+    foreach (SaxsviewPlotCurve *curve, p->curves)
       if (curve->isVisible())
         r = r.united(curve->boundingRect());
 
@@ -409,37 +400,37 @@ void Plot::setZoomBase(const QRectF& rect) {
   replot();
 }
 
-QRectF Plot::zoomBase() const {
+QRectF SaxsviewPlot::zoomBase() const {
   return p->zoomer->zoomBase();
 }
 
-void Plot::zoom(const QRectF& rect) {
+void SaxsviewPlot::zoom(const QRectF& rect) {
   p->zoomer->zoom(rect);
 }
 
-void Plot::setZoomEnabled(bool on) {
+void SaxsviewPlot::setZoomEnabled(bool on) {
   p->zoomer->setEnabled(on);
 }
 
-bool Plot::zoomEnabled() const {
+bool SaxsviewPlot::isZoomEnabled() const {
   return p->zoomer->isEnabled();
 }
 
-void Plot::setMoveEnabled(bool on) {
+void SaxsviewPlot::setMoveEnabled(bool on) {
   p->panner->setEnabled(on);
 }
 
-bool Plot::moveEnabled() const {
+bool SaxsviewPlot::isMoveEnabled() const {
   return p->panner->isEnabled();
 }
 
-void Plot::setScale(PlotScale scale) {
+void SaxsviewPlot::setScale(Saxsview::Scale scale) {
   switch(scale) {
-    case AbsoluteScale:
+    case Saxsview::AbsoluteScale:
       setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
       break;
 
-    case Log10Scale:
+    case Saxsview::Log10Scale:
       setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
   }
 
@@ -447,8 +438,147 @@ void Plot::setScale(PlotScale scale) {
   replot();
 }
 
-Plot::PlotScale Plot::scale() const {
+Saxsview::Scale SaxsviewPlot::scale() const {
   return p->scale;
 }
 
-} // end of namespace Saxsview
+void SaxsviewPlot::setPlotTitle(const QString& text) {
+  QwtText t = title();
+  t.setText(text);
+  setTitle(t);
+}
+
+QString SaxsviewPlot::plotTitle() const {
+  return title().text();
+}
+
+void SaxsviewPlot::setPlotTitleFont(const QFont& font) {
+  QwtText t = title();
+  t.setFont(font);
+  setTitle(t);
+}
+
+QFont SaxsviewPlot::plotTitleFont() const {
+  return title().font();
+}
+
+void SaxsviewPlot::setAxisTitleX(const QString& text) {
+  QwtText t = axisTitle(QwtPlot::xBottom);
+  t.setText(text);
+  setAxisTitle(QwtPlot::xBottom, t);
+}
+
+QString SaxsviewPlot::axisTitleX() const {
+  return axisTitle(QwtPlot::xBottom).text();
+}
+
+void SaxsviewPlot::setAxisTitleY(const QString& text) {
+  QwtText t = axisTitle(QwtPlot::yLeft);
+  t.setText(text);
+  setAxisTitle(QwtPlot::yLeft, t);
+}
+
+QString SaxsviewPlot::axisTitleY() const {
+  return axisTitle(QwtPlot::yLeft).text();
+}
+
+void SaxsviewPlot::setAxisTitleFont(const QFont& font) {
+  QwtText t = axisTitle(QwtPlot::xBottom);
+  t.setFont(font);
+  setAxisTitle(QwtPlot::xBottom, t);
+}
+
+QFont SaxsviewPlot::axisTitleFont() const {
+  return axisTitle(QwtPlot::xBottom).font();
+}
+
+void SaxsviewPlot::setTicksEnabledX(bool on) {
+  QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
+  scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
+  updateLayout();
+}
+
+bool SaxsviewPlot::ticksEnabledX() const {
+  const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
+  return scale->hasComponent(QwtAbstractScaleDraw::Labels);
+}
+
+void SaxsviewPlot::setTicksEnabledY(bool on) {
+  QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
+  scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
+  updateLayout();
+}
+
+bool SaxsviewPlot::ticksEnabledY() const {
+  const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
+  return scale->hasComponent(QwtAbstractScaleDraw::Labels);
+}
+
+void SaxsviewPlot::setTicksFont(const QFont& font) {
+  setAxisFont(QwtPlot::xBottom, font);
+  setAxisFont(QwtPlot::yLeft, font);
+}
+
+QFont SaxsviewPlot::ticksFont() const {
+  return axisFont(QwtPlot::xBottom);
+}
+
+void SaxsviewPlot::setLegendEnabled(bool) {
+  
+}
+
+bool SaxsviewPlot::legendEnabled() const {
+  
+}
+
+void SaxsviewPlot::setLegendPosition(SaxsviewPlot::LegendPosition pos) {
+  plotLayout()->setLegendPosition((QwtPlot::LegendPosition)pos);
+  updateLayout();
+}
+
+SaxsviewPlot::LegendPosition SaxsviewPlot::legendPosition() const {
+  return (SaxsviewPlot::LegendPosition)plotLayout()->legendPosition();
+}
+
+void SaxsviewPlot::setLegendColumnCount(int n) {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  ll->setMaxCols(n);
+}
+
+int SaxsviewPlot::legendColumnCount() const {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  return ll->maxCols();
+}
+
+void SaxsviewPlot::setLegendSpacing(int n) {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  ll->setMaxCols(n);
+}
+
+int SaxsviewPlot::legendSpacing() const {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  return ll->spacing();
+}
+
+void SaxsviewPlot::setLegendMargin(int n) {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  ll->setMaxCols(n);
+}
+
+int SaxsviewPlot::legendMargin() const {
+  QLayout *layout = legend()->contentsWidget()->layout();
+  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
+  return ll->margin();
+}
+
+void SaxsviewPlot::setLegendFont(const QFont& font) {
+}
+
+QFont SaxsviewPlot::legendFont() const {
+  return QFont();
+}

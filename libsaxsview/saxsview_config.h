@@ -26,9 +26,7 @@ class QPen;
 class QStandardItemModel;
 class QStringList;
 
-namespace Saxsview {
-
-class PlotCurve;
+class SaxsviewPlotCurve;
 
 
 class SaxsviewConfig {
@@ -48,7 +46,7 @@ public:
   void fileTypeTemplates(QStandardItemModel*) const;
   void setFileTypeTemplates(QStandardItemModel*);
 
-  void applyTemplate(PlotCurve* curve) const;
+  void applyTemplate(SaxsviewPlotCurve* curve) const;
 
   void defaultColors(QList<QColor>&, QList<QColor>&) const;
   void setDefaultColors(const QList<QColor>&, const QList<QColor>&);
@@ -61,7 +59,5 @@ private:
 };
 
 SaxsviewConfig& config();
-
-} // end of namespace Saxsview
 
 #endif // !SAXSVIEW_CONFIG_H

@@ -26,6 +26,7 @@
 class Saxsview : public QObject {
   Q_OBJECT
   Q_ENUMS(Scale)
+  Q_ENUMS(LineStyle SymbolStyle)
 
 public:
   enum Scale {
@@ -33,6 +34,32 @@ public:
     Log10Scale
   };
 
+  enum LineStyle {
+    None          = Qt::NoPen,
+    Solid         = Qt::SolidLine,
+    Dashed        = Qt::DashLine,
+    Dotted        = Qt::DotLine,
+    DashDotted    = Qt::DashDotLine,
+    DashDotDotted = Qt::DashDotDotLine
+  };
+
+  enum SymbolStyle {
+    NoSymbol,
+    Ellipse,
+    Rect,
+    Diamond,
+    Hexagon,
+    TrianglePointingDown,
+    TrianglePointingUp,
+    TrianglePointingLeft,
+    TrianglePointingRight,
+    Cross,
+    XCross,
+    HorizontalLine,
+    VerticalLine,
+    StarLine,
+    StarOutline
+  };
 };
 
 #include "qwt_text.h"

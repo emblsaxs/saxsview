@@ -41,6 +41,7 @@ public:
   SaxsviewProperty(const QString& label, const QString& property,
                    QtAbstractPropertyBrowser *browser,
                    SaxsviewProperty *parent = 0L);
+  ~SaxsviewProperty();
 
   void setValue(QObject *o);
 

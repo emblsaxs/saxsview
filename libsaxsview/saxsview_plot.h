@@ -27,37 +27,74 @@ class QRect;
 #include <qwt_plot.h>
 #include <qwt_plot_item.h>
 
-namespace Saxsview {
+#include "saxsview.h"
+class SaxsviewPlotCurve;
+class SaxsviewPlotSymbol;
 
-class PlotCurve;
-class PlotSymbol;
-
-class Plot : public QwtPlot {
+class SaxsviewPlot : public QwtPlot {
   Q_OBJECT
 
+  Q_ENUMS(LegendPosition)
+
+  Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
+
+  Q_PROPERTY(QString plotTitle READ plotTitle WRITE setPlotTitle)
+  Q_PROPERTY(QFont plotTitleFont READ plotTitleFont WRITE setPlotTitleFont)
+  Q_PROPERTY(QString axisTitleX READ axisTitleX WRITE setAxisTitleX)
+  Q_PROPERTY(QString axisTitleY READ axisTitleY WRITE setAxisTitleY)
+  Q_PROPERTY(QFont axisTitleFont READ axisTitleFont WRITE setAxisTitleFont)
+  Q_PROPERTY(bool ticksEnabledX READ ticksEnabledX WRITE setTicksEnabledX)
+  Q_PROPERTY(bool ticksEnabledY READ ticksEnabledY WRITE setTicksEnabledY)
+  Q_PROPERTY(QFont ticksFont READ ticksFont WRITE setTicksFont)
+  Q_PROPERTY(bool legendEnabled READ legendEnabled WRITE setLegendEnabled)
+  Q_PROPERTY(SaxsviewPlot::LegendPosition legendPosition READ legendPosition WRITE setLegendPosition)
+  Q_PROPERTY(int legendColumnsCount READ legendColumnCount WRITE setLegendColumnCount)
+  Q_PROPERTY(int legendSpacing READ legendSpacing WRITE setLegendSpacing)
+  Q_PROPERTY(int legendMargin READ legendMargin WRITE setLegendMargin)
+  Q_PROPERTY(QFont legendFont READ legendFont WRITE setLegendFont)
+
 public:
-  enum PlotScale {
-    AbsoluteScale = 1,
-    Log10Scale
+  enum LegendPosition {
+    LeftLegendPosition = QwtPlot::LeftLegend,
+    RightLegendPosition = QwtPlot::RightLegend,
+    BottomLegendPosition = QwtPlot::BottomLegend,
+    TopLegendPosition = QwtPlot::TopLegend,
+    FloatingLegendPosition = QwtPlot::ExternalLegend
   };
 
-  Plot(QWidget *parent = 0L);
-  ~Plot();
+  SaxsviewPlot(QWidget *parent = 0L);
+  ~SaxsviewPlot();
 
-  void addCurve(PlotCurve *);
-  void removeCurve(PlotCurve *);
-  QList<PlotCurve*> curves() const;
+  void addCurve(SaxsviewPlotCurve *);
+  void removeCurve(SaxsviewPlotCurve *);
+  QList<SaxsviewPlotCurve*> curves() const;
 
   QRectF zoomBase() const;
-  bool zoomEnabled() const;
-  bool moveEnabled() const;
-  PlotScale scale() const;
+  bool isZoomEnabled() const;
+  bool isMoveEnabled() const;
 
   bool replotBlocked() const;
 
   void zoom(const QRectF&);
 
   void updateLayout();
+
+  Saxsview::Scale scale() const;
+
+  QString plotTitle() const;
+  QFont plotTitleFont() const;
+  QString axisTitleX() const;
+  QString axisTitleY() const;
+  QFont axisTitleFont() const;
+  bool ticksEnabledX() const;
+  bool ticksEnabledY() const;
+  QFont ticksFont() const;
+  bool legendEnabled() const;
+  LegendPosition legendPosition() const;
+  int legendColumnCount() const;
+  int legendSpacing() const;
+  int legendMargin() const;
+  QFont legendFont() const;
 
 public slots:
   void replot();
@@ -71,7 +108,23 @@ public slots:
   void setZoomBase(const QRectF& rect = QRectF());
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
-  void setScale(PlotScale);
+
+  void setScale(Saxsview::Scale);
+
+  void setPlotTitle(const QString&);
+  void setPlotTitleFont(const QFont&);
+  void setAxisTitleX(const QString&);
+  void setAxisTitleY(const QString&);
+  void setAxisTitleFont(const QFont&);
+  void setTicksEnabledX(bool);
+  void setTicksEnabledY(bool);
+  void setTicksFont(const QFont&);
+  void setLegendEnabled(bool);
+  void setLegendPosition(LegendPosition);
+  void setLegendColumnCount(int);
+  void setLegendSpacing(int);
+  void setLegendMargin(int);
+  void setLegendFont(const QFont&);
 
 // protected:
 //   void printLegend(QPainter *, const QRect &) const;
@@ -80,10 +133,8 @@ protected:
   bool eventFilter(QObject*, QEvent*);
 
 private:
-  class PlotPrivate;
-  PlotPrivate *p;
+  class Private;
+  Private *p;
 };
-
-} // end of namespace Saxsview
 
 #endif // !SAXSVIEW_PLOT_H

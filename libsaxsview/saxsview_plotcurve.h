@@ -20,82 +20,17 @@
 #ifndef SAXSVIEW_PLOTCURVE_H
 #define SAXSVIEW_PLOTCURVE_H
 
-#include <QObject>
-class QPen;
-class QRectF;
+#include <QtGui>
 
 #include <qwt_series_data.h>
 #include <qwt_symbol.h>
 
-namespace Saxsview {
+#include "saxsview.h"
+class SaxsviewPlot;
 
-class Plot;
+typedef QVector<QPointF> SaxsviewPlotPointData;
+typedef QVector<QwtIntervalSample> SaxsviewPlotIntervalData;
 
-typedef QVector<QPointF> PlotPointData;
-typedef QVector<QwtIntervalSample> PlotIntervalData;
-
-
-/**
- * Generally, symbols have an outline and an inner area.
- * The pen color of the outline may differ from the color
- * of the brush to fill the interior. Here this is
- * simplified to a single color. Filled symbols have a
- * brush the same color as the pen for the outline,
- * all others use Qt::NoBrush.
- */
-class PlotSymbol {
-public:
-  enum Style {
-    NoSymbol = QwtSymbol::NoSymbol,
-    Ellipse = QwtSymbol::Ellipse,
-    Rect = QwtSymbol::Rect,
-    Diamond = QwtSymbol::Diamond,
-    Triangle = QwtSymbol::Triangle,
-    DTriangle = QwtSymbol::DTriangle,
-    UTriangle = QwtSymbol::UTriangle,
-    LTriangle = QwtSymbol::LTriangle,
-    RTriangle = QwtSymbol::RTriangle,
-    Cross = QwtSymbol::Cross,
-    XCross = QwtSymbol::XCross,
-    HLine = QwtSymbol::HLine,
-    VLine = QwtSymbol::VLine,
-    Star1 = QwtSymbol::Star1,
-    Star2 = QwtSymbol::Star2,
-    Hexagon = QwtSymbol::Hexagon,
-
-    FilledEllipse = Ellipse + 100,
-    FilledRect = Rect + 100,
-    FilledDiamond = Diamond + 100,
-    FilledTriangle = Triangle + 100,
-    FilledDTriangle = DTriangle + 100,
-    FilledUTriangle = UTriangle + 100,
-    FilledLTriangle = LTriangle + 100,
-    FilledRTriangle = RTriangle + 100,
-    FilledStar2 = Star2 + 100,
-    FilledHexagon = Hexagon + 100
-  };
-
-  PlotSymbol();
-  PlotSymbol(Style style, int size, const QColor& color);
-  PlotSymbol(const PlotSymbol&);
-  ~PlotSymbol();
-
-  PlotSymbol& operator=(const PlotSymbol&);
-
-  QColor color() const;
-  void setColor(const QColor& color);
-
-  int size() const;
-  void setSize(int size);
-
-  Style style() const;
-  void setStyle(Style s);
-
-  QwtSymbol* qwtSymbol() const;
-
-private:
-  QwtSymbol *mSymbol;
-};
 
 /**
  *
@@ -103,20 +38,40 @@ private:
  *       One for the data points (@ref QwtPlotCurve) and one
  *       for error bars (@ref QwtPlotIntervalCurve).
  */
-class PlotCurve : public QObject {
+class SaxsviewPlotCurve : public QObject {
   Q_OBJECT
 
+  Q_PROPERTY(bool curveEnabled READ isVisible WRITE setVisible)
+  Q_PROPERTY(QString curveTitle READ title WRITE setTitle)
+
+  Q_PROPERTY(Saxsview::LineStyle lineStyle READ lineStyle WRITE setLineStyle)
+  Q_PROPERTY(int lineWidth READ lineWidth WRITE setLineWidth)
+  Q_PROPERTY(QColor lineColor READ lineColor WRITE setLineColor)
+
+  Q_PROPERTY(Saxsview::SymbolStyle symbolStyle READ symbolStyle WRITE setSymbolStyle)
+  Q_PROPERTY(int symbolSize READ symbolSize WRITE setSymbolSize)
+  Q_PROPERTY(bool isSymbolFilled READ isSymbolFilled WRITE setSymbolFilled)
+  Q_PROPERTY(QColor symbolColor READ symbolColor WRITE setSymbolColor)
+
+  Q_PROPERTY(double scalingFactorX READ scalingFactorX WRITE setScalingFactorX)
+  Q_PROPERTY(double scalingFactorY READ scalingFactorY WRITE setScalingFactorY)
+  Q_PROPERTY(int merge READ merge WRITE setMerge)
+
+  Q_PROPERTY(Saxsview::LineStyle errorLineStyle READ errorLineStyle WRITE setErrorLineStyle)
+  Q_PROPERTY(int errorLineWidth READ errorLineWidth WRITE setErrorLineWidth)
+  Q_PROPERTY(QColor errorLineColor READ errorLineColor WRITE setErrorLineColor)
+
 public:
-  PlotCurve(int type, QObject *parent = 0L);
-  ~PlotCurve();
+  SaxsviewPlotCurve(int type, QObject *parent = 0L);
+  ~SaxsviewPlotCurve();
 
   int type() const;
 
-  void attach(Plot *plot);
+  void attach(SaxsviewPlot *plot);
   void detach();
 
-  void setData(const PlotPointData& points = PlotPointData(),
-               const PlotIntervalData& intervals = PlotIntervalData());
+  void setData(const SaxsviewPlotPointData& points,
+               const SaxsviewPlotIntervalData& intervals);
 
   QString fileName() const;
   QString title() const;
@@ -129,14 +84,18 @@ public:
   double scalingFactorY() const;
   int merge() const;
 
-  QPen pen() const;
-  void setPen(const QPen&); 
+  Saxsview::LineStyle lineStyle() const;
+  int lineWidth() const;
+  QColor lineColor() const;
 
-  QPen errorBarPen() const;
-  void setErrorBarPen(const QPen&); 
+  Saxsview::SymbolStyle symbolStyle() const;
+  int symbolSize() const;
+  bool isSymbolFilled() const;
+  QColor symbolColor() const;
 
-  PlotSymbol symbol() const;
-  void setSymbol(const PlotSymbol&); 
+  Saxsview::LineStyle errorLineStyle() const;
+  int errorLineWidth() const;
+  QColor errorLineColor() const;
 
   int closestPoint(const QPoint &pos, double *dist = NULL) const;
 
@@ -150,11 +109,22 @@ public slots:
   void setScalingFactorY(double);
   void setMerge(int);
 
-private:
-  class PlotCurvePrivate;
-  PlotCurvePrivate *p;
-};
+  void setLineStyle(Saxsview::LineStyle);
+  void setLineWidth(int);
+  void setLineColor(const QColor&);
 
-} // end of namespace Saxsview
+  void setSymbolStyle(Saxsview::SymbolStyle);
+  void setSymbolSize(int);
+  void setSymbolFilled(bool);
+  void setSymbolColor(const QColor&);
+
+  void setErrorLineStyle(Saxsview::LineStyle);
+  void setErrorLineWidth(int);
+  void setErrorLineColor(const QColor&);
+
+private:
+  class Private;
+  Private *p;
+};
 
 #endif // !SAXSVIEW_PLOTCURVE_H

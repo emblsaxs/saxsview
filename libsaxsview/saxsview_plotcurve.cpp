@@ -28,93 +28,23 @@
 #include <qwt_plot_intervalcurve.h>
 #include <qwt_symbol.h>
 
-namespace Saxsview {
 
-PlotSymbol::PlotSymbol() : mSymbol(new QwtSymbol) {
-  setStyle(NoSymbol);
-  setSize(0);
-  setColor(Qt::black);
-}
-
-PlotSymbol::PlotSymbol(Style style, int size, const QColor& color)
-  : mSymbol(new QwtSymbol) {
-  setStyle(style);
-  setSize(size);
-  setColor(color);
-}
-
-PlotSymbol::PlotSymbol(const PlotSymbol& other)
- : mSymbol(new QwtSymbol) {
-  mSymbol->setStyle(other.mSymbol->style());
-  mSymbol->setBrush(other.mSymbol->brush());
-  mSymbol->setPen(other.mSymbol->pen());
-  mSymbol->setSize(other.mSymbol->size());
-}
-
-PlotSymbol::~PlotSymbol() {
-//   delete mSymbol;
-}
-
-PlotSymbol& PlotSymbol::operator=(const PlotSymbol& other) {
-  PlotSymbol tmp(other);
-  qSwap(mSymbol, tmp.mSymbol);
-  return *this;
-}
-
-
-QColor PlotSymbol::color() const {
-  return mSymbol->pen().color();
-}
-
-void PlotSymbol::setColor(const QColor& color) {
-  mSymbol->setPen(QPen(color));
-  if (mSymbol->brush() != Qt::NoBrush)
-    mSymbol->setBrush(QBrush(color));
-}
-
-int PlotSymbol::size() const {
-  return mSymbol->size().width();
-}
-
-void PlotSymbol::setSize(int size) {
-  mSymbol->setSize(size);
-}
-
-PlotSymbol::Style PlotSymbol::style() const {
-  return (Style)(mSymbol->style() + (mSymbol->brush() == Qt::NoBrush ? 0 : 100));
-}
-
-void PlotSymbol::setStyle(Style s) {
-  if (s >= 100) {
-    mSymbol->setStyle((QwtSymbol::Style)(s - 100));
-    mSymbol->setBrush(QBrush(color()));
-  } else {
-    mSymbol->setStyle((QwtSymbol::Style)(s));
-    mSymbol->setBrush(QBrush(Qt::NoBrush));
-  }
-}
-
-QwtSymbol* PlotSymbol::qwtSymbol() const {
-  return mSymbol;
-}
-
-
-
-
-class PlotCurve::PlotCurvePrivate {
+class SaxsviewPlotCurve::Private {
 public:
-  PlotCurvePrivate(int type);
-  ~PlotCurvePrivate();
+  Private(int type);
+  ~Private();
 
   void scale();
+  void replot();
 
   int type;
   QwtPlotCurve *curve;
   QwtPlotIntervalCurve *errorCurve;
-  PlotSymbol curveSymbol;
+  QwtSymbol *symbol;
+  QwtIntervalSymbol *intervalSymbol;
 
-  PlotPointData *pointData;
-  PlotIntervalData *intervalData;
+  SaxsviewPlotPointData *pointData;
+  SaxsviewPlotIntervalData *intervalData;
   double scaleX, scaleY;
   int merge;
 
@@ -122,8 +52,10 @@ public:
   QString fileName;
 };
 
-PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
- : type(t), curve(0L), errorCurve(0L), pointData(0L), intervalData(0L),
+SaxsviewPlotCurve::Private::Private(int t)
+ : type(t), curve(0L), errorCurve(0L),
+   symbol(new QwtSymbol()), intervalSymbol(0L),
+   pointData(0L), intervalData(0L),
    scaleX(1.0), scaleY(1.0), merge(1), errorBarsEnabled(true) {
 
   // Template is applied by plot when attaching this curve.
@@ -133,18 +65,19 @@ PlotCurve::PlotCurvePrivate::PlotCurvePrivate(int t)
   curve->setLegendAttribute(QwtPlotCurve::LegendShowLine);
   curve->setLegendAttribute(QwtPlotCurve::LegendShowSymbol);
   curve->setLegendAttribute(QwtPlotCurve::LegendShowBrush);
-  curve->setSymbol(curveSymbol.qwtSymbol());
+  curve->setSymbol(symbol);
 
   // error bars
-  QwtIntervalSymbol *errorBar = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
-  errorBar->setWidth(1);        // cap width
+  intervalSymbol = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
+  intervalSymbol->setWidth(1);        // cap width
 
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setItemAttribute(QwtPlotItem::Legend, false);
   errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
+  errorCurve->setSymbol(intervalSymbol);
 }
 
-PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
+SaxsviewPlotCurve::Private::~Private() {
   delete curve;
   delete errorCurve;
 
@@ -152,9 +85,9 @@ PlotCurve::PlotCurvePrivate::~PlotCurvePrivate() {
   delete intervalData;
 }
 
-void PlotCurve::PlotCurvePrivate::scale() {
-  PlotPointData scaledPoints;
-  PlotIntervalData scaledIntervals;
+void SaxsviewPlotCurve::Private::scale() {
+  SaxsviewPlotPointData scaledPoints;
+  SaxsviewPlotIntervalData scaledIntervals;
 
   //
   // When merging N points, average them.
@@ -189,21 +122,29 @@ void PlotCurve::PlotCurvePrivate::scale() {
 
   curve->setSamples(scaledPoints);
   errorCurve->setSamples(scaledIntervals);
+
+  replot();
 }
 
-PlotCurve::PlotCurve(int type, QObject *parent)
- : QObject(parent), p(new PlotCurvePrivate(type)) {
+void SaxsviewPlotCurve::Private::replot() {
+  if (curve->plot())
+    curve->plot()->replot();
 }
 
-PlotCurve::~PlotCurve() {
+
+SaxsviewPlotCurve::SaxsviewPlotCurve(int type, QObject *parent)
+ : QObject(parent), p(new Private(type)) {
+}
+
+SaxsviewPlotCurve::~SaxsviewPlotCurve() {
   delete p;
 }
 
-int PlotCurve::type() const {
+int SaxsviewPlotCurve::type() const {
   return p->type;
 }
 
-void PlotCurve::attach(Plot *plot) {
+void SaxsviewPlotCurve::attach(SaxsviewPlot *plot) {
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
 
@@ -213,18 +154,18 @@ void PlotCurve::attach(Plot *plot) {
   p->curve->updateLegend(plot->legend());
 }
 
-void PlotCurve::detach() {
+void SaxsviewPlotCurve::detach() {
   p->curve->detach();
   p->errorCurve->detach();
 }
 
-void PlotCurve::setData(const PlotPointData& points,
-                        const PlotIntervalData& intervals) {
+void SaxsviewPlotCurve::setData(const SaxsviewPlotPointData& points,
+                        const SaxsviewPlotIntervalData& intervals) {
   delete p->pointData;
-  p->pointData = new PlotPointData(points);
+  p->pointData = new SaxsviewPlotPointData(points);
 
   delete p->intervalData;
-  p->intervalData = new PlotIntervalData(intervals);
+  p->intervalData = new SaxsviewPlotIntervalData(intervals);
 
   p->scaleX = 1.0;
   p->scaleY = 1.0;
@@ -234,24 +175,24 @@ void PlotCurve::setData(const PlotPointData& points,
   p->errorCurve->setSamples(intervals);
 }
 
-bool PlotCurve::errorBarsEnabled() const {
+bool SaxsviewPlotCurve::errorBarsEnabled() const {
   return p->errorBarsEnabled;
 }
 
-void PlotCurve::setErrorBarsEnabled(bool on) {
+void SaxsviewPlotCurve::setErrorBarsEnabled(bool on) {
   p->errorBarsEnabled = on;
   p->errorCurve->setVisible(on);
 }
 
-bool PlotCurve::isVisible() const {
+bool SaxsviewPlotCurve::isVisible() const {
   return p->curve->isVisible();
 }
 
-void PlotCurve::setVisible(bool on) {
+void SaxsviewPlotCurve::setVisible(bool on) {
   p->curve->setVisible(on);
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
 
-  if (Plot *plot = qobject_cast<Plot*>(p->curve->plot())) {
+  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot())) {
     //
     // The equivalent
     //    p->curve->setItemAttribute(QwtPlotItem::Legend, on);
@@ -275,96 +216,196 @@ void PlotCurve::setVisible(bool on) {
   }
 }
 
-QRectF PlotCurve::boundingRect() const {
+QRectF SaxsviewPlotCurve::boundingRect() const {
   return p->errorBarsEnabled
                ? p->errorCurve->boundingRect()
                : p->curve->boundingRect();
 }
 
 
-QString PlotCurve::fileName() const {
+QString SaxsviewPlotCurve::fileName() const {
   return p->fileName;
 }
 
-void PlotCurve::setFileName(const QString& fileName) {
+void SaxsviewPlotCurve::setFileName(const QString& fileName) {
   p->fileName = fileName;
 }
 
-QString PlotCurve::title() const {
+QString SaxsviewPlotCurve::title() const {
   return p->curve->title().text();
 }
 
-void PlotCurve::setTitle(const QString& title) {
+void SaxsviewPlotCurve::setTitle(const QString& title) {
   //
   // Remove the legend entry if the title is empty.
   // Test for the attribute as it is also used by setVisible().
   //
-  if (p->curve->testItemAttribute(QwtPlotItem::Legend))
+  if (p->curve->testItemAttribute(QwtPlotItem::Legend)) {
     p->curve->setItemAttribute(QwtPlotItem::Legend, !title.isEmpty());
+    if (p->curve->plot())
+      p->curve->plot()->updateLayout();
+  }
   p->curve->setTitle(title);
 }
 
-double PlotCurve::scalingFactorX() const {
+double SaxsviewPlotCurve::scalingFactorX() const {
   return p->scaleX;
 }
 
-void PlotCurve::setScalingFactorX(double scale) {
+void SaxsviewPlotCurve::setScalingFactorX(double scale) {
   p->scaleX = scale;
   p->scale();
 }
 
-double PlotCurve::scalingFactorY() const {
+double SaxsviewPlotCurve::scalingFactorY() const {
   return p->scaleY;
 }
 
-void PlotCurve::setScalingFactorY(double scale) {
+void SaxsviewPlotCurve::setScalingFactorY(double scale) {
   p->scaleY = scale;
   p->scale();
 }
 
-int PlotCurve::merge() const {
+int SaxsviewPlotCurve::merge() const {
   return p->merge;
 }
 
-void PlotCurve::setMerge(int merge) {
+void SaxsviewPlotCurve::setMerge(int merge) {
   p->merge = merge;
   p->scale();
 }
 
-QPen PlotCurve::pen() const {
-  return p->curve->pen();
-}
-
-void PlotCurve::setPen(const QPen& pen) {
-  p->curve->setPen(pen);
-}
-
-QPen PlotCurve::errorBarPen() const {
-  return p->errorCurve->symbol()->pen();
-}
-
-void PlotCurve::setErrorBarPen(const QPen& pen) {
-  QwtIntervalSymbol *symbol = new QwtIntervalSymbol(QwtIntervalSymbol::Bar);
-  symbol->setWidth(1);  // cap width
-  symbol->setPen(pen);
-  p->errorCurve->setSymbol(symbol);
-}
-
-PlotSymbol PlotCurve::symbol() const {
-  return p->curveSymbol;
-}
-
-void PlotCurve::setSymbol(const PlotSymbol& symbol) {
-  p->curveSymbol = symbol;
-  p->curve->setSymbol(p->curveSymbol.qwtSymbol());
-
-//   QwtSymbol *sym = new QwtSymbol(QwtSymbol::NoSymbol);
-
-//   p->curve->setSymbol(sym);
-}
-
-int PlotCurve::closestPoint(const QPoint &pos, double *dist) const {
+int SaxsviewPlotCurve::closestPoint(const QPoint &pos, double *dist) const {
   return p->curve->closestPoint(pos, dist);
 }
 
-} // end of namespace Saxsview
+void SaxsviewPlotCurve::setLineStyle(Saxsview::LineStyle style) {
+  QPen lp = p->curve->pen();
+  lp.setStyle((Qt::PenStyle)style);
+  p->curve->setPen(lp);
+
+  p->replot();
+}
+
+Saxsview::LineStyle SaxsviewPlotCurve::lineStyle() const {
+  return (Saxsview::LineStyle)p->curve->pen().style();
+}
+
+void SaxsviewPlotCurve::setLineWidth(int n) {
+  QPen lp = p->curve->pen();
+  lp.setWidth(n);
+  p->curve->setPen(lp);
+
+  p->replot();
+}
+
+int SaxsviewPlotCurve::lineWidth() const {
+  return p->curve->pen().width();
+}
+
+void SaxsviewPlotCurve::setLineColor(const QColor& c) {
+  QPen lp = p->curve->pen();
+  lp.setColor(c);
+  p->curve->setPen(lp);
+
+  p->replot();
+}
+
+QColor SaxsviewPlotCurve::lineColor() const {
+  return p->curve->pen().color();
+}
+
+void SaxsviewPlotCurve::setSymbolStyle(Saxsview::SymbolStyle s) {
+  QwtSymbol::Style style;
+  switch (s) {
+    default:
+    case Saxsview::NoSymbol:              style = QwtSymbol::NoSymbol; break;
+    case Saxsview::Ellipse:               style = QwtSymbol::Ellipse; break;
+    case Saxsview::Rect:                  style = QwtSymbol::Rect; break;
+    case Saxsview::Diamond:               style = QwtSymbol::Diamond; break;
+    case Saxsview::TrianglePointingDown:  style = QwtSymbol::DTriangle; break;
+    case Saxsview::TrianglePointingUp:    style = QwtSymbol::UTriangle; break;
+    case Saxsview::TrianglePointingLeft:  style = QwtSymbol::LTriangle; break;
+    case Saxsview::TrianglePointingRight: style = QwtSymbol::RTriangle; break;
+    case Saxsview::Cross:                 style = QwtSymbol::Cross; break;
+    case Saxsview::XCross:                style = QwtSymbol::XCross; break;
+    case Saxsview::HorizontalLine:        style = QwtSymbol::HLine; break;
+    case Saxsview::VerticalLine:          style = QwtSymbol::VLine; break;
+    case Saxsview::StarLine:              style = QwtSymbol::Star1; break;
+    case Saxsview::StarOutline:           style = QwtSymbol::Star2; break;
+    case Saxsview::Hexagon:               style = QwtSymbol::Hexagon; break;
+  }
+
+  p->symbol->setStyle(style);
+  p->replot();
+}
+
+Saxsview::SymbolStyle SaxsviewPlotCurve::symbolStyle() const {
+  return (Saxsview::SymbolStyle)(p->symbol->style());
+}
+
+void SaxsviewPlotCurve::setSymbolSize(int size) {
+  p->symbol->setSize(size);
+  p->replot();
+}
+
+int SaxsviewPlotCurve::symbolSize() const {
+  return p->symbol->size().width();
+}
+
+void SaxsviewPlotCurve::setSymbolFilled(bool filled) {
+  p->symbol->setBrush(filled ? QBrush(symbolColor()) : Qt::NoBrush);
+  p->replot();
+}
+
+bool SaxsviewPlotCurve::isSymbolFilled() const {
+  return p->symbol->brush() != Qt::NoBrush;
+}
+
+void SaxsviewPlotCurve::setSymbolColor(const QColor& c) {
+  p->symbol->setPen(QPen(c));
+  if (isSymbolFilled())
+    p->symbol->setBrush(QBrush(c));
+
+  p->replot();
+}
+
+QColor SaxsviewPlotCurve::symbolColor() const {
+  return p->symbol->pen().color();
+}
+
+void SaxsviewPlotCurve::setErrorLineStyle(Saxsview::LineStyle style) {
+  QPen ep = p->intervalSymbol->pen();
+  ep.setStyle((Qt::PenStyle)style);
+  p->intervalSymbol->setPen(ep);
+
+  p->replot();
+}
+
+Saxsview::LineStyle SaxsviewPlotCurve::errorLineStyle() const {
+  return (Saxsview::LineStyle)p->intervalSymbol->pen().style();
+}
+
+void SaxsviewPlotCurve::setErrorLineWidth(int n) {
+  QPen ep = p->intervalSymbol->pen();
+  ep.setWidth(n);
+  p->intervalSymbol->setPen(ep);
+
+  p->replot();
+}
+
+int SaxsviewPlotCurve::errorLineWidth() const {
+  return p->intervalSymbol->pen().width();
+}
+
+void SaxsviewPlotCurve::setErrorLineColor(const QColor& c) {
+  QPen ep = p->intervalSymbol->pen();
+  ep.setColor(c);
+  p->intervalSymbol->setPen(ep);
+
+  p->replot();
+}
+
+QColor SaxsviewPlotCurve::errorLineColor() const {
+  return p->intervalSymbol->pen().color();
+}
