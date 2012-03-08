@@ -341,7 +341,24 @@ void SaxsviewPlotCurve::setSymbolStyle(Saxsview::SymbolStyle s) {
 }
 
 Saxsview::SymbolStyle SaxsviewPlotCurve::symbolStyle() const {
-  return (Saxsview::SymbolStyle)(p->symbol->style());
+  switch (p->symbol->style()) {
+    default:
+    case QwtSymbol::NoSymbol:  return Saxsview::NoSymbol;
+    case QwtSymbol::Ellipse:   return Saxsview::Ellipse;
+    case QwtSymbol::Rect:      return Saxsview::Rect;
+    case QwtSymbol::Diamond:   return Saxsview::Diamond;
+    case QwtSymbol::DTriangle: return Saxsview::TrianglePointingDown;
+    case QwtSymbol::UTriangle: return Saxsview::TrianglePointingUp;
+    case QwtSymbol::LTriangle: return Saxsview::TrianglePointingLeft;
+    case QwtSymbol::RTriangle: return Saxsview::TrianglePointingRight;
+    case QwtSymbol::Cross:     return Saxsview::Cross;
+    case QwtSymbol::XCross:    return Saxsview::XCross;
+    case QwtSymbol::HLine:     return Saxsview::HorizontalLine;
+    case QwtSymbol::VLine:     return Saxsview::VerticalLine;
+    case QwtSymbol::Star1:     return Saxsview::StarLine;
+    case QwtSymbol::Star2:     return Saxsview::StarOutline;
+    case QwtSymbol::Hexagon:   return Saxsview::Hexagon;
+  }
 }
 
 void SaxsviewPlotCurve::setSymbolSize(int size) {

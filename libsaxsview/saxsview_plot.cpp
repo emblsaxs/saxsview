@@ -183,7 +183,7 @@ void SaxsviewPlot::Private::setupScales() {
 }
 
 void SaxsviewPlot::Private::setupDefaultColors() {
-  config().defaultColors(defaultLineColor, defaultErrorBarColor);
+  config().colors(defaultLineColor, defaultErrorBarColor);
   currentLineColor = currentErrorBarColor = 0; 
 }
 

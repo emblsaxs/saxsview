@@ -41,15 +41,18 @@ public:
   void setRecentPrinter(const QString&);
 
   void curveTemplates(QStandardItemModel*) const;
+  void setDefaultCurveTemplates();
   void setCurveTemplates(QStandardItemModel*);
 
   void fileTypeTemplates(QStandardItemModel*) const;
+  void setDefaultFileTypeTemplates();
   void setFileTypeTemplates(QStandardItemModel*);
 
   void applyTemplate(SaxsviewPlotCurve* curve) const;
 
-  void defaultColors(QList<QColor>&, QList<QColor>&) const;
-  void setDefaultColors(const QList<QColor>&, const QList<QColor>&);
+  void colors(QList<QColor>&, QList<QColor>&) const;
+  void setDefaultColors();
+  void setColors(const QList<QColor>&, const QList<QColor>&);
 
 private:
   SaxsviewConfig();

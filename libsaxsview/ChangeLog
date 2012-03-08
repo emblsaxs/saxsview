@@ -1,5 +1,27 @@
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_config.h (setDefaultCurveTemplates): New.
+	(setDefaultFileTypeTemplates): New.
+	(defaultColors): Renamed to ...
+	(colors): ... this. Updated all users.
+	(setDefaultColors): Renamed to ...
+	(setColors): ... this.
+	(setDefaultColors): New (meaning):
+	* saxsview_config.cpp (ctor): Apply default values if none found.
+	(curveTemplates): Handle "symbol-filled", moved setting of
+	defaults to ...
+	(setDefaultCurveTemplates): ... here.
+	(setCurveTemplates): Handle "symbol-filled".
+	(applyTemplate): Likewise.
+	(fileTypeTemplates): Moved setting of defaults to ...
+	(setDefaultFileTypeTemplates): ... here.
+	(defaultColors): Renamed to ...
+	(colors): ... this. Moved setting of default colors to ...
+	(setDefaultColors): ... here.
+	* saxsview_plotcurve.cpp (symbolStyle): Fixed return value.
+
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview.h (enum LineStyle): New.
 	(enum SymbolStyle): New.
 	* saxsview_plot.h (class Plot): Renamed to ...
