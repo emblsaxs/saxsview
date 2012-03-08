@@ -1,3 +1,10 @@
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview/saxsview/icons: Copied from libsaxsview.
+	* saxsview/saxsview/saxsview.qrc: Likewise.
+	* saxsview/saxsview/CMakeLists.txt: Make the monolithic saxsview
+	truely independent.
+
 2012-02-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsviewplotwindow.cpp (load): Sanitized lower/upper bounds

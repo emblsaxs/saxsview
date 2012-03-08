@@ -55,9 +55,12 @@ qt4_wrap_ui (saxsview_uic selectplotwindowdialog.ui
                           saxsview_configpage_curvetemplate.ui
                           saxsview_configpage_defaultcolors.ui)
 
+qt4_add_resources (saxsview_res saxsview.qrc)
+
 add_executable (saxsviewapp
                 ${saxsview_moc}
                 ${saxsview_uic}
+                ${saxsview_res}
                 ${saxsview_sources}
                 ${saxsview_headers})
 
@@ -75,9 +78,9 @@ set_target_properties (saxsviewapp PROPERTIES
 
 
 target_link_libraries (saxsviewapp
-                       saxsview
                        saxsdocument
-                       saxsimage)
+                       saxsimage 
+                       qwt ${QT_LIBRARIES})
 
 install (TARGETS saxsviewapp
          RUNTIME DESTINATION bin)
