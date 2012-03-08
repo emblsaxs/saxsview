@@ -100,6 +100,11 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties() {
   properties.append(new SaxsviewProperty("Font", "legendFont",
                                          browser, legendGroup));
   groups.append(legendGroup);
+
+  // FIXME: not ideal, but breaking up above's layout is messy ...
+  properties[11]->setMinimum(1);   // legend columns
+  properties[12]->setMinimum(0);   // legend spacing
+  properties[13]->setMinimum(0);   // legend margin
 }
 
 void SVPlotPropertyDockWidget::Private::setupCurveProperties() {
@@ -124,7 +129,7 @@ void SVPlotPropertyDockWidget::Private::setupCurveProperties() {
   SaxsviewProperty *symbolGroup = new SaxsviewProperty("Symbol", browser);
   properties.append(new SaxsviewProperty("Style", "symbolStyle",
                                               browser, symbolGroup));
-  properties.append(new SaxsviewProperty("Width", "symbolSize",
+  properties.append(new SaxsviewProperty("Size", "symbolSize",
                                               browser, symbolGroup));
   properties.append(new SaxsviewProperty("Filled", "isSymbolFilled",
                                               browser, symbolGroup));
@@ -150,6 +155,14 @@ void SVPlotPropertyDockWidget::Private::setupCurveProperties() {
   properties.append(new SaxsviewProperty("Merge", "merge",
                                               browser, transformGroup));
   groups.append(transformGroup);
+
+  // FIXME: not ideal, but breaking up above's layout is messy ...
+//   properties[ 3]->setMinimum(1);   // line width
+//   properties[ 6]->setMinimum(1);   // symbol size
+//   properties[10]->setMinimum(1);   // error bar width
+//   properties[12]->setMinimum(0.0); // scaling factor x
+//   properties[13]->setMinimum(0.0); // scaling factor y
+//   properties[14]->setMinimum(0);   // merge
 }
 
 

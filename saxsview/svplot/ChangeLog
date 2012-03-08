@@ -1,5 +1,11 @@
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotpropertydockwidget.cpp (setupPlotProperties): Set limits
+	for numerical properties.
+	(setupCurveProperties): Likewise.
+
+2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotpropertydockwidget.cpp (setupPlotProperties): Added
 	legend properties. Whitespace fixes.
 
