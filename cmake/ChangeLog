@@ -1,3 +1,7 @@
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* packaging.cmake: Fixed Debian dependencies.
+
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* packaging.cmake: New.

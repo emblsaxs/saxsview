@@ -44,7 +44,7 @@ set (CPACK_SOURCE_IGNORE_FILES         "/.svn/;/build/;")
 #   Verify description: `dpkg --info <file>`
 #
 set (CPACK_DEBIAN_PACKAGE_SECTION      "science")
-set (CPACK_DEBIAN_PACKAGE_DEPENDS      "libxml2 (>= 2.7.0), libtiff4 (>= 3.7.2), libqt4-gui (>= 4.5.0)")
+set (CPACK_DEBIAN_PACKAGE_DEPENDS      "libxml2 (>= 2.7.0), libtiff4 (>= 3.7.2), libqtgui4 (>= 4.5.0)")
 
 
 #
