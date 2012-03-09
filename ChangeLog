@@ -1,5 +1,9 @@
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Fixed directory name.
+
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* freedesktop.org/: New subdirectory.
 	* CMakeLists.txt: Added new subdirectory.
 

@@ -33,7 +33,7 @@ add_subdirectory (libsaxsdocument)
 add_subdirectory (libsaxsimage)
 add_subdirectory (libsaxsview)
 add_subdirectory (saxsview)
-add_subdirectory (freedesktop)
+add_subdirectory (freedesktop.org)
 
 ENABLE_TESTING()
 add_subdirectory (testsuite)
