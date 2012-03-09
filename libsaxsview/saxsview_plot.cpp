@@ -99,9 +99,6 @@ void SaxsviewPlot::Private::setupCanvas() {
   plot->setPalette(Qt::white);
   plot->canvas()->setFrameStyle(QFrame::NoFrame);
   plot->canvas()->setLineWidth(1);
-
-  // to intercept right-click events
-  plot->canvas()->installEventFilter(plot);
 }
 
 void SaxsviewPlot::Private::setupLegend() {
@@ -113,8 +110,6 @@ void SaxsviewPlot::Private::setupLegend() {
   ll->setMargin(6);
   ll->setSpacing(0);
 
-  // to intercept right-click events
-  legend->installEventFilter(plot);
   legend->show();
 
   plot->insertLegend(legend, QwtPlot::RightLegend);
@@ -325,38 +320,6 @@ void SaxsviewPlot::removeCurve(SaxsviewPlotCurve *curve) {
 
 QList<SaxsviewPlotCurve*> SaxsviewPlot::curves() const {
   return p->curves;
-}
-
-bool SaxsviewPlot::eventFilter(QObject *watchedObj, QEvent *e) {
-  //
-  // Open a context menu on the legend to allow selection of curves.
-  //
-  // If no curves are visible, Qwt sets the legend's width to '0'.
-  // Thus, if all curves have been disabled, show the context menu
-  // on the canvas instead.
-  //
-  if (watchedObj == p->legend
-      || (watchedObj == canvas()
-          && !p->curves.isEmpty()
-          && p->legend && p->legend->width() == 0)) {
-
-    if (QMouseEvent *me = dynamic_cast<QMouseEvent*>(e)) {
-      if (me->button() == Qt::RightButton) {
-        QMenu contextMenu(this);
-        foreach (SaxsviewPlotCurve *curve, p->curves) {
-          QAction *action = contextMenu.addAction(curve->title());
-          action->setCheckable(true);
-          action->setChecked(curve->isVisible());
-          connect(action, SIGNAL(toggled(bool)),
-                  curve, SLOT(setVisible(bool)));
-        }
-        contextMenu.exec(me->globalPos());
-        return true;
-      }
-    }
-  }
-
-  return QwtPlot::eventFilter(watchedObj, e);
 }
 
 void SaxsviewPlot::updateLayout() {

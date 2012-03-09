@@ -129,9 +129,6 @@ public slots:
 // protected:
 //   void printLegend(QPainter *, const QRect &) const;
 
-protected:
-  bool eventFilter(QObject*, QEvent*);
-
 private:
   class Private;
   Private *p;
