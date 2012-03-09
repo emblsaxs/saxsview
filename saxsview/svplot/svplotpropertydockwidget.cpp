@@ -157,13 +157,12 @@ void SVPlotPropertyDockWidget::Private::setupCurveProperties() {
                                               browser, transformGroup));
   groups.append(transformGroup);
 
-  // FIXME: not ideal, but breaking up above's layout is messy ...
-//   properties[ 3]->setMinimum(1);   // line width
-//   properties[ 6]->setMinimum(1);   // symbol size
-//   properties[10]->setMinimum(1);   // error bar width
-//   properties[12]->setMinimum(0.0); // scaling factor x
-//   properties[13]->setMinimum(0.0); // scaling factor y
-//   properties[14]->setMinimum(0);   // merge
+  properties[ 3]->setMinimum(1);   // line width
+  properties[ 6]->setMinimum(1);   // symbol size
+  properties[10]->setMinimum(1);   // error bar width
+  properties[12]->setMinimum(0.0); // scaling factor x
+  properties[13]->setMinimum(0.0); // scaling factor y
+  properties[14]->setMinimum(0);   // merge
 }
 
 
