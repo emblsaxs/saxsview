@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+
+  <!-- mime types handled by svimage -->
+  <mime-type type="image/x-cbf">
+         <comment xml:lang="en">Crystallographic Binary Format</comment>
+         <glob pattern="*.cbf"/>
+  </mime-type>
+  <mime-type type="image/x-edf">
+         <comment xml:lang="en">ESRF Data Format</comment>
+         <glob pattern="*.edf"/>
+  </mime-type>
+  <mime-type type="image/x-msk">
+         <comment xml:lang="en">Fit2D Mask Image</comment>
+         <glob pattern="*.msk"/>
+  </mime-type>
+
+  <!-- mime types handled by svplot -->
+  <mime-type type="application/vnd.embl-hh.atsas.dat">
+         <comment xml:lang="en">SAXS data</comment>
+         <glob pattern="*.dat"/>
+  </mime-type>
+  <mime-type type="application/vnd.embl-hh.atsas.fit">
+         <comment xml:lang="en">ATSAS fit data</comment>
+         <glob pattern="*.fit"/>
+  </mime-type>
+  <mime-type type="application/vnd.embl-hh.atsas.fir">
+         <comment xml:lang="en">ATSAS fir data</comment>
+         <glob pattern="*.fir"/>
+  </mime-type>
+</mime-info>

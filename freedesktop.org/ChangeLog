@@ -1,0 +1,7 @@
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview.xml: New.
+	* svimage.desktop: New.
+	* svplot.desktop: New.
+	* CMakeLists.txt: New.
+	* README: New.

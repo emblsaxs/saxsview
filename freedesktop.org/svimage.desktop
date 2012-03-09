@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+MimeType=image/tiff;image/x-cbf;image/x-edf;image/x-msk
+Terminal=false
+Name=svimage
+GenericName=svimage
+TryExec=svimage
+Exec=svimage %F
+Icon=svimage
+Categories=Education;Science;Biology;Physics;
