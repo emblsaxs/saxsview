@@ -1,5 +1,11 @@
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotsubwindow.h (eventFilter): New.
+	* svplotsubwindow.cpp (eventFilter): New.
+	(setupUi): Accept file drops on plot.
+
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotpropertydockwidget.cpp (dtor): New.
 	(clear): Removed.
 	(setupPlotProperties): Take 'browser' argument.

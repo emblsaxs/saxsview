@@ -57,6 +57,8 @@ public:
 void SVPlotSubWindow::Private::setupUi(SVPlotSubWindow *w) {
   plot = new SaxsviewPlot(w);
   plot->setScale(Saxsview::Log10Scale);
+  plot->setAcceptDrops(true);
+  plot->installEventFilter(w);
 
   w->setAttribute(Qt::WA_DeleteOnClose);
   w->setWidget(plot);
@@ -180,4 +182,30 @@ void SVPlotSubWindow::setZoomEnabled(bool on) {
 
 void SVPlotSubWindow::setMoveEnabled(bool on) {
   p->plot->setMoveEnabled(on);
+}
+
+bool SVPlotSubWindow::eventFilter(QObject *watched, QEvent *e) {
+  if (watched != p->plot)
+    return QMdiSubWindow::eventFilter(watched, e);
+
+  switch (e->type()) {
+    case QEvent::Drop:
+    {
+      QDropEvent *dropEvent = dynamic_cast<QDropEvent*>(e);
+      if (dropEvent->mimeData()->hasUrls())
+        foreach (QUrl url, dropEvent->mimeData()->urls())
+          load(url.toLocalFile());
+
+      dropEvent->acceptProposedAction();
+      // fall through
+    }
+
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+      e->accept();
+      return true;
+
+    default:
+      return QMdiSubWindow::eventFilter(watched, e);
+  }
 }
