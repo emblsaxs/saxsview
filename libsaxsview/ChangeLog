@@ -1,3 +1,14 @@
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_config.h (geometry): New.
+	(setGeometry): New.
+	(windowState): New.
+	(setWindowState): New.
+	* saxsview_config.cpp (geometry): New.
+	(setGeometry): New.
+	(windowState): New.
+	(setWindowState): New.
+
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.h (eventFilter): Removed.

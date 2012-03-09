@@ -1,3 +1,12 @@
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotfiledockwidget.cpp (setupUi): Set object name.
+	* svplotpropertydockwidget.cpp (setupUi): Likewise.
+	* svplotmainwindow.h (closeEvent): New.
+	* svplotmainwindow.cpp (setupToolbar): Set object name.
+	(ctor): Restore window geometry and state.
+	(closeEvent): New.
+
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotpropertydockwidget.cpp (setupPlotProperties): Set limits

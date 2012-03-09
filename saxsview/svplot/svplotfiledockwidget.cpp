@@ -42,6 +42,7 @@ void SVPlotFileDockWidget::Private::setupUi(SVPlotFileDockWidget *dock) {
   view->setSelectionMode(QAbstractItemView::SingleSelection);
 
   dock->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  dock->setObjectName("FileDock");
   dock->setWidget(view);
 }
 

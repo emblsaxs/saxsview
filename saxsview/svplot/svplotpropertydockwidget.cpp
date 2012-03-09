@@ -50,6 +50,7 @@ void SVPlotPropertyDockWidget::Private::setupUi(SVPlotPropertyDockWidget *dock) 
   browser->setRootIsDecorated(false);
 
   dock->setFeatures(QDockWidget::AllDockWidgetFeatures);
+  dock->setObjectName("PropertyDock");
   dock->setWidget(browser);
 }
 

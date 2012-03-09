@@ -20,6 +20,7 @@
 #ifndef SAXSVIEW_CONFIG_H
 #define SAXSVIEW_CONFIG_H
 
+#include <QByteArray>
 #include <QList>
 class QColor;
 class QPen;
@@ -53,6 +54,12 @@ public:
   void colors(QList<QColor>&, QList<QColor>&) const;
   void setDefaultColors();
   void setColors(const QList<QColor>&, const QList<QColor>&);
+
+  QByteArray geometry() const;
+  void setGeometry(const QByteArray&);
+
+  QByteArray windowState() const;
+  void setWindowState(const QByteArray&);
 
 private:
   SaxsviewConfig();

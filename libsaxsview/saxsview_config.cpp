@@ -333,3 +333,19 @@ void SaxsviewConfig::setColors(const QList<QColor>& lineColor,
   settings().endArray();
   settings().endGroup();
 }
+
+QByteArray SaxsviewConfig::geometry() const {
+  return settings().value("Window/Geometry").toByteArray();
+}
+
+void SaxsviewConfig::setGeometry(const QByteArray& value) {
+  settings().setValue("Window/Geometry", value);
+}
+
+QByteArray SaxsviewConfig::windowState() const {
+  return settings().value("Window/State").toByteArray();
+}
+
+void SaxsviewConfig::setWindowState(const QByteArray& value) {
+  settings().setValue("Window/State", value);
+}

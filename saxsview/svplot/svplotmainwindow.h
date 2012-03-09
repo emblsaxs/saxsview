@@ -56,6 +56,9 @@ private slots:
   void subWindowActivated(QMdiSubWindow*);
   void subWindowDestroyed(QObject*);
 
+protected:
+  void closeEvent(QCloseEvent*);
+
 private:
   class SVPlotMainWindowPrivate;
   SVPlotMainWindowPrivate *p;

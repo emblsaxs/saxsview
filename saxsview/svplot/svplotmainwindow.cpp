@@ -269,7 +269,8 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupToolbars() {
   mw->setIconSize(QSize(24, 24));
   mw->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
-  svplotToolBar = mw->addToolBar("svplot Toolbar");
+  svplotToolBar = mw->addToolBar("SVPlot Toolbar");
+  svplotToolBar->setObjectName("SVPlotToolbar");
   svplotToolBar->addAction(actionNew);
   svplotToolBar->addAction(actionLoad);
   svplotToolBar->addAction(actionReload);
@@ -313,6 +314,10 @@ SVPlotMainWindow::SVPlotMainWindow(QWidget *parent)
   p->setupMenus();
 
   statusBar();
+
+  // All prepared, now restore previous state:
+  restoreGeometry(config().geometry());
+  restoreState(config().windowState());
 }
 
 SVPlotMainWindow::~SVPlotMainWindow() {
@@ -512,4 +517,9 @@ void SVPlotMainWindow::subWindowActivated(QMdiSubWindow *w) {
 }
 
 void SVPlotMainWindow::subWindowDestroyed(QObject *obj) {
+}
+
+void SVPlotMainWindow::closeEvent(QCloseEvent *e) {
+  config().setGeometry(saveGeometry());
+  config().setWindowState(saveState());
 }
