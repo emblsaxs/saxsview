@@ -33,148 +33,177 @@
 
 class SVPlotPropertyDockWidget::Private {
 public:
+  ~Private();
+
   void setupUi(SVPlotPropertyDockWidget *dock);
-  void setupPlotProperties();
-  void setupCurveProperties();
-  void clear();
+  void setupPlotProperties(QtTreePropertyBrowser*);
+  void setupCurveProperties(QtTreePropertyBrowser*);
+
+  void hideProperties();
+  void showPlotProperties();
+  void showCurveProperties();
 
   QStandardItemModel *model;
 
-  QtTreePropertyBrowser *browser;
+  QStackedWidget *browserStack;
+
   QList<SaxsviewProperty*> groups;
-  QList<SaxsviewProperty*> properties;
+  QList<SaxsviewProperty*> plotProperties, curveProperties;
 };
 
+SVPlotPropertyDockWidget::Private::~Private() {
+  qDeleteAll(plotProperties.begin(), plotProperties.end());
+  plotProperties.clear();
+
+  qDeleteAll(curveProperties.begin(), curveProperties.end());
+  curveProperties.clear();
+
+  qDeleteAll(groups.begin(), groups.end());
+  groups.clear();
+}
+
 void SVPlotPropertyDockWidget::Private::setupUi(SVPlotPropertyDockWidget *dock) {
-  browser = new QtTreePropertyBrowser(dock);
-  browser->setRootIsDecorated(false);
+  QtTreePropertyBrowser *plotBrowser = new QtTreePropertyBrowser(dock);
+  plotBrowser->setRootIsDecorated(false);
+  setupPlotProperties(plotBrowser);
+
+  QtTreePropertyBrowser *curveBrowser = new QtTreePropertyBrowser(dock);
+  curveBrowser->setRootIsDecorated(false);
+  setupCurveProperties(curveBrowser);
+
+  browserStack = new QStackedWidget(dock);
+  browserStack->addWidget(plotBrowser);
+  browserStack->addWidget(curveBrowser);
 
   dock->setFeatures(QDockWidget::AllDockWidgetFeatures);
   dock->setObjectName("PropertyDock");
-  dock->setWidget(browser);
+  dock->setWidget(browserStack);
+
+  hideProperties();
 }
 
-void SVPlotPropertyDockWidget::Private::setupPlotProperties() {
-  clear();
-
+void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowser *browser) {
   SaxsviewProperty *plotGroup = new SaxsviewProperty("Plot", browser);
-  properties.append(new SaxsviewProperty("Scale", "scale",
-                                         browser, plotGroup));
+  plotProperties.append(new SaxsviewProperty("Scale", "scale",
+                                             browser, plotGroup));
   groups.append(plotGroup);
 
   SaxsviewProperty *titleGroup = new SaxsviewProperty("Title", browser);
-  properties.append(new SaxsviewProperty("Text", "plotTitle",
-                                         browser, titleGroup));
-  properties.append(new SaxsviewProperty("Font", "plotTitleFont",
-                                         browser, titleGroup));
+  plotProperties.append(new SaxsviewProperty("Text", "plotTitle",
+                                             browser, titleGroup));
+  plotProperties.append(new SaxsviewProperty("Font", "plotTitleFont",
+                                             browser, titleGroup));
   groups.append(titleGroup);
 
   SaxsviewProperty *axisGroup = new SaxsviewProperty("Axis", browser);
-  properties.append(new SaxsviewProperty("X Text", "axisTitleX",
-                                         browser, axisGroup));
-  properties.append(new SaxsviewProperty("Y Text", "axisTitleY",
-                                         browser, axisGroup));
-  properties.append(new SaxsviewProperty("Font", "axisTitleFont",
-                                         browser, axisGroup));
+  plotProperties.append(new SaxsviewProperty("X Text", "axisTitleX",
+                                             browser, axisGroup));
+  plotProperties.append(new SaxsviewProperty("Y Text", "axisTitleY",
+                                             browser, axisGroup));
+  plotProperties.append(new SaxsviewProperty("Font", "axisTitleFont",
+                                             browser, axisGroup));
   groups.append(axisGroup);
 
   SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);
-  properties.append(new SaxsviewProperty("X Ticks Enabled", "ticksEnabledX",
-                                         browser, ticksGroup));
-  properties.append(new SaxsviewProperty("Y Ticks Enabled", "ticksEnabledY",
-                                         browser, ticksGroup));
-  properties.append(new SaxsviewProperty("Font", "ticksFont",
-                                         browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("X Ticks Enabled", "ticksEnabledX",
+                                             browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("Y Ticks Enabled", "ticksEnabledY",
+                                             browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("Font", "ticksFont",
+                                             browser, ticksGroup));
   groups.append(ticksGroup);
 
   SaxsviewProperty *legendGroup = new SaxsviewProperty("Legend", browser);
-  properties.append(new SaxsviewProperty("Enabled", "legendEnabled",
-                                         browser, legendGroup));
-  properties.append(new SaxsviewProperty("Position", "legendPosition",
-                                         browser, legendGroup));
-  properties.append(new SaxsviewProperty("Columns", "legendColumnsCount",
-                                         browser, legendGroup));
-  properties.append(new SaxsviewProperty("Spacing", "legendSpacing",
-                                         browser, legendGroup));
-  properties.append(new SaxsviewProperty("Margin", "legendMargin",
-                                         browser, legendGroup));
-  properties.append(new SaxsviewProperty("Font", "legendFont",
-                                         browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Enabled", "legendEnabled",
+                                             browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Position", "legendPosition",
+                                             browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Columns", "legendColumnsCount",
+                                             browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Spacing", "legendSpacing",
+                                             browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Margin", "legendMargin",
+                                             browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Font", "legendFont",
+                                             browser, legendGroup));
   groups.append(legendGroup);
 
   // FIXME: not ideal, but breaking up above's layout is messy ...
-  properties[11]->setMinimum(1);   // legend columns
-  properties[12]->setMinimum(0);   // legend spacing
-  properties[13]->setMinimum(0);   // legend margin
+  plotProperties[11]->setMinimum(1);   // legend columns
+  plotProperties[12]->setMinimum(0);   // legend spacing
+  plotProperties[13]->setMinimum(0);   // legend margin
 }
 
-void SVPlotPropertyDockWidget::Private::setupCurveProperties() {
-  clear();
-
+void SVPlotPropertyDockWidget::Private::setupCurveProperties(QtTreePropertyBrowser *browser) {
   SaxsviewProperty *curveGroup = new SaxsviewProperty("Curve", browser);
-  properties.append(new SaxsviewProperty("Enabled", "curveEnabled",
+  curveProperties.append(new SaxsviewProperty("Enabled", "curveEnabled",
                                               browser, curveGroup));
-  properties.append(new SaxsviewProperty("Title", "curveTitle",
+  curveProperties.append(new SaxsviewProperty("Title", "curveTitle",
                                               browser, curveGroup));
   groups.append(curveGroup);
 
   SaxsviewProperty *lineGroup = new SaxsviewProperty("Line", browser);
-  properties.append(new SaxsviewProperty("Style", "lineStyle",
+  curveProperties.append(new SaxsviewProperty("Style", "lineStyle",
                                               browser, lineGroup));
-  properties.append(new SaxsviewProperty("Width", "lineWidth",
+  curveProperties.append(new SaxsviewProperty("Width", "lineWidth",
                                               browser, lineGroup));
-  properties.append(new SaxsviewProperty("Color", "lineColor",
+  curveProperties.append(new SaxsviewProperty("Color", "lineColor",
                                               browser, lineGroup));
   groups.append(lineGroup);
 
   SaxsviewProperty *symbolGroup = new SaxsviewProperty("Symbol", browser);
-  properties.append(new SaxsviewProperty("Style", "symbolStyle",
+  curveProperties.append(new SaxsviewProperty("Style", "symbolStyle",
                                               browser, symbolGroup));
-  properties.append(new SaxsviewProperty("Size", "symbolSize",
+  curveProperties.append(new SaxsviewProperty("Size", "symbolSize",
                                               browser, symbolGroup));
-  properties.append(new SaxsviewProperty("Filled", "isSymbolFilled",
+  curveProperties.append(new SaxsviewProperty("Filled", "isSymbolFilled",
                                               browser, symbolGroup));
-  properties.append(new SaxsviewProperty("Color", "symbolColor",
+  curveProperties.append(new SaxsviewProperty("Color", "symbolColor",
                                               browser, symbolGroup));
   groups.append(symbolGroup);
 
   SaxsviewProperty *errorGroup = new SaxsviewProperty("Error", browser);
-  properties.append(new SaxsviewProperty("Style", "errorLineStyle",
+  curveProperties.append(new SaxsviewProperty("Style", "errorLineStyle",
                                               browser, errorGroup));
-  properties.append(new SaxsviewProperty("Width", "errorLineWidth",
+  curveProperties.append(new SaxsviewProperty("Width", "errorLineWidth",
                                               browser, errorGroup));
-  properties.append(new SaxsviewProperty("Color", "errorLineColor",
+  curveProperties.append(new SaxsviewProperty("Color", "errorLineColor",
                                               browser, errorGroup));
   groups.append(errorGroup);
 
   SaxsviewProperty *transformGroup = new SaxsviewProperty("Transformation",
                                                           browser);
-  properties.append(new SaxsviewProperty("Scaling X", "scalingFactorX",
+  curveProperties.append(new SaxsviewProperty("Scaling X", "scalingFactorX",
                                               browser, transformGroup));
-  properties.append(new SaxsviewProperty("Scaling Y", "scalingFactorY",
+  curveProperties.append(new SaxsviewProperty("Scaling Y", "scalingFactorY",
                                               browser, transformGroup));
-  properties.append(new SaxsviewProperty("Merge", "merge",
+  curveProperties.append(new SaxsviewProperty("Merge", "merge",
                                               browser, transformGroup));
   groups.append(transformGroup);
 
-  properties[ 3]->setMinimum(1);   // line width
-  properties[ 6]->setMinimum(1);   // symbol size
-  properties[10]->setMinimum(1);   // error bar width
-  properties[12]->setMinimum(0.0); // scaling factor x
-  properties[13]->setMinimum(0.0); // scaling factor y
-  properties[14]->setMinimum(0);   // merge
+  curveProperties[ 3]->setMinimum(1);   // line width
+  curveProperties[ 6]->setMinimum(1);   // symbol size
+  curveProperties[10]->setMinimum(1);   // error bar width
+  curveProperties[12]->setMinimum(0.0); // scaling factor x
+  curveProperties[13]->setMinimum(0.0); // scaling factor y
+  curveProperties[14]->setMinimum(0);   // merge
+}
+
+void SVPlotPropertyDockWidget::Private::hideProperties() {
+  browserStack->setEnabled(false);
+}
+
+void SVPlotPropertyDockWidget::Private::showPlotProperties() {
+  browserStack->setEnabled(true);
+  browserStack->setCurrentIndex(0);
+}
+
+void SVPlotPropertyDockWidget::Private::showCurveProperties() {
+  browserStack->setEnabled(true);
+  browserStack->setCurrentIndex(1);
 }
 
 
-void SVPlotPropertyDockWidget::Private::clear() {
-  browser->clear();
-
-  qDeleteAll(properties.begin(), properties.end());
-  properties.clear();
-
-  qDeleteAll(groups.begin(), groups.end());
-  groups.clear();
-}
 
 
 SVPlotPropertyDockWidget::SVPlotPropertyDockWidget(QWidget *parent)
@@ -184,7 +213,6 @@ SVPlotPropertyDockWidget::SVPlotPropertyDockWidget(QWidget *parent)
 }
 
 SVPlotPropertyDockWidget::~SVPlotPropertyDockWidget() {
-  p->clear();
   delete p;
 }
 
@@ -192,20 +220,24 @@ void SVPlotPropertyDockWidget::currentIndexChanged(const QModelIndex& index) {
   QStandardItem *item = p->model->itemFromIndex(index);
 
   if (SaxsviewPlotItem *plotItem = dynamic_cast<SaxsviewPlotItem*>(item)) {
-    p->setupPlotProperties();
-    foreach (SaxsviewProperty *property, p->properties)
+    //
+    // First set up the values, then show the updated page to reduce flicker
+    // when a page is set up the first time.
+    //
+    foreach (SaxsviewProperty *property, p->plotProperties)
       property->setValue(plotItem->plot());
+    p->showPlotProperties();
 
   } else if (SaxsviewPlotCurveItem *curveItem = dynamic_cast<SaxsviewPlotCurveItem*>(item)) {
-    p->setupCurveProperties();
-    foreach (SaxsviewProperty *property, p->properties)
+    foreach (SaxsviewProperty *property, p->curveProperties)
       property->setValue(curveItem->curve());
-  }
+    p->showCurveProperties();
+
+  } else
+    p->hideProperties();
 }
 
 void SVPlotPropertyDockWidget::subWindowActivated(QMdiSubWindow *w) {
-  p->clear();
-
   if (SVPlotSubWindow *sv = qobject_cast<SVPlotSubWindow*>(w)) {
     p->model = sv->project()->model();
 

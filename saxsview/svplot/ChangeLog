@@ -1,5 +1,18 @@
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotpropertydockwidget.cpp (dtor): New.
+	(clear): Removed.
+	(setupPlotProperties): Take 'browser' argument.
+	(setupCurveProperties): Likewise.
+	(hideProperties): New.
+	(showPlotProperties): New.
+	(showCurveProperties): New.
+	(setupUi): Build stacked widget for fast browser switching,
+	reduces flicker and fixes two annoying crashes.
+	(currentIndexChanged): Use new functions.
+
+2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotfiledockwidget.cpp (setupUi): Set object name.
 	* svplotpropertydockwidget.cpp (setupUi): Likewise.
 	* svplotmainwindow.h (closeEvent): New.
