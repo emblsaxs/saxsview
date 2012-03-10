@@ -1,5 +1,10 @@
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plotcurve.cpp (setTitle): Fixed hide/show of an empty
+	legend title.
+
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Do not install static link libraries on Windows.
 
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>

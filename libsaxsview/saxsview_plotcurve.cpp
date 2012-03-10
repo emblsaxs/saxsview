@@ -160,7 +160,7 @@ void SaxsviewPlotCurve::detach() {
 }
 
 void SaxsviewPlotCurve::setData(const SaxsviewPlotPointData& points,
-                        const SaxsviewPlotIntervalData& intervals) {
+                                const SaxsviewPlotIntervalData& intervals) {
   delete p->pointData;
   p->pointData = new SaxsviewPlotPointData(points);
 
@@ -237,15 +237,18 @@ QString SaxsviewPlotCurve::title() const {
 
 void SaxsviewPlotCurve::setTitle(const QString& title) {
   //
-  // Remove the legend entry if the title is empty.
-  // Test for the attribute as it is also used by setVisible().
+  // Hide the legend entry if the title is empty.
   //
-  if (p->curve->testItemAttribute(QwtPlotItem::Legend)) {
-    p->curve->setItemAttribute(QwtPlotItem::Legend, !title.isEmpty());
-    if (p->curve->plot())
-      p->curve->plot()->updateLayout();
+  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot())) {
+    QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve));
+    if (legendItem)
+      legendItem->setVisible(p->curve->isVisible() && !title.isEmpty());
   }
+
   p->curve->setTitle(title);
+
+  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot()))
+    plot->updateLayout();
 }
 
 double SaxsviewPlotCurve::scalingFactorX() const {
