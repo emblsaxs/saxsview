@@ -19,6 +19,7 @@
 
 #include "svplotmainwindow.h"
 #include "svplotsubwindow.h"
+#include "svplotfilebrowserdockwidget.h"
 #include "svplotfiledockwidget.h"
 #include "svplotpropertydockwidget.h"
 #include "svplotproject.h"
@@ -62,6 +63,7 @@ public:
   QToolBar *svplotToolBar;
 
   // Dock widgets
+  SVPlotFileBrowserDockWidget *browserDock;
   SVPlotFileDockWidget *fileDock;
   SVPlotPropertyDockWidget *propertyDock;
 
@@ -200,6 +202,10 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupUi() {
   connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
           mw, SLOT(subWindowActivated(QMdiSubWindow*)));
 
+  browserDock = new SVPlotFileBrowserDockWidget(mw);
+  connect(browserDock, SIGNAL(selected(const QString&)),
+          mw, SLOT(load(const QString&)));
+
   fileDock = new SVPlotFileDockWidget(mw);
   connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
           fileDock, SLOT(subWindowActivated(QMdiSubWindow*)));
@@ -208,6 +214,7 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupUi() {
   connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
           propertyDock, SLOT(subWindowActivated(QMdiSubWindow*)));
 
+  mw->addDockWidget(Qt::LeftDockWidgetArea, browserDock);
   mw->addDockWidget(Qt::RightDockWidgetArea, fileDock);
   mw->addDockWidget(Qt::RightDockWidgetArea, propertyDock);
   mw->setCentralWidget(mdiArea);
@@ -251,6 +258,7 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupMenus() {
 
   menuView = new QMenu("&View", mw);
   menuView->addAction(svplotToolBar->toggleViewAction());
+  menuView->addAction(browserDock->toggleViewAction());
   menuView->addAction(fileDock->toggleViewAction());
   menuView->addAction(propertyDock->toggleViewAction());
   menuBar->addMenu(menuView);

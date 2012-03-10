@@ -1,3 +1,11 @@
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotfilebrowserdockwidget.h: New.
+	* svplotfilebrowserdockwidget.cpp: New.
+	* svplotmainwindow.cpp (setupUi): Added file browser dock.
+	(setupMenus): Added entry for file browser.
+	* CMakeLists.txt: Added new files.
+
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotsubwindow.h (eventFilter): New.

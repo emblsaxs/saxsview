@@ -8,6 +8,7 @@ include_directories (${QWT_SOURCE_DIR}
 set (svplot_header svplotmainwindow.h
                    svplotsubwindow.h
                    svplotfiledockwidget.h
+                   svplotfilebrowserdockwidget.h
                    svplotpropertydockwidget.h
                    svplotproject.h)
 
@@ -15,6 +16,7 @@ set (svplot_sources main.cpp
                     svplotmainwindow.cpp
                     svplotsubwindow.cpp
                     svplotfiledockwidget.cpp
+                    svplotfilebrowserdockwidget.cpp
                     svplotpropertydockwidget.cpp
                     svplotproject.cpp)
 
