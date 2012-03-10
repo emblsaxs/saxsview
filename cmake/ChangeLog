@@ -1,3 +1,7 @@
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* packaging.cmake: Bumped package version to 0.3.0.
+
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* packaging.cmake: Fixed Debian dependencies.
