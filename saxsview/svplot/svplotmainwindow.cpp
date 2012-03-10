@@ -43,7 +43,7 @@ public:
   SVPlotMainWindow *mw;
 
   // "File"-menu
-  QAction *actionNew, *actionLoad, *actionReload, *actionQuit, *actionPrint;
+  QAction *actionNew, *actionLoad, *actionQuit, *actionPrint;
 
   // "Plot"-menu
   QAction *actionZoomFit, *actionZoom, *actionMove;
@@ -106,13 +106,6 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupActions() {
   actionLoad->setShortcut(QKeySequence::Open);
   connect(actionLoad, SIGNAL(triggered()),
           mw, SLOT(load()));
-
-  actionReload = new QAction("&Reload", mw);
-  actionReload->setIcon(QIcon(":icons/view-refresh.png"));
-  actionReload->setShortcut(QKeySequence::Refresh);
-  actionReload->setEnabled(false);
-  connect(actionReload, SIGNAL(triggered()),
-          mw, SLOT(reload()));
 
   actionPrint = new QAction("&Print", mw);
   actionPrint->setIcon(QIcon(":icons/document-print.png"));
@@ -243,7 +236,6 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupMenus() {
   menuFile->addAction(actionNew);
   menuFile->addAction(actionLoad);
   menuFile->addMenu(menuRecentFiles);
-  menuFile->addAction(actionReload);
   menuFile->addMenu(menuExportAs);
   menuFile->addAction(actionPrint);
   menuFile->addSeparator();
@@ -281,7 +273,6 @@ void SVPlotMainWindow::SVPlotMainWindowPrivate::setupToolbars() {
   svplotToolBar->setObjectName("SVPlotToolbar");
   svplotToolBar->addAction(actionNew);
   svplotToolBar->addAction(actionLoad);
-  svplotToolBar->addAction(actionReload);
   svplotToolBar->addAction(actionPrint);
   svplotToolBar->addSeparator();
   svplotToolBar->addAction(actionZoomFit);
@@ -381,11 +372,6 @@ void SVPlotMainWindow::load(const QString& fileName) {
   // In case there were no recent files yet, the menu may be disabled
   if (!p->menuRecentFiles->isEnabled())
     p->menuRecentFiles->setEnabled(true);
-}
-
-void SVPlotMainWindow::reload() {
-  if (currentSubWindow())
-    currentSubWindow()->reload();
 }
 
 void SVPlotMainWindow::exportAs(const QString& format) {
@@ -516,7 +502,6 @@ void SVPlotMainWindow::subWindowActivated(QMdiSubWindow *w) {
   // 0L if and only if the last subwindow was closed.
   //
   const bool on = (currentSubWindow() != 0L);
-//   p->actionReload->setEnabled(on);          // FIXME enable reload
   p->actionPrint->setEnabled(on);
   p->actionZoomFit->setEnabled(on);
   p->actionZoom->setEnabled(on);

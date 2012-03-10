@@ -40,7 +40,6 @@ public slots:
   void newSubWindow();
   void load();
   void load(const QString& fileName);
-  void reload();
   void exportAs(const QString& format);
   void print();
   void zoomFit();
