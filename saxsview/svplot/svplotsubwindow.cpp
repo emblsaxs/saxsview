@@ -159,10 +159,6 @@ bool SVPlotSubWindow::load(const QString& fileName) {
   return true;
 }
 
-void SVPlotSubWindow::reload() {
-  // TODO
-}
-
 void SVPlotSubWindow::exportAs(const QString& fileName,
                                 const QString& format) {
   p->plot->exportAs(fileName, format);

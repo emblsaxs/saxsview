@@ -1,5 +1,10 @@
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotsubwindow.h (reload): Removed.
+	* svplotsubwindow.cpp (reload): Removed.
+
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Fixed link libraries.
 
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
