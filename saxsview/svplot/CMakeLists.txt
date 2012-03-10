@@ -34,9 +34,8 @@ if (WIN32)
                          WIN32_EXECUTABLE TRUE)
 endif (WIN32)
 
-target_link_libraries (svplot
-                       saxsview
-                       saxsimage)
+target_link_libraries (svplot saxsview
+                              saxsdocument)
 
 install (TARGETS svplot
          RUNTIME DESTINATION bin)

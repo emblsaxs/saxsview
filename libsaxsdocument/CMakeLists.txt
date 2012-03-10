@@ -41,7 +41,9 @@ endif (LIBXML2_FOUND)
 add_library (fsaxsdocument STATIC saxsdocument.f90)
 target_link_libraries (fsaxsdocument saxsdocument)
 
-install (TARGETS saxsdocument fsaxsdocument
-         ARCHIVE DESTINATION lib
+install (TARGETS saxsdocument
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
+
+install (TARGETS fsaxsdocument
+         ARCHIVE DESTINATION lib)

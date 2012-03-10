@@ -1,3 +1,8 @@
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* qpropertybrowser/CMakeLists.txt: Do not install static link
+	libraries on Windows.
+
 2012-02-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* qtpropertybrowser/CMakeLists.txt: Build shared library.

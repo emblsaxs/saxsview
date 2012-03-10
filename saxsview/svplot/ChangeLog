@@ -1,5 +1,9 @@
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Fixed link libraries.
+
+2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotmainwindow.h (reload): Removed.
 	* svplotmainwindow.cpp (reload): Removed; removed all related code.
 

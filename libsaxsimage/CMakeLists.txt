@@ -39,8 +39,9 @@ add_library (fsaxsimage STATIC saxsimage.f90)
 target_link_libraries (fsaxsimage saxsimage)
 
 
-install (TARGETS saxsimage fsaxsimage
-         ARCHIVE DESTINATION lib
+install (TARGETS saxsimage
          LIBRARY DESTINATION lib
          RUNTIME DESTINATION bin)
 
+install (TARGETS fsaxsimage
+         ARCHIVE DESTINATION lib)

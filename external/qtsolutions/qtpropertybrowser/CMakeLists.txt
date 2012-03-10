@@ -68,5 +68,4 @@ target_link_libraries (qtpropertybrowser ${QT_LIBRARIES})
 
 install (TARGETS qtpropertybrowser
          LIBRARY DESTINATION lib
-         ARCHIVE DESTINATION lib
          RUNTIME DESTINATION bin)
