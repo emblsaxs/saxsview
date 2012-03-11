@@ -57,6 +57,10 @@ public:
   Saxsview::Scale scale() const;
 
 public slots:
+  void exportAs();
+  void exportAs(const QString& fileName, const QString& format = QString());
+  void print();
+
   void setFrame(SaxsviewFrame *frame);
   void setZoomBase(const QRectF& rect = QRectF());
   void setZoomEnabled(bool);

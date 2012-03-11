@@ -1,5 +1,12 @@
 2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_image.h (exportAs): New.
+	(print): New.
+	* saxsview_image.cpp (exportAs): New.
+	(print): New.
+
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_image.h (range): Removed.
 	* saxsview_image.cpp: Adjusted to changes in Qwt.
 

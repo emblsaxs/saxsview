@@ -17,7 +17,9 @@
  * License along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
+// libsaxsview
 #include "saxsview_image.h"
+#include "saxsview_config.h"
 
 // libsaxsimage
 #include "saxsimage.h"
@@ -28,6 +30,7 @@
 #include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
 #include "qwt_plot_panner.h"
+#include "qwt_plot_renderer.h"
 #include "qwt_plot_rescaler.h"
 #include "qwt_plot_scaleitem.h"
 #include "qwt_plot_spectrogram.h"
@@ -260,6 +263,45 @@ bool SaxsviewImage::isAspectRatioFixed() const {
 Saxsview::Scale SaxsviewImage::scale() const {
   return p->scale;
 }
+
+void SaxsviewImage::exportAs() {
+  QString fileName = QFileDialog::getSaveFileName(this, "Export As",
+                                                  config().recentDirectory(),
+                                                  "All files (*.*)");
+  exportAs(fileName);
+}
+
+void SaxsviewImage::exportAs(const QString& fileName, const QString& format) {
+  if (fileName.isEmpty())
+    return;
+
+  QString ext = format.isEmpty() ? QFileInfo(fileName).completeSuffix() : format;
+
+  if (ext == "ps" || ext == "pdf" || ext == "svg") {
+    QwtPlotRenderer renderer;
+    renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
+
+  } else
+    QPixmap::grabWidget(this).save(fileName, qPrintable(ext));
+}
+
+void SaxsviewImage::print() {
+  QString printerName = config().recentPrinter();
+
+  QPrinter printer(QPrinter::HighResolution);
+  printer.setOrientation(QPrinter::Landscape);
+  if (!printerName.isEmpty())
+    printer.setPrinterName(printerName);
+
+  QPrintDialog dlg(&printer, this);
+  if (dlg.exec() == QDialog::Accepted) {
+    QwtPlotRenderer renderer;
+    renderer.renderTo(this, printer);
+  }
+
+  config().setRecentPrinter(printer.printerName());
+}
+
 
 void SaxsviewImage::setZoomBase(const QRectF& rect) {
   QRectF r = rect;
