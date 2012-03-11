@@ -62,7 +62,4 @@ public:
   };
 };
 
-#include "qwt_text.h"
-Q_DECLARE_METATYPE(QwtText);
-
 #endif // !SAXSVIEW_H

@@ -1,3 +1,23 @@
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview.h: Do not declare the QwtText MetaType.
+	* saxsview_plot.h (enum LegendPosition): Removed.
+	(updateLayout): Removed.
+	(setLegendEnabled): Renamed to ...
+	(setLegendVisible): ... this.
+	(legendEnabled): Renamed to ...
+	(legendVisible): ... this
+	(setLegendPosition): Take a Qt::Corner argument.
+	(legendPosition): Return a Qt::Corner.
+	* saxsview_plot.cpp (SaxsviewPlotRenderer): Removed.
+	(setupLegend): Use QwtPlotLegendItem, updated all users.
+	(setLegendEnabled): Renamed to ...
+	(setLegendVisible): ... this.
+	(legendEnabled): Renamed to ...
+	(legendVisible): ... this
+	(setLegendPosition): Take a Qt::Corner argument.
+	(legendPosition): Return a Qt::Corner.
+
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plotcurve.cpp (setTitle): Fixed hide/show of an empty

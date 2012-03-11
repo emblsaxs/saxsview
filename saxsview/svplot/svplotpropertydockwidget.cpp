@@ -114,7 +114,7 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
   groups.append(ticksGroup);
 
   SaxsviewProperty *legendGroup = new SaxsviewProperty("Legend", browser);
-  plotProperties.append(new SaxsviewProperty("Enabled", "legendEnabled",
+  plotProperties.append(new SaxsviewProperty("Visible", "legendVisible",
                                              browser, legendGroup));
   plotProperties.append(new SaxsviewProperty("Position", "legendPosition",
                                              browser, legendGroup));

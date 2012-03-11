@@ -26,10 +26,10 @@
 
 #include "qwt_dyngrid_layout.h"
 #include "qwt_legend.h"
-#include "qwt_legend_item.h"
 #include "qwt_painter.h"
 #include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
+#include "qwt_plot_legenditem.h"
 #include "qwt_plot_marker.h"
 #include "qwt_plot_panner.h"
 #include "qwt_plot_renderer.h"
@@ -38,29 +38,6 @@
 #include "qwt_scale_draw.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
-
-
-/* An external legend, i.e. a legend shown on top of the
-   plot canvas, needs to be positioned properly. */
-class SaxsviewPlotRenderer : public QwtPlotRenderer {
-protected:
-  void renderLegend(QPainter *painter, const QRectF &r) const {
-    QRectF rect = r;
-
-    if (!rect.isValid()) {
-      QRectF canvasRect = plot()->plotLayout()->canvasRect();
-      QSize legendSizeHint = plot()->legend()->sizeHint();
-
-      rect.setTop(30);
-      rect.setLeft(canvasRect.right() - legendSizeHint.width() - 30);
-      rect.setWidth(legendSizeHint.width());
-      rect.setHeight(legendSizeHint.height());
-    }
-
-    QwtPlotRenderer::renderLegend(painter, rect);
-  }
-};
-
 
 
 class SaxsviewPlot::Private {
@@ -84,7 +61,7 @@ public:
 
   bool blockReplot;
 
-  QwtLegend *legend;
+  QwtPlotLegendItem *legend;
   QwtPlotMarker *marker;
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
@@ -102,17 +79,15 @@ void SaxsviewPlot::Private::setupCanvas() {
 }
 
 void SaxsviewPlot::Private::setupLegend() {
-  legend = new QwtLegend(plot->canvas());
-
-  QLayout *layout = legend->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setMaxCols(1);
-  ll->setMargin(6);
-  ll->setSpacing(0);
-
-  legend->show();
-
-  plot->insertLegend(legend, QwtPlot::RightLegend);
+  legend = new QwtPlotLegendItem;
+  legend->setRenderHint(QwtPlotItem::RenderAntialiased);
+  legend->setBorderPen(Qt::NoPen);
+  legend->setBackgroundBrush(Qt::NoBrush);
+  legend->setMaxColumns(1);
+  legend->setMargin(6);
+  legend->setSpacing(0);
+  legend->setAlignment(Qt::AlignRight | Qt::AlignTop);
+  legend->attach(plot);
 }
 
 void SaxsviewPlot::Private::setupPanner() {
@@ -200,7 +175,7 @@ SaxsviewPlot::SaxsviewPlot(QWidget *parent)
  : QwtPlot(parent), p(new Private(this)) {
 
   // margin around the plot
-  plotLayout()->setMargin(12);
+  setContentsMargins(12, 12, 12, 12);
   plotLayout()->setAlignCanvasToScales(true);
 
   p->setupScales();
@@ -268,8 +243,7 @@ void SaxsviewPlot::exportAs(const QString& fileName, const QString& format) {
   QString ext = format.isEmpty() ? QFileInfo(fileName).completeSuffix() : format;
 
   if (ext == "ps" || ext == "pdf" || ext == "svg") {
-    SaxsviewPlotRenderer renderer;
-    renderer.setLayoutFlag(QwtPlotRenderer::KeepMargins);
+    QwtPlotRenderer renderer;
     renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
 
   } else
@@ -286,7 +260,7 @@ void SaxsviewPlot::print() {
 
   QPrintDialog dlg(&printer, this);
   if (dlg.exec() == QDialog::Accepted) {
-    SaxsviewPlotRenderer renderer;
+    QwtPlotRenderer renderer;
     renderer.renderTo(this, printer);
   }
 
@@ -320,16 +294,6 @@ void SaxsviewPlot::removeCurve(SaxsviewPlotCurve *curve) {
 
 QList<SaxsviewPlotCurve*> SaxsviewPlot::curves() const {
   return p->curves;
-}
-
-void SaxsviewPlot::updateLayout() {
-  QwtPlot::updateLayout();
-
-  if (plotLayout()->legendPosition() == QwtPlot::ExternalLegend) {
-    QSize legendSizeHint = legend()->sizeHint();
-    legend()->setGeometry(width() - legendSizeHint.width() - 30, 30,
-                          legendSizeHint.width(), legendSizeHint.height());
-  }
 }
 
 void SaxsviewPlot::setZoomBase(const QRectF& rect) {
@@ -486,82 +450,88 @@ QFont SaxsviewPlot::ticksFont() const {
   return axisFont(QwtPlot::xBottom);
 }
 
-void SaxsviewPlot::setLegendEnabled(bool on) {
-  foreach(QWidget *w, legend()->legendItems())
-    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w)) {
-      item->setVisible(on);
-    }
-
-  updateLayout();
+void SaxsviewPlot::setLegendVisible(bool on) {
+  p->legend->setVisible(on);
+  replot();
 }
 
-bool SaxsviewPlot::legendEnabled() const {
-  return legend()->width() > 0;
+bool SaxsviewPlot::legendVisible() const {
+  return p->legend->isVisible();
 }
 
-void SaxsviewPlot::setLegendPosition(SaxsviewPlot::LegendPosition pos) {
-  plotLayout()->setLegendPosition((QwtPlot::LegendPosition)pos);
-  updateLayout();
+void SaxsviewPlot::setLegendPosition(Qt::Corner pos) {
+  switch (pos) {
+    case Qt::TopLeftCorner:
+      p->legend->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+      break;
+
+    case Qt::TopRightCorner:
+      p->legend->setAlignment(Qt::AlignTop | Qt::AlignRight);
+      break;
+
+    case Qt::BottomLeftCorner:
+      p->legend->setAlignment(Qt::AlignBottom | Qt::AlignLeft);
+      break;
+
+    case Qt::BottomRightCorner:
+      p->legend->setAlignment(Qt::AlignBottom | Qt::AlignRight);
+      break;
+  }
+
+  replot();
 }
 
-SaxsviewPlot::LegendPosition SaxsviewPlot::legendPosition() const {
-  return (SaxsviewPlot::LegendPosition)plotLayout()->legendPosition();
+Qt::Corner SaxsviewPlot::legendPosition() const {
+  Qt::Alignment pos = p->legend->alignment();
+
+  if (pos == (Qt::AlignTop | Qt::AlignLeft))
+    return Qt::TopLeftCorner;
+
+  else if (pos == (Qt::AlignTop | Qt::AlignRight))
+    return Qt::TopRightCorner;
+
+  else if (pos == (Qt::AlignBottom | Qt::AlignLeft))
+    return Qt::BottomLeftCorner;
+
+  else if (pos == (Qt::AlignBottom | Qt::AlignRight))
+    return Qt::BottomRightCorner;
+
+  else
+    return Qt::TopRightCorner;
 }
 
 void SaxsviewPlot::setLegendColumnCount(int n) {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setMaxCols(n);
-  updateLayout();
+  p->legend->setMaxColumns(n);
+  replot();
 }
 
 int SaxsviewPlot::legendColumnCount() const {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  return ll->maxCols();
+  return p->legend->maxColumns();
 }
 
 void SaxsviewPlot::setLegendSpacing(int n) {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setSpacing(n);
-  updateLayout();
+  p->legend->setSpacing(n);
+  replot();
 }
 
 int SaxsviewPlot::legendSpacing() const {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  return ll->spacing();
+  return p->legend->spacing();
 }
 
 void SaxsviewPlot::setLegendMargin(int n) {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  ll->setMargin(n);
-  updateLayout();
+  p->legend->setMargin(n);
+  replot();
 }
 
 int SaxsviewPlot::legendMargin() const {
-  QLayout *layout = legend()->contentsWidget()->layout();
-  QwtDynGridLayout *ll = qobject_cast<QwtDynGridLayout*>(layout);
-  return ll->margin();
+  return p->legend->margin();
 }
 
 void SaxsviewPlot::setLegendFont(const QFont& font) {
-  foreach(QWidget *w, legend()->legendItems())
-    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w)) {
-      QwtText text = item->text();
-      text.setFont(font);
-      item->setText(text);
-    }
-
-  updateLayout();
+  p->legend->setFont(font);
+  replot();
 }
 
 QFont SaxsviewPlot::legendFont() const {
-  foreach(QWidget *w, legend()->legendItems())
-    if (QwtLegendItem* item = qobject_cast<QwtLegendItem*>(w))
-      return item->text().font();
-
-  return QFont();
+  return p->legend->font();
 }

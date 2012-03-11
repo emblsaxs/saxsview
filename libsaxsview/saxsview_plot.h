@@ -34,8 +34,6 @@ class SaxsviewPlotSymbol;
 class SaxsviewPlot : public QwtPlot {
   Q_OBJECT
 
-  Q_ENUMS(LegendPosition)
-
   Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
 
   Q_PROPERTY(QString plotTitle READ plotTitle WRITE setPlotTitle)
@@ -46,22 +44,14 @@ class SaxsviewPlot : public QwtPlot {
   Q_PROPERTY(bool ticksEnabledX READ ticksEnabledX WRITE setTicksEnabledX)
   Q_PROPERTY(bool ticksEnabledY READ ticksEnabledY WRITE setTicksEnabledY)
   Q_PROPERTY(QFont ticksFont READ ticksFont WRITE setTicksFont)
-  Q_PROPERTY(bool legendEnabled READ legendEnabled WRITE setLegendEnabled)
-  Q_PROPERTY(SaxsviewPlot::LegendPosition legendPosition READ legendPosition WRITE setLegendPosition)
+  Q_PROPERTY(bool legendVisible READ legendVisible WRITE setLegendVisible)
+  Q_PROPERTY(Qt::Corner legendPosition READ legendPosition WRITE setLegendPosition)
   Q_PROPERTY(int legendColumnsCount READ legendColumnCount WRITE setLegendColumnCount)
   Q_PROPERTY(int legendSpacing READ legendSpacing WRITE setLegendSpacing)
   Q_PROPERTY(int legendMargin READ legendMargin WRITE setLegendMargin)
   Q_PROPERTY(QFont legendFont READ legendFont WRITE setLegendFont)
 
 public:
-  enum LegendPosition {
-    LeftLegendPosition = QwtPlot::LeftLegend,
-    RightLegendPosition = QwtPlot::RightLegend,
-    BottomLegendPosition = QwtPlot::BottomLegend,
-    TopLegendPosition = QwtPlot::TopLegend,
-    FloatingLegendPosition = QwtPlot::ExternalLegend
-  };
-
   SaxsviewPlot(QWidget *parent = 0L);
   ~SaxsviewPlot();
 
@@ -77,8 +67,6 @@ public:
 
   void zoom(const QRectF&);
 
-  void updateLayout();
-
   Saxsview::Scale scale() const;
 
   QString plotTitle() const;
@@ -89,8 +77,8 @@ public:
   bool ticksEnabledX() const;
   bool ticksEnabledY() const;
   QFont ticksFont() const;
-  bool legendEnabled() const;
-  LegendPosition legendPosition() const;
+  bool legendVisible() const;
+  Qt::Corner legendPosition() const;
   int legendColumnCount() const;
   int legendSpacing() const;
   int legendMargin() const;
@@ -119,15 +107,12 @@ public slots:
   void setTicksEnabledX(bool);
   void setTicksEnabledY(bool);
   void setTicksFont(const QFont&);
-  void setLegendEnabled(bool);
-  void setLegendPosition(LegendPosition);
+  void setLegendVisible(bool);
+  void setLegendPosition(Qt::Corner);
   void setLegendColumnCount(int);
   void setLegendSpacing(int);
   void setLegendMargin(int);
   void setLegendFont(const QFont&);
-
-// protected:
-//   void printLegend(QPainter *, const QRect &) const;
 
 private:
   class Private;
