@@ -1,3 +1,7 @@
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview/CMakeLists.txt: Disabled monolithic saxsview.
+
 2012-03-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Fixed directory name.
