@@ -1,5 +1,11 @@
 2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotsubwindow.cpp (zoomFit): Implemented.
+	* svplotpropertydockwidget.cpp (setupCurveProperties): Sanitized
+	lower limits.
+
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotpropertydockwidget.cpp (setupCurveProperties): Relabeled
 	the Curve from "Enabled" to "Visible".
 

@@ -181,12 +181,12 @@ void SVPlotPropertyDockWidget::Private::setupCurveProperties(QtTreePropertyBrows
                                               browser, transformGroup));
   groups.append(transformGroup);
 
-  curveProperties[ 3]->setMinimum(1);   // line width
-  curveProperties[ 6]->setMinimum(1);   // symbol size
-  curveProperties[10]->setMinimum(1);   // error bar width
-  curveProperties[12]->setMinimum(0.0); // scaling factor x
-  curveProperties[13]->setMinimum(0.0); // scaling factor y
-  curveProperties[14]->setMinimum(0);   // merge
+  curveProperties[ 3]->setMinimum(1);    // line width
+  curveProperties[ 6]->setMinimum(1);    // symbol size
+  curveProperties[10]->setMinimum(1);    // error bar width
+  curveProperties[12]->setMinimum(0.01); // scaling factor x
+  curveProperties[13]->setMinimum(0.01); // scaling factor y
+  curveProperties[14]->setMinimum(1);    // merge
 }
 
 void SVPlotPropertyDockWidget::Private::hideProperties() {

@@ -169,7 +169,7 @@ void SVPlotSubWindow::print() {
 }
 
 void SVPlotSubWindow::zoomFit() {
-//   p->plot->setZoomBase(p->plot->boundingRect());
+  p->plot->setZoomBase();
 }
 
 void SVPlotSubWindow::setZoomEnabled(bool on) {
