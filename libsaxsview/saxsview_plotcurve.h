@@ -41,7 +41,7 @@ typedef QVector<QwtIntervalSample> SaxsviewPlotIntervalData;
 class SaxsviewPlotCurve : public QObject {
   Q_OBJECT
 
-  Q_PROPERTY(bool curveEnabled READ isVisible WRITE setVisible)
+  Q_PROPERTY(bool curveVisible READ isVisible WRITE setVisible)
   Q_PROPERTY(QString curveTitle READ title WRITE setTitle)
 
   Q_PROPERTY(Saxsview::LineStyle lineStyle READ lineStyle WRITE setLineStyle)

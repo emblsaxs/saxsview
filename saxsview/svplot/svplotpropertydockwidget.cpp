@@ -136,7 +136,7 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
 
 void SVPlotPropertyDockWidget::Private::setupCurveProperties(QtTreePropertyBrowser *browser) {
   SaxsviewProperty *curveGroup = new SaxsviewProperty("Curve", browser);
-  curveProperties.append(new SaxsviewProperty("Enabled", "curveEnabled",
+  curveProperties.append(new SaxsviewProperty("Visible", "curveVisible",
                                               browser, curveGroup));
   curveProperties.append(new SaxsviewProperty("Title", "curveTitle",
                                               browser, curveGroup));

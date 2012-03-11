@@ -1,5 +1,10 @@
 2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotpropertydockwidget.cpp (setupCurveProperties): Relabeled
+	the Curve from "Enabled" to "Visible".
+
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotpropertydockwidget.cpp (setupPlotProperties): Relabeled
 	the legend from "Enabled" to "Visible".
 

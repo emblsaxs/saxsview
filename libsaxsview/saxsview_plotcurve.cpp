@@ -22,7 +22,6 @@
 #include "saxsview_config.h"
 
 #include <qwt_interval_symbol.h>
-#include <qwt_legend_item.h>
 #include <qwt_plot.h>
 #include <qwt_plot_curve.h>
 #include <qwt_plot_intervalcurve.h>
@@ -73,7 +72,7 @@ SaxsviewPlotCurve::Private::Private(int t)
 
   errorCurve = new QwtPlotIntervalCurve;
   errorCurve->setItemAttribute(QwtPlotItem::Legend, false);
-  errorCurve->setCurveStyle(QwtPlotIntervalCurve::NoCurve);
+  errorCurve->setStyle(QwtPlotIntervalCurve::NoCurve);
   errorCurve->setSymbol(intervalSymbol);
 }
 
@@ -147,11 +146,6 @@ int SaxsviewPlotCurve::type() const {
 void SaxsviewPlotCurve::attach(SaxsviewPlot *plot) {
   p->curve->attach(plot);
   p->errorCurve->attach(plot);
-
-  if (QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve)))
-    legendItem->setIdentifierSize(QSize(15, 10));
-
-  p->curve->updateLegend(plot->legend());
 }
 
 void SaxsviewPlotCurve::detach() {
@@ -190,30 +184,13 @@ bool SaxsviewPlotCurve::isVisible() const {
 
 void SaxsviewPlotCurve::setVisible(bool on) {
   p->curve->setVisible(on);
+  p->curve->setItemAttribute(QwtPlotItem::Legend,
+                             on && !p->curve->title().isEmpty());
+
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
 
-  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot())) {
-    //
-    // The equivalent
-    //    p->curve->setItemAttribute(QwtPlotItem::Legend, on);
-    //
-    // deletes the legend item and thus all settings may be lost.
-    //
-    QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve));
-    if (legendItem)
-      legendItem->setVisible(on);
-
-    //
-    // UpdateLayout() is required to hide/show the
-    // legend on the last/first curve.
-    //
-    plot->updateLayout();
-
-    //
-    // Update the bounding-rect and show the actual change.
-    //
-    plot->replot();
-  }
+  if (p->curve->plot())
+    p->curve->plot()->replot();
 }
 
 QRectF SaxsviewPlotCurve::boundingRect() const {
@@ -236,19 +213,12 @@ QString SaxsviewPlotCurve::title() const {
 }
 
 void SaxsviewPlotCurve::setTitle(const QString& title) {
-  //
-  // Hide the legend entry if the title is empty.
-  //
-  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot())) {
-    QwtLegendItem* legendItem = qobject_cast<QwtLegendItem*>(plot->legend()->find(p->curve));
-    if (legendItem)
-      legendItem->setVisible(p->curve->isVisible() && !title.isEmpty());
-  }
-
+  p->curve->setItemAttribute(QwtPlotItem::Legend,
+                             p->curve->isVisible() &&  !title.isEmpty());
   p->curve->setTitle(title);
 
-  if (SaxsviewPlot *plot = qobject_cast<SaxsviewPlot*>(p->curve->plot()))
-    plot->updateLayout();
+  if (p->curve->plot())
+    p->curve->plot()->replot();
 }
 
 double SaxsviewPlotCurve::scalingFactorX() const {
