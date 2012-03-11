@@ -9,11 +9,11 @@
 
 #include "qwt_plot_seriesitem.h"
 
-class QwtPlotAbstractSeriesItem::PrivateData
+class QwtPlotSeriesItem::PrivateData
 {
 public:
     PrivateData():
-        orientation(Qt::Vertical)
+        orientation( Qt::Vertical )
     {
     }
 
@@ -22,43 +22,59 @@ public:
 
 /*!
   Constructor
-  \param title Title of the curve   
+  \param title Title of the curve
 */
-QwtPlotAbstractSeriesItem::QwtPlotAbstractSeriesItem(const QwtText &title):
-    QwtPlotItem(title)
+QwtPlotSeriesItem::QwtPlotSeriesItem( const QwtText &title ):
+    QwtPlotItem( title )
 {
     d_data = new PrivateData();
+    setItemInterest( QwtPlotItem::ScaleInterest, true );
 }
 
 /*!
   Constructor
-  \param title Title of the curve   
+  \param title Title of the curve
 */
-QwtPlotAbstractSeriesItem::QwtPlotAbstractSeriesItem(const QString &title):
-    QwtPlotItem(QwtText(title))
+QwtPlotSeriesItem::QwtPlotSeriesItem( const QString &title ):
+    QwtPlotItem( QwtText( title ) )
 {
     d_data = new PrivateData();
 }
 
 //! Destructor
-QwtPlotAbstractSeriesItem::~QwtPlotAbstractSeriesItem()
+QwtPlotSeriesItem::~QwtPlotSeriesItem()
 {
     delete d_data;
 }
 
-void QwtPlotAbstractSeriesItem::setOrientation(Qt::Orientation orientation)
+/*!
+  Set the orientation of the item.
+
+  The orientation() might be used in specific way by a plot item.
+  F.e. a QwtPlotCurve uses it to identify how to display the curve
+  int QwtPlotCurve::Steps or QwtPlotCurve::Sticks style.
+
+  \sa orientation()
+*/
+void QwtPlotSeriesItem::setOrientation( Qt::Orientation orientation )
 {
     if ( d_data->orientation != orientation )
     {
         d_data->orientation = orientation;
+
+        legendChanged();
         itemChanged();
     }
 }
 
-Qt::Orientation QwtPlotAbstractSeriesItem::orientation() const
-{ 
+/*!
+  \return Orientation of the plot item
+  \sa setOrientation()
+*/
+Qt::Orientation QwtPlotSeriesItem::orientation() const
+{
     return d_data->orientation;
-}   
+}
 
 /*!
   \brief Draw the complete series
@@ -66,11 +82,31 @@ Qt::Orientation QwtPlotAbstractSeriesItem::orientation() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
+  \param canvasRect Contents rect of the canvas
 */
-void QwtPlotAbstractSeriesItem::draw(QPainter *painter,
+void QwtPlotSeriesItem::draw( QPainter *painter,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect) const
+        const QRectF &canvasRect ) const
 {
-    drawSeries(painter, xMap, yMap, canvasRect, 0, -1);
+    drawSeries( painter, xMap, yMap, canvasRect, 0, -1 );
 }
 
+QRectF QwtPlotSeriesItem::boundingRect() const
+{
+    return dataRect();
+}
+
+void QwtPlotSeriesItem::updateScaleDiv(
+    const QwtScaleDiv &xScaleDiv, const QwtScaleDiv &yScaleDiv )
+{   
+    const QRectF rect = QRectF(
+        xScaleDiv.lowerBound(), yScaleDiv.lowerBound(),
+        xScaleDiv.range(), yScaleDiv.range() );
+        
+    setRectOfInterest( rect );
+}   
+
+void QwtPlotSeriesItem::dataChanged()
+{
+    itemChanged();
+}

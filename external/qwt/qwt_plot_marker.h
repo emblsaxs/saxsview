@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -31,13 +31,14 @@ class QwtSymbol;
   The QwtPlotMarker::setSymbol() member assigns a symbol to the marker.
   The symbol is drawn at the specified point.
 
-  With QwtPlotMarker::setLabel(), a label can be assigned to the marker.
-  The QwtPlotMarker::setLabelAlignment() member specifies where the label is
+  With setLabel(), a label can be assigned to the marker.
+  The setLabelAlignment() member specifies where the label is
   drawn. All the Align*-constants in Qt::AlignmentFlags (see Qt documentation)
   are valid. The interpretation of the alignment depends on the marker's
   line style. The alignment refers to the center point of
   the marker, which means, for example, that the label would be printed
-  left above the center point if the alignment was set to AlignLeft|AlignTop.
+  left above the center point if the alignment was set to 
+  Qt::AlignLeft | Qt::AlignTop.
 */
 
 class QWT_EXPORT QwtPlotMarker: public QwtPlotItem
@@ -48,15 +49,24 @@ public:
         Line styles.
         \sa setLineStyle(), lineStyle()
     */
-    enum LineStyle 
+    enum LineStyle
     {
-        NoLine, 
-        HLine, 
-        VLine, 
+        //! No line
+        NoLine,
+
+        //! A horizontal line
+        HLine,
+
+        //! A vertical line
+        VLine,
+
+        //! A crosshair
         Cross
     };
-   
-    explicit QwtPlotMarker();
+
+    explicit QwtPlotMarker( const QString &title = QString::null );
+    explicit QwtPlotMarker( const QwtText &title );
+
     virtual ~QwtPlotMarker();
 
     virtual int rtti() const;
@@ -65,43 +75,48 @@ public:
     double yValue() const;
     QPointF value() const;
 
-    void setXValue(double);
-    void setYValue(double);
-    void setValue(double, double);
-    void setValue(const QPointF &);
+    void setXValue( double );
+    void setYValue( double );
+    void setValue( double, double );
+    void setValue( const QPointF & );
 
-    void setLineStyle(LineStyle st);
+    void setLineStyle( LineStyle st );
     LineStyle lineStyle() const;
 
-    void setLinePen(const QPen &p);
+    void setLinePen( const QPen &p );
     const QPen &linePen() const;
 
-    void setSymbol(const QwtSymbol *s);
-    const QwtSymbol &symbol() const;
+    void setSymbol( const QwtSymbol * );
+    const QwtSymbol *symbol() const;
 
-    void setLabel(const QwtText&);
+    void setLabel( const QwtText& );
     QwtText label() const;
 
-    void setLabelAlignment(Qt::Alignment);
+    void setLabelAlignment( Qt::Alignment );
     Qt::Alignment labelAlignment() const;
 
-    void setLabelOrientation(Qt::Orientation);
+    void setLabelOrientation( Qt::Orientation );
     Qt::Orientation labelOrientation() const;
 
-    void setSpacing(int);
+    void setSpacing( int );
     int spacing() const;
 
-    virtual void draw(QPainter *p, 
+    virtual void draw( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &) const;
-    
+        const QRectF & ) const;
+
     virtual QRectF boundingRect() const;
 
+    virtual QwtGraphic legendIcon( int index, const QSizeF & ) const;
+
 protected:
-    void drawAt(QPainter *,const QRectF &, const QPointF &) const;
+    virtual void drawLines( QPainter *, 
+        const QRectF &, const QPointF & ) const;
+
+    virtual void drawLabel( QPainter *, 
+        const QRectF &, const QPointF & ) const;
 
 private:
-    void drawLabel(QPainter *, const QRectF &, const QPointF &) const;
 
     class PrivateData;
     PrivateData *d_data;

@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -11,6 +11,8 @@
 #define _QWT_COMPAT_H_
 
 #include "qwt_global.h"
+#include "qwt_interval.h"
+#include "qwt_point_3d.h"
 #include <qlist.h>
 #include <qvector.h>
 #include <qpoint.h>
@@ -34,5 +36,7 @@ typedef QRectF QwtDoubleRect;
 
 typedef QPolygon QwtPolygon;
 typedef QPolygonF QwtPolygonF;
+typedef QwtInterval QwtDoubleInterval;
+typedef QwtPoint3D QwtDoublePoint3D;
 
 #endif

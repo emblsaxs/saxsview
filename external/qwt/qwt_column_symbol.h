@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -11,7 +11,7 @@
 #define QWT_COLUMN_SYMBOL_H
 
 #include "qwt_global.h"
-#include "qwt_double_interval.h"
+#include "qwt_interval.h"
 #include <qpen.h>
 #include <qsize.h>
 #include <qrect.h>
@@ -22,32 +22,55 @@ class QRect;
 class QwtText;
 
 /*!
-    Directed rectangle representing bounding rectangle und orientation
+    \brief Directed rectangle representing bounding rectangle und orientation
     of a column.
 */
 class QWT_EXPORT QwtColumnRect
 {
 public:
+    //! Direction of the column
     enum Direction
     {
+        //! From left to right
         LeftToRight,
+
+        //! From right to left
         RightToLeft,
+
+        //! From bottom to top
         BottomToTop,
+
+        //! From top to bottom
         TopToBottom
     };
 
+    //! Build an rectangle with invalid intervals directed BottomToTop.
     QwtColumnRect():
-        direction(BottomToTop)
+        direction( BottomToTop )
     {
     }
 
+    //! \return A normalized QRect built from the intervals
     QRectF toRect() const
     {
-        return QRectF(hInterval.minValue(), vInterval.minValue(),
+        QRectF r( hInterval.minValue(), vInterval.minValue(),
             hInterval.maxValue() - hInterval.minValue(),
-            vInterval.maxValue() - vInterval.minValue() ).normalized();
+            vInterval.maxValue() - vInterval.minValue() );
+        r = r.normalized();
+
+        if ( hInterval.borderFlags() & QwtInterval::ExcludeMinimum )
+            r.adjust( 1, 0, 0, 0 );
+        if ( hInterval.borderFlags() & QwtInterval::ExcludeMaximum )
+            r.adjust( 0, 0, -1, 0 );
+        if ( vInterval.borderFlags() & QwtInterval::ExcludeMinimum )
+            r.adjust( 0, 1, 0, 0 );
+        if ( vInterval.borderFlags() & QwtInterval::ExcludeMaximum )
+            r.adjust( 0, 0, 0, -1 );
+
+        return r;
     }
 
+    //! \return Orientation
     Qt::Orientation orientation() const
     {
         if ( direction == LeftToRight || direction == RightToLeft )
@@ -56,9 +79,13 @@ public:
         return Qt::Vertical;
     }
 
-    
-    QwtDoubleInterval hInterval;
-    QwtDoubleInterval vInterval;
+    //! Interval for the horizontal coordinates
+    QwtInterval hInterval;
+
+    //! Interval for the vertical coordinates
+    QwtInterval vInterval;
+
+    //! Direction
     Direction direction;
 };
 
@@ -66,54 +93,65 @@ public:
 class QWT_EXPORT QwtColumnSymbol
 {
 public:
+    /*!
+      Style
+      \sa setStyle(), style()
+    */
+    enum Style
+    {
+        //! No Style, the symbol draws nothing
+        NoStyle = -1,
+
+        /*!
+          The column is painted with a frame depending on the frameStyle()
+          and lineWidth() using the palette().
+         */
+        Box,
+
+        /*!
+          Styles >= QwtColumnSymbol::UserStyle are reserved for derived
+          classes of QwtColumnSymbol that overload draw() with
+          additional application specific symbol types.
+         */
+        UserStyle = 1000
+    };
 
     /*!
-        Style
-        \sa setStyle(), style()
+      Frame Style used in Box style().
+      \sa Style, setFrameStyle(), frameStyle(), setStyle(), setPalette()
      */
-    enum Style 
-    { 
-        NoSymbol = -1, 
-
-        Box, 
-
-        StyleCnt 
-    };
-   
     enum FrameStyle
     {
+        //! No frame
         NoFrame,
 
+        //! A plain frame style
         Plain,
+
+        //! A raised frame style
         Raised
     };
 
 public:
-    QwtColumnSymbol(Style = NoSymbol);
+    QwtColumnSymbol( Style = NoStyle );
     virtual ~QwtColumnSymbol();
-    
-    void setFrameStyle(FrameStyle style);
+
+    void setFrameStyle( FrameStyle style );
     FrameStyle frameStyle() const;
 
-    void setLineWidth(int width);
+    void setLineWidth( int width );
     int lineWidth() const;
-    
-    bool operator!=(const QwtColumnSymbol &) const;
-    virtual bool operator==(const QwtColumnSymbol &) const;
 
-    void setPalette(const QPalette &);
+    void setPalette( const QPalette & );
     const QPalette &palette() const;
 
-    void setStyle(Style);
+    void setStyle( Style );
     Style style() const;
-    
-    void setLabel(const QwtText&);
-    const QwtText &label() const;
 
-    virtual void draw(QPainter *, const QwtColumnRect &) const;
+    virtual void draw( QPainter *, const QwtColumnRect & ) const;
 
 protected:
-    void drawBox(QPainter *, const QwtColumnRect &) const;
+    void drawBox( QPainter *, const QwtColumnRect & ) const;
 
 private:
     class PrivateData;

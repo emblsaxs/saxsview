@@ -21,8 +21,8 @@ public:
 
 
 //! Constructor
-QwtSamplingThread::QwtSamplingThread(QObject *parent):
-    QThread(parent)
+QwtSamplingThread::QwtSamplingThread( QObject *parent ):
+    QThread( parent )
 {
     d_data = new PrivateData;
     d_data->interval = 1000; // 1 second
@@ -42,7 +42,7 @@ QwtSamplingThread::~QwtSamplingThread()
    \param interval Interval
    \sa interval()
 */
-void QwtSamplingThread::setInterval(double interval)
+void QwtSamplingThread::setInterval( double interval )
 {
     if ( interval < 0.0 )
         interval = 0.0;
@@ -89,18 +89,18 @@ void QwtSamplingThread::run()
     d_data->clock.start();
     d_data->isStopped = false;
 
-    while(!d_data->isStopped)
+    while ( !d_data->isStopped )
     {
         const double elapsed = d_data->clock.elapsed();
-        sample(elapsed / 1000.0);
+        sample( elapsed / 1000.0 );
 
         if ( d_data->interval > 0.0 )
         {
             const double msecs =
-                d_data->interval - (d_data->clock.elapsed() - elapsed);
+                d_data->interval - ( d_data->clock.elapsed() - elapsed );
 
             if ( msecs > 0.0 )
-                usleep(qRound(1000.0 * msecs));
+                usleep( qRound( 1000.0 * msecs ) );
         }
     }
 }

@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -19,10 +19,10 @@ class QPoint;
 /*!
   \brief Base class for needles that can be used in a QwtDial.
 
-  QwtDialNeedle is a pointer that indicates a value by pointing 
-  to a specific direction. 
-    
-  Qwt is missing a set of good looking needles. 
+  QwtDialNeedle is a pointer that indicates a value by pointing
+  to a specific direction.
+
+  Qwt is missing a set of good looking needles.
   Contributions are very welcome.
 
   \sa QwtDial, QwtCompass
@@ -34,25 +34,34 @@ public:
     QwtDialNeedle();
     virtual ~QwtDialNeedle();
 
-    /*!
-        Draw the needle
+    virtual void setPalette( const QPalette & );
+    const QPalette &palette() const;
 
-        \param painter Painter
-        \param center Center of the dial, start position for the needle
-        \param length Length of the needle
-        \param direction Direction of the needle, in degrees counter clockwise
-        \param cg Color group, used for painting
-    */
-    virtual void draw(QPainter *painter, const QPoint &center, 
-        int length, double direction, 
-        QPalette::ColorGroup cg = QPalette::Active) const = 0;
-
-    virtual void setPalette(const QPalette &);
-    const QPalette &palette() const; 
+    virtual void draw( QPainter *painter, const QPointF &center,
+        double length, double direction, 
+        QPalette::ColorGroup = QPalette::Active ) const;
 
 protected:
-    static void drawKnob(QPainter *, const QPoint &pos, 
-        int width, const QBrush &, bool sunken);
+    /*!
+      \brief Draw the needle
+
+      The origin of the needle is at position (0.0, 0.0 )
+      pointing in direction 0.0 ( = east ). 
+
+      The painter is already initilaized with translation and 
+      rotation.
+
+      \param painter Painter
+      \param length Length of the needle
+      \param colorGroup Color group, used for painting
+
+      \sa setPalette(), palette()
+    */
+    virtual void drawNeedle( QPainter *painter, 
+        double length, QPalette::ColorGroup colorGroup ) const = 0;
+
+    virtual void drawKnob( QPainter *, double width, 
+        const QBrush &, bool sunken ) const;
 
 private:
     QPalette d_palette;
@@ -62,6 +71,7 @@ private:
   \brief A needle for dial widgets
 
   The following colors are used:
+
   - QPalette::Mid\n
     Pointer
   - QPalette::Base\n
@@ -76,33 +86,27 @@ public:
     //! Style of the needle
     enum Style
     {
+        //! Arrow
         Arrow,
+
+        //! A straight line from the center
         Ray
     };
 
-    QwtDialSimpleNeedle(Style, bool hasKnob = true, 
-        const QColor &mid = Qt::gray, const QColor &base = Qt::darkGray);
+    QwtDialSimpleNeedle( Style, bool hasKnob = true,
+        const QColor &mid = Qt::gray, const QColor &base = Qt::darkGray );
 
-    virtual void draw(QPainter *, const QPoint &, int length, 
-        double direction, QPalette::ColorGroup = QPalette::Active) const;
+    void setWidth( double width );
+    double width() const;
 
-    static void drawArrowNeedle(QPainter *, 
-        const QPalette&, QPalette::ColorGroup,
-        const QPoint &, int length, int width, double direction, 
-        bool hasKnob);
-
-    static void drawRayNeedle(QPainter *, 
-        const QPalette&, QPalette::ColorGroup,
-        const QPoint &, int length, int width, double direction, 
-        bool hasKnob);
-
-    void setWidth(int width);
-    int width() const;
+protected:
+    virtual void drawNeedle( QPainter *, double length,
+        QPalette::ColorGroup ) const;
 
 private:
     Style d_style;
     bool d_hasKnob;
-    int d_width;
+    double d_width;
 };
 
 /*!
@@ -128,27 +132,19 @@ public:
     //! Style of the needle
     enum Style
     {
+        //! A needle with a triangular shape
         TriangleStyle,
+
+        //! A thin needle 
         ThinStyle
     };
-    QwtCompassMagnetNeedle(Style = TriangleStyle,
-        const QColor &light = Qt::white, const QColor &dark = Qt::red);
 
-    virtual void draw(QPainter *, const QPoint &, int length, 
-        double direction, QPalette::ColorGroup = QPalette::Active) const;
-
-    static void drawTriangleNeedle(QPainter *, 
-        const QPalette &, QPalette::ColorGroup,
-        const QPoint &, int length, double direction); 
-
-    static void drawThinNeedle(QPainter *,
-        const QPalette &, QPalette::ColorGroup,
-        const QPoint &, int length, double direction);
+    QwtCompassMagnetNeedle( Style = TriangleStyle,
+        const QColor &light = Qt::white, const QColor &dark = Qt::red );
 
 protected:
-    static void drawPointer(QPainter *painter, const QBrush &brush,
-        int colorOffset, const QPoint &center, 
-        int length, int width, double direction);
+    virtual void drawNeedle( QPainter *, 
+        double length, QPalette::ColorGroup ) const;
 
 private:
     Style d_style;
@@ -173,26 +169,22 @@ public:
     //! Style of the arrow
     enum Style
     {
+        //! A needle pointing to the center
         Style1,
+
+        //! A needle pointing to the center
         Style2
     };
 
-    QwtCompassWindArrow(Style, const QColor &light = Qt::white,
-        const QColor &dark = Qt::gray);
+    QwtCompassWindArrow( Style, const QColor &light = Qt::white,
+        const QColor &dark = Qt::gray );
 
-    virtual void draw(QPainter *, const QPoint &, int length,
-        double direction, QPalette::ColorGroup = QPalette::Active) const;
-
-    static void drawStyle1Needle(QPainter *, 
-        const QPalette &, QPalette::ColorGroup,
-        const QPoint &, int length, double direction);
-
-    static void drawStyle2Needle(QPainter *, 
-        const QPalette &, QPalette::ColorGroup,
-        const QPoint &, int length, double direction);
+protected:
+    virtual void drawNeedle( QPainter *, 
+        double length, QPalette::ColorGroup ) const;
 
 private:
     Style d_style;
 };
 
-#endif // QWT_DIAL_NEEDLE_H
+#endif 

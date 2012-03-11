@@ -10,15 +10,15 @@
 #ifndef QWT_PLOT_SVGITEM_H
 #define QWT_PLOT_SVGITEM_H
 
-#include "qwt_global.h" 
-#include "qwt_plot_item.h" 
+#include "qwt_global.h"
+#include "qwt_plot_item.h"
 #include <qstring.h>
 
 class QSvgRenderer;
 class QByteArray;
 
 /*!
-  \brief A plot item, which displays 
+  \brief A plot item, which displays
          data in Scalable Vector Graphics (SVG) format.
 
   SVG images are often used to display maps
@@ -27,18 +27,18 @@ class QByteArray;
 class QWT_EXPORT QwtPlotSvgItem: public QwtPlotItem
 {
 public:
-    explicit QwtPlotSvgItem(const QString& title = QString::null );
-    explicit QwtPlotSvgItem(const QwtText& title );
+    explicit QwtPlotSvgItem( const QString& title = QString::null );
+    explicit QwtPlotSvgItem( const QwtText& title );
     virtual ~QwtPlotSvgItem();
 
-    bool loadFile(const QRectF&, const QString &fileName);
-    bool loadData(const QRectF&, const QByteArray &);
+    bool loadFile( const QRectF&, const QString &fileName );
+    bool loadData( const QRectF&, const QByteArray & );
 
     virtual QRectF boundingRect() const;
 
-    virtual void draw(QPainter *p,
+    virtual void draw( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &rect) const;
+        const QRectF &rect ) const;
 
     virtual int rtti() const;
 
@@ -46,9 +46,10 @@ protected:
     const QSvgRenderer &renderer() const;
     QSvgRenderer &renderer();
 
-    void render(QPainter *painter,
-        const QRectF &viewBox, const QRectF &rect) const;
-    QRectF viewBox(const QRectF &area) const;
+    void render( QPainter *painter,
+        const QRectF &viewBox, const QRectF &rect ) const;
+
+    QRectF viewBox( const QRectF &area ) const;
 
 private:
     void init();

@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -15,7 +15,7 @@
 
 #if QT_VERSION < 0x040601
 #define qFabs(x) ::fabs(x)
-#endif          
+#endif
 
 //! Constructor
 QwtCurveFitter::QwtCurveFitter()
@@ -31,8 +31,8 @@ class QwtSplineCurveFitter::PrivateData
 {
 public:
     PrivateData():
-        fitMode(QwtSplineCurveFitter::Auto),
-        splineSize(250)
+        fitMode( QwtSplineCurveFitter::Auto ),
+        splineSize( 250 )
     {
     }
 
@@ -59,7 +59,7 @@ QwtSplineCurveFitter::~QwtSplineCurveFitter()
   \param mode Mode representing a spline algorithm
   \sa fitMode()
 */
-void QwtSplineCurveFitter::setFitMode(FitMode mode)
+void QwtSplineCurveFitter::setFitMode( FitMode mode )
 {
     d_data->fitMode = mode;
 }
@@ -73,18 +73,32 @@ QwtSplineCurveFitter::FitMode QwtSplineCurveFitter::fitMode() const
     return d_data->fitMode;
 }
 
-void QwtSplineCurveFitter::setSpline(const QwtSpline &spline)
+/*!
+  Assign a spline
+
+  \param spline Spline
+  \sa spline()
+*/
+void QwtSplineCurveFitter::setSpline( const QwtSpline &spline )
 {
     d_data->spline = spline;
     d_data->spline.reset();
 }
 
+/*!
+  \return Spline
+  \sa setSpline()
+*/
 const QwtSpline &QwtSplineCurveFitter::spline() const
 {
     return d_data->spline;
 }
 
-QwtSpline &QwtSplineCurveFitter::spline() 
+/*!
+  \return Spline
+  \sa setSpline()
+*/
+QwtSpline &QwtSplineCurveFitter::spline()
 {
     return d_data->spline;
 }
@@ -95,12 +109,12 @@ QwtSpline &QwtSplineCurveFitter::spline()
    \param splineSize Spline size
    \sa splineSize()
 */
-void QwtSplineCurveFitter::setSplineSize(int splineSize)
+void QwtSplineCurveFitter::setSplineSize( int splineSize )
 {
-    d_data->splineSize = qMax(splineSize, 10);
+    d_data->splineSize = qMax( splineSize, 10 );
 }
 
-/*! 
+/*!
   \return Spline size
   \sa setSplineSize()
 */
@@ -115,9 +129,9 @@ int QwtSplineCurveFitter::splineSize() const
   \param points Series of data points
   \return Curve points
 */
-QPolygonF QwtSplineCurveFitter::fitCurve(const QPolygonF &points) const
+QPolygonF QwtSplineCurveFitter::fitCurve( const QPolygonF &points ) const
 {
-    const int size = (int)points.size();
+    const int size = points.size();
     if ( size <= 2 )
         return points;
 
@@ -138,91 +152,91 @@ QPolygonF QwtSplineCurveFitter::fitCurve(const QPolygonF &points) const
     }
 
     if ( fitMode == ParametricSpline )
-        return fitParametric(points);
+        return fitParametric( points );
     else
-        return fitSpline(points);
+        return fitSpline( points );
 }
 
-QPolygonF QwtSplineCurveFitter::fitSpline(const QPolygonF &points) const
+QPolygonF QwtSplineCurveFitter::fitSpline( const QPolygonF &points ) const
 {
-    d_data->spline.setPoints(points);
+    d_data->spline.setPoints( points );
     if ( !d_data->spline.isValid() )
         return points;
 
-    QPolygonF fittedPoints(d_data->splineSize);
+    QPolygonF fittedPoints( d_data->splineSize );
 
     const double x1 = points[0].x();
-    const double x2 = points[int(points.size() - 1)].x();
+    const double x2 = points[int( points.size() - 1 )].x();
     const double dx = x2 - x1;
-    const double delta = dx / (d_data->splineSize - 1);
+    const double delta = dx / ( d_data->splineSize - 1 );
 
-    for (int i = 0; i < d_data->splineSize; i++)
+    for ( int i = 0; i < d_data->splineSize; i++ )
     {
         QPointF &p = fittedPoints[i];
 
         const double v = x1 + i * delta;
-        const double sv = d_data->spline.value(v);
+        const double sv = d_data->spline.value( v );
 
-        p.setX(qRound(v));
-        p.setY(qRound(sv));
+        p.setX( v );
+        p.setY( sv );
     }
     d_data->spline.reset();
 
     return fittedPoints;
 }
 
-QPolygonF QwtSplineCurveFitter::fitParametric(const QPolygonF &points) const
+QPolygonF QwtSplineCurveFitter::fitParametric( const QPolygonF &points ) const
 {
     int i;
     const int size = points.size();
 
-    QPolygonF fittedPoints(d_data->splineSize);
-    QPolygonF splinePointsX(size);
-    QPolygonF splinePointsY(size);
+    QPolygonF fittedPoints( d_data->splineSize );
+    QPolygonF splinePointsX( size );
+    QPolygonF splinePointsY( size );
 
     const QPointF *p = points.data();
     QPointF *spX = splinePointsX.data();
     QPointF *spY = splinePointsY.data();
 
     double param = 0.0;
-    for (i = 0; i < size; i++)
+    for ( i = 0; i < size; i++ )
     {
         const double x = p[i].x();
         const double y = p[i].y();
         if ( i > 0 )
         {
-            const double delta = qSqrt( qwtSqr(x - spX[i-1].y())
+            const double delta = qSqrt( qwtSqr( x - spX[i-1].y() )
                       + qwtSqr( y - spY[i-1].y() ) );
-            param += qMax(delta, 1.0);
+            param += qMax( delta, 1.0 );
         }
-        spX[i].setX(param);
-        spX[i].setY(x);
-        spY[i].setX(param);
-        spY[i].setY(y);
+        spX[i].setX( param );
+        spX[i].setY( x );
+        spY[i].setX( param );
+        spY[i].setY( y );
     }
 
-    d_data->spline.setPoints(splinePointsX);
+    d_data->spline.setPoints( splinePointsX );
     if ( !d_data->spline.isValid() )
         return points;
 
     const double deltaX =
-        splinePointsX[size - 1].x() / (d_data->splineSize-1);
-    for (i = 0; i < d_data->splineSize; i++)
+        splinePointsX[size - 1].x() / ( d_data->splineSize - 1 );
+    for ( i = 0; i < d_data->splineSize; i++ )
     {
         const double dtmp = i * deltaX;
-        fittedPoints[i].setX(qRound(d_data->spline.value(dtmp)));
+        fittedPoints[i].setX( d_data->spline.value( dtmp ) );
     }
 
-    d_data->spline.setPoints(splinePointsY);
+    d_data->spline.setPoints( splinePointsY );
     if ( !d_data->spline.isValid() )
         return points;
 
     const double deltaY =
-        splinePointsY[size - 1].x() / (d_data->splineSize-1);
-    for (i = 0; i < d_data->splineSize; i++)
+        splinePointsY[size - 1].x() / ( d_data->splineSize - 1 );
+    for ( i = 0; i < d_data->splineSize; i++ )
     {
         const double dtmp = i * deltaY;
-        fittedPoints[i].setY(qRound(d_data->spline.value(dtmp)));
+        fittedPoints[i].setY( d_data->spline.value( dtmp ) );
     }
 
     return fittedPoints;
@@ -232,7 +246,7 @@ class QwtWeedingCurveFitter::PrivateData
 {
 public:
     PrivateData():
-        tolerance(1.0)
+        tolerance( 1.0 )
     {
     }
 
@@ -242,9 +256,9 @@ public:
 class QwtWeedingCurveFitter::Line
 {
 public:
-    Line(int i1 = 0, int i2 = 0):
-        from(i1),
-        to(i2)
+    Line( int i1 = 0, int i2 = 0 ):
+        from( i1 ),
+        to( i2 )
     {
     }
 
@@ -252,16 +266,16 @@ public:
     int to;
 };
 
-/*! 
+/*!
    Constructor
 
    \param tolerance Tolerance
    \sa setTolerance(), tolerance()
 */
-QwtWeedingCurveFitter::QwtWeedingCurveFitter(double tolerance)
+QwtWeedingCurveFitter::QwtWeedingCurveFitter( double tolerance )
 {
     d_data = new PrivateData;
-    setTolerance(tolerance);
+    setTolerance( tolerance );
 }
 
 //! Destructor
@@ -283,9 +297,9 @@ QwtWeedingCurveFitter::~QwtWeedingCurveFitter()
 
  \sa tolerance()
 */
-void QwtWeedingCurveFitter::setTolerance(double tolerance)
+void QwtWeedingCurveFitter::setTolerance( double tolerance )
 {
-    d_data->tolerance = qMax(tolerance, 0.0);
+    d_data->tolerance = qMax( tolerance, 0.0 );
 }
 
 /*!
@@ -301,19 +315,19 @@ double QwtWeedingCurveFitter::tolerance() const
   \param points Series of data points
   \return Curve points
 */
-QPolygonF QwtWeedingCurveFitter::fitCurve(const QPolygonF &points) const
+QPolygonF QwtWeedingCurveFitter::fitCurve( const QPolygonF &points ) const
 {
     QStack<Line> stack;
-    stack.reserve(500);
+    stack.reserve( 500 );
 
     const QPointF *p = points.data();
     const int nPoints = points.size();
 
-    QVector<bool> usePoint(nPoints, false);
+    QVector<bool> usePoint( nPoints, false );
 
     double distToSegment;
 
-    stack.push(Line(0, nPoints - 1));
+    stack.push( Line( 0, nPoints - 1 ) );
 
     while ( !stack.isEmpty() )
     {
@@ -325,8 +339,8 @@ QPolygonF QwtWeedingCurveFitter::fitCurve(const QPolygonF &points) const
 
         const double vecLength = qSqrt( vecX * vecX + vecY * vecY );
 
-        const double unitVecX = (vecLength != 0.0) ? vecX / vecLength : 0.0;
-        const double unitVecY = (vecLength != 0.0) ? vecY / vecLength : 0.0;
+        const double unitVecX = ( vecLength != 0.0 ) ? vecX / vecLength : 0.0;
+        const double unitVecY = ( vecLength != 0.0 ) ? vecY / vecLength : 0.0;
 
         double maxDist = 0.0;
         int nVertexIndexMaxDistance = r.from + 1;
@@ -336,7 +350,7 @@ QPolygonF QwtWeedingCurveFitter::fitCurve(const QPolygonF &points) const
             const double fromVecX = p[i].x() - p[r.from].x();
             const double fromVecY = p[i].y() - p[r.from].y();
             const double fromVecLength =
-                qSqrt(fromVecX * fromVecX + fromVecY * fromVecY );
+                qSqrt( fromVecX * fromVecX + fromVecY * fromVecY );
 
             if ( fromVecX * unitVecX + fromVecY * unitVecY < 0.0 )
             {
@@ -351,7 +365,7 @@ QPolygonF QwtWeedingCurveFitter::fitCurve(const QPolygonF &points) const
                 const double toVecX = p[i].x() - p[r.to].x();
                 const double toVecY = p[i].y() - p[r.to].y();
                 const double toVecLength = qSqrt( toVecX * toVecX + toVecY * toVecY );
-                const double s = toVecX * (-unitVecX) + toVecY * (-unitVecY);
+                const double s = toVecX * ( -unitVecX ) + toVecY * ( -unitVecY );
                 if ( s < 0.0 )
                     distToSegment = toVecLength;
                 else
@@ -373,19 +387,19 @@ QPolygonF QwtWeedingCurveFitter::fitCurve(const QPolygonF &points) const
         }
         else
         {
-            stack.push(Line(r.from, nVertexIndexMaxDistance) );
-            stack.push(Line(nVertexIndexMaxDistance, r.to) );
+            stack.push( Line( r.from, nVertexIndexMaxDistance ) );
+            stack.push( Line( nVertexIndexMaxDistance, r.to ) );
         }
     }
 
     int cnt = 0;
 
-    QPolygonF stripped(nPoints);
+    QPolygonF stripped( nPoints );
     for ( int i = 0; i < nPoints; i++ )
     {
         if ( usePoint[i] )
             stripped[cnt++] = p[i];
     }
-    stripped.resize(cnt);
+    stripped.resize( cnt );
     return stripped;
 }

@@ -27,20 +27,21 @@ class QwtCurveFitter;
   \brief A plot item, that represents a series of points
 
   A curve is the representation of a series of points in the x-y plane.
-  It supports different display styles, interpolation ( f.e. spline ) 
+  It supports different display styles, interpolation ( f.e. spline )
   and symbols.
 
   \par Usage
   <dl><dt>a) Assign curve properties</dt>
   <dd>When a curve is created, it is configured to draw black solid lines
-  with in Lines style and no symbols. You can change this by calling 
+  with in QwtPlotCurve::Lines style and no symbols. 
+  You can change this by calling
   setPen(), setStyle() and setSymbol().</dd>
   <dt>b) Connect/Assign data.</dt>
-  <dd>QwtPlotCurve gets its points using a QwtData object offering
+  <dd>QwtPlotCurve gets its points using a QwtSeriesData object offering
   a bridge to the real storage of the points ( like QAbstractItemModel ).
-  There are several convenience classes derived from QwtData, that also store
+  There are several convenience classes derived from QwtSeriesData, that also store
   the points inside ( like QStandardItemModel ). QwtPlotCurve also offers
-  a couple of variations of setData(), that build QwtData objects from
+  a couple of variations of setSamples(), that build QwtSeriesData objects from
   arrays internally.</dd>
   <dt>c) Attach the curve to a plot</dt>
   <dd>See QwtPlotItem::attach()
@@ -51,210 +52,252 @@ class QwtCurveFitter;
 
   \sa QwtPointSeriesData, QwtSymbol, QwtScaleMap
 */
-class QWT_EXPORT QwtPlotCurve: public QwtPlotSeriesItem<QPointF>
+class QWT_EXPORT QwtPlotCurve: 
+    public QwtPlotSeriesItem, public QwtSeriesStore<QPointF>
 {
 public:
-    /*! 
-        Curve styles. 
-
-         - NoCurve\n
-           Don't draw a curve. Note: This doesn't affect the symbols.
-         - Lines\n
-           Connect the points with straight lines. The lines might
-           be interpolated depending on the 'Fitted' attribute. Curve
-           fitting can be configured using setCurveFitter().
-         - Sticks\n
-           Draw vertical(Yfx) or horizontal(Xfy) sticks from a baseline 
-           which is defined by setBaseline().
-         - Steps\n
-           Connect the points with a step function. The step function
-           is drawn from the left to the right or vice versa,
-           depending on the 'Inverted' attribute.
-         - Dots\n
-           Draw dots at the locations of the data points. Note:
-           This is different from a dotted line (see setPen()), and faster
-           as a curve in NoStyle style and a symbol painting a point.
-         - UserCurve\n
-           Styles >= UserCurve are reserved for derived
-           classes of QwtPlotCurve that overload drawCurve() with
-           additional application specific curve types.
-
+    /*!
+        Curve styles.
         \sa setStyle(), style()
     */
     enum CurveStyle
     {
-        NoCurve,
+        /*!
+           Don't draw a curve. Note: This doesn't affect the symbols.
+        */
+        NoCurve = -1,
 
+        /*!
+           Connect the points with straight lines. The lines might
+           be interpolated depending on the 'Fitted' attribute. Curve
+           fitting can be configured using setCurveFitter().
+        */
         Lines,
+
+        /*!
+           Draw vertical or horizontal sticks ( depending on the 
+           orientation() ) from a baseline which is defined by setBaseline().
+        */
         Sticks,
+
+        /*!
+           Connect the points with a step function. The step function
+           is drawn from the left to the right or vice versa,
+           depending on the QwtPlotCurve::Inverted attribute.
+        */
         Steps,
+
+        /*!
+           Draw dots at the locations of the data points. Note:
+           This is different from a dotted line (see setPen()), and faster
+           as a curve in QwtPlotCurve::NoStyle style and a symbol 
+           painting a point.
+        */
         Dots,
 
+        /*!
+           Styles >= QwtPlotCurve::UserCurve are reserved for derived
+           classes of QwtPlotCurve that overload drawCurve() with
+           additional application specific curve types.
+        */
         UserCurve = 100
     };
 
-    /*! 
+    /*!
       Attribute for drawing the curve
-
-      - Fitted ( in combination with the Lines QwtPlotCurve::CurveStyle only )\n
-        A QwtCurveFitter tries to
-        interpolate/smooth the curve, before it is painted.
-        Note that curve fitting requires temorary memory
-        for calculating coefficients and additional points.
-        If painting in Fitted mode is slow it might be better
-        to fit the points, before they are passed to QwtPlotCurve.
-      - Inverted\n
-        For Steps only. Draws a step function
-        from the right to the left.
-
-        \sa setCurveAttribute(), testCurveAttribute(), curveFitter()
+      \sa setCurveAttribute(), testCurveAttribute(), curveFitter()
     */
     enum CurveAttribute
     {
-        Inverted = 1,
-        Fitted = 2
+        /*!
+           For QwtPlotCurve::Steps only. 
+           Draws a step function from the right to the left.
+         */
+        Inverted = 0x01,
+
+        /*!
+          Only in combination with QwtPlotCurve::Lines
+          A QwtCurveFitter tries to
+          interpolate/smooth the curve, before it is painted.
+
+          \note Curve fitting requires temorary memory
+          for calculating coefficients and additional points.
+          If painting in QwtPlotCurve::Fitted mode is slow it might be better
+          to fit the points, before they are passed to QwtPlotCurve.
+         */
+        Fitted = 0x02
     };
 
-    /*! 
+    //! Curve attributes
+    typedef QFlags<CurveAttribute> CurveAttributes;
+
+    /*!
         Attributes how to represent the curve on the legend
 
-        - LegendShowLine
-          If the curveStyle() is not NoCurve a line is painted with the 
-          curvePen().
-        - LegendShowSymbol
-          If the curve has a valid symbol it is painted.
-        - LegendShowBrush
-          If the curve has a brush a rectangle filled with this brush
-          is painted
-
-        If none of the flags is activated QwtPlotCurve tries to find
-        a color representing the curve and paints a rectangle with it.
-        In the default setting all attributes are off.
-
         \sa setLegendAttribute(), testLegendAttribute(),
-            drawLegendIdentifier()
+            QwtPlotItem::legendData(), legendIcon()
      */
 
     enum LegendAttribute
     {
-        LegendShowLine = 1,
-        LegendShowSymbol = 2,
-        LegendShowBrush = 4
+        /*!
+          QwtPlotCurve tries to find a color representing the curve 
+          and paints a rectangle with it.
+         */
+        LegendNoAttribute = 0x00,
+
+        /*!
+          If the style() is not QwtPlotCurve::NoCurve a line 
+          is painted with the curve pen().
+         */
+        LegendShowLine = 0x01,
+
+        /*!
+          If the curve has a valid symbol it is painted.
+         */
+        LegendShowSymbol = 0x02,
+
+        /*!
+          If the curve has a brush a rectangle filled with the
+          curve brush() is painted.
+         */
+        LegendShowBrush = 0x04
     };
 
-    /*! 
+    //! Legend attributes
+    typedef QFlags<LegendAttribute> LegendAttributes;
+
+    /*!
         Attributes to modify the drawing algorithm.
-
-        - ClipPolygons\n
-          Clip polygons before painting them. In situations, where points
-          are far outside the visible area (f.e when zooming deep) this 
-          might be a substantial improvement for the painting performance 
-          ( especially on Windows ).
-        - CacheSymbols\n
-          Paint the symbol to a QPixmap and paint the pixmap
-          instead rendering the symbol for each point. The flag has
-          no effect, when the curve is not painted to the canvas 
-          ( or its cache )
-
-        The default setting enables ClipPolygons
+        The default setting enables ClipPolygons | FilterPoints
 
         \sa setPaintAttribute(), testPaintAttribute()
     */
     enum PaintAttribute
     {
-        ClipPolygons = 1,
-        CacheSymbols = 2
+        /*!
+          Clip polygons before painting them. In situations, where points
+          are far outside the visible area (f.e when zooming deep) this
+          might be a substantial improvement for the painting performance
+         */
+        ClipPolygons = 0x01,
+
+        /*!
+          Tries to reduce the data that has to be painted, by sorting out
+          duplicates, or paintings outside the visible area. Might have a
+          notable impact on curves with many close points.
+          Only a couple of very basic filtering algos are implemented.
+         */
+        FilterPoints = 0x02,
+
+        /*!
+          Minimize memory usage that is temporarily needed for the 
+          translated points, before they get painted.
+          This might slow down the performance of painting 
+         */
+        MinimizeMemory = 0x04,
+
+        /*!
+          Render the points to a temporary image and paint the image.
+          This is a very special optimization for Dots style, when
+          having a huge amount of points. 
+          With a reasonable number of points QPainter::drawPoints()
+          will be faster.
+         */
+        ImageBuffer = 0x08
     };
 
-    explicit QwtPlotCurve(const QString &title = QString::null);
-    explicit QwtPlotCurve(const QwtText &title);
+    //! Paint attributes
+    typedef QFlags<PaintAttribute> PaintAttributes;
+
+    explicit QwtPlotCurve( const QString &title = QString::null );
+    explicit QwtPlotCurve( const QwtText &title );
 
     virtual ~QwtPlotCurve();
 
     virtual int rtti() const;
 
-    void setPaintAttribute(PaintAttribute, bool on = true);
-    bool testPaintAttribute(PaintAttribute) const;
+    void setPaintAttribute( PaintAttribute, bool on = true );
+    bool testPaintAttribute( PaintAttribute ) const;
 
-    void setLegendAttribute(LegendAttribute, bool on = true);
-    bool testLegendAttribute(LegendAttribute) const;
+    void setLegendAttribute( LegendAttribute, bool on = true );
+    bool testLegendAttribute( LegendAttribute ) const;
 
 #ifndef QWT_NO_COMPAT
-    void setRawSamples(const double *xData, const double *yData, int size);
-    void setSamples(const double *xData, const double *yData, int size);
-    void setSamples(const QVector<double> &xData, const QVector<double> &yData);
+    void setRawSamples( const double *xData, const double *yData, int size );
+    void setSamples( const double *xData, const double *yData, int size );
+    void setSamples( const QVector<double> &xData, const QVector<double> &yData );
 #endif
-    void setSamples(const QVector<QPointF> &);
+    void setSamples( const QVector<QPointF> & );
 
-    int closestPoint(const QPoint &pos, double *dist = NULL) const;
+    int closestPoint( const QPoint &pos, double *dist = NULL ) const;
 
     double minXValue() const;
     double maxXValue() const;
     double minYValue() const;
     double maxYValue() const;
 
-    void setCurveAttribute(CurveAttribute, bool on = true);
-    bool testCurveAttribute(CurveAttribute) const;
+    void setCurveAttribute( CurveAttribute, bool on = true );
+    bool testCurveAttribute( CurveAttribute ) const;
 
-    void setPen(const QPen &);
+    void setPen( const QPen & );
     const QPen &pen() const;
 
-    void setBrush(const QBrush &);
+    void setBrush( const QBrush & );
     const QBrush &brush() const;
 
-    void setBaseline(double ref);
+    void setBaseline( double );
     double baseline() const;
 
-    void setStyle(CurveStyle style);
+    void setStyle( CurveStyle style );
     CurveStyle style() const;
 
-    void setSymbol(const QwtSymbol *s);
+    void setSymbol( const QwtSymbol *s );
     const QwtSymbol *symbol() const;
 
-    void setCurveFitter(QwtCurveFitter *);
+    void setCurveFitter( QwtCurveFitter * );
     QwtCurveFitter *curveFitter() const;
 
-    virtual void drawSeries(QPainter *, 
+    virtual void drawSeries( QPainter *,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    virtual void updateLegend(QwtLegend *) const;
-    virtual void drawLegendIdentifier(QPainter *, const QRectF &) const;
+    virtual QwtGraphic legendIcon( int index, const QSizeF & ) const;
 
 protected:
 
     void init();
 
-    virtual void drawCurve(QPainter *p, int style,
+    virtual void drawCurve( QPainter *p, int style,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    virtual void drawSymbols(QPainter *p, const QwtSymbol &,
+    virtual void drawSymbols( QPainter *p, const QwtSymbol &,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    void drawLines(QPainter *p,
+    void drawLines( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    void drawSticks(QPainter *p,
+    void drawSticks( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    void drawDots(QPainter *p,
+    void drawDots( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    void drawSteps(QPainter *p,
+    void drawSteps( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QRectF &canvasRect, int from, int to) const;
+        const QRectF &canvasRect, int from, int to ) const;
 
-    void fillCurve(QPainter *,
-        const QwtScaleMap &, const QwtScaleMap &,
-        QPolygonF &) const;
+    virtual void fillCurve( QPainter *,
+        const QwtScaleMap &, const QwtScaleMap &, 
+        const QRectF &canvasRect, QPolygonF & ) const;
 
-    void closePolyline(const QwtScaleMap &, const QwtScaleMap &,
-        QPolygonF &) const;
+    void closePolyline( QPainter *,
+        const QwtScaleMap &, const QwtScaleMap &, QPolygonF & ) const;
 
 private:
     class PrivateData;
@@ -262,27 +305,31 @@ private:
 };
 
 //! boundingRect().left()
-inline double QwtPlotCurve::minXValue() const 
-{ 
-    return boundingRect().left(); 
+inline double QwtPlotCurve::minXValue() const
+{
+    return boundingRect().left();
 }
 
 //! boundingRect().right()
-inline double QwtPlotCurve::maxXValue() const 
-{ 
-    return boundingRect().right(); 
+inline double QwtPlotCurve::maxXValue() const
+{
+    return boundingRect().right();
 }
 
 //! boundingRect().top()
-inline double QwtPlotCurve::minYValue() const 
-{ 
-    return boundingRect().top(); 
+inline double QwtPlotCurve::minYValue() const
+{
+    return boundingRect().top();
 }
 
 //! boundingRect().bottom()
-inline double QwtPlotCurve::maxYValue() const 
-{ 
-    return boundingRect().bottom(); 
+inline double QwtPlotCurve::maxYValue() const
+{
+    return boundingRect().bottom();
 }
+
+Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotCurve::PaintAttributes )
+Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotCurve::LegendAttributes )
+Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotCurve::CurveAttributes )
 
 #endif

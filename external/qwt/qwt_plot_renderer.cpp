@@ -10,11 +10,9 @@
 #include "qwt_plot_renderer.h"
 #include "qwt_plot.h"
 #include "qwt_painter.h"
-#include "qwt_legend_item.h"
 #include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
-#include "qwt_legend.h"
-#include "qwt_dyngrid_layout.h"
+#include "qwt_abstract_legend.h"
 #include "qwt_scale_widget.h"
 #include "qwt_scale_engine.h"
 #include "qwt_text.h"
@@ -24,30 +22,58 @@
 #include <qpaintengine.h>
 #include <qtransform.h>
 #include <qprinter.h>
-#include <qimagewriter.h>
+#include <qprintdialog.h>
+#include <qfiledialog.h>
 #include <qfileinfo.h>
+#include <qstyle.h>
+#include <qstyleoption.h>
+#include <qimagewriter.h>
+#ifndef QWT_NO_SVG
 #ifdef QT_SVG_LIB
 #include <qsvggenerator.h>
+#endif
 #endif
 
 class QwtPlotRenderer::PrivateData
 {
 public:
     PrivateData():
-        discardFlags(QwtPlotRenderer::DiscardBackground),
-        layoutFlags(QwtPlotRenderer::DefaultLayout),
-        plot(NULL)
+        discardFlags( QwtPlotRenderer::DiscardBackground ),
+        layoutFlags( QwtPlotRenderer::DefaultLayout )
     {
     }
 
     QwtPlotRenderer::DiscardFlags discardFlags;
     QwtPlotRenderer::LayoutFlags layoutFlags;
-    QwtPlot *plot;
 };
 
-//! Constructor
-QwtPlotRenderer::QwtPlotRenderer(QObject *parent):
-    QObject(parent)
+static void qwtRenderBackground( QPainter *painter,
+    const QRectF &rect, const QWidget *widget )
+{
+    if ( widget->testAttribute( Qt::WA_StyledBackground ) )
+    {
+        QStyleOption opt;
+        opt.initFrom( widget );
+        opt.rect = rect.toAlignedRect();
+
+        widget->style()->drawPrimitive(
+            QStyle::PE_Widget, &opt, painter, widget);
+    }
+    else
+    {
+        const QBrush brush = 
+            widget->palette().brush( widget->backgroundRole() );
+
+        painter->fillRect( rect, brush );
+    }
+}
+
+/*! 
+   Constructor
+   \param parent Parent object
+*/
+QwtPlotRenderer::QwtPlotRenderer( QObject *parent ):
+    QObject( parent )
 {
     d_data = new PrivateData;
 }
@@ -58,7 +84,15 @@ QwtPlotRenderer::~QwtPlotRenderer()
     delete d_data;
 }
 
-void QwtPlotRenderer::setDiscardFlag(DiscardFlag flag, bool on)
+/*!
+  Change a flag, indicating what to discard from rendering
+
+  \param flag Flag to change
+  \param on On/Off
+
+  \sa DiscardFlag, testDiscardFlag(), setDiscardFlags(), discardFlags()
+*/
+void QwtPlotRenderer::setDiscardFlag( DiscardFlag flag, bool on )
 {
     if ( on )
         d_data->discardFlags |= flag;
@@ -66,22 +100,46 @@ void QwtPlotRenderer::setDiscardFlag(DiscardFlag flag, bool on)
         d_data->discardFlags &= ~flag;
 }
 
-bool QwtPlotRenderer::testDiscardFlag(DiscardFlag flag) const
+/*!
+  Check if a flag is set.
+
+  \param flag Flag to be tested
+  \sa DiscardFlag, setDiscardFlag(), setDiscardFlags(), discardFlags()
+*/
+bool QwtPlotRenderer::testDiscardFlag( DiscardFlag flag ) const
 {
     return d_data->discardFlags & flag;
 }
 
-void QwtPlotRenderer::setDiscardFlags(DiscardFlags flags)
+/*!
+  Set the flags, indicating what to discard from rendering
+
+  \param flags Flags
+  \sa DiscardFlag, setDiscardFlag(), testDiscardFlag(), discardFlags()
+*/
+void QwtPlotRenderer::setDiscardFlags( DiscardFlags flags )
 {
     d_data->discardFlags = flags;
 }
 
+/*!
+  \return Flags, indicating what to discard from rendering
+  \sa DiscardFlag, setDiscardFlags(), setDiscardFlag(), testDiscardFlag()
+*/
 QwtPlotRenderer::DiscardFlags QwtPlotRenderer::discardFlags() const
 {
     return d_data->discardFlags;
 }
 
-void QwtPlotRenderer::setLayoutFlag(LayoutFlag flag, bool on)
+/*!
+  Change a layout flag
+
+  \param flag Flag to change
+  \param on On/Off
+
+  \sa LayoutFlag, testLayoutFlag(), setLayoutFlags(), layoutFlags()
+*/
+void QwtPlotRenderer::setLayoutFlag( LayoutFlag flag, bool on )
 {
     if ( on )
         d_data->layoutFlags |= flag;
@@ -89,32 +147,83 @@ void QwtPlotRenderer::setLayoutFlag(LayoutFlag flag, bool on)
         d_data->layoutFlags &= ~flag;
 }
 
-bool QwtPlotRenderer::testLayoutFlag(LayoutFlag flag) const
+/*!
+  Check if a flag is set.
+
+  \param flag Flag to be tested
+  \sa LayoutFlag, setLayoutFlag(), setLayoutFlags(), layoutFlags()
+*/
+bool QwtPlotRenderer::testLayoutFlag( LayoutFlag flag ) const
 {
     return d_data->layoutFlags & flag;
-}   
+}
 
-void QwtPlotRenderer::setLayoutFlags(LayoutFlags flags)
+/*!
+  Set the layout flags
+
+  \param flags Flags
+  \sa LayoutFlag, setLayoutFlag(), testLayoutFlag(), layoutFlags()
+*/
+void QwtPlotRenderer::setLayoutFlags( LayoutFlags flags )
 {
     d_data->layoutFlags = flags;
 }
 
+/*!
+  \return Layout flags
+  \sa LayoutFlag, setLayoutFlags(), setLayoutFlag(), testLayoutFlag()
+*/
 QwtPlotRenderer::LayoutFlags QwtPlotRenderer::layoutFlags() const
 {
     return d_data->layoutFlags;
 }
 
-void QwtPlotRenderer::renderDocument(QwtPlot *plot, 
-    const QString &fileName, const QSizeF &sizeMM, int resolution)
-{
-    renderDocument(plot, fileName, 
-        QFileInfo(fileName).suffix(), sizeMM, resolution);
-}
-        
+/*!
+  Render a plot to a file
 
-void QwtPlotRenderer::renderDocument(QwtPlot *plot, 
+  The format of the document will be autodetected from the
+  suffix of the filename.
+
+  \param plot Plot widget
+  \param fileName Path of the file, where the document will be stored
+  \param sizeMM Size for the document in millimeters.
+  \param resolution Resolution in dots per Inch (dpi)
+*/
+void QwtPlotRenderer::renderDocument( QwtPlot *plot,
+    const QString &fileName, const QSizeF &sizeMM, int resolution )
+{
+    renderDocument( plot, fileName,
+        QFileInfo( fileName ).suffix(), sizeMM, resolution );
+}
+
+/*!
+  Render a plot to a file
+
+  Supported formats are:
+
+  - pdf\n
+    Portable Document Format PDF
+  - ps\n
+    Postcript
+  - svg\n
+    Scalable Vector Graphics SVG
+  - all image formats supported by Qt\n
+    see QImageWriter::supportedImageFormats()
+
+  Scalable vector graphic formats like PDF or SVG are superior to
+  raster graphics formats.
+
+  \param plot Plot widget
+  \param fileName Path of the file, where the document will be stored
+  \param format Format for the document
+  \param sizeMM Size for the document in millimeters.
+  \param resolution Resolution in dots per Inch (dpi)
+
+  \sa renderTo(), render(), QwtPainter::setRoundingAlignment()
+*/
+void QwtPlotRenderer::renderDocument( QwtPlot *plot,
     const QString &fileName, const QString &format,
-    const QSizeF &sizeMM, int resolution)
+    const QSizeF &sizeMM, int resolution )
 {
     if ( plot == NULL || sizeMM.isEmpty() || resolution <= 0 )
         return;
@@ -123,38 +232,42 @@ void QwtPlotRenderer::renderDocument(QwtPlot *plot,
     if ( title.isEmpty() )
         title = "Plot Document";
 
-    const double toInch = 1.0 / 25.4;
-    const QSizeF size = sizeMM * toInch * resolution; 
+    const double mmToInch = 1.0 / 25.4;
+    const QSizeF size = sizeMM * mmToInch * resolution;
 
-    const QRectF documentRect(0.0, 0.0, size.width(), size.height());
+    const QRectF documentRect( 0.0, 0.0, size.width(), size.height() );
 
     const QString fmt = format.toLower();
-    if ( format == "pdf" || format == "ps" )
+    if ( fmt == "pdf" || fmt == "ps" )
     {
+#ifndef QT_NO_PRINTER
         QPrinter printer;
-        printer.setResolution(resolution);
-        printer.setFullPage(true);
-        printer.setPaperSize(sizeMM, QPrinter::Millimeter);
-        printer.setDocName(title);
-        printer.setOutputFileName(fileName);
-        printer.setOutputFormat( (format == "pdf") 
-            ? QPrinter::PdfFormat : QPrinter::PostScriptFormat);
-        
-        QPainter painter(&printer);
-        render(plot, &painter, documentRect);
+        printer.setFullPage( true );
+        printer.setPaperSize( sizeMM, QPrinter::Millimeter );
+        printer.setDocName( title );
+        printer.setOutputFileName( fileName );
+        printer.setOutputFormat( ( format == "pdf" )
+            ? QPrinter::PdfFormat : QPrinter::PostScriptFormat );
+        printer.setResolution( resolution );
+
+        QPainter painter( &printer );
+        render( plot, &painter, documentRect );
+#endif
     }
-    else if ( format == "svg" )
+    else if ( fmt == "svg" )
     {
+#ifndef QWT_NO_SVG
 #ifdef QT_SVG_LIB
 #if QT_VERSION >= 0x040500
         QSvgGenerator generator;
-        generator.setTitle(title);
-        generator.setFileName(fileName);
-        generator.setResolution(resolution);
+        generator.setTitle( title );
+        generator.setFileName( fileName );
+        generator.setResolution( resolution );
         generator.setViewBox( documentRect );
 
-        QPainter painter(&generator);
-        render(plot, &painter, documentRect);
+        QPainter painter( &generator );
+        render( plot, &painter, documentRect );
+#endif
 #endif
 #endif
     }
@@ -164,35 +277,43 @@ void QwtPlotRenderer::renderDocument(QwtPlot *plot,
             format.toLatin1() ) >= 0 )
         {
             const QRect imageRect = documentRect.toRect();
-            QImage image(imageRect.size(), QImage::Format_ARGB32);
-            image.fill(QColor(Qt::white).rgb());
+            const int dotsPerMeter = qRound( resolution * mmToInch * 1000.0 );
 
-            QPainter painter(&image);
-            render(plot, &painter, imageRect);
+            QImage image( imageRect.size(), QImage::Format_ARGB32 );
+            image.setDotsPerMeterX( dotsPerMeter );
+            image.setDotsPerMeterY( dotsPerMeter );
+            image.fill( QColor( Qt::white ).rgb() );
+
+            QPainter painter( &image );
+            render( plot, &painter, imageRect );
             painter.end();
 
-            image.save(fileName, format.toLatin1());
+            image.save( fileName, format.toLatin1() );
         }
     }
 }
 
 /*!
-  \brief Render the plot to a \c QPaintDevice 
+  \brief Render the plot to a \c QPaintDevice
+
   This function renders the contents of a QwtPlot instance to
-  \c QPaintDevice object. The target rectangle is derived from 
+  \c QPaintDevice object. The target rectangle is derived from
   its device metrics.
 
+  \param plot Plot to be rendered
   \param paintDevice device to paint on, f.e a QImage
+
+  \sa renderDocument(), render(), QwtPainter::setRoundingAlignment()
 */
 
 void QwtPlotRenderer::renderTo(
-    QwtPlot *plot, QPaintDevice &paintDevice) const
+    QwtPlot *plot, QPaintDevice &paintDevice ) const
 {
     int w = paintDevice.width();
     int h = paintDevice.height();
 
-    QPainter p(&paintDevice);
-    render(plot, &p, QRectF(0, 0, w, h));
+    QPainter p( &paintDevice );
+    render( plot, &p, QRectF( 0, 0, w, h ) );
 }
 
 /*!
@@ -202,25 +323,34 @@ void QwtPlotRenderer::renderTo(
   \c QPaintDevice object. The size is derived from the printer
   metrics.
 
+  \param plot Plot to be rendered
   \param printer Printer to paint on
 
-  \sa QwtPlotPrintFilter
+  \sa renderDocument(), render(), QwtPainter::setRoundingAlignment()
 */
 
+#ifndef QT_NO_PRINTER
+
 void QwtPlotRenderer::renderTo(
-    QwtPlot *plot, QPrinter &printer) const
+    QwtPlot *plot, QPrinter &printer ) const
 {
     int w = printer.width();
     int h = printer.height();
 
-    QRectF rect(0, 0, w, h);
+    QRectF rect( 0, 0, w, h );
     double aspect = rect.width() / rect.height();
-    if ((aspect < 1.0))
-        rect.setHeight(aspect * rect.width());
+    if ( ( aspect < 1.0 ) )
+        rect.setHeight( aspect * rect.width() );
 
-    QPainter p(&printer);
-    render(plot, &p, rect);
+    QPainter p( &printer );
+    render( plot, &p, rect );
 }
+
+#endif
+
+#ifndef QWT_NO_SVG
+#ifdef QT_SVG_LIB
+#if QT_VERSION >= 0x040500
 
 /*!
   \brief Render the plot to a QSvgGenerator
@@ -230,287 +360,249 @@ void QwtPlotRenderer::renderTo(
   will be (0, 0, generator.width(), generator.height()). Otherwise
   the target rectangle will be QRectF(0, 0, 800, 600);
 
+  \param plot Plot to be rendered
   \param generator SVG generator
 */
-
-#ifdef QT_SVG_LIB 
-#if QT_VERSION >= 0x040500
 void QwtPlotRenderer::renderTo(
-    QwtPlot *plot, QSvgGenerator &generator) const
+    QwtPlot *plot, QSvgGenerator &generator ) const
 {
     QRectF rect = generator.viewBoxF();
     if ( rect.isEmpty() )
-        rect.setRect(0, 0, generator.width(), generator.height());
+        rect.setRect( 0, 0, generator.width(), generator.height() );
 
     if ( rect.isEmpty() )
-        rect.setRect(0, 0, 800, 600); // something
-        
-    QPainter p(&generator);
-    render(plot, &p, rect);
+        rect.setRect( 0, 0, 800, 600 ); // something
+
+    QPainter p( &generator );
+    render( plot, &p, rect );
 }
+#endif
 #endif
 #endif
 
 /*!
-  \brief Paint the plot into a given rectangle.
   Paint the contents of a QwtPlot instance into a given rectangle.
 
+  \param plot Plot to be rendered
   \param painter Painter
   \param plotRect Bounding rectangle
-*/
-void QwtPlotRenderer::render(QwtPlot *plot, 
-    QPainter *painter, const QRectF &plotRect) const
-{
-    int axisId;
 
+  \sa renderDocument(), renderTo(), QwtPainter::setRoundingAlignment()
+*/
+void QwtPlotRenderer::render( QwtPlot *plot,
+    QPainter *painter, const QRectF &plotRect ) const
+{
     if ( painter == 0 || !painter->isActive() ||
             !plotRect.isValid() || plot->size().isNull() )
-       return;
+        return;
 
-    if ( !(d_data->discardFlags & DiscardBackground) )
-    {
-        const QBrush brush = plot->palette().brush(plot->backgroundRole());
-        painter->fillRect(plotRect, brush);
-    }
+    if ( !( d_data->discardFlags & DiscardBackground ) )
+        qwtRenderBackground( painter, plotRect, plot );
 
-    /* 
+    /*
       The layout engine uses the same methods as they are used
-      by the Qt layout system. Therefore we need to calculate the 
+      by the Qt layout system. Therefore we need to calculate the
       layout in screen coordinates and paint with a scaled painter.
      */
     QTransform transform;
     transform.scale(
-        double(painter->device()->logicalDpiX()) / plot->logicalDpiX(),
-        double(painter->device()->logicalDpiY()) / plot->logicalDpiY() );
-        
-    d_data->plot = plot;
+        double( painter->device()->logicalDpiX() ) / plot->logicalDpiX(),
+        double( painter->device()->logicalDpiY() ) / plot->logicalDpiY() );
 
-    painter->save();
+    QRectF layoutRect = transform.inverted().mapRect( plotRect );
+
+    QwtPlotLayout *layout = plot->plotLayout();
 
     int baseLineDists[QwtPlot::axisCnt];
-    if ( d_data->layoutFlags & FrameWithScales )
+    int canvasMargins[QwtPlot::axisCnt];
+
+    for ( int axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
     {
-        for (axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+        canvasMargins[ axisId ] = layout->canvasMargin( axisId );
+
+        if ( d_data->layoutFlags & FrameWithScales )
         {
-            QwtScaleWidget *scaleWidget = 
-                (QwtScaleWidget *)plot->axisWidget(axisId);
+            QwtScaleWidget *scaleWidget = plot->axisWidget( axisId );
             if ( scaleWidget )
             {
                 baseLineDists[axisId] = scaleWidget->margin();
-                scaleWidget->setMargin(0);
+                scaleWidget->setMargin( 0 );
+            }
+
+            if ( !plot->axisEnabled( axisId ) )
+            {
+                int left = 0;
+                int right = 0;
+                int top = 0;
+                int bottom = 0;
+
+                // When we have a scale the frame is painted on
+                // the position of the backbone - otherwise we
+                // need to introduce a margin around the canvas
+
+                switch( axisId )
+                {
+                    case QwtPlot::yLeft:
+                        layoutRect.adjust( 1, 0, 0, 0 );
+                        break;
+                    case QwtPlot::yRight:
+                        layoutRect.adjust( 0, 0, -1, 0 );
+                        break;
+                    case QwtPlot::xTop:
+                        layoutRect.adjust( 0, 1, 0, 0 );
+                        break;
+                    case QwtPlot::xBottom:
+                        layoutRect.adjust( 0, 0, 0, -1 );
+                        break;
+                    default:
+                        break;
+                }
+                layoutRect.adjust( left, top, right, bottom );
             }
         }
     }
-    // Calculate the layout for the print.
 
-    int layoutOptions = QwtPlotLayout::IgnoreScrollbars 
-        | QwtPlotLayout::IgnoreFrames;
-    if ( !d_data->layoutFlags & KeepMargins )
-        layoutOptions |= QwtPlotLayout::IgnoreMargin;
+    // Calculate the layout for the document.
+
+    QwtPlotLayout::Options layoutOptions = 
+        QwtPlotLayout::IgnoreScrollbars | QwtPlotLayout::IgnoreFrames;
+
     if ( d_data->discardFlags & DiscardLegend )
         layoutOptions |= QwtPlotLayout::IgnoreLegend;
 
-    const QRectF layoutRect = transform.inverted().mapRect(plotRect);
-    plot->plotLayout()->activate(plot, layoutRect, layoutOptions);
+    if ( d_data->discardFlags & DiscardTitle )
+        layoutOptions |= QwtPlotLayout::IgnoreTitle;
 
-    painter->setWorldTransform(transform);
+    if ( d_data->discardFlags & DiscardFooter )
+        layoutOptions |= QwtPlotLayout::IgnoreFooter;
 
-    if ( !(d_data->discardFlags & DiscardTitle)
-        && (!plot->titleLabel()->text().isEmpty()))
+    layout->activate( plot, layoutRect, layoutOptions );
+
+    // canvas
+
+    QwtScaleMap maps[QwtPlot::axisCnt];
+    buildCanvasMaps( plot, layout->canvasRect(), maps );
+    if ( updateCanvasMargins( plot, layout->canvasRect(), maps ) )
     {
-        renderTitle(painter, plot->plotLayout()->titleRect());
+        // recalculate maps and layout, when the margins
+        // have been changed
+
+        layout->activate( plot, layoutRect, layoutOptions );
+        buildCanvasMaps( plot, layout->canvasRect(), maps );
     }
 
-    for ( axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+    // now start painting
+
+    painter->save();
+    painter->setWorldTransform( transform, true );
+
+    renderCanvas( plot, painter, layout->canvasRect(), maps );
+
+    if ( !( d_data->discardFlags & DiscardTitle )
+        && ( !plot->titleLabel()->text().isEmpty() ) )
     {
-        QwtScaleWidget *scaleWidget = plot->axisWidget(axisId);
-        if (scaleWidget)
+        renderTitle( plot, painter, layout->titleRect() );
+    }
+
+    if ( !( d_data->discardFlags & DiscardFooter )
+        && ( !plot->footerLabel()->text().isEmpty() ) )
+    {
+        renderFooter( plot, painter, layout->footerRect() );
+    }
+
+    if ( !( d_data->discardFlags & DiscardLegend )
+        && plot->legend() && !plot->legend()->isEmpty() )
+    {
+        renderLegend( plot, painter, layout->legendRect() );
+    }
+
+    for ( int axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+    {
+        QwtScaleWidget *scaleWidget = plot->axisWidget( axisId );
+        if ( scaleWidget )
         {
             int baseDist = scaleWidget->margin();
 
             int startDist, endDist;
-            scaleWidget->getBorderDistHint(startDist, endDist);
+            scaleWidget->getBorderDistHint( startDist, endDist );
 
-            renderScale(painter, axisId, startDist, endDist,
-                baseDist, plot->plotLayout()->scaleRect(axisId));
-        }
-    }
-
-    QRectF canvasRect = plot->plotLayout()->canvasRect();
-
-    QwtScaleMap map[QwtPlot::axisCnt];
-    for (axisId = 0; axisId < QwtPlot::axisCnt; axisId++)
-    {
-        map[axisId].setTransformation(
-            plot->axisScaleEngine(axisId)->transformation());
-
-        const QwtScaleDiv &scaleDiv = *plot->axisScaleDiv(axisId);
-        map[axisId].setScaleInterval(
-            scaleDiv.lowerBound(), scaleDiv.upperBound());
-
-        double from, to;
-        if ( plot->axisEnabled(axisId) )
-        {
-            const int sDist = plot->axisWidget(axisId)->startBorderDist();
-            const int eDist = plot->axisWidget(axisId)->endBorderDist();
-            const QRectF &scaleRect = plot->plotLayout()->scaleRect(axisId);
-
-            if ( axisId == QwtPlot::xTop || axisId == QwtPlot::xBottom )
-            {
-                from = scaleRect.left() + sDist;
-                to = scaleRect.right() - eDist;
-            }
-            else
-            {
-                from = scaleRect.bottom() - eDist;
-                to = scaleRect.top() + sDist;
-            }
-        }
-        else
-        {
-            int margin = plot->plotLayout()->canvasMargin(axisId);
-            if ( axisId == QwtPlot::yLeft || axisId == QwtPlot::yRight )
-            {
-                from = canvasRect.bottom() - margin;
-                to = canvasRect.top() + margin;
-            }
-            else
-            {
-                from = canvasRect.left() + margin;
-                to = canvasRect.right() - margin;
-            }
-        }
-        map[axisId].setPaintInterval(from, to);
-    }
-
-    // canvas 
-    renderCanvas(painter, canvasRect, map);
-
-    if ( !(d_data->discardFlags & DiscardLegend)
-        && plot->legend() && !plot->legend()->isEmpty() )
-    {
-        renderLegend(painter, plot->plotLayout()->legendRect());
-    }
-
-    plot->plotLayout()->invalidate();
-
-    // reset all widgets with their original attributes.
-    if ( d_data->layoutFlags & FrameWithScales )
-    {
-        // restore the previous base line dists
-
-        for (axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
-        {
-            QwtScaleWidget *scaleWidget = plot->axisWidget(axisId);
-            if ( scaleWidget  )
-                scaleWidget->setMargin(baseLineDists[axisId]);
+            renderScale( plot, painter, axisId, startDist, endDist,
+                baseDist, layout->scaleRect( axisId ) );
         }
     }
 
     painter->restore();
 
-    d_data->plot = NULL;
+    // restore all setting to their original attributes.
+    for ( int axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+    {
+        if ( d_data->layoutFlags & FrameWithScales )
+        {
+            QwtScaleWidget *scaleWidget = plot->axisWidget( axisId );
+            if ( scaleWidget  )
+                scaleWidget->setMargin( baseLineDists[axisId] );
+        }
+
+        layout->setCanvasMargin( canvasMargins[axisId] );
+    }
+
+    layout->invalidate();
+
 }
 
 /*!
-  Print the title into a given rectangle.
+  Render the title into a given rectangle.
 
+  \param plot Plot widget
   \param painter Painter
   \param rect Bounding rectangle
 */
-
-void QwtPlotRenderer::renderTitle(QPainter *painter, const QRectF &rect) const
+void QwtPlotRenderer::renderTitle( const QwtPlot *plot,
+    QPainter *painter, const QRectF &rect ) const
 {
-    const QwtPlot *plot = d_data->plot;
-
-    painter->setFont(plot->titleLabel()->font());
+    painter->setFont( plot->titleLabel()->font() );
 
     const QColor color = plot->titleLabel()->palette().color(
-            QPalette::Active, QPalette::Text);
+            QPalette::Active, QPalette::Text );
 
-    painter->setPen(color);
-    plot->titleLabel()->text().draw(painter, rect);
+    painter->setPen( color );
+    plot->titleLabel()->text().draw( painter, rect );
 }
 
 /*!
-  Print the legend into a given rectangle.
+  Render the footer into a given rectangle.
 
+  \param plot Plot widget
   \param painter Painter
   \param rect Bounding rectangle
 */
-
-void QwtPlotRenderer::renderLegend(QPainter *painter, const QRectF &rect) const
+void QwtPlotRenderer::renderFooter( const QwtPlot *plot,
+    QPainter *painter, const QRectF &rect ) const
 {
-    const QwtPlot *plot = d_data->plot;
+    painter->setFont( plot->footerLabel()->font() );
 
-    if ( !plot->legend() || plot->legend()->isEmpty() )
-        return;
+    const QColor color = plot->footerLabel()->palette().color(
+            QPalette::Active, QPalette::Text );
 
-    QLayout *l = plot->legend()->contentsWidget()->layout();
-    if ( l == 0 || !l->inherits("QwtDynGridLayout") )
-        return;
-
-    QwtDynGridLayout *legendLayout = (QwtDynGridLayout *)l;
-
-    uint numCols = legendLayout->columnsForWidth(rect.width());
-    QList<QRect> itemRects = 
-        legendLayout->layoutItems(rect.toRect(), numCols);
-
-    int index = 0;
-
-    for ( int i = 0; i < legendLayout->count(); i++ )
-    {
-        QLayoutItem *item = legendLayout->itemAt(i);
-        QWidget *w = item->widget();
-        if ( w )
-        {
-            painter->save();
-
-            painter->setClipRect(itemRects[index]);
-            renderLegendItem(painter, w, itemRects[index]);
-
-            index++;
-            painter->restore();
-        }
-    }
+    painter->setPen( color );
+    plot->footerLabel()->text().draw( painter, rect );
 }
 
-/*!
-  Print the legend item into a given rectangle.
 
+/*!
+  Render the legend into a given rectangle.
+
+  \param plot Plot widget
   \param painter Painter
-  \param w Widget representing a legend item
   \param rect Bounding rectangle
 */
-
-void QwtPlotRenderer::renderLegendItem(QPainter *painter, 
-    const QWidget *w, const QRectF &rect) const
+void QwtPlotRenderer::renderLegend( const QwtPlot *plot,
+    QPainter *painter, const QRectF &rect ) const
 {
-    const QwtPlot *plot = d_data->plot;
-
-    if ( w->inherits("QwtLegendItem") )
+    if ( plot->legend() )
     {
-        QwtLegendItem *item = (QwtLegendItem *)w;
-
-        const QRect identifierRect(
-            rect.x() + item->margin(), rect.y(),
-            item->identifierSize().width(), rect.height());
-
-        QwtLegendItemManager *itemManger = plot->legend()->find(item);
-        if ( itemManger )
-        {
-            painter->save();
-            itemManger->drawLegendIdentifier(painter, identifierRect);
-            painter->restore();
-        }
-
-        // Label
-    
-        QRectF titleRect = rect;
-        titleRect.setX(identifierRect.right() + 2 * item->spacing());
-
-        painter->setFont(item->font());
-        item->text().draw(painter, titleRect);
+        bool fillBackground = !( d_data->discardFlags & DiscardBackground );
+        plot->legend()->renderLegend( painter, rect, fillBackground );
     }
 }
 
@@ -518,6 +610,7 @@ void QwtPlotRenderer::renderLegendItem(QPainter *painter,
   \brief Paint a scale into a given rectangle.
   Paint the scale into a given rectangle.
 
+  \param plot Plot widget
   \param painter Painter
   \param axisId Axis
   \param startDist Start border distance
@@ -525,21 +618,19 @@ void QwtPlotRenderer::renderLegendItem(QPainter *painter,
   \param baseDist Base distance
   \param rect Bounding rectangle
 */
-
-void QwtPlotRenderer::renderScale(QPainter *painter,
-    int axisId, int startDist, int endDist, int baseDist, 
-    const QRectF &rect) const
+void QwtPlotRenderer::renderScale( const QwtPlot *plot,
+    QPainter *painter,
+    int axisId, int startDist, int endDist, int baseDist,
+    const QRectF &rect ) const
 {
-    const QwtPlot *plot = d_data->plot;
-
-    if (!plot->axisEnabled(axisId))
+    if ( !plot->axisEnabled( axisId ) )
         return;
 
-    const QwtScaleWidget *scaleWidget = plot->axisWidget(axisId);
-    if ( scaleWidget->isColorBarEnabled() 
-        && scaleWidget->colorBarWidth() > 0)
+    const QwtScaleWidget *scaleWidget = plot->axisWidget( axisId );
+    if ( scaleWidget->isColorBarEnabled()
+        && scaleWidget->colorBarWidth() > 0 )
     {
-        scaleWidget->drawColorBar(painter, scaleWidget->colorBarRect(rect));
+        scaleWidget->drawColorBar( painter, scaleWidget->colorBarRect( rect ) );
 
         const int off = scaleWidget->colorBarWidth() + scaleWidget->spacing();
         if ( scaleWidget->scaleDraw()->orientation() == Qt::Horizontal )
@@ -553,7 +644,7 @@ void QwtPlotRenderer::renderScale(QPainter *painter,
     QwtScaleDraw::Alignment align;
     double x, y, w;
 
-    switch(axisId)
+    switch ( axisId )
     {
         case QwtPlot::yLeft:
         {
@@ -591,68 +682,236 @@ void QwtPlotRenderer::renderScale(QPainter *painter,
             return;
     }
 
-    scaleWidget->drawTitle(painter, align, rect);
+    scaleWidget->drawTitle( painter, align, rect );
 
-    painter->setFont(scaleWidget->font());
+    painter->setFont( scaleWidget->font() );
 
-    QwtScaleDraw *sd = (QwtScaleDraw *)scaleWidget->scaleDraw();
+    QwtScaleDraw *sd = const_cast<QwtScaleDraw *>( scaleWidget->scaleDraw() );
     const QPointF sdPos = sd->pos();
     const double sdLength = sd->length();
 
-    sd->move(x, y);
-    sd->setLength(w);
+    sd->move( x, y );
+    sd->setLength( w );
 
     QPalette palette = scaleWidget->palette();
-    palette.setCurrentColorGroup(QPalette::Active);
-    sd->draw(painter, palette);
+    palette.setCurrentColorGroup( QPalette::Active );
+    sd->draw( painter, palette );
 
     // reset previous values
-    sd->move(sdPos); 
-    sd->setLength(sdLength); 
+    sd->move( sdPos );
+    sd->setLength( sdLength );
 
     painter->restore();
 }
 
 /*!
-  Print the canvas into a given rectangle.
+  Render the canvas into a given rectangle.
 
+  \param plot Plot widget
   \param painter Painter
   \param map Maps mapping between plot and paint device coordinates
   \param canvasRect Canvas rectangle
 */
-
-void QwtPlotRenderer::renderCanvas(QPainter *painter, 
-    const QRectF &canvasRect, const QwtScaleMap *map) const
+void QwtPlotRenderer::renderCanvas( const QwtPlot *plot,
+    QPainter *painter, const QRectF &canvasRect, 
+    const QwtScaleMap *map ) const
 {
-    const QwtPlot *plot = d_data->plot;
-
     painter->save();
 
-    QRectF r = canvasRect.adjusted(0.0, 0.0, -1.0, -1.0);
+    QPainterPath clipPath;
+
+    QRectF r = canvasRect.adjusted( 0.0, 0.0, -1.0, -1.0 );
 
     if ( d_data->layoutFlags & FrameWithScales )
     {
-        r.adjust(-1.0, -1.0, 1.0, 1.0);
-        painter->setPen(QPen(Qt::black));
+        r.adjust( -1.0, -1.0, 1.0, 1.0 );
+        painter->setPen( QPen( Qt::black ) );
+
+        if ( !( d_data->discardFlags & DiscardCanvasBackground ) )
+        {
+            const QBrush bgBrush =
+                plot->canvas()->palette().brush( plot->backgroundRole() );
+            painter->setBrush( bgBrush );
+        }
+
+        QwtPainter::drawRect( painter, r );
     }
     else
-        painter->setPen(Qt::NoPen);
-
-    if ( !( d_data->discardFlags & DiscardCanvasBackground) )
     {
-        const QBrush bgBrush = 
-            plot->canvas()->palette().brush(plot->backgroundRole());
-        painter->setBrush(bgBrush);
-    }
+        if ( !( d_data->discardFlags & DiscardCanvasBackground ) )
+        {
+            qwtRenderBackground( painter, r, plot->canvas() );
 
-    QwtPainter::drawRect(painter, r);
+            if ( plot->canvas()->testAttribute( Qt::WA_StyledBackground ) )
+            {
+                // The clip region is calculated in integers
+                // To avoid too much rounding errors better
+                // calculate it in target device resolution
+                // TODO ...
+
+                int x1 = qCeil( canvasRect.left() );
+                int x2 = qFloor( canvasRect.right() );
+                int y1 = qCeil( canvasRect.top() );
+                int y2 = qFloor( canvasRect.bottom() );
+
+                clipPath = plot->canvas()->borderPath( 
+                    QRect( x1, y1, x2 - x1 - 1, y2 - y1 - 1 ) );
+            }
+        }
+    }
 
     painter->restore();
 
-    painter->setClipRect(canvasRect);
-    d_data->plot->drawItems(painter, canvasRect, map);
+    painter->save();
+
+    if ( clipPath.isEmpty() )
+        painter->setClipRect( canvasRect );
+    else
+        painter->setClipPath( clipPath );
+
+    plot->drawItems( painter, canvasRect, map );
+
+    painter->restore();
 }
 
-QwtPlot* QwtPlotRenderer::plot() const {
-  return d_data->plot;
+/*!
+   Calculated the scale maps for rendering the canvas
+
+   \param plot Plot widget
+   \param canvasRect Target rectangle
+   \param maps Scale maps to be calculated
+*/
+void QwtPlotRenderer::buildCanvasMaps( const QwtPlot *plot,
+    const QRectF &canvasRect, QwtScaleMap maps[] ) const
+{
+    for ( int axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+    {
+        maps[axisId].setTransformation(
+            plot->axisScaleEngine( axisId )->transformation() );
+
+        const QwtScaleDiv &scaleDiv = plot->axisScaleDiv( axisId );
+        maps[axisId].setScaleInterval(
+            scaleDiv.lowerBound(), scaleDiv.upperBound() );
+
+        double from, to;
+        if ( plot->axisEnabled( axisId ) )
+        {
+            const int sDist = plot->axisWidget( axisId )->startBorderDist();
+            const int eDist = plot->axisWidget( axisId )->endBorderDist();
+            const QRectF &scaleRect = plot->plotLayout()->scaleRect( axisId );
+
+            if ( axisId == QwtPlot::xTop || axisId == QwtPlot::xBottom )
+            {
+                from = scaleRect.left() + sDist;
+                to = scaleRect.right() - eDist;
+            }
+            else
+            {
+                from = scaleRect.bottom() - eDist;
+                to = scaleRect.top() + sDist;
+            }
+        }
+        else
+        {
+            int margin = plot->plotLayout()->canvasMargin( axisId );
+            if ( axisId == QwtPlot::yLeft || axisId == QwtPlot::yRight )
+            {
+                from = canvasRect.bottom() - margin;
+                to = canvasRect.top() + margin;
+            }
+            else
+            {
+                from = canvasRect.left() + margin;
+                to = canvasRect.right() - margin;
+            }
+        }
+        maps[axisId].setPaintInterval( from, to );
+    }
 }
+
+bool QwtPlotRenderer::updateCanvasMargins( QwtPlot *plot,
+    const QRectF &canvasRect, const QwtScaleMap maps[] ) const
+{
+    double margins[QwtPlot::axisCnt];
+    plot->getCanvasMarginsHint( maps, canvasRect,
+        margins[QwtPlot::yLeft], margins[QwtPlot::xTop], 
+        margins[QwtPlot::yRight], margins[QwtPlot::xBottom] );
+
+    bool marginsChanged = false;
+    for ( int axisId = 0; axisId < QwtPlot::axisCnt; axisId++ )
+    {
+        if ( margins[axisId] >= 0.0 )
+        {
+            const int m = qCeil( margins[axisId] );
+            plot->plotLayout()->setCanvasMargin( m, axisId);
+            marginsChanged = true;
+        }
+    }
+
+    return marginsChanged;
+}
+
+/*!
+   \brief Execute a file dialog and render the plot to the selected file
+
+   The document will be rendered in 85dpi for a size 30x20cm
+
+   \param plot Plot widget
+   \param documentName Default document name
+
+   \note exportTo() is handy for testing, but usually an application
+         wants to configure the export individually 
+         using renderDocument() or even more low level methods
+         of QwtPlotRenderer.
+*/
+bool QwtPlotRenderer::exportTo( QwtPlot *plot, const QString &documentName )
+{       
+    if ( plot == NULL )
+        return false;
+    
+    QString fileName = documentName;
+
+    // What about translation 
+
+#ifndef QT_NO_FILEDIALOG
+    const QList<QByteArray> imageFormats =
+        QImageWriter::supportedImageFormats();
+        
+    QStringList filter;
+#ifndef QT_NO_PRINTER
+    filter += QString( "PDF " ) + tr( "Documents" ) + " (*.pdf)";
+#endif
+#ifndef QWT_NO_SVG 
+    filter += QString( "SVG " ) + tr( "Documents" ) + " (*.svg)";
+#endif
+#ifndef QT_NO_PRINTER
+    filter += QString( "Postscript " ) + tr( "Documents" ) + " (*.ps)";
+#endif
+    
+    if ( imageFormats.size() > 0 )
+    {
+        QString imageFilter( tr( "Images" ) );
+        imageFilter += " (";
+        for ( int i = 0; i < imageFormats.size(); i++ )
+        {
+            if ( i > 0 )
+                imageFilter += " ";
+            imageFilter += "*."; 
+            imageFilter += imageFormats[i];
+        }   
+        imageFilter += ")";
+        
+        filter += imageFilter;
+    }   
+    
+    fileName = QFileDialog::getSaveFileName(
+        NULL, tr( "Export File Name" ), fileName,
+        filter.join( ";;" ), NULL, QFileDialog::DontConfirmOverwrite );
+#endif  
+    if ( fileName.isEmpty() )
+        return false;
+
+    renderDocument( plot, fileName, QSizeF( 300, 200 ), 85 );
+
+    return true;
+}   

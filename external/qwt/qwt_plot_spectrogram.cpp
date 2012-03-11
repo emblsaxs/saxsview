@@ -9,7 +9,7 @@
 
 #include "qwt_plot_spectrogram.h"
 #include "qwt_painter.h"
-#include "qwt_double_interval.h"
+#include "qwt_interval.h"
 #include "qwt_scale_map.h"
 #include "qwt_color_map.h"
 #include <qimage.h>
@@ -26,29 +26,14 @@
 class QwtPlotSpectrogram::PrivateData
 {
 public:
-    class DummyData: public QwtRasterData
-    {
-    public:
-        virtual double value(double, double) const
-        {
-            return 0.0;
-        }
-
-        virtual QwtDoubleInterval range() const
-        {
-            return QwtDoubleInterval(0.0, 1.0);
-        }
-    };
-
     PrivateData():
-        renderThreadCount(1)
+        data( NULL )
     {
-        data = new DummyData();
         colorMap = new QwtLinearColorMap();
         displayMode = ImageMode;
 
-        conrecAttributes = QwtRasterData::IgnoreAllVerticesOnLevel;
-        conrecAttributes |= QwtRasterData::IgnoreOutOfRange;
+        conrecFlags = QwtRasterData::IgnoreAllVerticesOnLevel;
+        conrecFlags |= QwtRasterData::IgnoreOutOfRange;
     }
     ~PrivateData()
     {
@@ -58,13 +43,11 @@ public:
 
     QwtRasterData *data;
     QwtColorMap *colorMap;
-    int displayMode;
-
-    uint renderThreadCount;
+    DisplayModes displayMode;
 
     QList<double> contourLevels;
     QPen defaultContourPen;
-    int conrecAttributes;
+    QwtRasterData::ConrecFlags conrecFlags;
 };
 
 /*!
@@ -73,20 +56,20 @@ public:
    - QwtPlotItem::Legend:    false
 
    The z value is initialized by 8.0.
-   
+
    \param title Title
 
    \sa QwtPlotItem::setItemAttribute(), QwtPlotItem::setZ()
 */
-QwtPlotSpectrogram::QwtPlotSpectrogram(const QString &title):
-    QwtPlotRasterItem(title)
+QwtPlotSpectrogram::QwtPlotSpectrogram( const QString &title ):
+    QwtPlotRasterItem( title )
 {
     d_data = new PrivateData();
 
-    setItemAttribute(QwtPlotItem::AutoScale, true);
-    setItemAttribute(QwtPlotItem::Legend, false);
+    setItemAttribute( QwtPlotItem::AutoScale, true );
+    setItemAttribute( QwtPlotItem::Legend, false );
 
-    setZ(8.0);
+    setZ( 8.0 );
 }
 
 //! Destructor
@@ -111,9 +94,9 @@ int QwtPlotSpectrogram::rtti() const
 
    \sa DisplayMode, displayMode()
 */
-void QwtPlotSpectrogram::setDisplayMode(DisplayMode mode, bool on)
+void QwtPlotSpectrogram::setDisplayMode( DisplayMode mode, bool on )
 {
-    if ( on != bool(mode & d_data->displayMode) )
+    if ( on != bool( mode & d_data->displayMode ) )
     {
         if ( on )
             d_data->displayMode |= mode;
@@ -121,6 +104,7 @@ void QwtPlotSpectrogram::setDisplayMode(DisplayMode mode, bool on)
             d_data->displayMode &= ~mode;
     }
 
+    legendChanged();
     itemChanged();
 }
 
@@ -130,40 +114,9 @@ void QwtPlotSpectrogram::setDisplayMode(DisplayMode mode, bool on)
    \param mode Display mode
    \return true if mode is enabled
 */
-bool QwtPlotSpectrogram::testDisplayMode(DisplayMode mode) const
+bool QwtPlotSpectrogram::testDisplayMode( DisplayMode mode ) const
 {
-    return (d_data->displayMode & mode);
-}
-
-/*!
-   Rendering an image from the raster data can often be done 
-   parallel on a multicore system. 
-
-   \param numThreads Number of threads to be used for rendering.
-                     If numThreads is set to 0, the system specific
-                     ideal thread count is used.
-
-   The default thread count is 1 ( = no additional threads )
-
-   \warning Rendering in multiple threads is only supported for Qt >= 4.4
-   \sa renderThreadCount(), renderImage(), renderTile()
-*/
-void QwtPlotSpectrogram::setRenderThreadCount(uint numThreads)
-{
-    d_data->renderThreadCount = numThreads;
-}
-
-/*
-   \return Number of threads to be used for rendering.
-           If numThreads is set to 0, the system specific
-           ideal thread count is used.
-
-   \warning Rendering in multiple threads is only supported for Qt >= 4.4
-   \sa setRenderThreadCount(), renderImage(), renderTile()
-*/
-uint QwtPlotSpectrogram::renderThreadCount() const
-{
-    return d_data->renderThreadCount;
+    return ( d_data->displayMode & mode );
 }
 
 /*!
@@ -177,12 +130,17 @@ uint QwtPlotSpectrogram::renderThreadCount() const
   \sa colorMap(), QwtScaleWidget::setColorBarEnabled(),
       QwtScaleWidget::setColorMap()
 */
-void QwtPlotSpectrogram::setColorMap(const QwtColorMap &colorMap)
+void QwtPlotSpectrogram::setColorMap( QwtColorMap *colorMap )
 {
-    delete d_data->colorMap;
-    d_data->colorMap = colorMap.copy();
+    if ( d_data->colorMap != colorMap )
+    {
+        delete d_data->colorMap;
+        d_data->colorMap = colorMap;
+    }
 
     invalidateCache();
+
+    legendChanged();
     itemChanged();
 }
 
@@ -190,26 +148,28 @@ void QwtPlotSpectrogram::setColorMap(const QwtColorMap &colorMap)
    \return Color Map used for mapping the intensity values to colors
    \sa setColorMap()
 */
-const QwtColorMap &QwtPlotSpectrogram::colorMap() const
+const QwtColorMap *QwtPlotSpectrogram::colorMap() const
 {
-    return *d_data->colorMap;
+    return d_data->colorMap;
 }
 
 /*!
    \brief Set the default pen for the contour lines
 
-   If the spectrogram has a valid default contour pen 
+   If the spectrogram has a valid default contour pen
    a contour line is painted using the default contour pen.
    Otherwise (pen.style() == Qt::NoPen) the pen is calculated
    for each contour level using contourPen().
 
    \sa defaultContourPen(), contourPen()
 */
-void QwtPlotSpectrogram::setDefaultContourPen(const QPen &pen)
+void QwtPlotSpectrogram::setDefaultContourPen( const QPen &pen )
 {
     if ( pen != d_data->defaultContourPen )
     {
         d_data->defaultContourPen = pen;
+
+        legendChanged();
         itemChanged();
     }
 }
@@ -225,43 +185,46 @@ QPen QwtPlotSpectrogram::defaultContourPen() const
 
 /*!
    \brief Calculate the pen for a contour line
- 
+
    The color of the pen is the color for level calculated by the color map
-   
+
    \param level Contour level
    \return Pen for the contour line
    \note contourPen is only used if defaultContourPen().style() == Qt::NoPen
 
    \sa setDefaultContourPen(), setColorMap(), setContourLevels()
 */
-QPen QwtPlotSpectrogram::contourPen(double level) const
+QPen QwtPlotSpectrogram::contourPen( double level ) const
 {
-    const QwtDoubleInterval intensityRange = d_data->data->range();
-    const QColor c(d_data->colorMap->rgb(intensityRange, level));
+    if ( d_data->data == NULL || d_data->colorMap == NULL )
+        return QPen();
 
-    return QPen(c);
+    const QwtInterval intensityRange = d_data->data->interval(Qt::ZAxis);
+    const QColor c( d_data->colorMap->rgb( intensityRange, level ) );
+
+    return QPen( c );
 }
 
 /*!
    Modify an attribute of the CONREC algorithm, used to calculate
    the contour lines.
 
-   \param attribute CONREC attribute
+   \param flag CONREC flag
    \param on On/Off
 
-   \sa testConrecAttribute(), renderContourLines(), 
+   \sa testConrecFlag(), renderContourLines(),
        QwtRasterData::contourLines()
 */
-void QwtPlotSpectrogram::setConrecAttribute(
-    QwtRasterData::ConrecAttribute attribute, bool on)
+void QwtPlotSpectrogram::setConrecFlag(
+    QwtRasterData::ConrecFlag flag, bool on )
 {
-    if ( bool(d_data->conrecAttributes & attribute) == on )
+    if ( bool( d_data->conrecFlags & flag ) == on )
         return;
 
     if ( on )
-        d_data->conrecAttributes |= attribute;
+        d_data->conrecFlags |= flag;
     else
-        d_data->conrecAttributes &= ~attribute;
+        d_data->conrecFlags &= ~flag;
 
     itemChanged();
 }
@@ -270,40 +233,42 @@ void QwtPlotSpectrogram::setConrecAttribute(
    Test an attribute of the CONREC algorithm, used to calculate
    the contour lines.
 
-   \param attribute CONREC attribute
+   \param flag CONREC flag
    \return true, is enabled
 
-   \sa setConrecAttribute(), renderContourLines(), 
+   \sa setConrecClag(), renderContourLines(),
        QwtRasterData::contourLines()
 */
-bool QwtPlotSpectrogram::testConrecAttribute(
-    QwtRasterData::ConrecAttribute attribute) const
-{   
-    return d_data->conrecAttributes & attribute;
+bool QwtPlotSpectrogram::testConrecFlag(
+    QwtRasterData::ConrecFlag flag ) const
+{
+    return d_data->conrecFlags & flag;
 }
 
 /*!
    Set the levels of the contour lines
 
    \param levels Values of the contour levels
-   \sa contourLevels(), renderContourLines(), 
+   \sa contourLevels(), renderContourLines(),
        QwtRasterData::contourLines()
 
    \note contourLevels returns the same levels but sorted.
 */
-void QwtPlotSpectrogram::setContourLevels(const QList<double> &levels)
+void QwtPlotSpectrogram::setContourLevels( const QList<double> &levels )
 {
     d_data->contourLevels = levels;
-    qSort(d_data->contourLevels);
+    qSort( d_data->contourLevels );
+
+    legendChanged();
     itemChanged();
 }
 
 /*!
-   \brief Return the levels of the contour lines. 
+   \brief Return the levels of the contour lines.
 
    The levels are sorted in increasing order.
 
-   \sa contourLevels(), renderContourLines(), 
+   \sa contourLevels(), renderContourLines(),
        QwtRasterData::contourLines()
 */
 QList<double> QwtPlotSpectrogram::contourLevels() const
@@ -317,7 +282,7 @@ QList<double> QwtPlotSpectrogram::contourLevels() const
   \param data Spectrogram Data
   \sa data()
 */
-void QwtPlotSpectrogram::setData(QwtRasterData *data)
+void QwtPlotSpectrogram::setData( QwtRasterData *data )
 {
     if ( data != d_data->data )
     {
@@ -342,116 +307,94 @@ const QwtRasterData *QwtPlotSpectrogram::data() const
   \return Spectrogram data
   \sa setData()
 */
-QwtRasterData *QwtPlotSpectrogram::data() 
+QwtRasterData *QwtPlotSpectrogram::data()
 {
     return d_data->data;
 }
 
 /*!
-   \return Bounding rect of the data
-   \sa QwtRasterData::boundingRect()
+   \return Bounding interval for an axis
+
+   The default implementation returns the interval of the
+   associated raster data object.
+
+   \param axis X, Y, or Z axis
+   \sa QwtRasterData::interval()
 */
-QRectF QwtPlotSpectrogram::boundingRect() const
+QwtInterval QwtPlotSpectrogram::interval(Qt::Axis axis) const
 {
-    return d_data->data->boundingRect();
+    if ( d_data->data == NULL )
+        return QwtInterval();
+
+    return d_data->data->interval( axis );
 }
 
 /*!
-   \brief Returns the recommended raster for a given rect.
+   \brief Pixel hint
 
-   F.e the raster hint is used to limit the resolution of
-   the image that is rendered.
+   The geometry of a pixel is used to calculated the resolution and
+   alignment of the rendered image. 
 
-   \param rect Rect for the raster hint
-   \return data().rasterHint(rect)
+   The default implementation returns data()->pixelHint( rect );
+
+   \param area In most implementations the resolution of the data doesn't
+               depend on the requested area.
+
+   \return Bounding rectangle of a pixel
+
+   \sa QwtPlotRasterItem::pixelHint(), QwtRasterData::pixelHint(), 
+       render(), renderImage()
 */
-QSize QwtPlotSpectrogram::rasterHint(const QRectF &rect) const
+QRectF QwtPlotSpectrogram::pixelHint( const QRectF &area ) const
 {
-    return d_data->data->rasterHint(rect);
+    if ( d_data->data == NULL )
+        return QRectF();
+
+    return d_data->data->pixelHint( area );
 }
 
 /*!
-   \brief Render an image from the data and color map.
+   \brief Render an image from data and color map.
 
-   The area is translated into a rect of the paint device. 
-   For each pixel of this rect the intensity is mapped
-   into a color.
+   For each pixel of rect the value is mapped into a color.
 
   \param xMap X-Scale Map
   \param yMap Y-Scale Map
-  \param area Area that should be rendered in scale coordinates.
+  \param area Requested area for the image in scale coordinates
+  \param imageSize Size of the requested image
 
-   \return A QImage::Format_Indexed8 or QImage::Format_ARGB32 depending 
+   \return A QImage::Format_Indexed8 or QImage::Format_ARGB32 depending
            on the color map.
 
-   \sa QwtRasterData::intensity(), QwtColorMap::rgb(),
+   \sa QwtRasterData::value(), QwtColorMap::rgb(),
        QwtColorMap::colorIndex()
 */
 QImage QwtPlotSpectrogram::renderImage(
-    const QwtScaleMap &xMap, const QwtScaleMap &yMap, 
-    const QRectF &area) const
+    const QwtScaleMap &xMap, const QwtScaleMap &yMap,
+    const QRectF &area, const QSize &imageSize ) const
 {
-    if ( area.isEmpty() )
-        return QImage();
-
-    QRect rect = innerRect( QwtScaleMap::transform(xMap, yMap, area) );
-
-    QwtScaleMap xxMap = xMap;
-    QwtScaleMap yyMap = yMap;
-
-    const QSize res = d_data->data->rasterHint(area);
-    if ( res.isValid() )
+    if ( imageSize.isEmpty() || d_data->data == NULL 
+        || d_data->colorMap == NULL )
     {
-        /*
-          It is useless to render an image with a higher resolution
-          than the data offers. Of course someone will have to
-          scale this image later into the size of the given rect, but f.e.
-          in case of postscript this will done on the printer.
-         */
-        rect.setSize(rect.size().boundedTo(res));
-
-        double px1 = rect.left();
-        double px2 = rect.right();
-        if ( xMap.p1() > xMap.p2() )
-            qSwap(px1, px2);
-
-        double sx1 = area.left();
-        double sx2 = area.right();
-        if ( xMap.s1() > xMap.s2() )
-            qSwap(sx1, sx2);
-
-        double py1 = rect.top();
-        double py2 = rect.bottom();
-        if ( yMap.p1() > yMap.p2() )
-            qSwap(py1, py2);
-
-        double sy1 = area.top();
-        double sy2 = area.bottom();
-        if ( yMap.s1() > yMap.s2() )
-            qSwap(sy1, sy2);
-
-        xxMap.setPaintInterval(px1, px2);
-        xxMap.setScaleInterval(sx1, sx2);
-        yyMap.setPaintInterval(py1, py2);
-        yyMap.setScaleInterval(sy1, sy2); 
+        return QImage();
     }
 
-    QImage::Format format = (d_data->colorMap->format() == QwtColorMap::RGB)
+    const QwtInterval intensityRange = d_data->data->interval( Qt::ZAxis );
+    if ( !intensityRange.isValid() )
+        return QImage();
+
+    QImage::Format format = ( d_data->colorMap->format() == QwtColorMap::RGB )
         ? QImage::Format_ARGB32 : QImage::Format_Indexed8;
 
-    QImage image( rect.size(), format);
-
-    const QwtDoubleInterval intensityRange = d_data->data->range();
-    if ( !intensityRange.isValid() )
-        return image;
+    QImage image( imageSize, format );
 
     if ( d_data->colorMap->format() == QwtColorMap::Indexed )
-        image.setColorTable(d_data->colorMap->colorTable(intensityRange));
+        image.setColorTable( d_data->colorMap->colorTable( intensityRange ) );
 
-    d_data->data->initRaster(area, image.size());
+    d_data->data->initRaster( area, image.size() );
 
-#if QT_VERSION >= 0x040400
-    uint numThreads = d_data->renderThreadCount;
+#if QT_VERSION >= 0x040400 && !defined(QT_NO_QFUTURE)
+    uint numThreads = renderThreadCount();
 
     if ( numThreads <= 0 )
         numThreads = QThread::idealThreadCount();
@@ -459,43 +402,33 @@ QImage QwtPlotSpectrogram::renderImage(
     if ( numThreads <= 0 )
         numThreads = 1;
 
-    const int numRows = rect.height() / numThreads;
+    const int numRows = imageSize.height() / numThreads;
 
     QList< QFuture<void> > futures;
     for ( uint i = 0; i < numThreads; i++ )
     {
-        QRect tile(rect.x(), rect.y() + i * numRows,
-            rect.width(), numRows);
+        QRect tile( 0, i * numRows, image.width(), numRows );
         if ( i == numThreads - 1 )
         {
-            tile.setHeight(rect.height() - i * numRows);
-            renderTile(xxMap, yyMap, rect, tile, &image);
+            tile.setHeight( image.height() - i * numRows );
+            renderTile( xMap, yMap, tile, &image );
         }
         else
         {
             futures += QtConcurrent::run(
                 this, &QwtPlotSpectrogram::renderTile,
-                xxMap, yyMap, rect, tile, &image);
+                xMap, yMap, tile, &image );
         }
     }
     for ( int i = 0; i < futures.size(); i++ )
         futures[i].waitForFinished();
 
 #else // QT_VERSION < 0x040400
-    renderTile(xxMap, yyMap, rect, rect, &image);
+    const QRect tile( 0, 0, image.width(), image.height() );
+    renderTile( xMap, yMap, tile, &image );
 #endif
 
     d_data->data->discardRaster();
-
-    // Mirror the image in case of inverted maps
-
-    const bool hInvert = xxMap.p1() > xxMap.p2();
-    const bool vInvert = yyMap.p1() < yyMap.p2();
-    if ( hInvert || vInvert )
-    {
-        // Better invert the image composition !
-        image = image.mirrored(hInvert, vInvert);
-    }
 
     return image;
 }
@@ -508,33 +441,32 @@ QImage QwtPlotSpectrogram::renderImage(
 
     \param xMap X-Scale Map
     \param yMap Y-Scale Map
-    \param rect Geometry of the image in screen coordinates
-    \param tile Geometry of the tile in screen coordinates
+    \param tile Geometry of the tile in image coordinates
     \param image Image to be rendered
 */
 void QwtPlotSpectrogram::renderTile(
-    const QwtScaleMap &xMap, const QwtScaleMap &yMap, 
-    const QRect &rect, const QRect &tile, QImage *image) const
+    const QwtScaleMap &xMap, const QwtScaleMap &yMap,
+    const QRect &tile, QImage *image ) const
 {
-    const QwtDoubleInterval intensityRange = d_data->data->range();
-    if ( !intensityRange.isValid() )
+    const QwtInterval range = d_data->data->interval( Qt::ZAxis );
+    if ( !range.isValid() )
         return;
 
     if ( d_data->colorMap->format() == QwtColorMap::RGB )
     {
         for ( int y = tile.top(); y <= tile.bottom(); y++ )
         {
-            const double ty = yMap.invTransform(y);
+            const double ty = yMap.invTransform( y );
 
-            QRgb *line = (QRgb *)image->scanLine(y - rect.top());
-            line += tile.left() - rect.left();
+            QRgb *line = reinterpret_cast<QRgb *>( image->scanLine( y ) );
+            line += tile.left();
 
             for ( int x = tile.left(); x <= tile.right(); x++ )
             {
-                const double tx = xMap.invTransform(x);
+                const double tx = xMap.invTransform( x );
 
-                *line++ = d_data->colorMap->rgb(intensityRange,
-                    d_data->data->value(tx, ty));
+                *line++ = d_data->colorMap->rgb( range,
+                    d_data->data->value( tx, ty ) );
             }
         }
     }
@@ -542,17 +474,17 @@ void QwtPlotSpectrogram::renderTile(
     {
         for ( int y = tile.top(); y <= tile.bottom(); y++ )
         {
-            const double ty = yMap.invTransform(y);
+            const double ty = yMap.invTransform( y );
 
-            unsigned char *line = image->scanLine(y - rect.top());
-            line += tile.left() - rect.left();
+            unsigned char *line = image->scanLine( y );
+            line += tile.left();
 
             for ( int x = tile.left(); x <= tile.right(); x++ )
             {
-                const double tx = xMap.invTransform(x);
+                const double tx = xMap.invTransform( x );
 
-                *line++ = d_data->colorMap->colorIndex(intensityRange,
-                    d_data->data->value(tx, ty));
+                *line++ = d_data->colorMap->colorIndex( range,
+                    d_data->data->value( tx, ty ) );
             }
         }
     }
@@ -565,24 +497,28 @@ void QwtPlotSpectrogram::renderTile(
    but will slow down the time that is needed to calculate the lines.
 
    The default implementation returns rect.size() / 2 bounded to
-   data().rasterHint().
+   the resolution depending on pixelSize().
 
    \param area Rect, where to calculate the contour lines
    \param rect Rect in pixel coordinates, where to paint the contour lines
    \return Raster to be used by the CONREC contour algorithm.
 
    \note The size will be bounded to rect.size().
-   
+
    \sa drawContourLines(), QwtRasterData::contourLines()
 */
-QSize QwtPlotSpectrogram::contourRasterSize(const QRectF &area,
-    const QRect &rect) const
+QSize QwtPlotSpectrogram::contourRasterSize( 
+    const QRectF &area, const QRect &rect ) const
 {
     QSize raster = rect.size() / 2;
 
-    const QSize rasterHint = d_data->data->rasterHint(area);
-    if ( rasterHint.isValid() )
-        raster = raster.boundedTo(rasterHint);
+    const QRectF pixelRect = pixelHint( area );
+    if ( !pixelRect.isEmpty() )
+    {
+        const QSize res( qCeil( rect.width() / pixelRect.width() ),
+            qCeil( rect.height() / pixelRect.height() ) );
+        raster = raster.boundedTo( res );
+    }
 
     return raster;
 }
@@ -593,14 +529,17 @@ QSize QwtPlotSpectrogram::contourRasterSize(const QRectF &area,
    \param rect Rectangle, where to calculate the contour lines
    \param raster Raster, used by the CONREC algorithm
 
-   \sa contourLevels(), setConrecAttribute(), 
+   \sa contourLevels(), setConrecFlag(),
        QwtRasterData::contourLines()
 */
 QwtRasterData::ContourLines QwtPlotSpectrogram::renderContourLines(
-    const QRectF &rect, const QSize &raster) const
+    const QRectF &rect, const QSize &raster ) const
 {
-    return d_data->data->contourLines(rect, raster,
-        d_data->contourLevels, d_data->conrecAttributes );
+    if ( d_data->data == NULL )
+        return QwtRasterData::ContourLines();
+
+    return d_data->data->contourLines( rect, raster,
+        d_data->contourLevels, d_data->conrecFlags );
 }
 
 /*!
@@ -613,35 +552,38 @@ QwtRasterData::ContourLines QwtPlotSpectrogram::renderContourLines(
 
    \sa renderContourLines(), defaultContourPen(), contourPen()
 */
-void QwtPlotSpectrogram::drawContourLines(QPainter *painter,
+void QwtPlotSpectrogram::drawContourLines( QPainter *painter,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-        const QwtRasterData::ContourLines &contourLines) const
+        const QwtRasterData::ContourLines &contourLines ) const
 {
-    const QwtDoubleInterval intensityRange = d_data->data->range();
+    if ( d_data->data == NULL )
+        return;
 
-    const int numLevels = (int)d_data->contourLevels.size();
-    for (int l = 0; l < numLevels; l++)
+    const QwtInterval intensityRange = d_data->data->interval( Qt::ZAxis );
+
+    const int numLevels = d_data->contourLevels.size();
+    for ( int l = 0; l < numLevels; l++ )
     {
         const double level = d_data->contourLevels[l];
 
         QPen pen = defaultContourPen();
         if ( pen.style() == Qt::NoPen )
-            pen = contourPen(level);
+            pen = contourPen( level );
 
         if ( pen.style() == Qt::NoPen )
             continue;
 
-        painter->setPen(pen);
+        painter->setPen( pen );
 
         const QPolygonF &lines = contourLines[level];
-        for ( int i = 0; i < (int)lines.size(); i += 2 )
+        for ( int i = 0; i < lines.size(); i += 2 )
         {
-            const QPointF p1( xMap.transform(lines[i].x()),
-                yMap.transform(lines[i].y()) );
-            const QPointF p2( xMap.transform(lines[i+1].x()),
-                yMap.transform(lines[i+1].y()) );
+            const QPointF p1( xMap.transform( lines[i].x() ),
+                yMap.transform( lines[i].y() ) );
+            const QPointF p2( xMap.transform( lines[i+1].x() ),
+                yMap.transform( lines[i+1].y() ) );
 
-            QwtPainter::drawLine(painter, p1, p2);
+            QwtPainter::drawLine( painter, p1, p2 );
         }
     }
 }
@@ -652,46 +594,45 @@ void QwtPlotSpectrogram::drawContourLines(QPainter *painter,
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas in painter coordinates 
+  \param canvasRect Contents rect of the canvas in painter coordinates
 
-  \sa setDisplayMode(), renderImage(), 
+  \sa setDisplayMode(), renderImage(),
       QwtPlotRasterItem::draw(), drawContourLines()
 */
-
-void QwtPlotSpectrogram::draw(QPainter *painter,
+void QwtPlotSpectrogram::draw( QPainter *painter,
     const QwtScaleMap &xMap, const QwtScaleMap &yMap,
-    const QRectF &canvasRect) const
+    const QRectF &canvasRect ) const
 {
     if ( d_data->displayMode & ImageMode )
-        QwtPlotRasterItem::draw(painter, xMap, yMap, canvasRect);
+        QwtPlotRasterItem::draw( painter, xMap, yMap, canvasRect );
 
     if ( d_data->displayMode & ContourMode )
     {
-        // Add some pixels at the borders, so that 
+        // Add some pixels at the borders
         const int margin = 2;
-        QRectF rasterRect(canvasRect.x() - margin, canvasRect.y() - margin,
-            canvasRect.width() + 2 * margin, canvasRect.height() + 2 * margin);
+        QRectF rasterRect( canvasRect.x() - margin, canvasRect.y() - margin,
+            canvasRect.width() + 2 * margin, canvasRect.height() + 2 * margin );
 
-        QRectF area = QwtScaleMap::invTransform(xMap, yMap, rasterRect);
+        QRectF area = QwtScaleMap::invTransform( xMap, yMap, rasterRect );
 
         const QRectF br = boundingRect();
-        if ( br.isValid() ) 
+        if ( br.isValid() )
         {
             area &= br;
             if ( area.isEmpty() )
                 return;
 
-            rasterRect = QwtScaleMap::transform(xMap, yMap, area);
+            rasterRect = QwtScaleMap::transform( xMap, yMap, area );
         }
 
-        QSize raster = contourRasterSize(area, rasterRect.toRect());
-        raster = raster.boundedTo(rasterRect.toRect().size());
+        QSize raster = contourRasterSize( area, rasterRect.toRect() );
+        raster = raster.boundedTo( rasterRect.toRect().size() );
         if ( raster.isValid() )
         {
             const QwtRasterData::ContourLines lines =
-                renderContourLines(area, raster);
+                renderContourLines( area, raster );
 
-            drawContourLines(painter, xMap, yMap, lines);
+            drawContourLines( painter, xMap, yMap, lines );
         }
     }
 }

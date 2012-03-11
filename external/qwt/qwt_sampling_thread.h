@@ -27,20 +27,20 @@ public:
     double elapsed() const;
 
 public Q_SLOTS:
-    void setInterval(double interval);
+    void setInterval( double interval );
     void stop();
 
 protected:
-    explicit QwtSamplingThread(QObject *parent = NULL);
+    explicit QwtSamplingThread( QObject *parent = NULL );
 
     virtual void run();
 
     /*!
        Collect a sample
- 
+
        \param elapsed Time since the thread was started in miliseconds
      */
-    virtual void sample(double elapsed) = 0;
+    virtual void sample( double elapsed ) = 0;
 
 private:
     class PrivateData;

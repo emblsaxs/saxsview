@@ -2,7 +2,7 @@
  * Qwt Widget Library
  * Copyright (C) 1997   Josef Wilgen
  * Copyright (C) 2002   Uwe Rathmann
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
@@ -23,7 +23,6 @@
 #define _USE_MATH_DEFINES 1
 #endif
 
-#include <qpoint.h>
 #include <qmath.h>
 #include "qwt_global.h"
 
@@ -105,8 +104,8 @@
 #define M_SQRT1_2   0.70710678118654752440  /* 1/sqrt(2) */
 #endif
 
-QWT_EXPORT double qwtGetMin(const double *array, int size);
-QWT_EXPORT double qwtGetMax(const double *array, int size);
+QWT_EXPORT double qwtGetMin( const double *array, int size );
+QWT_EXPORT double qwtGetMax( const double *array, int size );
 
 /*!
   \brief Compare 2 values, relative to an interval
@@ -120,9 +119,9 @@ QWT_EXPORT double qwtGetMax(const double *array, int size);
 
   \return 0: if equal, -1: if value2 > value1, 1: if value1 > value2
 */
-inline int qwtFuzzyCompare(double value1, double value2, double intervalSize)
+inline int qwtFuzzyCompare( double value1, double value2, double intervalSize )
 {
-    const double eps = qAbs(1.0e-6 * intervalSize);
+    const double eps = qAbs( 1.0e-6 * intervalSize );
 
     if ( value2 - value1 > eps )
         return -1;
@@ -134,86 +133,64 @@ inline int qwtFuzzyCompare(double value1, double value2, double intervalSize)
 }
 
 
-inline bool qwtFuzzyGreaterOrEqual(double d1, double d2)
+inline bool qwtFuzzyGreaterOrEqual( double d1, double d2 )
 {
-    return (d1 >= d2) || qFuzzyCompare(d1, d2);
+    return ( d1 >= d2 ) || qFuzzyCompare( d1, d2 );
 }
 
-inline bool qwtFuzzyLessOrEqual(double d1, double d2)
+inline bool qwtFuzzyLessOrEqual( double d1, double d2 )
 {
-    return (d1 <= d2) || qFuzzyCompare(d1, d2);
+    return ( d1 <= d2 ) || qFuzzyCompare( d1, d2 );
 }
 
-//! Return the sign 
-inline int qwtSign(double x)
+//! Return the sign
+inline int qwtSign( double x )
 {
-    if (x > 0.0)
-       return 1;
-    else if (x < 0.0)
-       return (-1);
+    if ( x > 0.0 )
+        return 1;
+    else if ( x < 0.0 )
+        return ( -1 );
     else
-       return 0;
-}            
+        return 0;
+}
 
 //! Return the square of a number
-inline double qwtSqr(const double x)
+inline double qwtSqr( double x )
 {
-    return x*x;
+    return x * x;
 }
 
-/*!
-  \brief Limit a value to fit into a specified interval
-  \param x Input value
-  \param x1 First interval boundary
-  \param x2 Second interval boundary  
-*/
-template <class T>
-T qwtLim(const T& x, const T& x1, const T& x2)
+//! Approximation of arc tangent ( error below 0,005 radians )
+inline double qwtFastAtan( double x )
 {
-    T rv;
-    T xmin, xmax;
-    
-    xmin = qMin(x1, x2);
-    xmax = qMax(x1, x2);
+    if ( x < -1.0 )
+        return -M_PI_2 - x / ( x * x + 0.28 );
 
-    if ( x < xmin )
-       rv = xmin;
-    else if ( x > xmax )
-       rv = xmax;
-    else
-       rv = x;
+    if ( x > 1.0 )
+        return M_PI_2 - x / ( x * x + 0.28 );
 
-    return rv;
+    return x / ( 1.0 + x * x * 0.28 );
 }
 
-inline QPoint qwtPolar2Pos(const QPoint &pole,
-    double radius, double angle)
+//! Approximation of arc tangent ( error below 0,005 radians )
+inline double qwtFastAtan2( double y, double x )
 {
-    const double x = pole.x() + radius * qCos(angle);
-    const double y = pole.y() - radius * qSin(angle);
+    if ( x > 0 )
+        return qwtFastAtan( y / x );
 
-    return QPoint(qRound(x), qRound(y));
-}
+    if ( x < 0 )
+    {
+        const double d = qwtFastAtan( y / x );
+        return ( y >= 0 ) ? d + M_PI : d - M_PI;
+    }
 
-inline QPoint qwtDegree2Pos(const QPoint &pole,
-    double radius, double angle)
-{
-    return qwtPolar2Pos(pole, radius, angle / 180.0 * M_PI);
-}
+    if ( y < 0.0 )
+        return -M_PI_2;
 
-inline QPointF qwtPolar2Pos(const QPointF &pole,
-    double radius, double angle)
-{
-    const double x = pole.x() + radius * qCos(angle);
-    const double y = pole.y() - radius * qSin(angle);
+    if ( y > 0.0 )
+        return M_PI_2;
 
-    return QPoint(qRound(x), qRound(y));
-}
-
-inline QPointF qwtDegree2Pos(const QPointF &pole,
-    double radius, double angle)
-{
-    return qwtPolar2Pos(pole, radius, angle / 180.0 * M_PI);
+    return 0.0;
 }
 
 #endif

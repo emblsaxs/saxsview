@@ -16,14 +16,15 @@
   \brief QwtSystemClock provides high resolution clock time functions.
 
   Sometimes the resolution offered by QTime ( millisecond ) is not accurate
-  enough for implementing time measurements ( f.e. sampling ). 
-  QwtSystemClock offers a subset of the QTime functionality using higher 
+  enough for implementing time measurements ( f.e. sampling ).
+  QwtSystemClock offers a subset of the QTime functionality using higher
   resolution timers ( if possible ).
 
-  Precision and time intervals are multiples of milliseconds (ms).  
+  Precision and time intervals are multiples of milliseconds (ms).
 
-  \hint The implementation uses POSIX timers or high-resolution performance 
-        counter on Windows. If both are not available it falls back on QTimer.
+  \note The implementation uses high-resolution performance counter on Windows,
+        mach_absolute_time() on the Mac or POSIX timers on other systems. 
+        If none is available it falls back on QTimer.
 */
 
 class QWT_EXPORT QwtSystemClock
@@ -31,14 +32,12 @@ class QWT_EXPORT QwtSystemClock
 public:
     QwtSystemClock();
     virtual ~QwtSystemClock();
-    
+
     bool isNull() const;
 
     void start();
     double restart();
     double elapsed() const;
-
-    static double precision();
 
 private:
     class PrivateData;

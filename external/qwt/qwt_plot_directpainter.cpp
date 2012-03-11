@@ -17,66 +17,134 @@
 #include <qapplication.h>
 #include <qpixmap.h>
 
-static void renderItem(QPainter *painter,
-    QwtPlotAbstractSeriesItem *seriesItem, int from, int to)
+static inline void renderItem( 
+    QPainter *painter, const QRect &canvasRect,
+    QwtPlotSeriesItem *seriesItem, int from, int to )
 {
+    // A minor performance improvement is possible
+    // with caching the maps. TODO ...
+
     QwtPlot *plot = seriesItem->plot();
+    const QwtScaleMap xMap = plot->canvasMap( seriesItem->xAxis() );
+    const QwtScaleMap yMap = plot->canvasMap( seriesItem->yAxis() );
 
-    const QwtScaleMap xMap = plot->canvasMap(seriesItem->xAxis());
-    const QwtScaleMap yMap = plot->canvasMap(seriesItem->yAxis());
-
-    painter->setRenderHint(QPainter::Antialiasing,
-        seriesItem->testRenderHint(QwtPlotItem::RenderAntialiased) );
-    seriesItem->drawSeries(painter, xMap, yMap,
-        plot->canvas()->contentsRect(), from, to);
+    painter->setRenderHint( QPainter::Antialiasing,
+        seriesItem->testRenderHint( QwtPlotItem::RenderAntialiased ) );
+    seriesItem->drawSeries( painter, xMap, yMap, canvasRect, from, to );
 }
 
 class QwtPlotDirectPainter::PrivateData
 {
 public:
     PrivateData():
-        attributes(0),
-        seriesItem(NULL)
+        attributes( 0 ),
+        hasClipping(false),
+        seriesItem( NULL )
     {
     }
 
-    int attributes;
+    QwtPlotDirectPainter::Attributes attributes;
+
+    bool hasClipping;
+    QRegion clipRegion;
 
     QPainter painter;
 
-    QwtPlotAbstractSeriesItem *seriesItem;
+    QwtPlotSeriesItem *seriesItem;
     int from;
     int to;
 };
 
-QwtPlotDirectPainter::QwtPlotDirectPainter(QObject *parent):
-    QObject(parent)
+//! Constructor
+QwtPlotDirectPainter::QwtPlotDirectPainter( QObject *parent ):
+    QObject( parent )
 {
     d_data = new PrivateData;
 }
 
+//! Destructor
 QwtPlotDirectPainter::~QwtPlotDirectPainter()
 {
     delete d_data;
 }
 
-void QwtPlotDirectPainter::setAttribute(Attribute attribute, bool on)
+/*!
+  Change an attribute
+
+  \param attribute Attribute to change
+  \param on On/Off
+
+  \sa Attribute, testAttribute()
+*/
+void QwtPlotDirectPainter::setAttribute( Attribute attribute, bool on )
 {
-    if ( bool(d_data->attributes & attribute) != on )
+    if ( bool( d_data->attributes & attribute ) != on )
     {
         if ( on )
             d_data->attributes |= attribute;
         else
             d_data->attributes &= ~attribute;
 
-        if ( attribute == AtomicPainter && on )
+        if ( ( attribute == AtomicPainter ) && on )
             reset();
     }
 }
 
-bool QwtPlotDirectPainter::testAttribute(Attribute attribute) const
+/*!
+  Check if a attribute is set.
+
+  \param attribute Attribute to be tested
+  \sa Attribute, setAttribute()
+*/
+bool QwtPlotDirectPainter::testAttribute( Attribute attribute ) const
 {
     return d_data->attributes & attribute;
+}
+
+/*!
+  En/Disables clipping 
+
+  \param enable Enables clipping is true, disable it otherwise
+  \sa hasClipping(), clipRegion(), setClipRegion()
+*/
+void QwtPlotDirectPainter::setClipping( bool enable )
+{
+    d_data->hasClipping = enable;
+}
+
+/*!
+  \return true, when clipping is enabled
+  \sa setClipping(), clipRegion(), setClipRegion()
+*/
+bool QwtPlotDirectPainter::hasClipping() const
+{
+    return d_data->hasClipping;
+}
+
+/*!
+   \brief Assign a clip region and enable clipping
+
+   Depending on the environment setting a proper clip region might improve 
+   the performance heavily. F.e. on Qt embedded only the clipped part of
+   the backing store will be copied to a ( maybe unaccelerated ) frame buffer
+   device.
+   
+   \param region Clip region
+   \sa clipRegion(), hasClipping(), setClipping()
+*/
+void QwtPlotDirectPainter::setClipRegion( const QRegion &region )
+{
+    d_data->clipRegion = region;
+    d_data->hasClipping = true;
+}
+
+/*!
+   \return Currently set clip region.
+   \sa setClipRegion(), setClipping(), hasClipping()
+*/
+QRegion QwtPlotDirectPainter::clipRegion() const
+{
+    return d_data->clipRegion;
 }
 
 /*!
@@ -88,33 +156,36 @@ bool QwtPlotDirectPainter::testAttribute(Attribute attribute) const
 
   Setting plot()->canvas()->setAttribute(Qt::WA_PaintOutsidePaintEvent, true);
   will result in faster painting, if the paint engine of the canvas widget
-  supports this feature. 
+  supports this feature.
 
+  \param seriesItem Item to be painted
   \param from Index of the first point to be painted
   \param to Index of the last point to be painted. If to < 0 the
          series will be painted to its last point.
 */
 void QwtPlotDirectPainter::drawSeries(
-    QwtPlotAbstractSeriesItem *seriesItem, int from, int to) 
+    QwtPlotSeriesItem *seriesItem, int from, int to )
 {
     if ( seriesItem == NULL || seriesItem->plot() == NULL )
         return;
 
     QwtPlotCanvas *canvas = seriesItem->plot()->canvas();
+    const QRect canvasRect = canvas->contentsRect();
 
-    const QwtScaleMap xMap = seriesItem->plot()->canvasMap(seriesItem->xAxis());
-    const QwtScaleMap yMap = seriesItem->plot()->canvasMap(seriesItem->yAxis());
+    const bool hasBackingStore = 
+        canvas->testPaintAttribute( QwtPlotCanvas::BackingStore ) 
+        && canvas->backingStore() && !canvas->backingStore()->isNull();
 
-    if ( canvas->testPaintAttribute(QwtPlotCanvas::PaintCached) &&
-        canvas->paintCache() && !canvas->paintCache()->isNull() )
+    if ( hasBackingStore )
     {
-        QPainter painter((QPixmap *)canvas->paintCache());
-        painter.translate(-canvas->contentsRect().x(),
-            -canvas->contentsRect().y());
+        QPainter painter( const_cast<QPixmap *>( canvas->backingStore() ) );
 
-        renderItem(&painter, seriesItem, from, to);
+        if ( d_data->hasClipping )
+            painter.setClipRegion( d_data->clipRegion );
 
-        if ( d_data->attributes & FullRepaint )
+        renderItem( &painter, canvasRect, seriesItem, from, to );
+
+        if ( testAttribute( QwtPlotDirectPainter::FullRepaint ) )
         {
             canvas->repaint();
             return;
@@ -122,8 +193,8 @@ void QwtPlotDirectPainter::drawSeries(
     }
 
     bool immediatePaint = true;
-    if ( !canvas->testAttribute(Qt::WA_WState_InPaintEvent) &&
-        !canvas->testAttribute(Qt::WA_PaintOutsidePaintEvent) )
+    if ( !canvas->testAttribute( Qt::WA_WState_InPaintEvent ) &&
+        !canvas->testAttribute( Qt::WA_PaintOutsidePaintEvent ) )
     {
         immediatePaint = false;
     }
@@ -131,22 +202,36 @@ void QwtPlotDirectPainter::drawSeries(
     if ( immediatePaint )
     {
         QwtPlotCanvas *canvas = seriesItem->plot()->canvas();
-        if ( !(d_data->painter.isActive() && 
-            d_data->painter.device() == canvas) )
+        if ( !d_data->painter.isActive() )
         {
             reset();
 
-            d_data->painter.begin(canvas);
-            d_data->painter.setClipping(true);
-            d_data->painter.setClipRect(canvas->contentsRect());
-
-            canvas->installEventFilter(this);
+            d_data->painter.begin( canvas );
+            canvas->installEventFilter( this );
         }
 
-        renderItem(&d_data->painter, seriesItem, from, to);
+        if ( d_data->hasClipping )
+        {
+            d_data->painter.setClipRegion( 
+                QRegion( canvasRect ) & d_data->clipRegion );
+        }
+        else
+        {
+            if ( !d_data->painter.hasClipping() )
+                d_data->painter.setClipRect( canvasRect );
+        }
 
-        if ( d_data->attributes & AtomicPainter )
+        renderItem( &d_data->painter, canvasRect, seriesItem, from, to );
+
+        if ( d_data->attributes & QwtPlotDirectPainter::AtomicPainter )
+        {
             reset();
+        }
+        else
+        {
+            if ( d_data->hasClipping )
+                d_data->painter.setClipping( false );
+        }
     }
     else
     {
@@ -156,27 +241,33 @@ void QwtPlotDirectPainter::drawSeries(
         d_data->from = from;
         d_data->to = to;
 
-        canvas->installEventFilter(this);
-        canvas->repaint();
-        canvas->removeEventFilter(this);
+        QRegion clipRegion = canvasRect;
+        if ( d_data->hasClipping )
+            clipRegion &= d_data->clipRegion;
+
+        canvas->installEventFilter( this );
+        canvas->repaint(clipRegion);
+        canvas->removeEventFilter( this );
 
         d_data->seriesItem = NULL;
     }
 }
 
+//! Close the internal QPainter
 void QwtPlotDirectPainter::reset()
 {
     if ( d_data->painter.isActive() )
     {
-        QWidget *w = (QWidget *)d_data->painter.device();
+        QWidget *w = static_cast<QWidget *>( d_data->painter.device() );
         if ( w )
-            w->removeEventFilter(this);
+            w->removeEventFilter( this );
 
         d_data->painter.end();
     }
 }
 
-bool QwtPlotDirectPainter::eventFilter(QObject *, QEvent *event)
+//! Event filter
+bool QwtPlotDirectPainter::eventFilter( QObject *, QEvent *event )
 {
     if ( event->type() == QEvent::Paint )
     {
@@ -184,16 +275,36 @@ bool QwtPlotDirectPainter::eventFilter(QObject *, QEvent *event)
 
         if ( d_data->seriesItem )
         {
+            const QPaintEvent *pe = static_cast< QPaintEvent *>( event );
+
             QwtPlotCanvas *canvas = d_data->seriesItem->plot()->canvas();
 
-            QPainter painter(canvas);
-            painter.setClipping(true);
-            painter.setClipRect(canvas->contentsRect());
+            QPainter painter( canvas );
+            painter.setClipRegion( pe->region() );
 
-            renderItem(&painter, d_data->seriesItem,
-                d_data->from, d_data->to);
+            bool copyCache = testAttribute( CopyBackingStore )
+                && canvas->testPaintAttribute( QwtPlotCanvas::BackingStore );
 
-            return true;
+            if ( copyCache )
+            {
+                // is something valid in the cache ?
+                copyCache = ( canvas->backingStore() != NULL )
+                    && !canvas->backingStore()->isNull();
+            }
+
+            if ( copyCache )
+            {
+                painter.drawPixmap( 
+                    canvas->contentsRect().topLeft(), 
+                    *canvas->backingStore() );
+            }
+            else
+            {
+                renderItem( &painter, canvas->contentsRect(),
+                    d_data->seriesItem, d_data->from, d_data->to );
+            }
+
+            return true; // don't call QwtPlotCanvas::paintEvent()
         }
     }
 

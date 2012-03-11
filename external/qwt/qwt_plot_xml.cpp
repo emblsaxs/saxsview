@@ -11,22 +11,22 @@
 
 /*!
   This method is intended for manipulating the plot widget
-  from a specific editor in the Qwt designer plugin. 
+  from a specific editor in the Qwt designer plugin.
 
   \warning The plot editor has never been implemented.
 */
-void QwtPlot::applyProperties(const QString & /* xmlDocument */)
+void QwtPlot::applyProperties( const QString & /* xmlDocument */ )
 {
 #if 0
     // Temporary dummy code, for designer tests
-    setTitle(xmlDocument);
+    setTitle( xmlDocument );
     replot();
 #endif
 }
 
 /*!
   This method is intended for manipulating the plot widget
-  from a specific editor in the Qwt designer plugin. 
+  from a specific editor in the Qwt designer plugin.
 
   \warning The plot editor has never been implemented.
 */
@@ -38,4 +38,4 @@ QString QwtPlot::grabProperties() const
 #else
     return QString::null;
 #endif
-}   
+}
