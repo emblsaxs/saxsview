@@ -1,5 +1,10 @@
 2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_image.h (range): Removed.
+	* saxsview_image.cpp: Adjusted to changes in Qwt.
+
+2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plotcurve.h (curveEnabled): Renamed property to ...
 	(curveVisible): ... this.
 	* saxsview_plotcurve.cpp: Adjusted to changes in Qwt.

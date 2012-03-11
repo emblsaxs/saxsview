@@ -106,7 +106,6 @@ public:
 
   void setMinValue(double x);
   void setMaxValue(double x);
-  QwtDoubleInterval range() const;
 
   double value(double x, double y) const;
 

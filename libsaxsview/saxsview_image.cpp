@@ -44,14 +44,7 @@ public:
    : QwtLinearColorMap(from, to, format) {
   }
 
-  Log10ColorMap(const Log10ColorMap& other) : QwtLinearColorMap(other) {
-  }
-
-  Log10ColorMap* copy() const {
-    return new Log10ColorMap(*this);
-  }
-
-  QRgb rgb(const QwtDoubleInterval& interval, double x) const {
+  QRgb rgb(const QwtInterval& interval, double x) const {
     //
     // Due to selectable thresholds it may happen that 'x' is outside the
     // range. If this is the case, we automatically get color1() if 'x'
@@ -64,14 +57,14 @@ public:
     double max = interval.maxValue() > 1.0 ? log10(interval.maxValue()) : 0.0;
     double val = x > 1.0 ? log10(x) : 0.0;
 
-    return QwtLinearColorMap::rgb(QwtDoubleInterval(min, max), val);
+    return QwtLinearColorMap::rgb(QwtInterval(min, max), val);
   }
 
-  unsigned char colorIndex(const QwtDoubleInterval& interval, double x) const {
+  unsigned char colorIndex(const QwtInterval& interval, double x) const {
     double min = interval.minValue() > 1.0 ? log10(interval.minValue()) : 0.0;
     double max = interval.maxValue() > 1.0 ? log10(interval.maxValue()) : 0.0;
     double val = x > 1.0 ? log10(x) : 0.0;
-    return QwtLinearColorMap::colorIndex(QwtDoubleInterval(min, max), val);
+    return QwtLinearColorMap::colorIndex(QwtInterval(min, max), val);
   }
 };
 
@@ -123,8 +116,7 @@ void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
   image->canvas()->setLineWidth(1);
 
   // margin around the plot
-  image->plotLayout()->setMargin(12);
-  image->plotLayout()->setAlignCanvasToScales(true);
+  image->setContentsMargins(12, 12, 12, 12);
 }
 
 void SaxsviewImage::Private::setupScales(SaxsviewImage *image) {
@@ -230,10 +222,11 @@ void SaxsviewImage::setFrame(SaxsviewFrame *frame) {
   p->frame = frame;
   frame->attach(this);
 
-  const QwtDoubleInterval range = p->frame->data()->range();
-  axisWidget(QwtPlot::yRight)->setColorMap(range, p->frame->colorMap());
-
-  setAxisScale(QwtPlot::yRight, range.minValue(), range.maxValue());
+  if (frame->data()) {
+    const QwtInterval range = p->frame->data()->interval(Qt::ZAxis);
+    axisWidget(QwtPlot::yRight)->setColorBarInterval(range);
+    setAxisScale(QwtPlot::yRight, range.minValue(), range.maxValue());
+  }
 
   setZoomBase(p->frame->boundingRect());
 
@@ -313,21 +306,25 @@ void SaxsviewImage::setScale(Saxsview::Scale s) {
   if (!p->frame)
     return;
 
+  QwtInterval interval;
+  if (p->frame->data())
+    interval = p->frame->data()->interval(Qt::ZAxis);
+
   switch (s) {
     case Saxsview::AbsoluteScale:
-      p->frame->setColorMap(QwtLinearColorMap(Qt::white, Qt::black));
+      p->frame->setColorMap(new QwtLinearColorMap(Qt::white, Qt::black));
       setAxisScaleEngine(QwtPlot::yRight, new QwtLinearScaleEngine);
+      axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                               new QwtLinearColorMap(Qt::white, Qt::black));
       break;
 
     case Saxsview::Log10Scale:
-      p->frame->setColorMap(Log10ColorMap(Qt::white, Qt::black));
+      p->frame->setColorMap(new Log10ColorMap(Qt::white, Qt::black));
       setAxisScaleEngine(QwtPlot::yRight, new Log10ScaleEngine);
+      axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                               new Log10ColorMap(Qt::white, Qt::black));
       break;
   }
-
-  if (p->frame->boundingRect().isValid())
-    axisWidget(QwtPlot::yRight)->setColorMap(p->frame->data()->range(),
-                                             p->frame->colorMap());
 
   replot();
 }
@@ -350,16 +347,19 @@ SaxsviewFrame::~SaxsviewFrame() {
 }
 
 QSize SaxsviewFrame::size() const {
-  const QRectF rect = data()->boundingRect();
-  return QSize((int)rect.width(), (int)rect.height());
+  if (data())
+    return QSize(data()->interval(Qt::XAxis).width(),
+                 data()->interval(Qt::YAxis).width());
+  else
+    return QSize();
 }
 
 double SaxsviewFrame::minValue() const {
-  return data()->range().minValue();
+  return data() ? data()->interval(Qt::ZAxis).minValue() : 0.0;
 }
 
 double SaxsviewFrame::maxValue() const {
-  return data()->range().maxValue();
+  return data() ? data()->interval(Qt::ZAxis).maxValue() : 0.0;
 }
 
 void SaxsviewFrame::setMinValue(double x) {
@@ -367,7 +367,7 @@ void SaxsviewFrame::setMinValue(double x) {
     d->setMinValue(x);
 
     QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
-    scale->setColorMap(data()->range(), colorMap());
+    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
 
     plot()->replot();
   }
@@ -378,7 +378,7 @@ void SaxsviewFrame::setMaxValue(double x) {
     d->setMaxValue(x);
 
     QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
-    scale->setColorMap(data()->range(), colorMap());
+    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
 
     plot()->replot();
   }
@@ -389,7 +389,7 @@ void SaxsviewFrame::setMaxValue(double x) {
 class SaxsviewFrameData::Private {
 public:
   saxs_image* data;
-  QwtDoubleInterval range, selectedRange;
+  QwtInterval range, selectedRange;
 };
 
 SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
@@ -398,13 +398,10 @@ SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
   p->data = saxs_image_create();
   if (saxs_image_read(p->data, qPrintable(fileName), 0L) == 0) {
 
-    setBoundingRect(QRectF(0.0, 0.0,
-                           saxs_image_width(p->data) - 1.0,
-                           saxs_image_height(p->data) - 1.0));
-
-    p->range = QwtDoubleInterval(saxs_image_value_min(p->data),
-                                 saxs_image_value_max(p->data));
-    p->selectedRange = p->range;
+    setInterval(Qt::XAxis, QwtInterval(0.0, saxs_image_width(p->data) - 1.0));
+    setInterval(Qt::YAxis, QwtInterval(0.0, saxs_image_height(p->data) - 1.0));
+    setInterval(Qt::ZAxis, QwtInterval(saxs_image_value_min(p->data),
+                                       saxs_image_value_max(p->data)));
 
   } else {
     saxs_image_free(p->data);
@@ -415,8 +412,6 @@ SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
 SaxsviewFrameData::SaxsviewFrameData(const SaxsviewFrameData& other)
   : p(new Private) {
   p->data = other.p->data;
-  p->range = other.p->range;
-  p->selectedRange = other.p->selectedRange;
 }
 
 SaxsviewFrameData::~SaxsviewFrameData() {
@@ -430,19 +425,18 @@ SaxsviewFrameData* SaxsviewFrameData::copy() const {
   return 0L;
 }
 
-QwtDoubleInterval SaxsviewFrameData::range() const {
-  return p->selectedRange;
-}
-
 void SaxsviewFrameData::setMinValue(double x) {
-  p->selectedRange.setMinValue(qMax(x, p->range.minValue()));
+  QwtInterval zrange = interval(Qt::ZAxis);
+  setInterval(Qt::ZAxis, QwtInterval(qMax(x, saxs_image_value_min(p->data)),
+                                     zrange.maxValue()));
 }
 
 void SaxsviewFrameData::setMaxValue(double x) {
-  p->selectedRange.setMaxValue(qMin(x, p->range.maxValue()));
+  QwtInterval zrange = interval(Qt::ZAxis);
+  setInterval(Qt::ZAxis, QwtInterval(zrange.minValue(),
+                                     qMin(x, saxs_image_value_max(p->data))));
 }
 
 double SaxsviewFrameData::value(double x, double y) const {
-  const double z = saxs_image_value(p->data, (int)x, (int)y);
-  return z >= 0.0 ? z : 0.0;
+  return saxs_image_value(p->data, (int)x, (int)y);
 }
