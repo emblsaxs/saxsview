@@ -1,0 +1,34 @@
+Index: qwt_scale_widget.cpp
+===================================================================
+--- qwt_scale_widget.cpp	(revision 226)
++++ qwt_scale_widget.cpp	(working copy)
+@@ -876,6 +876,13 @@
+     return d_data->colorBar.width;
+ }
+ 
++void QwtScaleWidget::setColorBarInterval( const QwtInterval &interval )
++{
++    d_data->colorBar.interval = interval;
++    if ( isColorBarEnabled() )
++        layoutScale();
++}
++
+ /*!
+   \return Value interval for the color bar
+   \sa setColorMap(), colorMap()
+Index: qwt_scale_widget.h
+===================================================================
+--- qwt_scale_widget.h	(revision 226)
++++ qwt_scale_widget.h	(working copy)
+@@ -95,9 +95,10 @@
+     int colorBarWidth() const;
+ 
+     void setColorMap( const QwtInterval &, QwtColorMap * );
++    const QwtColorMap *colorMap() const;
+ 
++    void setColorBarInterval( const QwtInterval & );
+     QwtInterval colorBarInterval() const;
+-    const QwtColorMap *colorMap() const;
+ 
+     virtual QSize sizeHint() const;
+     virtual QSize minimumSizeHint() const;

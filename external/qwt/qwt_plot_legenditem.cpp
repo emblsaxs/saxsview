@@ -547,7 +547,8 @@ void QwtPlotLegendItem::drawLegendData( QPainter *painter,
     const QwtPlotItem *plotItem, const QwtLegendData &data, 
     const QRectF &rect ) const
 {
-    Q_UNUSED( plotItem );
+    if ( !plotItem->testItemAttribute(QwtPlotItem::Legend) )
+      return;
 
     const int m = d_data->itemMargin;
     const QRectF r = rect.toRect().adjusted( m, m, -m, -m );

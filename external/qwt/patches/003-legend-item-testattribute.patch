@@ -1,0 +1,14 @@
+Index: qwt_plot_legenditem.cpp
+===================================================================
+--- qwt_plot_legenditem.cpp	(revision 233)
++++ qwt_plot_legenditem.cpp	(working copy)
+@@ -547,7 +547,8 @@
+     const QwtPlotItem *plotItem, const QwtLegendData &data, 
+     const QRectF &rect ) const
+ {
+-    Q_UNUSED( plotItem );
++    if ( !plotItem->testItemAttribute(QwtPlotItem::Legend) )
++      return;
+ 
+     const int m = d_data->itemMargin;
+     const QRectF r = rect.toRect().adjusted( m, m, -m, -m );

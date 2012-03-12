@@ -11,21 +11,32 @@ The remainder of this README describes the patches in some detail.
 
 001-legend-item-size.patch
 --------------------------
-In qwt_plot_curve.cpp, the identifier size of a curve's legend symbol is set 
-to the size of the symbol - discarding any (larger) size already set by the 
-user.
-
-See also:
-http://sourceforge.net/mailarchive/forum.php?thread_name=201006061913.25315.franke.daniel%40gmail.com&forum_name=qwt-interest
-
+Superseeded by import of qwt/trunk r1238.
 
 
 002-external-legend-position.patch
 ----------------------------------
-In qwt_plot.h (current trunk) one finds:
+Superseeded by import of qwt/trunk r1238.
 
-        \note In case of ExternalLegend, the legend is not 
-              handled by QwtPlotRenderer
 
-See also:
-http://sourceforge.net/mailarchive/forum.php?thread_name=201007232238.41892.franke.daniel%40gmail.com&forum_name=qwt-interest
+003-legend-item-testattribute.patch
+-----------------------------------
+The QwtPlotLegendItem does not check if an item requested not to be 
+included in the legend via "setItemAttribute(QwtPlotItem::Legend, false)".
+
+This patch breaks compability with the QwtLegend, but as we are not
+interested in that any more, so what. It simplifies the client code
+significantly.
+
+
+004-set-colorbar-interval.patch
+-------------------------------
+The API of QwtScaleWidget::setColorMap/colorMap was changed that the former 
+only accepts non-const pointers while the latter only returns const pointers. 
+Here it's useful to change the z-interval to mask out point below or above
+a threshold. For this I used to use setColorMap(newRange, colorMap()), which
+is now broken (r1298). One could now re-create the appropriate colorMap (which
+here depends on additional parameters), but a convenience function
+"QwtScaleWidget::setColorBarInterval" seems more appropriate.
+
+This patch adds this convenience function.

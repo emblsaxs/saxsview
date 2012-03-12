@@ -1,4 +1,14 @@
-2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
+2012-03-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* patches/003-legend-item-testattribute.patch: New.
+	* patches/004-set-colorbar-interval.patch: New.
+	* README: Updated.
+
+	* qwt_plot_legenditem.cpp: Applied 003-legend-item-testattribute.patch.
+	* qwt_scale_widget.h: Applied 004-set-colorbar-interval.patch.
+	* qwt_scale_widget.cpp: Likewise.
+
+2012-03-12  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Imported r1239 from qwt/trunk.
 
