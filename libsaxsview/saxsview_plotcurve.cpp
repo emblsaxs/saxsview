@@ -190,7 +190,9 @@ bool SaxsviewPlotCurve::isVisible() const {
 }
 
 void SaxsviewPlotCurve::setVisible(bool on) {
+  // Visibility change doesn't change the legend - do it manually.
   p->curve->setVisible(on);
+  p->curve->legendChanged();
   p->curve->setItemAttribute(QwtPlotItem::Legend,
                              on && !p->curve->title().isEmpty());
 
@@ -220,9 +222,9 @@ QString SaxsviewPlotCurve::title() const {
 }
 
 void SaxsviewPlotCurve::setTitle(const QString& title) {
+  p->curve->setTitle(title);
   p->curve->setItemAttribute(QwtPlotItem::Legend,
                              p->curve->isVisible() &&  !title.isEmpty());
-  p->curve->setTitle(title);
 
   if (p->curve->plot())
     p->curve->plot()->replot();
