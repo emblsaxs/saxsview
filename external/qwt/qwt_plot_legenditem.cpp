@@ -524,7 +524,10 @@ void QwtPlotLegendItem::updateLegend( const QwtPlotItem *plotItem,
     }
 
     if ( changed )
+    {
+        d_data->layout->invalidate();
         itemChanged();
+    }
 }
 
 void QwtPlotLegendItem::clearLegend()
