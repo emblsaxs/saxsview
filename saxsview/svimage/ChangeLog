@@ -1,3 +1,8 @@
+2012-03-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimagesubwindow.cpp (exportAs): Implemented.
+	(print): Implemented.
+
 2012-03-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagemainwindow.cpp: Removed usage of namespace Saxsview.

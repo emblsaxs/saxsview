@@ -155,11 +155,11 @@ void SVImageSubWindow::reload() {
 
 void SVImageSubWindow::exportAs(const QString& fileName,
                                 const QString& format) {
-//   p->image->exportAs(fileName, format);
+  p->image->exportAs(fileName, format);
 }
 
 void SVImageSubWindow::print() {
-//   p->image->print();
+  p->image->print();
 }
 
 void SVImageSubWindow::zoomFit() {
