@@ -24,6 +24,9 @@ Superseeded by import of qwt/trunk r1238.
 The QwtPlotLegendItem does not check if an item requested not to be 
 included in the legend via "setItemAttribute(QwtPlotItem::Legend, false)".
 
+Also the layout doesn't hide layout items that are empty. Second change
+updates the definition of isEmpty(), minimumSize() and related.
+
 This patch breaks compability with the QwtLegend, but as we are not
 interested in that any more, so what. It simplifies the client code
 significantly.

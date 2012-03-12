@@ -81,22 +81,23 @@ Qt::Orientations QwtLegendLayoutItem::expandingDirections() const
 
 bool QwtLegendLayoutItem::hasHeightForWidth() const
 {
-    return !d_data.title().isEmpty();
+    return !isEmpty();
 }
 
 int QwtLegendLayoutItem::minimumHeightForWidth( int w ) const
 {
-    return d_legendItem->heightForWidth( d_data, w );
+    return isEmpty() ? 0 : d_legendItem->heightForWidth( d_data, w );
 }
 
 int QwtLegendLayoutItem::heightForWidth( int w ) const
 {
-    return d_legendItem->heightForWidth( d_data, w );
+    return isEmpty() ? 0 : d_legendItem->heightForWidth( d_data, w );
 }
 
 bool QwtLegendLayoutItem::isEmpty() const
 {
-    return false;
+    return !plotItem()->isVisible() 
+             || !plotItem()->testItemAttribute(QwtPlotItem::Legend);
 }
 
 QSize QwtLegendLayoutItem::maximumSize() const
@@ -106,7 +107,7 @@ QSize QwtLegendLayoutItem::maximumSize() const
 
 QSize QwtLegendLayoutItem::minimumSize() const
 {
-    return d_legendItem->minimumSize( d_data );
+    return isEmpty() ? QSize() : d_legendItem->minimumSize( d_data );
 }
 
 QSize QwtLegendLayoutItem::sizeHint() const
