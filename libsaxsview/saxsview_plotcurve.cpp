@@ -113,6 +113,9 @@ void SaxsviewPlotCurve::Private::scale() {
     x /= n;
     y /= n;
 
+    if ((y - sqrt(y_lower_err)/n) * scaleY < 1e-6)
+      continue;
+
     scaledPoints.push_back(QPointF(x * scaleX, y * scaleY));
     scaledIntervals.push_back(QwtIntervalSample(x * scaleX,
                                                 (y - sqrt(y_lower_err)/n) * scaleY,
@@ -165,8 +168,11 @@ void SaxsviewPlotCurve::setData(const SaxsviewPlotPointData& points,
   p->scaleY = 1.0;
   p->merge  = 1;
 
-  p->curve->setSamples(points);
-  p->errorCurve->setSamples(intervals);
+  //
+  // Although we are not really scaling this curve, scale() also
+  // filters the crappy data points ...
+  //
+  p->scale();
 }
 
 bool SaxsviewPlotCurve::errorBarsEnabled() const {
@@ -176,6 +182,7 @@ bool SaxsviewPlotCurve::errorBarsEnabled() const {
 void SaxsviewPlotCurve::setErrorBarsEnabled(bool on) {
   p->errorBarsEnabled = on;
   p->errorCurve->setVisible(on);
+  p->replot();
 }
 
 bool SaxsviewPlotCurve::isVisible() const {
@@ -310,6 +317,11 @@ void SaxsviewPlotCurve::setSymbolStyle(Saxsview::SymbolStyle s) {
   }
 
   p->symbol->setStyle(style);
+  // This invalidates the icon cache for the legend item and makes
+  // sure the icon is updated properly.
+  p->curve->legendChanged();
+  p->curve->itemChanged();
+
   p->replot();
 }
 
@@ -336,6 +348,10 @@ Saxsview::SymbolStyle SaxsviewPlotCurve::symbolStyle() const {
 
 void SaxsviewPlotCurve::setSymbolSize(int size) {
   p->symbol->setSize(size);
+
+  p->curve->legendChanged();
+  p->curve->itemChanged();
+
   p->replot();
 }
 
@@ -345,6 +361,10 @@ int SaxsviewPlotCurve::symbolSize() const {
 
 void SaxsviewPlotCurve::setSymbolFilled(bool filled) {
   p->symbol->setBrush(filled ? QBrush(symbolColor()) : Qt::NoBrush);
+
+  p->curve->legendChanged();
+  p->curve->itemChanged();
+
   p->replot();
 }
 
@@ -357,6 +377,9 @@ void SaxsviewPlotCurve::setSymbolColor(const QColor& c) {
   if (isSymbolFilled())
     p->symbol->setBrush(QBrush(c));
 
+  p->curve->legendChanged();
+  p->curve->itemChanged();
+
   p->replot();
 }
 
@@ -365,6 +388,8 @@ QColor SaxsviewPlotCurve::symbolColor() const {
 }
 
 void SaxsviewPlotCurve::setErrorLineStyle(Saxsview::LineStyle style) {
+  p->errorBarsEnabled = (style != Saxsview::NoLine);
+
   QPen ep = p->intervalSymbol->pen();
   ep.setStyle((Qt::PenStyle)style);
   p->intervalSymbol->setPen(ep);

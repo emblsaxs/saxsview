@@ -35,7 +35,7 @@ public:
   };
 
   enum LineStyle {
-    None          = Qt::NoPen,
+    NoLine        = Qt::NoPen,
     Solid         = Qt::SolidLine,
     Dashed        = Qt::DashLine,
     Dotted        = Qt::DotLine,
