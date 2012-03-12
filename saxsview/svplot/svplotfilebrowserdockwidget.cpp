@@ -99,6 +99,7 @@ void SVPlotFileBrowserDockWidget::Private::setupUi(SVPlotFileBrowserDockWidget *
   view = new QListView(dock);
   view->setModel(model);
   view->setDragEnabled(true);
+  view->setSelectionMode(QAbstractItemView::ExtendedSelection);
   connect(view, SIGNAL(doubleClicked(const QModelIndex&)),
           dock, SLOT(indexSelected(const QModelIndex&)));
 
