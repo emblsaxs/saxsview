@@ -27,13 +27,45 @@
 #include <QtGui>
 
 
+class ElidedTextLabel : public QLabel {
+public:
+  ElidedTextLabel(QWidget *parent = 0L) : QLabel(parent) {
+    setSizePolicy(QSizePolicy(QSizePolicy::Ignored,
+                              QSizePolicy::Fixed,
+                              QSizePolicy::Label));
+  }
+
+public:
+  void setText(const QString& text) {
+    mText = text;
+    setElidedText(mText, width());
+  }
+
+protected:
+  void resizeEvent(QResizeEvent *e) {
+    setElidedText(mText, e->size().width());
+  }
+
+private:
+  void setElidedText(const QString& text, int width) {
+    QFontMetrics metrics(font());
+    QLabel::setText(metrics.elidedText(text, Qt::ElideLeft, width));
+
+    setToolTip(text);
+  }
+
+  QString mText;
+};
+
+
+
 class SVPlotFileBrowserDockWidget::Private {
 public:
   void setupUi(SVPlotFileBrowserDockWidget *dock);
 
   QLineEdit *editFilter;
   QToolButton *btnParentDir, *btnHomeDir;
-  QLabel *lblCurrentDirectory;
+  ElidedTextLabel *lblCurrentDirectory;
 
   QFileSystemModel *model;
   QListView *view;
@@ -62,7 +94,7 @@ void SVPlotFileBrowserDockWidget::Private::setupUi(SVPlotFileBrowserDockWidget *
   model->setReadOnly(true);
   model->setNameFilterDisables(false);   // hide items not matched by the filter
 
-  lblCurrentDirectory = new QLabel(dock);
+  lblCurrentDirectory = new ElidedTextLabel(dock);
 
   view = new QListView(dock);
   view->setModel(model);
@@ -112,12 +144,7 @@ void SVPlotFileBrowserDockWidget::homeDir() {
 
 void SVPlotFileBrowserDockWidget::indexSelected(const QModelIndex& index) {	
   if (p->model->fileInfo(index).isDir()) {
-    QFontMetrics fontMetric(p->lblCurrentDirectory->font());
-    QString elidedPath = fontMetric.elidedText(p->model->filePath(index),
-                                               Qt::ElideLeft, p->view->width());
-
-    p->lblCurrentDirectory->setText(elidedPath);
-    p->lblCurrentDirectory->setToolTip(p->model->filePath(index));
+    p->lblCurrentDirectory->setText(p->model->filePath(index));
     p->model->setRootPath(p->model->filePath(index));
     p->view->setRootIndex(index);
 
