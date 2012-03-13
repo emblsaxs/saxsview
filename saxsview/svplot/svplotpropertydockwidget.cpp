@@ -105,11 +105,15 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
   groups.append(axisGroup);
 
   SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);
-  plotProperties.append(new SaxsviewProperty("X Ticks Enabled", "ticksEnabledX",
+  plotProperties.append(new SaxsviewProperty("X Tick Labels", "xTickLabelsVisible",
                                              browser, ticksGroup));
-  plotProperties.append(new SaxsviewProperty("Y Ticks Enabled", "ticksEnabledY",
+  plotProperties.append(new SaxsviewProperty("Y Tick Labels", "yTickLabelsVisible",
                                              browser, ticksGroup));
-  plotProperties.append(new SaxsviewProperty("Font", "ticksFont",
+  plotProperties.append(new SaxsviewProperty("Tick Label Font", "tickLabelFont",
+                                             browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("Minor Tick Marks", "minorTicksVisible",
+                                             browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("Major Tick Marks", "majorTicksVisible",
                                              browser, ticksGroup));
   groups.append(ticksGroup);
 

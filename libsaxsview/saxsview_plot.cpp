@@ -62,6 +62,7 @@ public:
   bool blockReplot;
 
   QwtPlotLegendItem *legend;
+  QwtPlotScaleItem *scales[QwtPlot::axisCnt];
   QwtPlotMarker *marker;
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
@@ -125,29 +126,33 @@ void SaxsviewPlot::Private::setupScales() {
   yRight->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   yRight->attach(plot);
   yRight->setBorderDistance(1);
+  scales[QwtPlot::yRight] = yRight;
 
   QwtPlotScaleItem *yLeft = new QwtPlotScaleItem(QwtScaleDraw::RightScale);
   yLeft->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   yLeft->attach(plot);
   yLeft->setBorderDistance(0);
+  scales[QwtPlot::yLeft] = yLeft;
 
   QwtPlotScaleItem *xTop = new QwtPlotScaleItem(QwtScaleDraw::BottomScale);
   xTop->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   xTop->attach(plot);
   xTop->setBorderDistance(0);
+  scales[QwtPlot::xTop] = xTop;
 
   QwtPlotScaleItem *xBottom = new QwtPlotScaleItem(QwtScaleDraw::TopScale);
   xBottom->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   xBottom->attach(plot);
   xBottom->setBorderDistance(1);
+  scales[QwtPlot::xBottom] = xBottom;
 
   QwtScaleDraw *scaleDraw = plot->axisScaleDraw(QwtPlot::yLeft);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
 
   scaleDraw = plot->axisScaleDraw(QwtPlot::xBottom);
-  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Backbone, false);
-  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Ticks, false);
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
 
   plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 }
@@ -424,34 +429,72 @@ QFont SaxsviewPlot::axisTitleFont() const {
   return axisTitle(QwtPlot::xBottom).font();
 }
 
-void SaxsviewPlot::setTicksEnabledX(bool on) {
+void SaxsviewPlot::setXTickLabelsVisible(bool on) {
   QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
   scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
   updateLayout();
 }
 
-bool SaxsviewPlot::ticksEnabledX() const {
+bool SaxsviewPlot::xTickLabelsVisible() const {
   const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
   return scale->hasComponent(QwtAbstractScaleDraw::Labels);
 }
 
-void SaxsviewPlot::setTicksEnabledY(bool on) {
+void SaxsviewPlot::setYTickLabelsVisible(bool on) {
   QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
   scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
   updateLayout();
 }
 
-bool SaxsviewPlot::ticksEnabledY() const {
+bool SaxsviewPlot::yTickLabelsVisible() const {
   const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
   return scale->hasComponent(QwtAbstractScaleDraw::Labels);
 }
 
-void SaxsviewPlot::setTicksFont(const QFont& font) {
+void SaxsviewPlot::setMinorTicksVisible(bool on) {
+  //
+  // There is a ScaleDraw component "Ticks", like the "Labels" used
+  // for the visibility of the labels, but "Ticks" shows/hides
+  // all ticks, not selected ones. Here we "disable" tick marks by
+  // setting their size to 0 if disabled, and their default value
+  // when enabled.
+  //
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
+    QwtScaleDraw *draw = p->scales[i]->scaleDraw();
+    draw->setTickLength(QwtScaleDiv::MinorTick, on ? 4 : 0);
+  }
+
+  replot();
+}
+
+bool SaxsviewPlot::minorTicksVisible() const {
+  //
+  // All axis are in sync, just pick one.
+  //
+  QwtScaleDraw *draw = p->scales[QwtPlot::xBottom]->scaleDraw();
+  return draw->tickLength(QwtScaleDiv::MinorTick) > 0;
+}
+
+void SaxsviewPlot::setMajorTicksVisible(bool on) {
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
+    QwtScaleDraw *draw = p->scales[i]->scaleDraw();
+    draw->setTickLength(QwtScaleDiv::MajorTick, on ? 8 : 0);
+  }
+
+  replot();
+}
+
+bool SaxsviewPlot::majorTicksVisible() const {
+  QwtScaleDraw *draw = p->scales[QwtPlot::xBottom]->scaleDraw();
+  return draw->tickLength(QwtScaleDiv::MajorTick) > 0;
+}
+
+void SaxsviewPlot::setTickLabelFont(const QFont& font) {
   setAxisFont(QwtPlot::xBottom, font);
   setAxisFont(QwtPlot::yLeft, font);
 }
 
-QFont SaxsviewPlot::ticksFont() const {
+QFont SaxsviewPlot::tickLabelFont() const {
   return axisFont(QwtPlot::xBottom);
 }
 

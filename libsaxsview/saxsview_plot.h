@@ -41,9 +41,11 @@ class SaxsviewPlot : public QwtPlot {
   Q_PROPERTY(QString axisTitleX READ axisTitleX WRITE setAxisTitleX)
   Q_PROPERTY(QString axisTitleY READ axisTitleY WRITE setAxisTitleY)
   Q_PROPERTY(QFont axisTitleFont READ axisTitleFont WRITE setAxisTitleFont)
-  Q_PROPERTY(bool ticksEnabledX READ ticksEnabledX WRITE setTicksEnabledX)
-  Q_PROPERTY(bool ticksEnabledY READ ticksEnabledY WRITE setTicksEnabledY)
-  Q_PROPERTY(QFont ticksFont READ ticksFont WRITE setTicksFont)
+  Q_PROPERTY(bool xTickLabelsVisible READ xTickLabelsVisible WRITE setXTickLabelsVisible)
+  Q_PROPERTY(bool yTickLabelsVisible READ yTickLabelsVisible WRITE setYTickLabelsVisible)
+  Q_PROPERTY(QFont tickLabelFont READ tickLabelFont WRITE setTickLabelFont)
+  Q_PROPERTY(bool minorTicksVisible READ minorTicksVisible WRITE setMinorTicksVisible)
+  Q_PROPERTY(bool majorTicksVisible READ majorTicksVisible WRITE setMajorTicksVisible)
   Q_PROPERTY(bool legendVisible READ legendVisible WRITE setLegendVisible)
   Q_PROPERTY(Qt::Corner legendPosition READ legendPosition WRITE setLegendPosition)
   Q_PROPERTY(int legendColumnsCount READ legendColumnCount WRITE setLegendColumnCount)
@@ -74,9 +76,11 @@ public:
   QString axisTitleX() const;
   QString axisTitleY() const;
   QFont axisTitleFont() const;
-  bool ticksEnabledX() const;
-  bool ticksEnabledY() const;
-  QFont ticksFont() const;
+  bool xTickLabelsVisible() const;
+  bool yTickLabelsVisible() const;
+  bool majorTicksVisible() const;
+  bool minorTicksVisible() const;
+  QFont tickLabelFont() const;
   bool legendVisible() const;
   Qt::Corner legendPosition() const;
   int legendColumnCount() const;
@@ -104,9 +108,11 @@ public slots:
   void setAxisTitleX(const QString&);
   void setAxisTitleY(const QString&);
   void setAxisTitleFont(const QFont&);
-  void setTicksEnabledX(bool);
-  void setTicksEnabledY(bool);
-  void setTicksFont(const QFont&);
+  void setXTickLabelsVisible(bool);
+  void setYTickLabelsVisible(bool);
+  void setMinorTicksVisible(bool);
+  void setMajorTicksVisible(bool);
+  void setTickLabelFont(const QFont&);
   void setLegendVisible(bool);
   void setLegendPosition(Qt::Corner);
   void setLegendColumnCount(int);

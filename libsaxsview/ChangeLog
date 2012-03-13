@@ -1,5 +1,41 @@
 2012-03-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_plot.h (ticksEnabledX): Renamed to ...
+	(xTickLabelsVisible): ... this.
+	(ticksEnabledY): Renamed to ...
+	(yTickLabelsVisible): ... this.
+	(ticksFont): Renamed to ...
+	(tickLabelFont): ... this.
+	(majorTicksVisible): New.
+	(minorTicksVisible): New.
+	(setTicksEnabledX): Renamed to ...
+	(setXTickLabelsVisible): ... this.
+	(setTicksEnabledY): Renamed to ...
+	(setYTickLabelsVisible): ... this.
+	(setTicksFont): Renamed to ...
+	(setTickLabelFont): ... this.
+	(setMinorTicksVisible): New.
+	(setMajorTicksVisible): New.
+	* saxsview_plot.cpp (setupScales): Keep the scale items.
+	(ticksEnabledX): Renamed to ...
+	(xTickLabelsVisible): ... this.
+	(ticksEnabledY): Renamed to ...
+	(yTickLabelsVisible): ... this.
+	(ticksFont): Renamed to ...
+	(tickLabelFont): ... this.
+	(majorTicksVisible): New.
+	(minorTicksVisible): New.
+	(setTicksEnabledX): Renamed to ...
+	(setXTickLabelsVisible): ... this.
+	(setTicksEnabledY): Renamed to ...
+	(setYTickLabelsVisible): ... this.
+	(setTicksFont): Renamed to ...
+	(setTickLabelFont): ... this.
+	(setMinorTicksVisible): New.
+	(setMajorTicksVisible): New.
+
+2012-03-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_plot.cpp (setAxisTitleFont): Also set y-axis font.
 
 2012-03-12  Daniel Franke  <dfranke@users.sourceforge.net>
