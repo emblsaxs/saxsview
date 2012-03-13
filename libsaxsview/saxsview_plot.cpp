@@ -410,9 +410,14 @@ QString SaxsviewPlot::axisTitleY() const {
 }
 
 void SaxsviewPlot::setAxisTitleFont(const QFont& font) {
-  QwtText t = axisTitle(QwtPlot::xBottom);
+  QwtText t;
+  t= axisTitle(QwtPlot::xBottom);
   t.setFont(font);
   setAxisTitle(QwtPlot::xBottom, t);
+
+  t = axisTitle(QwtPlot::yLeft);
+  t.setFont(font);
+  setAxisTitle(QwtPlot::yLeft, t);
 }
 
 QFont SaxsviewPlot::axisTitleFont() const {
