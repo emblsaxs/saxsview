@@ -462,6 +462,7 @@ void SaxsviewPlot::setMinorTicksVisible(bool on) {
   for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
     QwtScaleDraw *draw = p->scales[i]->scaleDraw();
     draw->setTickLength(QwtScaleDiv::MinorTick, on ? 4 : 0);
+    draw->setTickLength(QwtScaleDiv::MediumTick, on ? 6 : 0);
   }
 
   replot();

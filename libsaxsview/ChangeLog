@@ -1,3 +1,8 @@
+2012-03-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.cpp (setMinorTicksVisible): Also show/hide
+	medium ticks.
+
 2012-03-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.h (ticksEnabledX): Renamed to ...
