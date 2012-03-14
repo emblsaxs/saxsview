@@ -35,6 +35,9 @@ class SaxsviewPlot : public QwtPlot {
   Q_OBJECT
 
   Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
+  Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
+  Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor)
+  Q_PROPERTY(QColor textColor READ textColor WRITE setTextColor)
 
   Q_PROPERTY(QString plotTitle READ plotTitle WRITE setPlotTitle)
   Q_PROPERTY(QFont plotTitleFont READ plotTitleFont WRITE setPlotTitleFont)
@@ -70,6 +73,9 @@ public:
   void zoom(const QRectF&);
 
   Saxsview::Scale scale() const;
+  QColor backgroundColor() const;
+  QColor foregroundColor() const;
+  QColor textColor() const;
 
   QString plotTitle() const;
   QFont plotTitleFont() const;
@@ -102,6 +108,9 @@ public slots:
   void setMoveEnabled(bool);
 
   void setScale(Saxsview::Scale);
+  void setBackgroundColor(const QColor&);
+  void setForegroundColor(const QColor&);
+  void setTextColor(const QColor&);
 
   void setPlotTitle(const QString&);
   void setPlotTitleFont(const QFont&);

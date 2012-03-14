@@ -374,6 +374,65 @@ Saxsview::Scale SaxsviewPlot::scale() const {
   return p->scale;
 }
 
+void SaxsviewPlot::setBackgroundColor(const QColor& c) {
+  QPalette pal = palette();
+  pal.setColor(QPalette::Window, c);
+
+  // The plot.
+  setPalette(pal);
+
+  // The scales.
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    p->scales[i]->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewPlot::backgroundColor() const {
+  return palette().color(QPalette::Window);
+}
+
+void SaxsviewPlot::setForegroundColor(const QColor& c) {
+  QPalette pal = palette();
+  pal.setColor(QPalette::WindowText, c);
+
+  // The plot.
+  setPalette(pal);
+
+  // The scales.
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    p->scales[i]->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewPlot::foregroundColor() const {
+  return palette().color(QPalette::WindowText);
+}
+
+void SaxsviewPlot::setTextColor(const QColor& c) {
+  QPalette pal = palette();
+  pal.setColor(QPalette::Text, c);
+
+  // The plot.
+  setPalette(pal);
+
+  // The scales.
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    p->scales[i]->setPalette(pal);
+
+  // The legend (special, as always).
+  QPen pen = p->legend->textPen();
+  pen.setColor(c);
+  p->legend->setTextPen(pen);
+
+  replot();
+}
+
+QColor SaxsviewPlot::textColor() const {
+  return palette().color(QPalette::Text);
+}
+
 void SaxsviewPlot::setPlotTitle(const QString& text) {
   QwtText t = title();
   t.setText(text);

@@ -42,7 +42,9 @@ public:
     imageProperties.append(new SaxsviewProperty("Fix Aspect Ratio",
                                                 "aspectRatioFixed",
                                                 browser, imageGroup));
-//     imageProperties.append(new SaxsviewProperty("Title", "title",
+//     imageProperties.append(new SaxsviewProperty("Title", "imageTitle",
+//                                                 browser, imageGroup));
+//     imageProperties.append(new SaxsviewProperty("Font", "imageTitleFont",
 //                                                 browser, imageGroup));
 
     SaxsviewProperty *frameGroup = new SaxsviewProperty("Frame", browser);
