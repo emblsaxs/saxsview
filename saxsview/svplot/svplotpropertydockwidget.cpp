@@ -86,6 +86,12 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
   SaxsviewProperty *plotGroup = new SaxsviewProperty("Plot", browser);
   plotProperties.append(new SaxsviewProperty("Scale", "scale",
                                              browser, plotGroup));
+  plotProperties.append(new SaxsviewProperty("Background", "backgroundColor",
+                                             browser, plotGroup));
+  plotProperties.append(new SaxsviewProperty("Foreground", "foregroundColor",
+                                             browser, plotGroup));
+  plotProperties.append(new SaxsviewProperty("Text", "textColor",
+                                             browser, plotGroup));
   groups.append(plotGroup);
 
   SaxsviewProperty *titleGroup = new SaxsviewProperty("Title", browser);
@@ -133,9 +139,9 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
   groups.append(legendGroup);
 
   // FIXME: not ideal, but breaking up above's layout is messy ...
-  plotProperties[11]->setMinimum(1);   // legend columns
-  plotProperties[12]->setMinimum(0);   // legend spacing
-  plotProperties[13]->setMinimum(0);   // legend margin
+  plotProperties[17]->setMinimum(1);   // legend columns
+  plotProperties[18]->setMinimum(0);   // legend spacing
+  plotProperties[19]->setMinimum(0);   // legend margin
 }
 
 void SVPlotPropertyDockWidget::Private::setupCurveProperties(QtTreePropertyBrowser *browser) {
