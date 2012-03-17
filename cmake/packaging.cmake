@@ -7,7 +7,6 @@ if (WIN32)
 
 elseif (APPLE)
   set (CPACK_GENERATOR  "PackageMaker")
-  set (CMAKE_OSX_ARCHITECTURES "i386")
 
 else (WIN32)
   set (CPACK_GENERATOR  "RPM" "DEB" "TGZ")
