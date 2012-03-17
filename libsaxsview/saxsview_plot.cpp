@@ -38,6 +38,47 @@
 #include "qwt_scale_draw.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
+#include "qwt_text_label.h"
+
+
+//
+// By default, QwtScaleDraw uses the same color for axis titles and labels.
+// This class is here to allow separate them.
+//
+// See also:
+//   http://sourceforge.net/mailarchive/message.php?msg_id=28994567
+//
+class SaxsviewScaleDraw : public QwtScaleDraw {
+public:
+  SaxsviewScaleDraw() : mLabelColor(Qt::black) {
+  }
+
+  QwtText label(double value) const {
+    QwtText text = QwtScaleDraw::label(value);
+    text.setColor(mLabelColor);
+    return text;
+  }
+
+  QColor labelColor() const {
+    return mLabelColor;
+  }
+
+  void setLabelColor(const QColor& c) {
+    mLabelColor = c;
+
+    //
+    // The labels texts (including their color) are cached.
+    // Invalidate this cache to rebuild them ...
+    //
+    invalidateCache();
+  }
+
+private:
+  QColor mLabelColor;
+};
+
+
+
 
 
 class SaxsviewPlot::Private {
@@ -146,13 +187,16 @@ void SaxsviewPlot::Private::setupScales() {
   xBottom->setBorderDistance(1);
   scales[QwtPlot::xBottom] = xBottom;
 
-  QwtScaleDraw *scaleDraw = plot->axisScaleDraw(QwtPlot::yLeft);
+  SaxsviewScaleDraw *scaleDraw;
+  scaleDraw = new SaxsviewScaleDraw;
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+  plot->setAxisScaleDraw(QwtPlot::yLeft, scaleDraw);
 
-  scaleDraw = plot->axisScaleDraw(QwtPlot::xBottom);
+  scaleDraw = new SaxsviewScaleDraw;
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+  plot->setAxisScaleDraw(QwtPlot::xBottom, scaleDraw);
 
   plot->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 }
@@ -410,29 +454,6 @@ QColor SaxsviewPlot::foregroundColor() const {
   return palette().color(QPalette::WindowText);
 }
 
-void SaxsviewPlot::setTextColor(const QColor& c) {
-  QPalette pal = palette();
-  pal.setColor(QPalette::Text, c);
-
-  // The plot.
-  setPalette(pal);
-
-  // The scales.
-  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
-    p->scales[i]->setPalette(pal);
-
-  // The legend (special, as always).
-  QPen pen = p->legend->textPen();
-  pen.setColor(c);
-  p->legend->setTextPen(pen);
-
-  replot();
-}
-
-QColor SaxsviewPlot::textColor() const {
-  return palette().color(QPalette::Text);
-}
-
 void SaxsviewPlot::setPlotTitle(const QString& text) {
   QwtText t = title();
   t.setText(text);
@@ -451,6 +472,18 @@ void SaxsviewPlot::setPlotTitleFont(const QFont& font) {
 
 QFont SaxsviewPlot::plotTitleFont() const {
   return title().font();
+}
+
+void SaxsviewPlot::setPlotTitleFontColor(const QColor& c) {
+  QPalette pal = titleLabel()->palette();
+  pal.setColor(QPalette::Text, c);
+  titleLabel()->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewPlot::plotTitleFontColor() const {
+  return titleLabel()->palette().color(QPalette::Text);
 }
 
 void SaxsviewPlot::setAxisTitleX(const QString& text) {
@@ -475,7 +508,7 @@ QString SaxsviewPlot::axisTitleY() const {
 
 void SaxsviewPlot::setAxisTitleFont(const QFont& font) {
   QwtText t;
-  t= axisTitle(QwtPlot::xBottom);
+  t = axisTitle(QwtPlot::xBottom);
   t.setFont(font);
   setAxisTitle(QwtPlot::xBottom, t);
 
@@ -486,6 +519,20 @@ void SaxsviewPlot::setAxisTitleFont(const QFont& font) {
 
 QFont SaxsviewPlot::axisTitleFont() const {
   return axisTitle(QwtPlot::xBottom).font();
+}
+
+void SaxsviewPlot::setAxisTitleFontColor(const QColor& c) {
+  QPalette pal = axisWidget(QwtPlot::xBottom)->palette();
+  pal.setColor(QPalette::Text, c);
+
+  axisWidget(QwtPlot::xBottom)->setPalette(pal);
+  axisWidget(QwtPlot::yLeft)->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewPlot::axisTitleFontColor() const {
+  return axisWidget(QwtPlot::xBottom)->palette().color(QPalette::Text);
 }
 
 void SaxsviewPlot::setXTickLabelsVisible(bool on) {
@@ -556,6 +603,25 @@ void SaxsviewPlot::setTickLabelFont(const QFont& font) {
 
 QFont SaxsviewPlot::tickLabelFont() const {
   return axisFont(QwtPlot::xBottom);
+}
+
+void SaxsviewPlot::setTickLabelFontColor(const QColor& c) {
+  SaxsviewScaleDraw *draw;
+  draw = dynamic_cast<SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::xBottom));
+  if (draw)
+    draw->setLabelColor(c);
+
+  draw = dynamic_cast<SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::yLeft));
+  if (draw)
+    draw->setLabelColor(c);
+
+  replot();
+}
+
+QColor SaxsviewPlot::tickLabelFontColor() const {
+  const SaxsviewScaleDraw *draw;
+  draw = dynamic_cast<const SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::xBottom));
+  return draw ? draw->labelColor() : QColor();
 }
 
 void SaxsviewPlot::setLegendVisible(bool on) {
@@ -642,4 +708,16 @@ void SaxsviewPlot::setLegendFont(const QFont& font) {
 
 QFont SaxsviewPlot::legendFont() const {
   return p->legend->font();
+}
+
+void SaxsviewPlot::setLegendFontColor(const QColor& c) {
+  QPen pen = p->legend->textPen();
+  pen.setColor(c);
+  p->legend->setTextPen(pen);
+
+  replot();
+}
+
+QColor SaxsviewPlot::legendFontColor() const {
+  return p->legend->textPen().color();  
 }

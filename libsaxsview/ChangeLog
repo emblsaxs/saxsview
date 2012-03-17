@@ -1,12 +1,37 @@
+2012-03-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.h (textColor): Removed.
+	(setTextColor): Removed.
+	(plotTitleFontColor): New.
+	(setPlotTitleFontColor): New.
+	(axisTitleFontColor): New.
+	(setAxisTitleFontColor): New.
+	(tickLabelFontColor): New.
+	(setTickLabelFontColor): New.
+	(legendFontColor): New.
+	(setLegendFontColor): New.
+	* saxsview_plot.cpp (class SaxsviewScaleDraw): New.
+	(setupScales): Use SaxsviewScaleDraw.
+	(textColor): Removed.
+	(setTextColor): Removed.
+	(plotTitleFontColor): New.
+	(setPlotTitleFontColor): New.
+	(axisTitleFontColor): New.
+	(setAxisTitleFontColor): New.
+	(tickLabelFontColor): New.
+	(setTickLabelFontColor): New.
+	(legendFontColor): New.
+	(setLegendFontColor): New.
+
 2012-03-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* libsaxsview/saxsview_plot.h (backgroundColor): New.
+	* saxsview_plot.h (backgroundColor): New.
 	(setBackgroundColor): New.
 	(foregroundColor): New.
 	(setForegroundColor): New.
 	(textColor): New.
 	(setTextColor): New.
-	* libsaxsview/saxsview_plot.cpp (backgroundColor): New.
+	* saxsview_plot.cpp (backgroundColor): New.
 	(setBackgroundColor): New.
 	(foregroundColor): New.
 	(setForegroundColor): New.

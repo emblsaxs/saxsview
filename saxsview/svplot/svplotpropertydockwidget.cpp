@@ -90,14 +90,14 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
                                              browser, plotGroup));
   plotProperties.append(new SaxsviewProperty("Foreground", "foregroundColor",
                                              browser, plotGroup));
-  plotProperties.append(new SaxsviewProperty("Text", "textColor",
-                                             browser, plotGroup));
   groups.append(plotGroup);
 
   SaxsviewProperty *titleGroup = new SaxsviewProperty("Title", browser);
   plotProperties.append(new SaxsviewProperty("Text", "plotTitle",
                                              browser, titleGroup));
   plotProperties.append(new SaxsviewProperty("Font", "plotTitleFont",
+                                             browser, titleGroup));
+  plotProperties.append(new SaxsviewProperty("Color", "plotTitleFontColor",
                                              browser, titleGroup));
   groups.append(titleGroup);
 
@@ -108,18 +108,22 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
                                              browser, axisGroup));
   plotProperties.append(new SaxsviewProperty("Font", "axisTitleFont",
                                              browser, axisGroup));
+  plotProperties.append(new SaxsviewProperty("Color", "axisTitleFontColor",
+                                             browser, axisGroup));
   groups.append(axisGroup);
 
   SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);
+  plotProperties.append(new SaxsviewProperty("Minor Tick Marks", "minorTicksVisible",
+                                             browser, ticksGroup));
+  plotProperties.append(new SaxsviewProperty("Major Tick Marks", "majorTicksVisible",
+                                             browser, ticksGroup));
   plotProperties.append(new SaxsviewProperty("X Tick Labels", "xTickLabelsVisible",
                                              browser, ticksGroup));
   plotProperties.append(new SaxsviewProperty("Y Tick Labels", "yTickLabelsVisible",
                                              browser, ticksGroup));
   plotProperties.append(new SaxsviewProperty("Tick Label Font", "tickLabelFont",
                                              browser, ticksGroup));
-  plotProperties.append(new SaxsviewProperty("Minor Tick Marks", "minorTicksVisible",
-                                             browser, ticksGroup));
-  plotProperties.append(new SaxsviewProperty("Major Tick Marks", "majorTicksVisible",
+  plotProperties.append(new SaxsviewProperty("Color", "tickLabelFontColor",
                                              browser, ticksGroup));
   groups.append(ticksGroup);
 
@@ -136,12 +140,14 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
                                              browser, legendGroup));
   plotProperties.append(new SaxsviewProperty("Font", "legendFont",
                                              browser, legendGroup));
+  plotProperties.append(new SaxsviewProperty("Color", "legendFontColor",
+                                             browser, legendGroup));
   groups.append(legendGroup);
 
   // FIXME: not ideal, but breaking up above's layout is messy ...
-  plotProperties[17]->setMinimum(1);   // legend columns
-  plotProperties[18]->setMinimum(0);   // legend spacing
-  plotProperties[19]->setMinimum(0);   // legend margin
+  plotProperties[18]->setMinimum(1);   // legend columns
+  plotProperties[19]->setMinimum(0);   // legend spacing
+  plotProperties[20]->setMinimum(0);   // legend margin
 }
 
 void SVPlotPropertyDockWidget::Private::setupCurveProperties(QtTreePropertyBrowser *browser) {
