@@ -34,6 +34,7 @@ void saxs_document_format_register_atsas_fir_fit();
 void saxs_document_format_register_atsas_int();
 void saxs_document_format_register_atsas_out();
 void saxs_document_format_register_csv();
+void saxs_document_format_register_maxlab_rad();
 
 #ifdef HAVE_LIBXML2
 void saxs_document_format_register_cansas_xml();
@@ -87,6 +88,7 @@ saxs_document_format_init() {
   saxs_document_format_register_atsas_int();
   saxs_document_format_register_atsas_out();
   saxs_document_format_register_csv();
+  saxs_document_format_register_maxlab_rad();
 #ifdef HAVE_LIBXML2
   saxs_document_format_register_cansas_xml();
 #endif

@@ -13,7 +13,8 @@ set (SOURCES saxsproperty.c
              atsas_dat.c
              atsas_fir_fit.c
              atsas_int.c
-             atsas_out.c)
+             atsas_out.c
+             maxlab_rad.c)
 
 set (HEADERS saxsproperty.h
              saxsdocument.h
