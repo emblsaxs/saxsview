@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009, 2010, 2011, 2012
+ * Copyright (C) 2009, 2010, 2011
  * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
@@ -194,7 +194,7 @@ saxs_image_set_value(saxs_image *image, int x, int y, double value) {
   if (image && image->image_data
       && x >= 0 && x < (signed)image->image_width
       && y >= 0 && y < (signed)image->image_height) {
-    *(image->image_data + (image->image_height - y -1) * image->image_width + x) = value;
+    *(image->image_data + y * image->image_width + x) = value;
 
     if (image->cache_valid)
       image->cache_valid = 0;

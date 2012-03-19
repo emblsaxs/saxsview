@@ -117,7 +117,7 @@ int saxs_image_cbf_read(saxs_image *image, const char *filename) {
     saxs_image_set_size(image, width, height);
     for (x = 0; x < width; ++x)
       for (y = 0; y < height; ++y)
-        saxs_image_set_value(image, x, y, *(data + y * width + x));
+        saxs_image_set_value(image, x, height - y - 1, *(data + y * width + x));
 
     free(data);
   }

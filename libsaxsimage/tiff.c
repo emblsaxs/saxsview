@@ -1,4 +1,4 @@
-/*
+	/*
  * Read/write files in 32-bit .tiff-format.
  * Copyright (C) 2009, 2010, 2011 Daniel Franke <dfranke@users.sourceforge.net>
  *
@@ -151,12 +151,11 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   for (x = 0; x < width; ++x)
     for (y = 0; y < height; ++y)
       if (spp == 1) {
-        saxs_image_set_value(image, x, y, *(data + y * width + x) * 1.0);
-//      saxs_image_set_value(image, x, y, *((char *)(data) + y * width + x));
+        saxs_image_set_value(image, x, height - y - 1, *(data + y * width + x) * 1.0);
 
       } else if (spp == 3) {
         unsigned char *rgb = (char *)(data) + (y * width + x)*3;
-        saxs_image_set_value(image, x, y, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
+        saxs_image_set_value(image, x, height - y - 1, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
       }
 
   TIFFClose(tiff);
@@ -190,7 +189,7 @@ int saxs_image_tiff_write(saxs_image *image, const char *filename) {
   data = _TIFFmalloc(width * height * 4 * 1);
   for (x = 0; x < width; ++x)
     for (y = 0; y < height; ++y)
-      *(data + y * width + x) = saxs_image_value(image, x, y);
+      *(data + y * width + x) = saxs_image_value(image, x, height - y - 1);
 
   /*
    * Tags need to be sorted in ascending order.

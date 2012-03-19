@@ -1,3 +1,12 @@
+2012-03-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.c (saxs_image_set_value): Reverted r200.
+	* msk.c (saxs_image_msk_read): Reverted r198.
+	* tiff.c (saxs_image_tiff_read): Invert rows to match Fit2D.
+	(saxs_image_tiff_write): Likewise.
+	* cbf.c (saxs_image_cbf_read): Likewise.
+	* edf.c (saxs_image_edf_read): Likewise.
+
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt (saxsimage): Do not install static link libraries
