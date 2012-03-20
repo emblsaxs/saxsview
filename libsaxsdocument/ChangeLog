@@ -1,3 +1,8 @@
+2012-03-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (atsas_header_txt_read): Do not attempt to free lines
+	of no lines where read.
+
 2012-03-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* maxlab_rad.c: New.

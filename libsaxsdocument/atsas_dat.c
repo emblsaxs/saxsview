@@ -459,7 +459,7 @@ atsas_dat_n_column_read(struct saxs_document *doc, const char *filename) {
 /**************************************************************************/
 int
 atsas_header_txt_read(struct saxs_document *doc, const char *filename) {
-  struct line *lines;
+  struct line *lines = NULL;
   int res;
 
   if ((res = lines_read(&lines, filename)) == 0) {
@@ -468,9 +468,10 @@ atsas_header_txt_read(struct saxs_document *doc, const char *filename) {
       parse_key_value_pair(doc, l);
       l = l->next;
     }
+
+    lines_free(lines);
   }
 
-  lines_free(lines);
   return res;
 }
 
