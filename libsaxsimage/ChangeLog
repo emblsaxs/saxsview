@@ -1,3 +1,7 @@
+2012-03-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxs_image.c (saxs_image_copy): Fixed data copy.
+
 2012-03-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsimage.c (saxs_image_set_value): Reverted r200.

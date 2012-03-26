@@ -105,7 +105,8 @@ saxs_image_copy(saxs_image *image) {
   copy->image_properties = saxs_property_list_create();
 
   saxs_image_set_size(copy, image->image_width, image->image_height);
-  memcpy(copy->image_data, image->image_data, sizeof(image->image_data));
+  memcpy(copy->image_data, image->image_data,
+         image->image_width * image->image_height * sizeof(double));
 
   return copy;
 }
