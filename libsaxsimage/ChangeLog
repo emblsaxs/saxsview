@@ -1,3 +1,9 @@
+2012-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* tiff.c (saxs_image_tiff_read_header): New.
+	(saxs_image_tiff_read): Read available custom TIFF fields and
+	add them as properties to the image.
+
 2012-03-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxs_image.c (saxs_image_copy): Fixed data copy.

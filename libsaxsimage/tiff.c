@@ -1,6 +1,6 @@
-	/*
+/*
  * Read/write files in 32-bit .tiff-format.
- * Copyright (C) 2009, 2010, 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2012 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -57,7 +57,7 @@
 #define DECTRIS_BEAM_MONITOR_TAG       (DECTRIS_OFFSET + 0x0010)
 #define DECTRIS_USER_VARIABLES_TAG     (DECTRIS_OFFSET + 0x0100)
 
-static const TIFFFieldInfo dectris_custom_fields[12] = {
+static const TIFFFieldInfo dectris_custom_fields[13] = {
   { DECTRIS_TITLE_TAG, TIFF_VARIABLE, TIFF_VARIABLE, TIFF_ASCII,
     FIELD_CUSTOM, FALSE, FALSE, "DectrisTitleTag" },
   { DECTRIS_NUM_EXPOSURE_TAG, 1, 1, TIFF_LONG,
@@ -81,7 +81,8 @@ static const TIFFFieldInfo dectris_custom_fields[12] = {
   { DECTRIS_BEAM_MONITOR_TAG, 1, 1, TIFF_FLOAT,
     FIELD_CUSTOM, FALSE, FALSE, "DectrisBeamMonitorTag" },
   { DECTRIS_USER_VARIABLES_TAG, 20, 20, TIFF_LONG,
-    FIELD_CUSTOM, FALSE, FALSE, "DectrisUserVariablesTag" }
+    FIELD_CUSTOM, FALSE, FALSE, "DectrisUserVariablesTag" },
+  { 0 }
 };
 
 static TIFFExtendProc tiff_parent_extender = NULL;
@@ -119,6 +120,40 @@ static void tiff_initialize(void) {
 }
 
 /**************************************************************************/
+static void saxs_image_tiff_read_header(saxs_image *image, TIFF *tiff,
+                                        const TIFFFieldInfo *info) {
+  char *c;
+  long l;
+  float f;
+
+  while (info && info->field_tag > 0) {
+    switch (info->field_type) {
+      case TIFF_ASCII:
+        if (TIFFGetField(tiff, info->field_tag, &c))
+          saxs_image_add_property(image, info->field_name, c);
+        break;
+
+      case TIFF_FLOAT:
+        if (TIFFGetField(tiff, info->field_tag, &f)) {
+          char buffer[128] =  { '\0' };
+          sprintf(buffer, "%f", f);
+          saxs_image_add_property(image, info->field_name, buffer);
+        }
+        break;
+
+      case TIFF_LONG:
+        if (TIFFGetField(tiff, info->field_tag, &l)) {
+          char buffer[128] =  { '\0' };
+          sprintf(buffer, "%ld", l);
+          saxs_image_add_property(image, info->field_name, buffer);
+        }
+        break;
+    }
+
+    ++info;
+  }
+}
+
 int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   TIFF *tiff;
   tstrip_t strip;
@@ -131,6 +166,8 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   tiff = TIFFOpen(filename, "r");
   if (!tiff)
     return -1;
+
+  saxs_image_tiff_read_header(image, tiff, &dectris_custom_fields[0]);
 
   TIFFGetField(tiff, TIFFTAG_IMAGEWIDTH, &width);
   TIFFGetField(tiff, TIFFTAG_IMAGELENGTH, &height);
