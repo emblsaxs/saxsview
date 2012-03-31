@@ -1,5 +1,12 @@
 2012-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* patches/001-format-descriptor.patch: Updated.
+	* edfio.c: Applied 001-format-descriptor.patch.
+	* readascii.c: Likewise.
+	* cmpr.c: Likewise.
+
+2012-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* Imported r227 of edfpack.
 
 2010-08-02  Daniel Franke  <dfranke@users.sourceforge.net>
