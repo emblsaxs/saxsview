@@ -1,3 +1,8 @@
+2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Bumped version to 2.216.
+	Explicitly link libz.
+
 2012-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* patches/001-format-descriptor.patch: Updated.

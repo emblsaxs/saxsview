@@ -12,7 +12,7 @@ set (EDFPACK_SOURCES angle.c arc.c bslio.c edfio.c filename.c gamma.c
                      sx.c strlib.c raster.c cmpr.c)
 
 add_library (edf SHARED ${EDFPACK_SOURCES} ${EDFPACK_HEADERS})
-target_link_libraries(edf m)
+target_link_libraries(edf m z)
 
 set_target_properties (edf PROPERTIES VERSION 2.216)
 
