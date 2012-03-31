@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 2001-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define IPOL_VERSION      "ipol : V1.6 Peter Boesecke 2008-05-27"
+# define IPOL_VERSION      "ipol : V1.7 Peter Boesecke 2010-09-29"
 /*+++------------------------------------------------------------------------
 NAME
 
@@ -38,6 +38,32 @@ DESCRIPTION
    The module does not used externally defined routines and does not need
    to be linked to external libraries. 
 
+HISTORY
+  2005-12-04 V1.0 Extracted from SaxsRoutines V1.38 
+  2005-12-09 V1.1 Array and dummy definitions from SaxsDefinitions.
+                  Isum2ldw and Isum2ldwE: IPOL_ANTIALIASED
+  2006-05-16 V1.2 Isum2ldw and Isum2ldwE: in vicinity to dummies *weight 
+                  can be zero if IPOL_ANTIALIASED is set, even if cnt is not
+                  zero. cnt is now explicitely set to 0 if *weight is 0.
+  2007-02-26 V1.3 IpolRebin2 added
+  2007-04-19 V1.4 code corrected to avoid compiler warnings with -Wall
+  2008-05-25 V1.5 Isum2ldwE (calculation of varsum): if VarDat is NULL 
+                  pvarval is not incremented and points always to 0,
+                  unused variable pvarstart has been removed.
+                  Isum2ldwEw (weighted sum), Isum2ldwE renamed to Isum2ldwEe.
+                  Isum2ldwE uses Isum2ldwEe or Isum2ldwEw depending on
+                  the switch variable IPolWeight.
+  2008-05-27 V1.6 IPolMin: minimum coverage ratio of all non-dummy input 
+                  pixels to the output pixel. 
+                  If IPolMin*the output pixel area is larger than the sum
+                  of all contributing input pixel areas, the calculated 
+                  value is rejected (cnt=0). 
+
+                  To do: the weight mode should also be used for rebinning,
+                         probably better: pixels covering regions fully 
+                         inside the output pixel should not be rejected, i.e.
+                         that are contributing with 100%.
+  2010-09-29 V1.7 IDX redefined using floor function
 
 DESCRIPTION
 

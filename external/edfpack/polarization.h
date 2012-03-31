@@ -61,6 +61,7 @@ DESCRIPTION
 # include <float.h>
 
 # include "waxs.h"
+# include "raster.h"
 
 /******************************************************************************
 * Type Defs                                                                   *
@@ -68,6 +69,7 @@ DESCRIPTION
 
 typedef struct polarization_params {
   int    Init;
+  long   Ori;          // orientation (1..16)
   double P;            // polarization (0<=P<=1) 
   double PChi;         // Poincaré angle chi (ellipticity) (-pi/4<=PChi<=pi/4)
   double PPsi;         // Poincaré angle psi (polarization direction)
@@ -87,7 +89,7 @@ typedef struct polarization_params {
 * Functions                                                                *
 ***************************************************************************/
 PUBLIC extern int 
-       polarization_Init ( PParams * pParams,
+       polarization_Init ( PParams * pParams, long ori,
                            double k, double rot1, double rot2, double rot3,
                            double P, double PChi, double PPsi, double Factor,
                            int Invert );

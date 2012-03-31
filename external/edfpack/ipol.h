@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 2001-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -121,7 +121,7 @@ DESCRIPTION
   float f; int I; float R;
   IDX( f, I, R );
 ---------------------------------------------------------------------------*/
-#define IDX(f,I,R) ((f)>=0)?((I)=(int)(f)):((I)=((int)(f))-1);(R)=(f)-(float)(I)
+#define IDX(f,I,R) (I)=floor(f);(R)=(f)-(float)(I) 
 
 /*---------------------------------------------------------------------------
  The following macros calcuate the pointers to array elements.

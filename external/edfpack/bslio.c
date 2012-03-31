@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 1998-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define BSLIO_VERSION      "bslio : V0.64 Peter Boesecke 2007-11-23"
+# define BSLIO_VERSION      "bslio : V0.65 Peter Boesecke 2010-12-18"
 /*+++***********************************************************************
 NAME
 
@@ -68,6 +68,28 @@ DESCRIPTION
    Library for access to bsl and otoko files. Public routines are defined
    in "bslio.h"
 
+HISTORY
+    22-Mar-1998 Peter Boesecke V0.50 (read only version)
+    27-Apr/1998 PB V0.51 (BSL read with HighByteFirst if not a PC)
+    17-May-1998 PB       open bsl file with "new", "old", "any" and "read"
+    31-Dec-2000 PB V0.53 Dim[3] not used any more
+    2000-01-12  PB V0.54 for VisualC++ compatibility:
+                         u_long replaced by unsigned long
+                         strncmp replaced by STRNCASECMP 
+                         still undefined in VCC: getcwd
+    2001-01-15  PB V0.55 GETCWD
+    2001-01-24  PB V0.56 _getcwd
+    2001-02-05  PB V0.57 all unreferenced variables removed
+    2001-02-05  PB V0.58 <unistd.h> not included for __MSVC__
+    2001-04-11  PB V0.59 __MSVC__ -> WIN32
+    2001-07-01  PB V0.60 __MSVC__ -> WIN32
+    2004-03-16  PB V0.61 STRNCASECMP now in numio, bslio must be linked 
+                         with numio
+    2004-03-24  PB V0.62 STRNCASECMP -> num_strncasecmp
+    2007-04-19  PB V0.63 sizeof is always first operand,
+                         corrected to avoid compiler warnings with -Wall
+    2007-11-23  PB V0.64 edf_byteorder() function used
+    2010-12-18  PB V0.65 read_bsl_header: (memory_key) is always TRUE
 
 ***************************************************************************/
 
@@ -188,7 +210,7 @@ SYNOPSIS
    char * newstr_bsl( const char * string );
 
 DESCRIPTION
-  Allocates strlen('string')+1 bytes of memory and copies 'string' into it.
+  Allocates strlen(´string´)+1 bytes of memory and copies ´string´ into it.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
 
@@ -216,11 +238,11 @@ SYNOPSIS
        char * trim_bsl ( char * str );
 
 DESCRIPTION
-       Leading and trailing characters in 'str' that return true when checked
-       with isspace are removed. The string 'str' is actually modified.
-       The first non-isspace character is copied to the start of 'str' and 
+       Leading and trailing characters in ´str´ that return true when checked
+       with isspace are removed. The string ´str´ is actually modified.
+       The first non-isspace character is copied to the start of ´str´ and 
        the character after the last non-isspace character is set to '\0'.
-       removed. If 'str' is the NULL pointer the NULL pointer is returned.
+       removed. If ´str´ is the NULL pointer the NULL pointer is returned.
 
 HISTORY
        23-Mar-1998 Peter Boesecke
@@ -368,8 +390,8 @@ SYNOPSIS
    char * rmeoln ( char * line );
 
 DESCRIPTION
-   Removes end of line characters from 'line' and replaces them with '\0'.
-   Nothing is done when 'line' is the NULL pointer.
+   Removes end of line characters from ´line´ and replaces them with '\0'.
+   Nothing is done when ´line´ is the NULL pointer.
 
 ARGUMENTS
    char * line (input and output) 
@@ -479,15 +501,15 @@ BslDataSpec * new_bsl_data_spec ( void )
 /*---------------------------------------------------------------------------
 NAME
 
-   free_bsl_data_spec --- deallocate 'data_spec' and all its contents
+   free_bsl_data_spec --- deallocate ´data_spec´ and all its contents
 
 SYNOPSIS
 
    BslDataSpec * free_bsl_data ( BslDataSpec * data_spec )
 
 DESCRIPTION
-The allocated memory of the contents of 'data_spec' is removed and
-(BslDataSpec *) NULL is returned. If 'data_spec' is NULL, nothing is done.
+The allocated memory of the contents of ´data_spec´ is removed and
+(BslDataSpec *) NULL is returned. If ´data_spec´ is NULL, nothing is done.
 
 RETURN VALUE
 (BslDataSpec *) NULL
@@ -545,7 +567,7 @@ BslFrame * new_bsl_frame ( const char * FrameKey )
 /*---------------------------------------------------------------------------
 NAME
 
-  search_bsl_frame --- searches the bsl 'frame' in the frame list of 'memory'
+  search_bsl_frame --- searches the bsl ´frame´ in the frame list of ´memory´
 
 SYNOPSIS
 
@@ -632,7 +654,7 @@ BslFrame  * insert_bsl_frame ( BslMemory * memory, const char * FrameKey )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_bsl_frame --- removes 'frame' from the frame list
+   remove_bsl_frame --- removes ´frame´ from the frame list
 
 SYNOPSIS
 
@@ -640,10 +662,10 @@ SYNOPSIS
 
 
 DESCRIPTION
-The allocated memory of the contents of 'frame' is removed. The frame is 
-removed from the frame list of the owning memory. If 'frame' was the only 
-frame in 'frame->Memory->FrameList' 'frame->Memory->FrameList' is set to 
-(BslFrame *) NULL. If 'frame' is NULL, nothing is done.
+The allocated memory of the contents of ´frame´ is removed. The frame is 
+removed from the frame list of the owning memory. If ´frame´ was the only 
+frame in ´frame->Memory->FrameList´ ´frame->Memory->FrameList´ is set to 
+(BslFrame *) NULL. If ´frame´ is NULL, nothing is done.
 ---------------------------------------------------------------------------*/
 void remove_bsl_frame ( BslFrame * frame )
 {
@@ -672,7 +694,7 @@ void remove_bsl_frame ( BslFrame * frame )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_bsl_frame_list --- empty the frame list of 'memory' 
+   remove_bsl_frame_list --- empty the frame list of ´memory´ 
 
 SYNOPSIS
 
@@ -698,7 +720,7 @@ void remove_bsl_frame_list ( BslMemory * memory )
 /*---------------------------------------------------------------------------
 NAME
 
-   print_bsl_data_spec --- prints 'data_spec'
+   print_bsl_data_spec --- prints ´data_spec´
 
 SYNOPSIS
 
@@ -738,7 +760,7 @@ void print_bsl_data_spec ( FILE * out, const BslDataSpec * data_spec )
 /*---------------------------------------------------------------------------
 NAME
 
-   print_bsl_frame_list --- prints frame list contents of 'memory'
+   print_bsl_frame_list --- prints frame list contents of ´memory´
 
 SYNOPSIS
 
@@ -822,7 +844,7 @@ BslMemory * new_bsl_memory ( const char * MemoryKey )
 /*---------------------------------------------------------------------------
 NAME
 
-  search_bsl_memory --- searches the bsl 'memory' in the memory list of 'file'
+  search_bsl_memory --- searches the bsl ´memory´ in the memory list of ´file´
 
 SYNOPSIS
 
@@ -909,17 +931,17 @@ BslMemory  * insert_bsl_memory ( BslFile * file, const char * MemoryKey )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_bsl_memory --- removes 'memory' from the memory list
+   remove_bsl_memory --- removes ´memory´ from the memory list
 
 SYNOPSIS
 
    void remove_bsl_memory ( BslMemory * memory );
 
 DESCRIPTION
-The allocated memory of the contents of 'memory' is removed. 'memory'
-is removed from the memory list of the owning file. If 'memory' was the 
-only memory in 'memory->File->MemoryList' 'memory->File->MemoryList' is 
-set to (BslMemory *) NULL. If 'memory' is NULL, nothing is done. 
+The allocated memory of the contents of ´memory´ is removed. ´memory´
+is removed from the memory list of the owning file. If ´memory´ was the 
+only memory in ´memory->File->MemoryList´ ´memory->File->MemoryList´ is 
+set to (BslMemory *) NULL. If ´memory´ is NULL, nothing is done. 
 ---------------------------------------------------------------------------*/
 void remove_bsl_memory ( BslMemory * memory )
 {
@@ -949,7 +971,7 @@ void remove_bsl_memory ( BslMemory * memory )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_bsl_memory_list --- empty the memory list of 'file'
+   remove_bsl_memory_list --- empty the memory list of ´file´
 
 SYNOPSIS
 
@@ -1082,14 +1104,14 @@ SYNOPSIS
    int strisspace ( const char * str );
 
 DESCRIPTION
-   Scans 'str' with isspace and returns 1 if all characters are white spaces.
+   Scans ´str´ with isspace and returns 1 if all characters are white spaces.
 
 ARGUMENTS
    const char * str     string to be scanned
 
 RETURN VALUE
-   int  1  'str' contains only white spaces (isspace) 
-   int  0  'str' contains also other characters
+   int  1  ´str´ contains only white spaces (isspace) 
+   int  0  ´str´ contains also other characters
 ---------------------------------------------------------------------------*/
 int strisspace ( const char * str ) 
 { 
@@ -1157,7 +1179,7 @@ SYNOPSIS
    long * get_bsl_dim ( const BslMemory * memory );
 
 DESCRIPTION
-   Reads the dimensions from the indicator string 'memory->Indicator'.
+   Reads the dimensions from the indicator string ´memory->Indicator´.
 
 ARGUMENTS
  const BslMemory * memory  input memory
@@ -1202,7 +1224,7 @@ SYNOPSIS
    long get_bsl_number ( const BslMemory * memory );
 
 DESCRIPTION
-   Reads the number of frames from the indicator string 'memory->Indicator'. 
+   Reads the number of frames from the indicator string ´memory->Indicator´. 
 
 ARGUMENTS
  const BslMemory * memory  input memory
@@ -1237,8 +1259,8 @@ SYNOPSIS
    int indicator2frame_list ( BslMemory * memory );
 
 DESCRIPTION
- Creates to the indicator string of 'memory' a frame list. Eventually 
- previously allocated memory for 'memory->FrameList' is released.
+ Creates to the indicator string of ´memory´ a frame list. Eventually 
+ previously allocated memory for ´memory->FrameList´ is released.
 
 ARGUMENTS
  BslMemory * memory  memory 
@@ -1293,7 +1315,7 @@ SYNOPSIS
    char * read_bsl_line ( BslFile * file, int * io_error );
 
 DESCRIPTION
-  Reads a single line from 'file', allocates memory for it and returns it.
+  Reads a single line from ´file´, allocates memory for it and returns it.
 
 ARGUMENTS
  BslFile * file   opened input file
@@ -1329,7 +1351,7 @@ SYNOPSIS
    int read_bsl_header ( BslFile * file );
 
 DESCRIPTION
-  Reads the bsl header from 'file'. The bsl header has the following
+  Reads the bsl header from ´file´. The bsl header has the following
   structure:
 
   *       line 1. Header with up to 80 alphanumeric characters.
@@ -1381,7 +1403,8 @@ int read_bsl_header ( BslFile * file )
 
         if (indicator2frame_list ( memory )) return(-1);
       }
-   } while (( memory_key ) && ( indicator ));
+//++++++++{+  } while (( memory_key ) && ( indicator )); // always true
+   } while ( indicator );
   if (io_error) return(-1);
 
   return(0);
@@ -1446,7 +1469,7 @@ SYNOPSIS
 
 DESCRIPTION
 Opens a bsl header file and analyzes the structure. If the contents of 
-the file does not contain in line 2+n*2+1 at least 'BslIndicNumber' 
+the file does not contain in line 2+n*2+1 at least ´BslIndicNumber´ 
 long integer values separated by white space, the reading of the file 
 is stopped, all memory is released and a negative value is returned.
 
@@ -1576,7 +1599,7 @@ SYNOPSIS
 
 DESCRIPTION
 Returns the minimum frame number (*minfra) and the maximum memory number
-(*maxfra) of the bsl memory with number 'memnum'.
+(*maxfra) of the bsl memory with number ´memnum´.
 
 RETURN VALUE
 success:   int 0
@@ -1645,7 +1668,7 @@ void read_bsl_file_headers ( int stream, char **first_header,
 /*---------------------------------------------------------------------------
 NAME
 
-   read_bsl_data_spec --- read data spec of frame 'franum' in memory 'memnum'
+   read_bsl_data_spec --- read data spec of frame ´franum´ in memory ´memnum´
 
 SYNOPSIS
 
@@ -1655,7 +1678,7 @@ SYNOPSIS
 DESCRIPTION
 
 RETURN VALUE
-success BslDataSpec * pointer to data spec of frame 'franum' in memory 'memnum' 
+success BslDataSpec * pointer to data spec of frame ´franum´ in memory ´memnum´ 
 error   NULL pointer
 ---------------------------------------------------------------------------*/
 BslDataSpec * read_bsl_data_spec ( int stream, long memnum, long franum )

@@ -26,17 +26,18 @@
 /*+++***********************************************************************
 NAME
 
-    poisson.h
+    strlib.h
 
 SYNOPSIS
 
-    #include "poisson.h"
+    #include "strlib.h"
 
 DESCRIPTION
-    Header of the module "poisson.c"
+
+    Header of the module "strlib.c"
+
 ***********************************************************************---*/
-#ifndef _POISSON_
-# define _POISSON_
+#ifndef _STRLIB_
 
 /***************************************************************************
 * General Definitions                                                      *
@@ -49,11 +50,11 @@ DESCRIPTION
 
 # include <stdio.h>
 # include <stdlib.h>
-# include <string.h>
-# include <ctype.h>
+# include <stdarg.h>
 # include <limits.h>
 # include <errno.h>
-# include <stdio.h>
+# include <string.h>
+# include <ctype.h>
 # include <fcntl.h>
 # include <math.h>
 # include <float.h>
@@ -62,18 +63,65 @@ DESCRIPTION
 * Functions                                                                *
 ***************************************************************************/
 
-PUBLIC extern double
+PUBLIC extern int
 
-       Poisson( long k, double ny ),           // poisson distribution
-       SumPoisson( long k, double ny ),        // Sum(0,k,Poisson(k,ny))
-       RandomNoise( void );          // random noise between 0.0 and 1.0
+  // returns 1 if c is white space
+  strlib_is_white ( char c ),
 
-PUBLIC extern long
-       InvSumPoisson ( double y, double ny ),  // inverted SumPoisson
-       PoissonNoise( double ny );       // poissonian noise with mean ny
+  // returns 1 if s is not a skip pattern: "." | "..." | "-" 
+  strlib_is_no_skip( const char * s ),
 
+  // returns 1 if s either NULL, has length 0 or contains only white spaces
+  strlib_is_empty( const char *s ),
 
-PUBLIC extern void 
-       PoissonNoiseSeed( unsigned int seed );  // set random number seed
+  // splits s at each white space and write pointers to sv[]
+  strlib_split ( char *sv[], int sc, char * s ),
 
-#endif
+  // non case sensitive comparison (compatible to strncasecmp)
+  strlib_ncasecmp(const char *s1, const char *s2, size_t n);
+
+PUBLIC extern char
+
+  // concatenate strings a and b
+  *strlib_concat( char * buffer, size_t buflen, 
+                  const char * a, const char * b ),
+
+  // terminates string at comment char '#'
+  *strlib_uncomment ( char * s ),
+
+  // removes leading and trailing white spaces
+  *strlib_trim ( char * s ),
+
+  // collapses multiple white spaces in s to a single space
+  *strlib_collapse ( char * s ),
+
+  // converts s to uppercase
+  *strlib_toupper ( char * s ),
+
+  // converts s to lowercase
+  *strlib_tolower ( char * s ),
+
+  // copies parameter parno to buffer and returns pointer
+  *strlib_param ( char * buffer, size_t buflen,
+                  const char *s, char separator, int parno ),
+
+  // split a string into tokens
+  *strlib_tok(char *s, const char *sep),
+
+  // split a string into tokens (thread safe)
+  *strlib_tok_r(char *s, const char *sep, char **lasts),
+
+  // copy input string into new allocated memory
+  *strlib_newstr( const char *string );
+
+PUBLIC extern const char
+
+  // return version string
+  *strlib_version ( void );
+
+# define _STRLIB_
+#endif /* _STRLIB_ */
+
+/****************************************************************************
+*                                                                           *
+****************************************************************************/

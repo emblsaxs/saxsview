@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 2001-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define FILENAME_VERSION "filename : V1.9 Peter Boesecke 2008-05-07"
+# define FILENAME_VERSION "filename : V1.10 Peter Boesecke 2010-12-18"
 /*+++------------------------------------------------------------------------
 NAME
    filename --- filename and directory routines
@@ -43,6 +43,22 @@ RESTRICTIONS
 
 DESCRIPTION
 
+HISTORY
+2001-07-03 V1.0 Peter Boesecke (replaces module SaxsGetName.inc)
+2001-07-08 V1.1 PB all input and output buffers can be identical
+2001-07-08 V1.2 PB filename_body, filename_extension
+2002-07-26 V1.3 PB filename_pattern allows other characters between '%'
+2004-03-24 V1.4 PB filename_full checks for /dev/null
+2007-03-08 V1.5 PB for WIN32 (__LCC__): 
+                   BUFLEN defined as PATH_MAX or MAX_FNAME
+                   filename_exist returns 1
+2007-04-19 V1.6 PB -Wall compiler warnings resolved
+2007-04-25 V1.7 PB filename_parameter: signed/unsigned comparison fixed
+2007-06-20 V1.8 PB filename_unix: White spaces are not removed any more
+2008-05-07 V1.9 PB filename_has_path added,
+                   filename_unix: env_subst included and everywhere else
+                   removed
+2010-12-18 V1.10 PB filename_pattern: unnecessary calculation removed
 --------------------------------------------------------------------------*/
 
 /***************************************************************************
@@ -300,9 +316,9 @@ char * env_subst ( char * buffer, size_t buflen, const char * filepattern )
 
                 if (!str) return ( (char *) NULL );
                 if (strlen(str)==0) {
-                  pwd_entry = getpwuid (getuid ()); // current user's dir
+                  pwd_entry = getpwuid (getuid ()); // current user´s dir
                 } else {
-                  pwd_entry = getpwnam (str); // other user's dir
+                  pwd_entry = getpwnam (str); // other user´s dir
                 }
                 if ( (!pwd_entry) || (!(str = pwd_entry->pw_dir)) ) {
                   return ( (char *) NULL ); // no entry
@@ -748,7 +764,7 @@ char * filename_pattern ( char * buffer, size_t buflen,
 
   // fill place holders with number
   sprintf(Temp,"%lu",ABS(number));
-  for ( pb=stop, str=Temp+strlen(Temp)-1; pb>=start; *pb-- ) {
+  for ( pb=stop, str=Temp+strlen(Temp)-1; pb>=start; pb-- ) {
     if (*pb=='%') {
       if ( (str>=Temp)&&(*str!=' ') ) {
         *pb=*str--;

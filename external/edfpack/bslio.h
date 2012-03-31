@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 1998-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -31,6 +31,12 @@ NAME
 DESCRIPTION
 
    Include file for bslio.c
+
+HISTORY
+    22-Mar-1998 Peter Boesecke 
+    2000-12-31  PB V0.53
+    2001-01-23  PB V0.54 u_long -> unsigned long
+    2000-01-12  PB V0.54 Visual C++ compatibility
 
 ***************************************************************************/
 

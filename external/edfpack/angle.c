@@ -1,6 +1,6 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
  *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
@@ -32,6 +32,14 @@ SYNOPSIS
 
    # include angle.h
 
+HISTORY
+  2005-10-08 V1.0  Peter Boesecke
+  2005-10-29 V1.1  PB *pstatus = Success; added
+  2006-05-13 V1.2  PB angle_limits and checks for Min/MaxAngle and Min/MaxRadius
+                      added
+  2007-04-19 V1.3  PB -Wall compiler warnings resolved
+  2009-10-02 V1.4  PB Success -> 0, SaxsAngle -> angle
+                      include only ipol.h and reference.h
 
 DESCRIPTION
 

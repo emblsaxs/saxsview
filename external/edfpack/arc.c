@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define ARC_VERSION      "arc : V1.8 Peter Boesecke 2010-06-02"
+# define ARC_VERSION      "arc : V1.9 Peter Boesecke 2011-06-28"
 /*+++------------------------------------------------------------------------
 NAME
 
@@ -49,6 +49,7 @@ HISTORY
   2010-05-31 V1.7  PB update for waxs.c V1.10
   2010-06-02 V1.8  PB maximum regrouping range 360_deg, splitted
                       in 3 ranges 
+  2011-06-28 V1.9  PB waxs_get_transform and waxs_Transform updated
 
 ----------------------------------------------------------------------------*/
 /******************************************************************************
@@ -119,7 +120,7 @@ int ang_range( int rsys, int proin, int proout,
   float f10, f20, f11, f21;
 
   double K=1.0, rot1=0.0, rot2=0.0, rot3=0.0;
-  WParams wparams;
+  WParams I1params, I0params;
 
   int transform=0; // no transformation
 
@@ -127,17 +128,23 @@ int ang_range( int rsys, int proin, int proout,
 
   if (pstatus) *pstatus = status;
 
-  if ( (rsys==IO_Saxs)&&(proin!=proout) ) {
+  /* Use waxs_Transform only if reference system is Saxs and if either the
+    input or the output image is in Saxs projection, but not if both images 
+    are in Saxs projection and the rotations are Zero. */
+  if ( (rsys==IO_Saxs)&&((proin==IO_ProSaxs)||(proout==IO_ProSaxs)) 
+     &&(!((proin==proout)&&(detrot1==0.0)&&(detrot2==0.0)&&(detrot3==0.0))) ) {
 
     K    = (double) WAVENUMBER(wvl);
     rot1 = (double) detrot1;
     rot2 = (double) detrot2;
     rot3 = (double) detrot3;
 
-    waxs_Init ( &wparams, K, rot1, rot2, rot3 );
+    waxs_Init ( &I1params, K, rot1, rot2, rot3 );
+    waxs_Init ( &I0params, K, 0.0, 0.0, 0.0 );
 
     /* Get coordinate range */
-    transform=waxs_Range( &wparams, proin, proout,
+    transform=waxs_Range( &I1params, &I0params, 
+                          proin, proout,
                           dim_1, dim_2,
                           off_1, pix_1, cen_1,
                           off_2, pix_2, cen_2,
@@ -468,7 +475,7 @@ void arc_sum ( int rsys,
   float E1Value, E1Sum, E1Weight, E1ArcSum, E1ArcSumWeight;
 
   double K=1.0, rot1=0.0, rot2=0.0, rot3=0.0;
-  WParams wparams; 
+  WParams I1params, I0params;
 
   float Angle, DAngle, AngleLower, AngleUpper;
   float MinArc, MaxArc;
@@ -631,10 +638,14 @@ void arc_sum ( int rsys,
   rot2 = (double) I1DetRot2;
   rot3 = (double) I1DetRot3; 
 
-  waxs_Init ( &wparams, K, rot1, rot2, rot3 );
+  waxs_Init ( &I1params, K, rot1, rot2, rot3 );
+  waxs_Init ( &I0params, K, 0.0, 0.0, 0.0 );
 
   if (testbit) {
-     waxs_PrintParams ( stdout, wparams );
+     printf("I0params\n");
+     waxs_PrintParams ( stdout, I0params );
+     printf("I1params\n");
+     waxs_PrintParams ( stdout, I1params );
   }
 
   if (AngleFst < AngleLst) {
@@ -715,7 +726,10 @@ void arc_sum ( int rsys,
             W0.s_2 = 0.0; // W_2
           }
 
-          W1 = waxs_Transform( &wparams, transform, W0 );
+          /* transform saxs-coordinate of unrotated detector (I0params) or Waxs-
+             projection to saxs-coordinate of rotated detector (I1params) */
+//++++++++          W1 = waxs_Transform( &I1params, &I0params, transform, W0 );
+          W1 = waxs_Transform( &I0params, &I1params, transform, W0 );
 
           if (!W1.status) {
 
@@ -938,7 +952,7 @@ void ang_sum ( int rsys,
   float E1Value, E1Sum, E1Weight, E1CircleSum, E1CircleSumWeight;
 
   double K=1.0, rot1=0.0, rot2=0.0, rot3=0.0;
-  WParams wparams;
+  WParams I1params, I0params;
 
   int i_1, i_2;
   int i_10, i_11, i_20, i_22;
@@ -1058,10 +1072,11 @@ void ang_sum ( int rsys,
   rot2 = (double) I1DetRot2;
   rot3 = (double) I1DetRot3;
 
-  waxs_Init ( &wparams, K, rot1, rot2, rot3 );
+  waxs_Init ( &I1params, K, rot1, rot2, rot3 );
+  waxs_Init ( &I0params, K, 0.0, 0.0, 0.0 );
 
   if (testbit) {
-     waxs_PrintParams ( stdout, wparams );
+     waxs_PrintParams ( stdout, I1params );
   }
 
   // REGROUPING BEGIN {
@@ -1174,7 +1189,9 @@ void ang_sum ( int rsys,
             W0.s_1 = Radius * cos( angle  );  
             W0.s_2 = Radius * sin( angle  );
 
-            W1 = waxs_Transform( &wparams, transform, W0 );
+            /* transform saxs-coordinate of unrotated detector (I0params) or Waxs-
+               projection to saxs-coordinate of rotated detector (I1params) */
+            W1 = waxs_Transform( &I0params, &I1params, transform, W0 );
 
             if (!W1.status) {
 

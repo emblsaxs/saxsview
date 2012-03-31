@@ -121,7 +121,7 @@ PUBLIC extern void
        waxs_PrintDir    ( FILE * out, WaxsDir Beam );
 
 PUBLIC extern int // calculate projection range
-       waxs_Range( WParams * pParams, 
+       waxs_Range( WParams * pParamsIn, WParams * pParamsOut,
                    int proin, int proout,
                    long  dim_1, long dim_2,
                    float off_1, float pix_1, float cen_1,
@@ -130,17 +130,23 @@ PUBLIC extern int // calculate projection range
                    WaxsCoord *Wmin, WaxsCoord *Wmax, int * pstatus);
 
 PUBLIC extern WaxsCoord 
-       waxs_Saxs ( WParams * pParams, 
-                   WaxsCoord sp ),  // SAXS coordinate from SAXS projection
-       waxs_Waxs ( WParams * pParams, 
-                   WaxsCoord s ),   // SAXS projection from SAXS coordinate
-       waxs_Uni2Iso ( WParams * pParams, 
-                      WaxsCoord ssym ),  // uniaxial WAXS to isotropic WAXS 
-       waxs_Iso2Uni ( WParams * pParams, 
-                      WaxsCoord sp );    // isotropic WAXS to uniaxial WAXS 
+       // waxs_Saxs2Saxs
+       waxs_S2S ( WParams * pParamsIn, WParams * pParamsOut, 
+            WaxsCoord s ), // SAXS coordinate from SAXS coordinate
+       // waxs_Waxs2Saxs
+       waxs_Sp2S ( WParams * pParamsIn, WParams * pParamsOut, 
+            WaxsCoord sp ),  // SAXS coordinate from WAXS projection
+       // waxs_Saxs2Waxs
+       waxs_S2Sp ( WParams * pParamsIn, WParams * pParamsOut,
+            WaxsCoord s ),   // WAXS projection from SAXS coordinate
+       waxs_Uni2Iso ( WParams * pParamsIn, WParams * pParamsOut,
+            WaxsCoord ssym ),  // uniaxial WAXS to isotropic WAXS 
+       waxs_Iso2Uni ( WParams * pParamsIn, WParams * pParamsOut, 
+            WaxsCoord sp );    // isotropic WAXS to uniaxial WAXS 
 
 PUBLIC extern WaxsCoord 
-       waxs_Transform( WParams * pParams, int transform, WaxsCoord W );
+       waxs_Transform( WParams * pParamsIn, WParams *pParamsOut,
+                       int transform, WaxsCoord W );
 
 PUBLIC extern WaxsVector
        waxs_Saxs2Vector ( WParams * pParams,

@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define ISOTIME_VERSION      "isotime : V1.3 Peter Boesecke 2010-05-27"
+# define ISOTIME_VERSION      "isotime : V1.4 Peter Boesecke 2010-12-12"
 /*+++------------------------------------------------------------------------
 NAME
    isotime --- routines for isotime conversion 
@@ -38,6 +38,7 @@ HISTORY
   2007-04-19 V1.2 PB code corrected to avoid compiler warnings with -Wall
   2010-05-27 V1.3 PB trim: unsigned long -> long, otherwise the condition
                            i>=0 in for loop would always be TRUE
+  2010-12-12 V1.4 PB _convert2epoch: all epoch value preset
 
 PUBLIC extern
        IsotimeEpoch isotime2epoch( const char * isotime_s ),
@@ -439,6 +440,10 @@ IsotimeEpoch _convert2epoch(long year, long month, long day,
 
   if (ISOTIME_debug>0) fprintf(stderr,"_convert2epoch BEGIN\n");
 
+  epoch.offset = (long int) 0;
+  epoch.fract  = (double) 0.0;
+  epoch.sec    = (long int) 0;
+
   epoch.status = -1;
 
   days = year*365+leap_days(year) - DAYS_19700101;
@@ -478,7 +483,7 @@ IsotimeEpoch _convert2epoch(long year, long month, long day,
     epoch.sec   += base;
 
     epoch.status = 0; // success
-  }
+  } 
 
   if (ISOTIME_debug>2)
     fprintf(stderr,"  %ld (DAYS_%04ld%02ld%02ld) - %ld (DAYS_19700101) = %ld\n",

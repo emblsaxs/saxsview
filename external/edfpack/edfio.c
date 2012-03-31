@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 1996-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define EDFIO_VERSION      "edfio : V2.25 Peter Boesecke 2008-05-27"
+# define EDFIO_VERSION      "edfio : V2.39 Peter Boesecke 2011-12-13"
 /*+++------------------------------------------------------------------------
 NAME
    edfio --- EDF data format specific file access routines
@@ -35,6 +35,7 @@ SYNOPSIS
 INCLUDE FILES
    edfio.h
    bslio.h
+   raster.h
    numio.h
 
 TO LINK WITH
@@ -48,7 +49,7 @@ RESTRICTIONS
 
 DESCRIPTION
    EDF data format specific file access routines (read and write routines)
-   The file format is described in 'SaxsKeywords.pdf'. The data files can
+   The file format is described in ´SaxsKeywords.pdf´. The data files can
    contain several data blocks that can be accessed by data numbers and
    chain numbers. Chain numbers are positive integer numbers. A data block 
    consists of a text block ("ASCII header") followed by a binary block 
@@ -57,28 +58,440 @@ DESCRIPTION
    data block number 1 of DataChain 1. Data chain 1 contains always primary 
    (scientific) data, therefore the extension ".Psd". The value 
    "1.Image.2" marks data block number 1 of DataChain 2 with additional
-   image data, e.g. error data.
+   image data. As a convention the associated variance data is stored 
+   with a negative chain number: data chain -m contains variance data of
+   data chain +m (m>=1).
 
    The following convention should be followed:
 
    primary image data : chain number 1;
-   error image data   : chain number 2;
+   error image data   : chain number -1;
 
    Internally, a general chain is defined. It has chain number 0 and 
    data number 0. 
 
    Data blocks with different chain numbers but the same data numbers
    belong together (e.g. data array (chain number 1) and associated 
-   error array (chain number 2)). 
+   error array (chain number -1)). 
+
+
+   ChainNumber DataNumber  chain key     block key  block id
+   +1          n           Image.Psd     n          n.Image.Psd
+   -1          n           Image.Error   n          n.Image.Error
+   +m          n           Image.Psd.m   n          n.Image.Psd.m
+   -m          n           Image.Error.m n          n.Image.Error.m
 
    The input routines can also read bsl files. Bsl frame numbers (franum)
    and memory numbers (memnum) are in the following way internally
    converted to edf data numbers and chain numbers:
 
-   memnum franum    ChainNumber DataNumber  chain key   block key  block id
-   1      n         1           n           Image.Psd   n          n.Image.Psd
-   m      n         m           n           Image.Psd.m n          n.Image.Psd.m
+   memnum franum ChainNumber DataNumber  chain key   block key  block id
+   1      n      1           n           Image.Psd   n          n.Image.Psd
+   m      n      m           n           Image.Psd.m n          n.Image.Psd.m
 
+HISTORY
+02-Jan-1996 Peter Boesecke 
+17-Mar-1998 Peter Boesecke V1.00
+19-Mar-1998 Peter Boesecke locate_blocks
+20-Mar-1998 Peter Boesecke search_general
+21-Mar-1998 file->Buffer = (char *) NULL; in init_file
+22-Mar-1998 
+28-Mar-1998 block->BinaryFilePos only used together with BinaryFileName
+17-May-1998 PB V1.002 indexing error in reorder_raster and 
+                      raster_normalization corrected
+17-May-1998 PB V1.003 open of old files read-only with mode="read"
+18-May-1998 PB V1.004 open_data_file and open_as_bsl_file:  
+                      opening mode must be either Old or Read
+01-Jun-1998 PB V1.01  set_bsl_input_byteorder
+20-Jun-1998 PB V1.011 locate_blocks (corrected): if in V1x V1_IMAGE_KEY 
+                      is missing, the header id number is used as image 
+                      number. 
+22-Jul-1998 PB V1.012 read_header_string: debug info added (keyword, value)
+30-Aug-1998 PB V1.013 numbers string: closing '\0' added (was missing) 
+18-Apr-1999 PB V1.02  all public routines start with edf_ or edfio_
+18-Apr-1999 PB V1.021 Return value of edf_read_data_2d_dimension
+                      is only FALSE if open_read_block terminated with
+                      the error value: CouldNotFindHeader.
+30-Apr-1999 PB V1.022 edf_read_data_2d_raw
+16-Jun-1999 PB V1.023 write_header_string debug info added
+23-Jun-1999 PB V1.024 Restrictions split into PUBLIC and PRIVATE
+24-Jun-1999 PB V1.03  Module history added, restrictions again only PRIVATE
+26-Jun-1999 PB V1.04  History_Line renamed to Header_Line, now public
+                      edf_read_header, edf_write_header
+17-Jul-1999 PB V1.05  edf_history_argv: strlen(argument)+3 (instead +2) 
+17-Jul-1999 PB V1.06  MaxLinLen increased from 127 to 255
+                      in SaxsInput.h: InputLineLength increased to 256
+23-Jul-1999 PB V1.07  DataValueOffset (EDF_DataFormatVersion = 2.20)
+                      "DataKey_" changed to "DataKey-"
+26-Jul-1999 PB V1.08  Block boundary warning only given if binary lenght
+                      is different from zero, 
+                      warning on BlockBoundaryKey missing removed, use
+                      internal default (512 bytes) without notice
+08-Nov-1999 PB V1.09  raster_normalization added
+08-Nov-1999 PB V1.10  in HSymb: shortlen and required added,
+                      new functions: edf_history_skip(), edf_history_take()
+26-Nov-1999 PB V1.11  for cc on dec alpha: 
+                      - some length values were not defined as constant and 
+                        were changed to const. 
+                      - all statements of the type *ps++=tolower(*ps);
+                        changed to { *ps=tolower(*ps); ps++; }
+19-Dec-1999 PB V1.12  reorder_raster corrected,
+                      Data2FloatIEEE32 bad size check also for output data
+07-Jan-2000 PB V1.13  for cc on dec alpha:
+                      all calls of the form "c=(char)ic=fgetc(channel);" 
+                      changed to {ic=fgetc(channel); c=(char)ic;}
+                      otherwise ic == c and EOF cannot be checked;
+16-Mar-2000 PB V1.14  Comments revised
+17-Mar-2000 PB V1.15  ChainKey generally defined as "Image.<ChainNum>" 
+18-Mar-2000 PB V1.16  DEFAULT_CHAIN_KEY changed to CLASS_KEY
+                      DBClass and DBInstance
+19-Mar-2000 PB V1.17  locate_block: using SequenceNumber, if IDs are missing
+06-Apr-2000 PB V1.18  new breakval, val2str adapted, MAX_LINE_WIDTH
+07-Apr-2000 PB V1.19  new function: edf_set_max_line_width
+30-Apr-2000 PB V1.20  new in edfio.h:
+                      -> enum MType, 
+                      -> edf_data2machine, 
+                      -> edf_showdatatypes,
+                      bswap -> edf_bswap
+                      raster_normalization -> edf_rasternormalization
+                      dim_product -> edf_dim_product
+                      in DTypeStrings:
+                      Unsigned64 and Signed64 renamed to UnsignedLong and
+                      SignedLong (unchanged in DTypeStringsAliases),
+                      in DSize:
+                      Size of DoubleValue (DoubleIEEE64) corrected from 4 
+                      to 8 bytes
+01-May-2000 PB V1.21  new in edfio.h:
+                      -> edf_showmachinetypes
+22-May-2000 PB V1.22  in open_as_bsl_file
+                      If bsl-file is read-only, opening as read-write can
+                      cause a segmentation error (linux). Therefore, bsl file
+                      is now opened read-only ("read").
+28-Jul-2000 PB V1.23  all arrays declared with constants
+30-Jul-2000 PB V1.24  new functions: raster_multiplication,
+                      raster_inversion
+10-Nov-2000 PB V1.30  RasterOrientation -> DataRasterConfiguration,
+                      Dim_0 is not written any more, 
+                      calculation of DataLen from all dimensions, 
+                      write keywords of all dimensions
+                      edf_write_data_2d_raw -> edf_write_data_raw
+                      edf_write_data_2d_float -> edf_write_data_float
+11-Nov-2000 PB V1.31  ExternalDimAlloc, ExternalDataAlloc
+                      disk_write_block and free_data_block_list release 
+                      only internally allocated DataDim and Data arrays, 
+                      externally allocated arrays are not released 
+12-Nov-2000 PB V1.32  edf_write_data_float -> edf_write_data(...,MFloat,...)
+               V1.33  long * pDataArraySize -> size_t * pDataArraySize
+                      newdim() in edf_write_data_raw
+               V1.34  edf_read_data_...(... , long Dim[], ...)
+                      --> edf_read_data_...(... , long **pDim, ...)
+                      edf_read_data_2d_... -> edf_read_data_...
+                      edf_read_data_float -> edf_read_data(...,MFloat,...)
+13-Nov-2000 PB V1.35  read_data_array( block, ... )
+29-Dec-2000 PB V1.36  new in data block: 
+                      DataByteOrder, DataRasterConfiguration, DataCompression
+                      renorm_data_array
+                      block->DataBufferLen: number of allocated data bytes
+2000-01-01  PB V1.37  all i/o to Dim[Dim[0]+1] removed
+                      History_Symbol_List, module header_list 
+                      print_bsl_filetable
+                      DBFlags.BadBlock, sync_data_block
+2000-01-12  PB V1.38  for VisualC++ compatibility:
+                      typedefs for u_char, u_short, u_int and u_long 
+                      removed and unsigned char, unsigned short, unsigned int 
+                      and unsigned long used instead
+                      still undefined in VCC: getcwd
+2000-01-15  PB V1.39  GETCWD
+2001-01-24  PB V1.40  _getcwd <dirent.h> for ms visual c
+2001-02-05  PB V1.41  remove unused variables
+2001-02-05  PB V1.42  <unistd.h> not included for WIN32
+2001-03-06  PB V1.43  on DEC alpha station: two fabs corrected to labs
+2001-03-30  PB V1.44  opening binary file with empty extension (adding ".")
+                      if fopen fails the first time (just for some cdroms)
+2001-04-11  PB V1.45  __MSVC__ -> WIN32 
+2001-05-15  PB V1.46  get_data_dim: i/o to Dim[Dim[0]+1] found and removed
+                      description corrected
+2001-05-18  PB V1.47  edf_dump
+2001-05-21  PB V1.48  edf_free_all: variables are only freed if != NULL
+2001-06-02  PB V1.49  edf_dump new arguments 
+2001-06-07  PB V1.50  read_header_string: *pstatus = status_error for 
+                      unsuccessful search in header
+                      write_header_string: *pstatus = status_error for
+                      unsuccessful write to header
+2001-06-08  PB V1.51  edf_read_data_dimension, get_binary_array:
+                      block->DataDim array is not reallocated any more,
+                      if it exists it is only updated with copydim
+2001-06-13  PB V1.52  edf_dump \n -> \r\n
+2001-07-06  PB V1.53  new function edf_search_data_file, check_mode
+2001-07-06  PB V1.54  InvalidStream
+2001-07-08  PB V1.55  EdfMaxKeyLen etc., edf_byteorder
+2001-07-10  PB V1.56  open_as_edf_file: ErrorCreatingGeneralBlock; return(-1);
+                      instead of ErrorCreatingGeneralBlock; return(0);
+2001-07-11  PB V1.57  accept empty files as edf-files without general header
+2001-08-05  PB V1.58  mode = "temp" (temporary files) see edf_open_data_file
+                      temporary files with binary data are not fully 
+                      implemented, missing: edf_read_data_raw cannot be used, 
+                      no internal memory allocation, no data type conversion.
+2001-09-02  PB V1.59  Data2Float -> Convert2Float, edf_set_datatype
+                      edf_data2machine -> edf_machine2machine
+                      Convert2UnsignedShort
+2001-09-03  PB V1.60  Convert2UnsignedShort: round MFloat and MDouble
+2001-09-04  PB V1.61  edf_write_data: error removed for data_type_out == 0
+2001-09-13  PB V1.62  call of edf_history routines with history_key,
+                      currently without function
+2001-09-15  PB V1.63  new_header_history -> clear_header_history
+2001-09-15  PB V1.64  edf_history V1.2
+2001-09-16  PB V1.65  UCharMin etc.
+2001-09-17  PB V1.66  edf_write_data_raw: remove non compulsary keywords
+                      read_header_string: debug output corrected
+2001-10-27  PB V1.67  DataKey- starts now with DATA_FORMAT_PREFIX
+2001-11-18  PB V1.68  edf_read_header: general block is now read first
+2001-11-18  PB V1.69  HEFlags, KeyOrderNo
+2001-11-25  PB V1.70  SEFlags, KeyOrderNo, KeyOrderNextSymbol
+                      module keyorder, module header_list 
+2001-11-25  PB V1.71  print_data_block_list corrected
+2001-11-28  PB V1.72  keyorder_DefaultTable updated
+2001-11-28  PB V1.73  edf_dump str2val added
+2001-11-29  PB V1.74  keyorder_DefaultTable updated
+2001-12-08  PB V1.75  edf_add_header_element, edf_delete_header_element
+2002-01-08  PB V1.76  edf_search_header_element, CouldNotFindHeaderKey 
+2002-01-09  PB V1.77  edf_print_header for single header 
+2002-01-21  PB V1.78  read_header_list, write_header_list:
+                      value-string-conversion added
+2002-02-12  PB V1.79  edf_datatype2machinetype, edf_machine_sizeof
+2002-04-25  PB V1.80  edf_history_read_header, edf_history_write_header,
+                      edf_history_copy
+2002-06-01  PB V1.81  write only non-empty history lines
+2002-11-27  PB V1.82  keyorder_DefaultTable updated (info keys added)
+2003-04-06  PB V1.83  keyorder_DefaultTable updated (info keys added)
+2003-04-06  PB V1.84  get_binary_array: BinaryFileName printed as string
+2003-08-13  PB        edf_read_header_...: Explicitely specified, that 
+                      Value is not changed when return value is 0 
+2003-11-29  PB V1.85  keyorder_DefaultTable changed: BSize*, Psic*
+2004-02-19  PB V1.86  To avoid problems when variables are copied to itself:
+                      tmp created before a variable is deleted ( in
+                      replace_string, insert_symbol, insert_symbol_root, 
+                      insert_header_element ), 
+                      additional check in copy_history_block
+2004-03-16  PB V1.87  includes numio.h, must be linked with numio.c
+                      edf_read_header_float: s2float replaced by num_str2double,
+                      edf_read_header_long, get_data_dim, get_data_value_offset,
+                      get_raster_configuration: s2long replaced by num_str2long
+2004-03-24  PB V1.88  EdfNDigitsFloat: number of significant float digits
+                      edf_write_header_unit: new function
+                      edf_write_header_float: float2s replaced by num_double2str
+2004-04-02  PB V1.89  num_str2double, num_str2long have new parameter tail
+2004-04-05  PB V1.90  removing memory leaks in
+                      history_line_new: allocated memory of newhline is 
+                                        now released in case of an error,
+                      get_binary_array: allocated memory of data_dim is
+                                        now released if it was copied to
+                                        block or in case of an error
+2004-04-05  PB V1.90a insert_symbol: allocated memory of newsymbol is 
+                                     now released in case of an error
+2004-04-06  PB V1.91  Previously temporarily allocated memory released in 
+                      case that newstr fails ( free(tmp...); return ):
+                      insert_symbol_root (3 changes),
+                      insert_data_block (1 change),
+                      insert_data_chain (1 change),
+                      insert_history_block (1 change),
+                      history_line_new (1 change)
+2004-04-08  PB V1.92  To prevent memory leaks:
+                      history_free: free(hline->key) added
+                      remove_history_block: free(hblock->key) added
+            PB V1.92a remove_history_block: if (hblock->key) added
+2004-04-12  PB V1.93  write header size into header
+2004-06-19  PB V1.94  edfio_debug: numio_debug added
+2004-07-17  PB V1.95  edf_set_minimumheadersize, sync_data_block updated 
+2004-07-17  PB V1.96  default of minimum_headersize_out increased to 4096
+2004-09-27  PB V1.97  keyorder_DefaultTable: RasterOrientation -> Raster*,
+                      Projection*, 
+                      needquotes: quotes required for empty strings
+2004-10-04  PB V1.98  keyorder_DefaultTable: Rotation_* -> DetectorRotation_*
+2005-02-23  PB V1.99  Size of DataType UnsignedLong and SignedLong changed
+                      to 4 bytes to be in agreement with the Daly routines.  
+                      UnsignedLong and SignedLong are now synonyms for
+                      UnsignedInteger and SignedInteger.
+2005-02-23  PB V2.00  Start of implementation of continuation keys:
+                      Continuation character defined
+                      compare_keys: the base key of a continuation key is
+                      sorted according to sort_mode, different keys with
+                      the same base key are sorted according to their
+                      continuation depth number.
+                      Continuation keys are sorted immediately after their
+                      base key. It is not necessary to search for continuation
+                      keys.
+                      str2val: pointer to rest of the string returned
+                      continuation_key, continuation_depth created
+
+                      is_prefix was accessing 1 bytes after end of buffer
+                      with keybuf[MaxKeyLen+1]='\0', but keybuf and prebuf
+                      are defined as keybuf[MaxKeyLen+1] -> corrected to 
+                      keybuf[MaxKeyLen]='\0'. The same applies to prebuf.
+2005-02-24  PB V2.01  byteorder() function
+2005-02-25  PB V2.02  continuation_key: a continuation key for depth > 0 is 
+                      only created if the basekey does not contain a
+                      continuation marker.
+                      SElement: new element String
+                      new: insert_string, search_string, remove_string
+                      remove_symbol: argument Next added
+                      delete_symbol OK, insert_string OK, search_string OK,
+                      remove_string OK, search_general OK,
+                      read_header_list OK, write_header_list OK.
+                      All output keywords are written with insert_string
+                      get_symbol_list uses insert_symbol
+                      All data format specific keywords are still written 
+                      and read with insert_symbol(_root) and search_symbol.
+                      str2val: also encapsulation when first or last 
+                      character is a quote
+                      read_header_value renamed to read_header_string
+                      write_header_value renamed to write_header_string
+                      read_header_string: The returned constant character
+                      string must not be released any more.
+                      new: edf_write_header_string, edf_read_header_string
+2005-03-03  PB V2.03  MaxConLen defined as MaxLinLen,
+                      insert_string: written continuation line length is
+                      limited to MaxConLen. MaxConLen should be smaller or
+                      equal to MaxValLen because longer values cannot be read.
+2005-04-11  PB V2.04  default of minimum_headersize_out increased to 8192
+2005-07-18  PB V2.05  for gcc 3.4.4.: all statements of the type 
+                      c = (char) ic = (int) ' '; splitted into 
+                      ic = (int) ' '; c = (char) ic;
+                      all statements of the form *px++ = y splitted into 
+                      *px = y; px++; where possible, except in while of
+                      keyorder_wildcmp,
+                      flush_data_block: psymbol=psymbol++ -> psymbol++
+2005-08-04  PB V2.06  get_binary_array: data_read_len, do not read more 
+                                        bytes than can be read from the 
+                                        binary block.
+                      newstrn: all keys are truncated after 
+                               MaxKeyLen characters
+                      all error messages written to stderr,
+                      only exits for SEVERE ERROR (=programming errors)
+2005-08-05  PB V2.07  edf_free_header: debug info corrected
+2005-10-13  PB V2.08  get_binary_array: unnecessary memset statement removed
+                      (for cc)
+2005-10-19  PB V2.09  compare_keys: replaced by compare_keys of version V2.04,
+                                    the modified version had errors in the
+                                    if statement. 
+                                    It should also work with gcc 3.4.4, 
+                                    because it does not contain redundant
+                                    statements of the kind a=a++.
+2006-03-15  PB V2.10  val2str, str2val: statements without effect removed
+                      edf_dim_product: 0.0l changed to 0l
+                      lcc warning: inconsistent linkage of ByteOrder2String, 
+                        edf_compression2string, byteorder could not be solved
+2006-12-01  PB V2.11  str2val: missing incrementation (pb++) added. Before, 
+                      a new line (\n) was converted to l instead to \l. 
+2007-02-01  PB V2.12  strtrm added
+                      continuation_depth: strncpy replaced with strtrm 
+                      continuation_key: strtrm added for depth>1
+                      update_string: incrementation of next corrected 
+2007-02-02  PB V2.13  update_string: 2nd while loop corrected for the case
+                                     that the string buffer is too small
+                                     for the values of all continuation 
+                                     keys (should be impossible as long 
+                                     as val2str does not increase the 
+                                     length of the input string).
+2007-02-11  PB V2.14  Andor EDF files:
+                      Keywords cannot contain carriage returns or 
+                      line feeds. Only the last portion containing '='
+                      is used as keyword. Empty lines between quotes without 
+                      separator '=' are ignored.
+                      Modifications:
+                      DTypeStringsAliases1: FloatValue => Float
+                      DCompressionStringsAliases1: None => NoSpecificValue
+                      edf_string2compression: DCompressionStringsAliases1 added
+                      get_key: Keywords that are not followed by an equal
+                               sign are skipped. get_key continues until 
+                               a valid keyword is found (or EOF etc).
+                      newstring: allocates 1 byte for '\0' when stringlen 
+                                 is zero (originally nothing was allocated
+                                 and the return value NULL).
+2007-03-07  PB V2.15  edfio_version returns EVERSION if defined
+2007-03-08  PB V2.16  prototypes updated for __LCC__ (to reduce warnings)
+2007-03-14  PB V2.17  open_as_edf_file: update and increment sequence number 
+                      of general block only if it will be physically written
+                      or if it was read (NoGeneralHeader not set), otherwise
+                      the first HeaderID number can be wrong.
+2007-04-20  PB V2.18  code corrected to avoid compiler warnings with -Wall 
+                      most %zu formats complemented with %lu, except in
+                      edf_show* (%z is not recognized, neither by sun, nor 
+                      by cygwin on pc), Flag formats %u changed to %hu
+2007-06-15  PB V2.19  locate_block: reads FIT2D specific edf format (KLORA)
+2007-06-17  PB V2.20  edf_dump: format 10000, 10001
+2007-09-07  PB V2.21  prototype for get_data_type
+2007-11-23  PB V2.22  DATA_FORMAT_VERSION increased to 2.4
+                      The output files are now written without starting
+                      newline. The starting newline has been removed from 
+                      the variable header_begin. Originally, the start byte 
+                      of an EDF file was a newline (0x0A) followed by an 
+                      opening curly brace (0x7B). The use of the newline
+                      was not imposed. In recent versions of some software 
+                      packages (SPEC, FIT2D) the newline is omitted and the 
+                      files start directly with an opening curly brace. 
+                      Because one of the software packages does not even
+                      want to read the original file format it has now been 
+                      changed here. Hopefully, it will not do too much 
+                      trouble to users. As before, all files with and without 
+                      newline are read.
+2007-12-05  PB V2.23  keyorder_DefaultTable: AxisType_ included
+                      Unsigned64, Signed64
+                      public raster_order2raster
+                      Convert2Float: bug corrected (double incrementation
+                      in ushort and uint caused segmentation fault)
+2008-04-23  PB V2.24  keyorder_DefaultTable: Msensi, Pslits, Sample*
+2008-05-27  PB V2.25  edf_dump: print file name for format=10000, 10001 
+2010-07-07  PB V2.26  raster functions extracted to raster.c/raster.h
+                      xxx_order2raster -> xxx_order2number
+                      edf_raster2number -> edf_raster_order2number
+                      raster_normalization calls updated.
+2010-07-08 PB V2.27   Convert2Double added
+2010-07-09 PB V2.28   pErrorValue and pstatus can be NULL in
+                      edf_open_data_file, edf_close_data_file,
+                      edf_search_stream, edf_read_data_dimension,
+                      edf_search_minmax_number, edf_test_header,
+                      edf_write_data_raw, edf_write_data, 
+                      edf_read_data_raw, edf_read_data,
+2010-09-08 PB V2.29   exit -> exit(-1)
+2010-09-09 PB V2.30   edf_delete_key added
+2010-09-09 PB V2.31   range of input variable stream checked
+                      (to avoid memory fault error if outside range)
+2010-12-18 PB V2.32   GzipCompression added: binary block output
+                      compression can be chosen with
+                      edf_set_datacompression( DCompression ).
+                      DBlock->Raw, RawBufferLen, RawLen
+                      disk_write_block: put_compressed_block added
+                      sync_data_block, flush_data_block updated,
+                      edf_set_datacompression added.
+                      get_binary_array: updated, data_read_len changed
+                                        to bytes_to_read, bytes_read added
+2011-01-05 PB V2.33   new public routines:
+                        edf_string2compression, edf_compression2string.
+                      some updates and cleanup in internal block routines:
+                      *pstatus parameter replaced by return value:
+                      disk_write_block
+                      get_data_header (disk_read_header removed),
+                      open_read_block, close_read_block,
+                      open_write_block, close_write_block
+                      updated:
+                      edf_write_data_raw, edf_write_data,
+                      edf_read_header, edf_write_header,
+                      locate_block, put_data_block,
+                      get_data_header, update_general, rewrite_symbol,
+                      update_symbol
+2011-01-31 PB V2.34   history_line_add: strncat (non-ansic) replaced
+                      with strncpy
+2011-05-25 PB V2.35   newdim -> newcopydim,
+                      newdim allocates only dimension array,
+                      get_data_dim: use newdim
+                      historically, data_dim is allocated with n+2 
+                      elements but only n+1 elements are used.
+2011-06-01 PB V2.36   read_header_string: status used
+2011-06-16 PB V2.37   edf_dump_format: line feed corrected
+2011-09-01 PB V2.38   Convert2Long, Convert2Integer, Convert2Short
+2011-12-13 PB V2.39   edf_byteorder2string, edf_string2byteorder
+                      
 --------------------------------------------------------------------------*/
 
 /***************************************************************************
@@ -124,7 +537,9 @@ DESCRIPTION
 
 # include "edfio.h"
 # include "bslio.h"
+# include "raster.h"
 # include "numio.h"
+# include "cmpr.h"
 
 /***************************************************************************
 * Macros                                                                   *
@@ -199,26 +614,26 @@ Internal Data Representation
 
 Data_Block :
 
-'BlockKey' is the unique name of this data block (usually a number).
-'BlockKeyLen' is the length of the BlockKey (without stop character '\0')
-'TextPos' is the displacement of the header section relative to the
+´BlockKey´ is the unique name of this data block (usually a number).
+´BlockKeyLen´ is the length of the BlockKey (without stop character '\0')
+´TextPos´ is the displacement of the header section relative to the
 begin of the file.
-'BinaryPos' is the displacement of the binary section relative to the
+´BinaryPos´ is the displacement of the binary section relative to the
 begin of the file.
-'TextLen' is the actual length of the header section, including padded
-white spaces. It must be a multiple of 'BlockBoundary'.
-'BinaryLen' is the length of the binary data section of the data block on
-disk. It must be a multiple of 'BlockBoundary'.
-'Flags' are reserved for future use.
-'PadLen' are the number of white-spaces that must be added to adjust
-the header section to a multiple of 'BlockBoundary'.
-'SymbolList' is the list of all keywords and values that are listed in
+´TextLen´ is the actual length of the header section, including padded
+white spaces. It must be a multiple of ´BlockBoundary´.
+´BinaryLen´ is the length of the binary data section of the data block on
+disk. It must be a multiple of ´BlockBoundary´.
+´Flags´ are reserved for future use.
+´PadLen´ are the number of white-spaces that must be added to adjust
+the header section to a multiple of ´BlockBoundary´.
+´SymbolList´ is the list of all keywords and values that are listed in
 the header.
-'KeyOrderNo' is a temporary variable
-'DataLen' is the number of meaningful bytes that should be written to the 
+´KeyOrderNo´ is a temporary variable
+´DataLen´ is the number of meaningful bytes that should be written to the 
 file out of the data buffer or that have been read from a file into the 
-data buffer.  It cannot be larger than 'BinaryLen'.
-'Data' is a typeless pointer to the data buffer. After writing, the data
+data buffer.  It cannot be larger than ´BinaryLen´.
+´Data´ is a typeless pointer to the data buffer. After writing, the data
 buffer is automatically discarded, before reading, a sufficiently large
 data buffer is allocated, if the NULL pointer is supplied.
 ---------------------------------------------------------------------------*/
@@ -230,9 +645,9 @@ unsigned short Major,                              /* major version number */
 
 typedef struct Data_File_Flags {
 unsigned short ExistingFile,             /* The file exists and was not
-                                               opened with 'new' or 'temp' */
+                                               opened with ´new´ or ´temp´ */
                ReadOnlyFile,                     /* This file is read-only */
-               TemporaryFile,            /* The file was opened with 'temp'*/
+               TemporaryFile,            /* The file was opened with ´temp´*/
                NoGeneralHeader;          /* The file has no general header */
 } DFFlags;
 
@@ -290,6 +705,9 @@ typedef struct Data_Block {
   long           DataType;                           /* the actual data type */
   long           DataValueOffset;  /* offset must be added to each data item */
   long           *DataDim;                          /* the actual dimensions */
+  void           *Raw;                 /* pointer to the typeless raw buffer */
+  size_t         RawBufferLen;    /* allocated length of raw buffer in bytes */
+  size_t         RawLen;         /* meaningful length of raw buffer in bytes */
   DBFlags        Flags;                                     /* various flags */
   unsigned long  SequenceNumber;       /* the sequential number of the block */
   SElement       *SymbolList;          /* the symbol list of this data block */
@@ -421,7 +839,7 @@ typedef struct Data_File {                     /* Definition of a file table */
 
 /***************************************************************************
 * Data Type Translation Tables                                             *
-* The indices of the tables correspond to 'enum DType'.                    * 
+* The indices of the tables correspond to ´enum DType´.                    * 
 ***************************************************************************/
 
 PRIVATE const char * DTypeStringsAliases[18] =
@@ -457,7 +875,7 @@ PRIVATE const size_t DSize[17] =
 
 /***************************************************************************
 * Byte Order Translation Tables                                            *
-* The constants correspond to 'enum BOrder'.                               *    
+* The constants correspond to ´enum BOrder´.                               *    
 ***************************************************************************/
 
 PRIVATE const char * BOrderStrings[5] = { INVALID, 
@@ -467,22 +885,28 @@ PRIVATE const char * BOrderStrings[5] = { INVALID,
 
 /***************************************************************************
 * Data Compression Translation Tables                                      *
-* The constants correspond to 'enum DCompression'.                         *    
+* The constants correspond to ´enum DCompression´.                         *    
 ***************************************************************************/
 
-PRIVATE const char * DCompressionStrings[3] =        { INVALID, 
+PRIVATE const char * DCompressionStrings[] =        { INVALID, 
                                                NONE, 
+                                               "GzipCompression",
+                                               "ZCompression",
                                                (const char *) NULL };
-PRIVATE const char * DCompressionStringsAliases[3] = { INVALID, 
+PRIVATE const char * DCompressionStringsAliases[] = { INVALID, 
                                                "UnCompressed" , 
+                                               "GzipCompression", 
+                                               "ZCompression",
                                                (const char *) NULL };
-PRIVATE const char * DCompressionStringsAliases1[3] = { INVALID, 
+PRIVATE const char * DCompressionStringsAliases1[] = { INVALID, 
                                                "NoSpecificValue" , 
+                                               "Gzip",
+                                               "Z",
                                                (const char *) NULL };
 
 /***************************************************************************
 * Data block classes and instances                                         *
-* The constants correspond to 'enum DBClass' and 'enum DBInstance'.        *
+* The constants correspond to ´enum DBClass´ and ´enum DBInstance´.        *
 ***************************************************************************/
 
 PRIVATE const char * DBClassStrings[4] =             { INVALID,
@@ -522,6 +946,7 @@ PRIVATE int      write_general_block = 0;  /* default without general header */
 PRIVATE int      write_headersize = 1;          /* default: with header size */
 PRIVATE unsigned long minimum_headersize_out = 8192l; /* minimum header size */ 
 PRIVATE int      data_type_out       = InValidDType;/* no specific data type */
+PRIVATE int      data_compression_out= InValidDCompression;  /* unspcfc cmpr */
 PRIVATE long     data_value_offset_out = 0l;         /* default is no offset */
 PRIVATE int      bsl_input_byteorder = InValidBOrder;  /* default: not spec. */ 
 PRIVATE unsigned long max_line_width = MAX_LINE_WIDTH; /* default line width */
@@ -533,7 +958,6 @@ enum SMode { CaseSensitiveSort, UpperCaseSort, NumberSort };
 * Prototypes                                                               *
 ***************************************************************************/
 PRIVATE const char * ByteOrder2String( int byte_order );
-PRIVATE const char * Compression2String( int data_compression );
 PRIVATE SElement **  keyorder_ordersymbols( DBlock * block );
 PRIVATE int byteorder ( void );
 PRIVATE int history_line_new  ( HSymb ** proot,
@@ -631,7 +1055,7 @@ PRIVATE int byteorder ( void )
 /*+++------------------------------------------------------------------------
 NAME
 
-  edf_general_block  --- write/don't write file with general header
+  edf_general_block  --- write/don´t write file with general header
 
 SYNOPSIS
 
@@ -652,7 +1076,7 @@ int edf_general_block          ( int writetodisk )                    /*---*/
 /*+++------------------------------------------------------------------------
 NAME
 
-  edf_headersize  --- write/don't write header size into header
+  edf_headersize  --- write/don´t write header size into header
 
 SYNOPSIS
 
@@ -703,6 +1127,16 @@ SYNOPSIS
   int edf_set_datatype  ( int datatype_out );
  
 DESCRIPTION
+
+  edf_set_datatype sets the output data type for all output data written
+  with edf_write_data. If necessary a data type conversion will be done. If 
+  datatype_out is InValidDType (default) the machine data are written without 
+  conversion. This change is immediately active globally. It can be done before
+  each call to edf_write_data.
+  edf_set_datatype modifies only the action of edf_write_data. It has no 
+  effect on any other function.
+
+  edf_set_datatype(InValidDType) returns to the default.
  
 RETURN VALUE
   SUCCESS: 0
@@ -710,7 +1144,38 @@ RETURN VALUE
 int edf_set_datatype         ( int datatype_out )                     /*---*/
 { data_type_out = datatype_out;
   return(0);
-} /* edf_set_datatype */                                                                                                                     
+} /* edf_set_datatype */
+
+/*+++------------------------------------------------------------------------
+NAME
+
+  edf_set_datacompression --- set data compression of all output files
+ 
+SYNOPSIS
+ 
+  int edf_set_datacompression  ( int datacompression_out );
+ 
+DESCRIPTION
+
+  edf_set_datacompression sets the output data compression for all data 
+  written with edf_write_data and edf_write_data_raw. If
+  datacompression_out is InValidDCompression (default) or UnCompressed
+  the data are written without compression. This change is immediately 
+  active globally. It can be done before each call to edf_write_data or
+  edf_write_data_raw.
+  edf_set_datatype influences only edf_write_data and edf_write_data_raw. 
+  It has no effect on any other function.
+
+  edf_set_datacompression(InValidDCompression) returns to the default.
+ 
+RETURN VALUE
+  SUCCESS: 0
+---------------------------------------------------------------------------*/
+int edf_set_datacompression  ( int datacompression_out )              /*---*/
+{ data_compression_out = datacompression_out;
+  return(0);
+} /* edf_set_datacompression */        
+
 /*+++------------------------------------------------------------------------
 NAME
  
@@ -827,10 +1292,10 @@ SYNOPSIS
    char * catstr( const char * a, const char * b );
 
 DESCRIPTION
-  Allocates strlen('a')+strlen('b')+1 bytes of memory and copies 'a' and 'b'
+  Allocates strlen(´a´)+strlen('b')+1 bytes of memory and copies ´a´ and 'b'
   into it. In case of success the pointer to the allocated memory is returned. 
   The null pointer is returned in case of an error.
-  If 'a' or 'b' are NULL pointers the NULL pointer is returned.
+  If ´a´ or 'b' are NULL pointers the NULL pointer is returned.
 
 RETURN VALUE
   Returns the pointer to the allocated string or (char *) NULL in case
@@ -862,10 +1327,10 @@ SYNOPSIS
    char * newstr( const char * string );
 
 DESCRIPTION
-  Allocates strlen('string')+1 bytes of memory and copies 'string' into it.
+  Allocates strlen(´string´)+1 bytes of memory and copies ´string´ into it.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
-  If 'string' is the NULL pointer the NULL pointer is returned.
+  If ´string´ is the NULL pointer the NULL pointer is returned.
 
 RETURN VALUE
   Returns the pointer to the allocated string or (char *) NULL in case
@@ -892,11 +1357,11 @@ SYNOPSIS
    char * newstr( const char * string, size_t maxlen );
  
 DESCRIPTION
-  Allocates MIN(maxlen,strlen('string'))+1 bytes of memory and copies not 
+  Allocates MIN(maxlen,strlen(´string´))+1 bytes of memory and copies not 
   more than maxlen characters of 'string' into it.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
-  If 'string' is the NULL pointer the NULL pointer is returned.
+  If ´string´ is the NULL pointer the NULL pointer is returned.
  
 RETURN VALUE
   Returns the pointer to the allocated string or (char *) NULL in case
@@ -927,7 +1392,7 @@ SYNOPSIS
    char * newstring( size_t stringlen );
 
 DESCRIPTION
-  Allocates 'stringlen'+1 bytes of memory and initializes the first element
+  Allocates ´stringlen´+1 bytes of memory and initializes the first element
   with a terminating 0.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
@@ -949,36 +1414,67 @@ char * newstring( size_t stringlen )
 /*---------------------------------------------------------------------------
 NAME
 
-   newdim --- allocate memory and copy the data dimension into it 
+   newdim --- allocate N+1 elements for dimension array
 
 SYNOPSIS
 
-   long * newdim( const long * dim );
+   long * newdim( long N );
 
 DESCRIPTION
-  Allocates a long array with dim[0]+2 elements and copies 'dim' into it.
-  The array element dim[dim[0]+1] is not copied. 
-  If 'dim' is the NULL pointer the NULL pointer is returned.
+  Allocates a long array with N+2 elements and copies N to newdim[0].
 
 RETURN VALUE
   Returns the pointer to the allocated dimension array and (long *) NULL 
-  in case of an error. In case of an error no memory is allocated.
+  in case of an error. 
 ---------------------------------------------------------------------------*/
-long * newdim( const long * dim )
+long * newdim( long N )
 { long * newdimension;
-  long N, idim;
+  long idim;
 
-  if (!dim) return( (long *) NULL );
-  N = dim[0];
   if (!(newdimension = (long *) malloc(sizeof(long)*(N+2l)) ))
     return((long *) NULL);
   /* copy dim to newdimension */
-  for (idim=0;idim<=N;idim++) newdimension[idim] = dim[idim];
+  newdimension[0]=N;
+  for (idim=1;idim<=N;idim++) newdimension[idim] = 0l;
   newdimension[N+1l]=0l;
 
   return( newdimension );
 
 } /* newdim */
+
+/*---------------------------------------------------------------------------
+NAME
+
+  newcopydim --- allocate memory and copy the data dimension into it 
+
+SYNOPSIS
+
+  long * newcopydim( const long * dim );
+
+DESCRIPTION
+  Creates a duplicate of the dimension array dim.
+  If ´dim´ is the NULL pointer the NULL pointer is returned.
+
+RETURN VALUE
+  Returns the pointer to the allocated dimension array and (long *) NULL 
+  in case of an error. In case of an error no memory is allocated.
+---------------------------------------------------------------------------*/
+long * newcopydim( const long * dim )
+{ long * newdimension;
+  long N, idim;
+
+  if (!dim) return( (long *) NULL );
+  N = dim[0];
+
+  if ( !(newdimension = newdim( N )) )
+    return((long *) NULL);
+
+  /* copy dim to newdimension */
+  for (idim=0;idim<=N;idim++) newdimension[idim] = dim[idim];
+
+  return( newdimension );
+
+} /* newcopydim */
 
 /*---------------------------------------------------------------------------
 NAME
@@ -991,13 +1487,13 @@ SYNOPSIS
 
 DESCRIPTION
   Copies the elements of dim[] between dim[0] and dim[dim[0]] to buffer.
-  N is the required output dimension number. At least 'N'+1 elements must have
-  been allocated for 'buffer' ('long buffer[N+2]'). 'buffer[0] is set to 'N'.
-  If 'N' is larger than 'dim[0]' the remaining elements of buffer are filled
-  with 1. If 'N' is smaller than dim[0] the routine does generally stop with
+  N is the required output dimension number. At least ´N´+1 elements must have
+  been allocated for ´buffer´ (´long buffer[N+2]´). ´buffer[0] is set to ´N´.
+  If ´N´ is larger than ´dim[0]´ the remaining elements of buffer are filled
+  with 1. If ´N´ is smaller than dim[0] the routine does generally stop with
   an error, except in the case where all elements dim[>N] are 1. 
 
-'N' must be at least
+´N´ must be at least
   equal to dim[0],
 
 RETURN VALUE
@@ -1014,15 +1510,15 @@ long * copydim( long buffer[], long N, const long dim[] )
   /* copy the input dims */
   for (idim=1l;idim<=idim_max;idim++) {
     buffer[idim] = dim[idim];
-    }
+  }
   /* set the remaining output dims to 1 */
   for (idim=idim_max+1l;idim<=N;idim++) {
     buffer[idim] = 1l;
-    }
+  }
   /* are the remaining input dims 1? */
   for (idim=N+1l;idim<=dim[0];idim++) {
     if (dim[idim]!=1l) return( (long *) NULL );
-    }
+  }
 
   return ( buffer );
 
@@ -1301,11 +1797,11 @@ SYNOPSIS
 DESCRIPTION
    The memory to which pstring points is released. pstring is replaced
    by a pointer to a new allocated memory with strlen(string)+1 bytes.
-   'string' is copied into this memory.
+   ´string´ is copied into this memory.
 
 CHANGED
    The memory at *pstring is released, new memory is allocated and filled
-   with 'string', pstring is replaced by a pointer to this memory.
+   with ´string´, pstring is replaced by a pointer to this memory.
 
 RETURN VALUE
     0: OK
@@ -1644,10 +2140,10 @@ DESCRIPTION
   Copies not more than n characters from src to dest. The copying 
   stops after n characters. In the case where the length of src is 
   less than n, the remainder of dest will be padded with the 
-  byte 'pad'. Thus, if there is no null byte among the first n bytes 
-  of src, the result will not be terminated by the byte 'pad'.
+  byte ´pad´. Thus, if there is no null byte among the first n bytes 
+  of src, the result will not be terminated by the byte ´pad´.
 
-  If 'pad' is the null byte strnpad works exactly like strncpy.
+  If ´pad´ is the null byte strnpad works exactly like strncpy.
  
 RETURN VALUE
   The  strnpad() function returns a pointer to the destination 
@@ -1683,11 +2179,11 @@ NAME
    suppress_suffix
 
 DESCRIPTION
-If the character string 'key' ends with the character string 'suffix' only
-the characters before 'suffix' are copied into 'buffer'. If 'key' does not
-end with 'suffix' all characters of 'key' are copied into 'buffer'. The
-pointer to 'buffer' is returned. If 'csens' is TRUE the comparison is case
-sensitive. The length of 'buffer' must be sufficiently long.
+If the character string ´key´ ends with the character string ´suffix´ only
+the characters before ´suffix´ are copied into ´buffer´. If ´key´ does not
+end with ´suffix´ all characters of ´key´ are copied into ´buffer´. The
+pointer to ´buffer´ is returned. If ´csens´ is TRUE the comparison is case
+sensitive. The length of ´buffer´ must be sufficiently long.
 ---------------------------------------------------------------------------*/
 char * suppress_suffix ( char buffer[], const char *key, 
                          const char * suffix, int csens )
@@ -1731,9 +2227,9 @@ SYNOPSIS
    int is_prefix ( const char *key, const char *prefix, int csens );
 
 DESCRIPTION
-If 'key' starts with 'prefix' 1 is returned, in all other cases 0.
+If 'key' starts with ´prefix´ 1 is returned, in all other cases 0.
 (char *) NULL strings are handled like empty strings.
-If 'prefix' is an empty string, the returned value is always 0.
+If ´prefix´ is an empty string, the returned value is always 0.
 If csens is 1 the comparison is case sensitive.
 
 RETURN VALUE
@@ -2048,8 +2544,7 @@ DFVersion str2version( const char * string )
   if ( npar < 1 ) {
     fprintf(stderr,"%s\"%s\"\n", ConversionError, string);
     exit(-1); 
-    } 
-    else if ( npar < 2 ) minor = 0u;
+  } else if ( npar < 2 ) minor = 0u;
 
   version.Major = (unsigned short int) major;
   version.Minor = (unsigned short int) minor;
@@ -2070,7 +2565,7 @@ SYNOPSIS
 DESCRIPTION
 The created version string has the following format: 
 
-  'version.Major'.'version.Minor' . 
+  ´version.Major´.´version.Minor´ . 
 
 In case of an error -1 is returned.
 
@@ -2265,7 +2760,7 @@ int print_symbol_element_flags ( FILE * out, const SEFlags * Flags )
 /*---------------------------------------------------------------------------
 NAME
 
-   insert_symbol -- insert/update 'key' in symbol-list of 'block'
+   insert_symbol -- insert/update ´key´ in symbol-list of ´block´
 
 SYNOPSIS
 
@@ -2278,9 +2773,9 @@ pointer is returned in *symbol if symbol is not the NULL pointer. Data
 format keys are inserted before all others. 'String' is not updated.
 
 RETURN VALUE
-  'Key' successfully updated, symbol pointer to symbol returned
+  ´Key´ successfully updated, symbol pointer to symbol returned
         in *symbol, return value 0
-  'Key' updated failed: -1, *symbol set to NULL pointer
+  ´Key´ updated failed: -1, *symbol set to NULL pointer
 ---------------------------------------------------------------------------*/
 int insert_symbol( DBlock * block, const char * Key,
                    const char * Value, SElement ** symbol )
@@ -2304,7 +2799,7 @@ int insert_symbol( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   previous = (SElement *) NULL;
@@ -2363,7 +2858,7 @@ int insert_symbol( DBlock * block, const char * Key,
 /*---------------------------------------------------------------------------
 NAME
 
-   search_symbol -- search for 'Key' in symbol-list of 'block'
+   search_symbol -- search for ´Key´ in symbol-list of ´block´
 
 SYNOPSIS
 
@@ -2374,8 +2869,8 @@ Searches for 'Key' and returns a pointer to it in *symbol, if symbol is not
 the NULL pointer. 'String' is not updated.
 
 RETURN VALUE
-  'Key' found, symbol pointer returned in **symbol, return value 0
-  'Key' not found: -1, pointer (SElement *) NULL returned in **symbol
+  ´Key´ found, symbol pointer returned in **symbol, return value 0
+  ´Key´ not found: -1, pointer (SElement *) NULL returned in **symbol
 ---------------------------------------------------------------------------*/
 int search_symbol( DBlock * block, const char * Key, SElement ** symbol )
 {
@@ -2393,7 +2888,7 @@ int search_symbol( DBlock * block, const char * Key, SElement ** symbol )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING (search_symbol): The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -2415,7 +2910,7 @@ int search_symbol( DBlock * block, const char * Key, SElement ** symbol )
 /*---------------------------------------------------------------------------
 NAME
 
-   delete_symbol -- deletes 'symbol' from symbol-list of 'block'
+   delete_symbol -- deletes 'symbol' from symbol-list of ´block´
 
 SYNOPSIS
 
@@ -2467,7 +2962,7 @@ int delete_symbol( DBlock * block, SElement * symbol, SElement ** Next )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_symbol -- removes 'key' from symbol-list of 'block'
+   remove_symbol -- removes ´key´ from symbol-list of ´block´
 
 SYNOPSIS
 
@@ -2498,7 +2993,7 @@ int remove_symbol( DBlock * block, const char * Key, SElement ** Next )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -2534,7 +3029,7 @@ int insert_symbol_root( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   if ( block == (DBlock *) NULL) return(-1);
@@ -2749,7 +3244,7 @@ int insert_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   if ( chain == (DChain *) NULL ) return(-1);
@@ -2789,6 +3284,10 @@ int insert_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
     newblock->DataCompression  = (long)   0;
     newblock->DataValueOffset  = (long)   0;
     newblock->DataDim          = (long *) NULL;
+    newblock->Raw              = (void *) NULL;
+    newblock->RawBufferLen     = (size_t) 0;
+    newblock->RawLen           = (size_t) 0;
+
 
     if ( init_data_block_flags( &(newblock->Flags) ) ) return(-1);
     
@@ -2826,7 +3325,7 @@ int search_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   /* search block */
@@ -2864,6 +3363,8 @@ int free_data_block_list( DChain * chain )
       free( block->DataDim ); 
     if ( ( block->Data ) && ( !block->Flags.ExternalDataAlloc ) ) 
       free ( block->Data );
+    if ( block->Raw ) 
+      free ( block->Raw );
 
     free(block);
     }
@@ -2904,7 +3405,7 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  BinaryFileLen           = %lu\n",block->BinaryFileLen);
       fprintf(out,"  Data                    = %p\n",block->Data);
 //      fprintf(out,"  DataLen (DataBufferLen) = %zu (%zu)\n",
-      fprintf(out,"  DataLen (DataBufferLen) = %zu | %zu (%zu)\n",
+      fprintf(out,"  DataLen (DataBufferLen) = %zu | %lu (%lu)\n",
                           block->DataLen,block->DataLen,block->DataBufferLen);
       fprintf(out,"  DataType                = %ld\n",block->DataType);
       fprintf(out,"  DataByteOrder           = %s\n",
@@ -2912,9 +3413,14 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  DataRasterConfiguration = %ld\n",
                                         block->DataRasterConfiguration);
       fprintf(out,"  DataCompression         = %s\n",
-                            Compression2String(block->DataCompression));
+                            edf_compression2string(block->DataCompression));
       fprintf(out,"  DataValueOffset         = %ld\n",block->DataValueOffset);
       fprintf(out,"  DataDim                 = %p\n",block->DataDim);
+      fprintf(out,"  Raw                     = %p\n",block->Raw);
+//      fprintf(out,"  RawLen (RawBufferLen)   = %zu (%zu)\n",
+      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %lu (%lu)\n",
+                          block->RawLen,block->RawLen,block->RawBufferLen);
+
       if (block->DataDim) for (i_dim=0;i_dim<=block->DataDim[0];i_dim++) 
         fprintf(out,"    DataDim[%1lu]            = %ld\n",
                                       i_dim,(block->DataDim)[i_dim]);
@@ -2962,7 +3468,7 @@ int insert_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   if ( file == (DFile *) NULL ) return(-1);
@@ -3017,7 +3523,7 @@ int search_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   /* search chain */
@@ -3045,10 +3551,10 @@ SYNOPSIS
    int free_data_chain( DChain * chain );
 
 DESCRIPTION
-The memory of all blocks and symbols of the data chain 'chain' is
+The memory of all blocks and symbols of the data chain ´chain´ is
 removed. The data chain is removed from the chain list of the owning 
-file. If 'chain' was the only chain in 'chain->File->ChainList' 
-'chain->File->ChainList is set to (DChain *) NULL. If 'chain' is 
+file. If ´chain´ was the only chain in ´chain->File->ChainList´ 
+´chain->File->ChainList is set to (DChain *) NULL. If ´chain´ is 
 NULL, nothing is done and 0 (success) is returned.
 
 RETURN VALUES
@@ -3152,7 +3658,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-   Prints the current filetable to the file 'out' 
+   Prints the current filetable to the file ´out´ 
 
 RETURN VALUE
     0: success
@@ -3168,6 +3674,7 @@ int edf_print_filetable( FILE * out, int level, int verbose )         /*---*/
 
   if (level<1) return(0);
   if (!InitTable) return(-1);
+  if (!out) return(-1);
 
   for (stream=0;stream<MaxFiles;stream++)
     if (FileTable[stream].Used) {
@@ -3328,7 +3835,7 @@ int update_string( SElement *base, SElement **next )
 /*---------------------------------------------------------------------------
 NAME
 
-   insert_string -- insert/update continuation 'key's in symbol-list of 'block'
+   insert_string -- insert/update continuation ´key´s in symbol-list of ´block´
 
 SYNOPSIS
 
@@ -3411,21 +3918,21 @@ int insert_string( DBlock * block, const char * BaseKey,
 /*---------------------------------------------------------------------------
 NAME
 
-   search_string -- searches for 'BaseKey' in symbol-list of 'block'
+   search_string -- searches for ´BaseKey´ in symbol-list of ´block´
 
 SYNOPSIS
 
    int search_string( DBlock *block, const char *BaseKey, SElement **symbol );
 
 DESCRIPTION
-Searches for 'BaseKey' in symbol-list of 'block'. If it was found the 
+Searches for 'BaseKey' in symbol-list of ´block´. If it was found the 
 symbol-string is created from the values of 'BaseKey' and of all its
 continuation keys. The pointer to 'BaseKey' is returned in symbol if it
 is not NULL.
 
 RETURN VALUE
-  'BaseKey' found, symbol pointer returned in *symbol, return value 0
-  'BaseKey' not found, *symbol set to NULL pointer, return value -1
+  ´BaseKey´ found, symbol pointer returned in *symbol, return value 0
+  ´BaseKey´ not found, *symbol set to NULL pointer, return value -1
 ---------------------------------------------------------------------------*/
 int search_string( DBlock *block, const char *BaseKey, SElement **symbol )
 { SElement *base;
@@ -3447,7 +3954,7 @@ int search_string( DBlock *block, const char *BaseKey, SElement **symbol )
 /*---------------------------------------------------------------------------
 NAME
 
-   remove_string -- removes continuation 'key's from symbol-list of 'block'
+   remove_string -- removes continuation ´key´s from symbol-list of ´block´
 
 SYNOPSIS
 
@@ -3475,21 +3982,21 @@ int remove_string( DBlock * block, const char * Key )
 /*---------------------------------------------------------------------------
 NAME
 
-   search_general -- search for 'key' in 'block' and GeneralBlock
+   search_general -- search for ´key´ in ´block´ and GeneralBlock
 
 SYNOPSIS
 
    int search_general( DBlock * block, const char * Key, SElement ** symbol );
 
 DESCRIPTION
-   Searches for a 'key' in the symbol list of 'block'. If 'key' was not found 
+   Searches for a ´key´ in the symbol list of ´block´. If ´key´ was not found 
    and if it is a user key, it searches afterwards in the general block. A user 
-   key is a key that does not start with 'DATA_FORMAT_PREFIX'. If 'key' was 
-   found the pointer to the 'symbol' element is returned.
+   key is a key that does not start with ´DATA_FORMAT_PREFIX´. If ´key´ was 
+   found the pointer to the ´symbol´ element is returned.
 
 RETURN VALUE
-  'key' found, symbol pointer returned in **symbol, return value 0
-  'key' not found: -1, pointer (SElement *) NULL returned in **symbol
+  ´key´ found, symbol pointer returned in **symbol, return value 0
+  ´key´ not found: -1, pointer (SElement *) NULL returned in **symbol
 ---------------------------------------------------------------------------*/
 int search_general( DBlock * block, const char * Key, SElement ** symbol )
 { int return_status;
@@ -3505,6 +4012,35 @@ int search_general( DBlock * block, const char * Key, SElement ** symbol )
 } /* search_general */
 
 /*===data_structure END=================================================---*/
+
+/*===raster_conversion BEGIN=================================================*/
+/* temporarily redefined, should everywhere be replaced by raster.h functions */
+
+int edf_raster_normalization ( void * dest, const void * src,
+                               const long data_dim[],
+                               long raster_configuration, size_t item )
+{
+  return( raster_normalization ( dest, src, data_dim,
+                                 raster_configuration, item, NULL ) );
+}
+
+long edf_raster_multiplication   ( long a, long x )
+{
+  return( raster_multiplication( a, x ) );
+} // edf_raster_multiplication
+
+long edf_raster_inversion        ( long x )
+{
+  return( raster_inversion ( x ) );
+} // edf_raster_inversion
+
+long edf_raster_order2number     ( const long order[] )
+{
+  return( raster_order2number( order ) );
+} // edf_raster_order2number
+
+/*===raster_conversion END===================================================*/
+
 /*===block_access BEGIN====================================================*/
 
 /*---------------------------------------------------------------------------
@@ -3817,10 +4353,10 @@ SYNOPSIS
                     char ** pBlockKey, char ** pChainKey  );
  
 DESCRIPTION
-'block_id' is copied into 'buffer'. 'buffer' is split into 'BlockKey' 
-and 'ChainKey' by replacing the first '.' in 'buffer' with '\0'. The pointer
-to the leading substring is returned in 'BlockKey', the pointer to the trailing 
-substring is returned in 'ChainKey'. The minimum length of 'buffer' is
+´block_id´ is copied into ´buffer´. ´buffer´ is split into ´BlockKey´ 
+and ´ChainKey´ by replacing the first '.' in ´buffer´ with '\0'. The pointer
+to the leading substring is returned in ´BlockKey´, the pointer to the trailing 
+substring is returned in ´ChainKey´. The minimum length of ´buffer´ is
 strlen(block_id)+1, the maximum length is MaxValLen+1.
 
 RETURN VALUE
@@ -3851,7 +4387,7 @@ NAME
   is_general_block ( block )
 
 DESCRIPTION
-Returns '1' if block is the general block. In all other cases '0'.
+Returns ´1´ if block is the general block. In all other cases ´0´.
 ---------------------------------------------------------------------------*/
 int is_general_block ( DBlock *block )
 {
@@ -3971,6 +4507,7 @@ DESCRIPTION
 Synchronizes the header information with the actual data. Writes the
 data format specific keywords into the header. 
 a) Calculates BinaryLen from DataLen
+   if RawLen is >0 BinaryLen is calculated from RawLen
 b) Updates the symbol list with the required keywords and values, for:
    the general block and for the normal data blocks. 
 c) Recalculates the header length and the number of bytes that
@@ -3980,12 +4517,15 @@ c) Recalculates the header length and the number of bytes that
 If ( block->Flags.DiskBlockFixed ) BinaryLen and TextLen are kept constant.
 If this is not possible, an error is returned.
 
+If RawLen is >0 BinaryLen is calculated from RawLen
+
 RETURN VALUE
 Returns 0 in case of success.
 
 HISTORY
 2001-01-01 PB calculation of block->BinaryLen for DiskBlockFixed is now 
               done before keyword is written to header.
+2010-12-16 PB if RawLen is >0 BinaryLen is calculated from RawLen
 ---------------------------------------------------------------------------*/
 int sync_data_block ( DBlock * block )
 {
@@ -4006,14 +4546,19 @@ int sync_data_block ( DBlock * block )
   if (block == (DBlock *) NULL) return(-1);
 
   /* Round up binary length to the next full multiple of block_boundary */
-  block->BinaryLen = 
+  if (block->RawLen) {
+    block->BinaryLen = 
+      CEILMOD ( (unsigned long) block->RawLen, block_boundary(block));
+  } else {
+    block->BinaryLen = 
       CEILMOD ( (unsigned long) block->DataLen, block_boundary(block));
+  }
 
   if ( block->Flags.DiskBlockFixed ) {
     /* keep lengths fixed */
     block->BinaryLen = MAX(block->BinaryLen,binary_len);
     if ( (block->BinaryLen) != binary_len ) return(-1);
-    }
+  }
 
   /* write keywords */ 
   if ( is_general_block ( block ) ) {
@@ -4055,7 +4600,7 @@ int sync_data_block ( DBlock * block )
     if (insert_symbol_root(block, BLOCK_ID_KEY,    block_id(block),&symbol))
       return(-1);
 
-    /* +++ compatibility to old data format, 'Image = NN' */
+    /* +++ compatibility to old data format, ´Image = NN´ */
     if (insert_string( block,
        suppress_suffix(keybuf, chain->ChainKey, V1_SUPPRESS, False),
        block->BlockKey, &symbol))
@@ -4102,20 +4647,20 @@ int sync_data_block ( DBlock * block )
 /*---------------------------------------------------------------------------
 NAME
 
-   get_block_pos --- get start position of 'block' in file
+   get_block_pos --- get start position of ´block´ in file
 
 SYNOPSIS
 int get_block_pos( DBlock * block, unsigned long *ptext_pos );
 
 DESCRIPTION
-Calculates the start position of the text header section of 'block'
+Calculates the start position of the text header section of ´block´
 relative to the start of the file.
 
 RETURN VALUE
 success:0, error:-1
 ---------------------------------------------------------------------------*/
 int get_block_pos( DBlock * block, unsigned long *ptext_pos )
-{ 
+{
   DBlock * LastBlockInFile = block->Chain->File->LastBlockInFile;
 
   if (block->Flags.DiskBlockFixed) *ptext_pos = block->TextPos; 
@@ -4158,9 +4703,11 @@ InternalHeader is set, data is never written to disk.
 
 The following parameters are updated:
   TextPos, BinaryPos, KeyPos, ValPos, BinaryFilePos, BinaryFileLen
+
+2010-12-16 PB if RawLen is >0 Raw is written instead of Data
 ---------------------------------------------------------------------------*/
 int flush_data_block ( DBlock *block )
-{ 
+{
   const unsigned long h_begin =(unsigned long) strlen(header_begin);
   const unsigned long s_sepa  =(unsigned long) strlen(symbol_separator);
   const unsigned long s_term  =(unsigned long) strlen(symbol_terminator);
@@ -4214,7 +4761,7 @@ int flush_data_block ( DBlock *block )
           perror("flush_data_block->symbol_terminator");free(table);return(-1);}
         cur_pos += s_term + (unsigned long) (*psymbol)->ValLen;
         psymbol++;
-        }
+      }
 
       /* free table */
       free(table);
@@ -4228,7 +4775,6 @@ int flush_data_block ( DBlock *block )
 
       block->Flags.HeaderChanged  = False;
 
-
       if ( (block->Flags.DataChanged) && (!block->Flags.InternalData) ) {
 
         /* Calculate BinaryPos */
@@ -4240,28 +4786,36 @@ int flush_data_block ( DBlock *block )
         block->BinaryFileLen = block->BinaryLen;
 
         /* write binary data section and fill rest with spaces */
-        if ( fwrite(block->Data,1,block->DataLen,channel) < block->DataLen ) {
-           perror("flush_data_block->fwrite"); return(-1); }
-        if ( pad_spaces( channel,-1,
-                         block->BinaryLen-(unsigned long)block->DataLen) ) {
-           perror("flush_data_block->pad_spaces"); return(-1); }
+        if (block->RawLen) {
+          if ( fwrite(block->Raw,1,block->RawLen,channel) < block->RawLen ) {
+            perror("flush_data_block->fwrite"); return(-1); }
+          if ( pad_spaces( channel,-1,
+                 block->BinaryLen-(unsigned long)block->RawLen) ) {
+            perror("flush_data_block->pad_spaces"); return(-1); }
+        } else {
+          if ( fwrite(block->Data,1,block->DataLen,channel) < block->DataLen ) {
+            perror("flush_data_block->fwrite"); return(-1); }
+          if ( pad_spaces( channel,-1,
+                 block->BinaryLen-(unsigned long)block->DataLen) ) {
+            perror("flush_data_block->pad_spaces"); return(-1); }
+        }
 
         if ( fflush( channel ) ) {
              perror("flush_data_block->fflush"); return(-1); }
 
         block->Flags.DataChanged    = False;
-        }
+      }
 
       /* data block is written, increment block number for next time */
       if (block->SequenceNumber == file->NextSequenceNumber) {
         file->LastBlockInFile=block;
         file->NextSequenceNumber++;
-        }
+      }
 
       /* update data block flags */
       block->Flags.DiskBlockUsed  = True;
       block->Flags.DiskBlockFixed = True;
-      }
+    }
 
   return(0);
 
@@ -4270,7 +4824,7 @@ int flush_data_block ( DBlock *block )
 /*---------------------------------------------------------------------------
 NAME
 
-  update_symbol --- Replaces the value of 'Key' in 'block' with 'Value'
+  update_symbol --- Replaces the value of ´Key´ in ´block´ with ´Value´
 
 SYNOPSIS
 
@@ -4278,9 +4832,9 @@ SYNOPSIS
                      const char * Value, SElement ** symbol )
 
 DESCRIPTION
-  The key value of the symbol 'Key' is replaced with 'Value'. The original
-  value length is not changed. If 'Value' is shorter than the original key
-  value, the remaining bytes are padded with spaces. If 'Value' is longer
+  The key value of the symbol ´Key´ is replaced with ´Value´. The original
+  value length is not changed. If ´Value´ is shorter than the original key
+  value, the remaining bytes are padded with spaces. If ´Value´ is longer
   than the original key value (symbol->ValLen), the routine stops with an
   error. 
 
@@ -4294,11 +4848,13 @@ int update_symbol( DBlock * block, const char * Key,
 { 
   *symbol = (SElement *) NULL;
 
-  if ( block == (DBlock *) NULL) return(-1);
-  if ( Value == (const char *) NULL ) return(-1);
+  if ( block == (DBlock *) NULL) goto update_symbol_error;
+  if ( Value == (const char *) NULL ) goto update_symbol_error;
 
   if (search_symbol( block, Key, symbol )) {
-    *symbol = (SElement *) NULL; return(-1); }
+    *symbol = (SElement *) NULL; 
+    goto update_symbol_error;
+  }
 
   /* replace key value with value */
   strnpad((*symbol)->Value, Value, (size_t) (*symbol)->ValLen, ' ');
@@ -4306,7 +4862,15 @@ int update_symbol( DBlock * block, const char * Key,
   block->KeyOrderNextSymbol = block->SymbolList;
   block->KeyOrderNo = 0;
 
+  /* success */
+
   return(0);
+
+update_symbol_error:
+ 
+  /* error */
+
+  return(-1);
 
 } /* update_symbol */
 
@@ -4337,19 +4901,33 @@ int rewrite_symbol ( const SElement * symbol )
   FILE     * channel = symbol->Block->Chain->File->Channel;
   long     pos; 
 
+  if (!symbol) goto rewrite_symbol_error;
+
   /* rewrite value in the file, if it was already written */
   pos = (long) symbol->ValPos;
   if ( pos > 0L ) {
     /* seek position of Value */
     if ( fseek( channel, pos, SEEK_SET) ) {
-      perror("rewrite_symbol->fseek"); return(-1); }
+      perror("rewrite_symbol->fseek"); 
+      goto rewrite_symbol_error;
+    }
 
     /* replace old value */
     if ( fputs(symbol->Value, channel) < 0 ) {
-      perror("rewrite_symbol->fputs"); return(-1); }
-    } 
+      perror("rewrite_symbol->fputs");
+      goto rewrite_symbol_error; 
+    }
+  }
+
+  /* success */
 
   return(0);
+
+rewrite_symbol_error:
+
+  /* error */
+
+  return(-1);
 
 } /* rewrite_symbol */
 
@@ -4385,26 +4963,38 @@ int update_general ( DBlock * block )
   FILE        * channel = block->Chain->File->Channel;
   unsigned long data_blocks;
 
+  if (!block) goto update_general_error;
+
   /* calculate number of data blocks without counting general block */
   data_blocks = block->Chain->File->NextSequenceNumber-FirstHeader-1;
   if (file->Flags.NoGeneralHeader) data_blocks-= 1; /* subtract general block */
 
-  /* rewrite 'DataBlocks' */
-  if (!(u_long2s(KeyVal,data_blocks))) return(-1);
+  /* rewrite ´DataBlocks´ */
+  if (!(u_long2s(KeyVal,data_blocks))) goto update_general_error; 
 
   update_symbol( general, DATA_BLOCKS_KEY, KeyVal, &symbol );
   if (!(general->Flags.InternalHeader))
-    if ( symbol ) if ( rewrite_symbol ( symbol ) ) return(-1);
+    if ( symbol ) if ( rewrite_symbol ( symbol ) ) goto update_general_error;
       
   /* seek end of file */
   if (!(file->Flags.TemporaryFile)) 
     if ( fseek( channel, 0L, SEEK_END) ) {
-      perror("update_general->fseek"); return(-1); }
+      perror("update_general->fseek"); 
+      goto update_general_error;
+    }
 
   block->KeyOrderNextSymbol = block->SymbolList;
   block->KeyOrderNo = 0;
 
+  /* success */
+
   return(0);
+
+update_general_error:
+
+  /* error */
+
+  return(-1);
 
 } /* update_general */
 
@@ -4422,8 +5012,8 @@ Writes header and binary data to the stream if they were changed
 (HeaderChanged, DataChanged). The format specific symbols are 
 written into the header. 
 
-'block' is only written physically to the file if the flag 
-'file->Flags.NoGeneralHeader' is False.
+´block´ is only written physically to the file if the flag 
+´file->Flags.NoGeneralHeader´ is False.
 
 RETURN VALUE
 success: 0
@@ -4434,26 +5024,37 @@ int put_data_block( DBlock * block )
   if ( block )
     if ( !block->Flags.BadBlock )
       if ( (block->Flags.HeaderChanged)||(block->Flags.DataChanged) ) {
-        /* Don't write general header if NoGeneralHeader is set */
+        /* Don´t write general header if NoGeneralHeader is set */
         if ( !( block->Chain->File->Flags.NoGeneralHeader ) || 
-             !( is_general_block ( block ) ) ) { 
+             !( is_general_block ( block ) ) ) {
 
           /* synchronize header, binary data and data file format */
           if (sync_data_block ( block )) {
-             block->Flags.BadBlock = True; return(-1); }
+            block->Flags.BadBlock = True; goto put_data_block_error;
+          }
 
           /* flush data block to file */
           if (flush_data_block( block )) {
-             block->Flags.BadBlock = True; return(-1); }
+            block->Flags.BadBlock = True; goto put_data_block_error;
+          }
 
           /* write block number into general block */
           if ( !block->Chain->File->Flags.NoGeneralHeader )
             if (update_general ( block )) {
-             block->Flags.BadBlock = True; return(-1); }
+              block->Flags.BadBlock = True; goto put_data_block_error;
+            }
         }
       }
 
+  /* success */
+
   return(0);
+
+put_data_block_error:
+
+  /* error */
+
+  return(-1);
 
 } /* put_data_block */
 
@@ -4469,14 +5070,14 @@ SYNOPSIS
 DESCRIPTION
 
    Checks whether the first characters in the file contain either: 
-          '\r' '\n' 'StartHeader', 
-          '\n' 'StartHeader' or
-          'StartHeader'.
-   The file pointer is positioned at the first character after 'StartHeader'. 
+          '\r' '\n' 'StartHeader´, 
+          '\n' 'StartHeader´ or
+          'StartHeader´.
+   The file pointer is positioned at the first character after ´StartHeader´. 
    If the patterns do not match or if EOF was read the return value is -1. 
    The file cannot be processed further.
    The correct pattern should be: 
-      '\n' 'StartHeader' immediately followed by '\r' '\n'.
+      '\n' 'StartHeader´ immediately followed by '\r' '\n'.
 
 RETURN VALUE
    Success, this is a header start: 0
@@ -4517,14 +5118,14 @@ DESCRIPTION
    Checks, whether the file pointer is positioned at the end of a header
    section. If EOF or '\0' is read the routine stops with an error 
    (return value is -1). The file cannot be processed further. If the 
-   first read character is not the 'EndHeader' character the return value 
+   first read character is not the ´EndHeader´ character the return value 
    is 1.  If one of the following characters do not match the end header 
    marker, this character is returned to channel. 
 
    The routine returns 1 if one of the following patterns were found: 
    
-          { 'EndHeader', '\r', '\n } or
-          { 'EndHeader', '\n' } 
+          { 'EndHeader´, '\r', '\n } or
+          { 'EndHeader´, '\n' } 
 
    At least 1 character is read from channel. If it is not equal to
    EndHeader the routine stops with the return value 1. By this way the
@@ -4532,7 +5133,7 @@ DESCRIPTION
 
 RETURN VALUE
    In case of success
-   end of header:      0, file pointer positioned after '\n'
+   end of header:      0, file pointer positioned after ´\n´
    not end of header:  1, wrong character is returned to channel
    error:              negative number
    EOF or '\0' :      -1, end of file or char NULL
@@ -4569,12 +5170,12 @@ SYNOPSIS
 DESCRIPTION
 If block_boundary is larger or equal to the the length of the header end
 marker the full header end marker "\r\n}\n" is searched relative to 
-'start' at the positions  (n=1, 2, 3, ...)
+´start´ at the positions  (n=1, 2, 3, ...)
 
   start + n * blockboundary - strlen(header_end) 
 
 If the block boundary is smaller than strlen(header_end) the file is 
-checked byte for byte with check_end starting at 'start' for the 
+checked byte for byte with check_end starting at ´start´ for the 
 EndHeader character. If no header end marker is found -1 is returned.
 
 If the header end marker was found the file pointer is  positioned
@@ -4583,7 +5184,7 @@ immediately after the marker (immediately after the '\n').
 RETURN VALUE
    success:      0
    no success    a negative number
-   EOF or '\0'   -1
+   EOF or ´\0´   -1
    fatal error:  -2
 ---------------------------------------------------------------------------*/
 int search_end( FILE * channel, 
@@ -4674,7 +5275,7 @@ int nextline( FILE * channel )
      if ( check_end( channel ) ) {
        long tmp; 
        tmp = ftell(channel);
-       fprintf(stderr,"\nERROR: position %ld, end marker '%c' not followed by eol\n",
+       fprintf(stderr,"\nERROR: position %ld, end marker ´%c´ not followed by eol\n",
           tmp, c); return(-1); 
      } else return(1); 
    }
@@ -4697,7 +5298,7 @@ DESCRIPTION
    Skip all characters until end of line, ignoring end of header marker. 
    In case of success (not eof or '\0') the file pointer is positioned 
    at first character after '\n'. This routine is only good for 
-   skipping comment lines which start with 'Comment' character.
+   skipping comment lines which start with ´Comment´ character.
 
 RETURN VALUE
    In case of success:  0
@@ -4735,33 +5336,33 @@ SYNOPSIS
                  unsigned long * pkey_pos, unsigned long *pkey_len);
 
 DESCRIPTION
-Reads 'key' starting at the first non-white character and positions
-the file pointer after 'Separator'. 
+Reads ´key´ starting at the first non-white character and positions
+the file pointer after ´Separator´. 
 
- {'white-space'} ('EndHeader' | ({'key'} ['white-space'] 
-                                     ('Separator' | '\r' | '\n') ) )
+ {´white-space´} (´EndHeader´ | ({´key´} [´white-space´] 
+                                     (´Separator´ | '\r' | '\n') ) )
 
 Starts at the first non-white character after the current position.
-'key' is returned in buffer with white spaces replaced by space. A white-space 
-character immediately before 'Separator' is not returned in 'key'. If 
-'Separator' was read the read pointer is positioned immediately after 
-'Separator'. 
+´key´ is returned in buffer with white spaces replaced by space. A white-space 
+character immediately before ´Separator´ is not returned in ´key´. If 
+´Separator´ was read the read pointer is positioned immediately after 
+´Separator´. 
 
-If the first non-white-character is the 'EndHeader' character the routine 
-stops and returns this character to 'channel'.  If the Separator character
-could not be read before {'\r', '\n'} or '\n', EOR or '\0' the routine
+If the first non-white-character is the ´EndHeader´ character the routine 
+stops and returns this character to ´channel´.  If the Separator character
+could not be read before {'\r', '\n'} or ´\n´, EOR or '\0' the routine
 stops with an error and returns -1. 
 
-'key' is returned as a string with not more than MIN(MaxKeyLen,'buflen'-1)
-characters (including white spaces). The string is terminated with '\0' 
-(buflen). buflen is the size of 'buffer'.
+´key´ is returned as a string with not more than MIN(MaxKeyLen,´buflen´-1)
+characters (including white spaces). The string is terminated with ´\0´ 
+(buflen). buflen is the size of ´buffer´.
 
 RETURN VALUES
 In case of success:  0 
 end of header:       1
-in case of an error ('Separator' not read, EOF or '\0'): a negative number
+in case of an error (´Separator´ not read, EOF or '\0'): a negative number
 The key is returned in buffer[].
-*pkey_pos is the position of the first character of 'key' in the file.
+*pkey_pos is the position of the first character of ´key´ in the file.
 *pkey_len is the length of key, not including '\0'.
 
 HISTORY
@@ -4802,7 +5403,7 @@ int get_key( char buffer[], unsigned long buflen, FILE * channel,
        if ( check_end( channel ) ) {
          long tmp;
          tmp = ftell(channel);
-         fprintf(stderr,"\nERROR: position %ld, end marker '%c' not followed by eol\n",
+         fprintf(stderr,"\nERROR: position %ld, end marker ´%c´ not followed by eol\n",
             tmp, *pb); return(-1); 
        } else return(1); 
      }
@@ -4837,7 +5438,7 @@ int get_key( char buffer[], unsigned long buflen, FILE * channel,
    }
 
    /* Space character before Separator does not belong to key */
-   if ( (*pb==Separator) && (i>0) && (is_white(buffer[i-1])) ) { i--; *pb--; }
+   if ( (*pb==Separator) && (i>0) && (is_white(buffer[i-1])) ) { i--; pb--; }
 
    /* Replace terminating character with end of string */
    *pb = '\0';
@@ -4858,28 +5459,28 @@ SYNOPSIS
                 unsigned long * pval_pos, unsigned long *pval_len);
 
 DESCRIPTION
-Reads 'value' starting at the first non-white character and positions the
-file read pointer after 'Terminator'. The routine 'get_key' should be 
+Reads ´value´ starting at the first non-white character and positions the
+file read pointer after ´Terminator´. The routine ´get_key´ should be 
 called beforehand. The first buflen-1 read characters are returned in 
-buffer, all following until 'Terminator' are skipped.
+buffer, all following until ´Terminator´ are skipped.
 
- {'white-space'} ( {'value'} ['white-space']
-                                     ('Terminator' | '\r' | '\n') )
+ {´white-space´} ( {´value´} [´white-space´]
+                                     (´Terminator´ | '\r' | '\n') )
 
 Starts reading at the first non-white character after the current position,
-which is normally after 'Separator'. 'value' is returned in buffer. A 
-white-space character immediately before 'Terminator' is not returned 
-in 'value'. If 'Terminator' was read the read pointer is positioned at the 
-first character after 'Terminator'. The 'EndHeader' and '\r' or '\n'
+which is normally after ´Separator´. ´value´ is returned in buffer. A 
+white-space character immediately before ´Terminator´ is not returned 
+in ´value´. If ´Terminator´ was read the read pointer is positioned at the 
+first character after ´Terminator´. The ´EndHeader´ and '\r' or '\n'
 characters are passed without change. The only terminating conditions are: 
-'Terminator' read (success),  '\0' read (error) or EOF reached (error).
+´Terminator´ read (success),  '\0' read (error) or EOF reached (error).
 The routine returns -1 on error and 0 on success.
 
 RETURN VALUES
 The routine returns -1 on error (EOF, '\0', Terminator not found). 
 The routine returns 0 on success.
 The value is returned in buffer[].
-*pval_pos is the position of the first character of 'value' in the file.
+*pval_pos is the position of the first character of ´value´ in the file.
 *pval_len is the length of value, not including '\0'.
 
 HISTORY
@@ -4923,7 +5524,7 @@ int get_val( char buffer[], unsigned long buflen, FILE * channel,
    }
 
    /* white space before Terminator does not belong to value */
-   if ( (*pb==Terminator) && (i>0) && (is_white(buffer[i-1])) ) { i--; *pb--; }
+   if ( (*pb==Terminator) && (i>0) && (is_white(buffer[i-1])) ) { i--; pb--; }
 
    /* Replace terminating character with end of string */
    *pb = '\0';
@@ -4944,19 +5545,19 @@ SYNOPSIS
 
 DESCRIPTION
 Starting at the current file position, all key/value pairs are read and 
-inserted into the symbol list of 'block'. According to the 'level' argument 
+inserted into the symbol list of ´block´. According to the ´level´ argument 
 only the data format keys (level=0) or all keys (level=1) are read.
 
 level = 0 Only keys starting with DATA_FORMAT_PREFIX are read. The read
           stops at the first key not starting with DATA_FORMAT_PREFIX or
-          after 'header_end'. To read all keys the file pointer has to be 
-          repositioned after the 'header_start' marker and then read with 
+          after ´header_end´. To read all keys the file pointer has to be 
+          repositioned after the ´header_start´ marker and then read with 
           level=1. In case of success, the file pointer is positioned at 
           the beginning of the first key that does not start with 
-          DATA_FORMAT_PREFIX or it is pointing to the 'EndHeader' character.
+          DATA_FORMAT_PREFIX or it is pointing to the ´EndHeader´ character.
 
 level = 1 All keys are read. The read stops at the end of the header. In
-          case of success, the file pointer is pointing to the 'EndHeader' 
+          case of success, the file pointer is pointing to the ´EndHeader´ 
           character. 
 
 RETURN VALUES
@@ -5051,7 +5652,7 @@ int new_general_block( DFile * file )
   if (insert_string( block, ChainKeyDefinition, ChainKey, &symbol)) return(-1);
 
   file->ActiveBlock = block;
-  /* don't write general block to disk, if NoGeneralHeader or TemporaryFile 
+  /* don´t write general block to disk, if NoGeneralHeader or TemporaryFile 
      are set */
   if ( (file->Flags.NoGeneralHeader)||(file->Flags.TemporaryFile) ) {
      block->Flags.InternalHeader = True; block->Flags.InternalData = True; }
@@ -5070,13 +5671,13 @@ SYNOPSIS
 
 DESCRIPTION
 Reads the general block from the file. Can only be called once after
-'new_general_block'. The general block must be at the start of the file 
+´new_general_block´. The general block must be at the start of the file 
 and MUST begin with 
 
-   'header_begin' 'DATA_FORMAT_PREFIX'.
+   ´header_begin´ ´DATA_FORMAT_PREFIX´.
 
 Otherwise it is assumed that this file has no general block. If the header 
-contains a 'BLOCK_ID_KEY' the version number V2.0 is assumed with default 
+contains a ´BLOCK_ID_KEY´ the version number V2.0 is assumed with default 
 block boundary. In the other case a block boudary of 1 byte is assumed.
 In all successful cases the file pointer is positioned at the beginning of 
 the first data block. 
@@ -5158,13 +5759,13 @@ int read_general_block( DFile * file )
   if (search_symbol( block, BLOCK_BOUNDARY_KEY, &symbol ) ) {
     ; /* set_block_boundary( block, 1U ); +++++++++++++++*/
     // fprintf(stderr,"WARNING: Key \"%s\" not found\n", BLOCK_BOUNDARY_KEY);
-    } else {
+  } else {
     if ( set_block_boundary( block, s2u_long( symbol->Value ) )) {
       sprintf(errmsg,"ERROR: Cannot change block boundary.");
       print_file_error ( stderr, file, text_pos, errmsg );
       return(-1);
-      }
     }
+  }
 
   /* BINARY_SIZE_KEY (alt: 0U) */
   if (search_symbol( block, BINARY_SIZE_KEY, &symbol ) ) {
@@ -5252,7 +5853,7 @@ DESCRIPTION
 Reads a block from the file, starting at the current position.  
 The block must start with:
 
-   'header_begin' 
+   ´header_begin´ 
 
 In versions < 2.0 the full header is scanned, for version >= 2.0
 only the format specific symbols are read and the end of the header
@@ -5265,19 +5866,15 @@ alternatively, if this was not found, V1_HEADER_ID_KEY is used to
 get the image number.
 
 RETURN VALUES
+further read not possible:  2, all temporary memory is released, 
+                               previously read file OK
+end of file:                1, all temporary memory is released.
+                               previously read file OK
 success:                    0, all temporary memory is released
-end of file:               -1, all temporary memory is released.
-                               previously read file OK
-further read not possible: -2, all temporary memory is released, 
-                               previously read file OK
-severe error:              -3, temporary memory might not be released.
+fatal error:               -1, temporary memory might not be released.
                                program should be terminated.
 
 Pointer *pblock to the located block.
-
-HISTORY
-28-Feb-1998 Peter Boesecke
-19-Mar-1998 Peter Boesecke, severe error -3, error, but file good until now: -2
 ---------------------------------------------------------------------------*/
 int locate_block( DFile * file , DBlock **pblock )
 { int   stop=0;
@@ -5288,7 +5885,7 @@ int locate_block( DFile * file , DBlock **pblock )
   unsigned long text_pos, binary_pos;
   unsigned long text_len, binary_len;
 
-  FILE   * channel = file->Channel;
+  FILE   * channel; 
   DChain * chain, *chain_tmp;
   DBlock * block, *block_tmp;
   SElement * symbol;
@@ -5296,7 +5893,7 @@ int locate_block( DFile * file , DBlock **pblock )
   long   *data_dim;
   size_t  data_len;
 
-  DFVersion  version = file->Version;
+  DFVersion  version;
   char       BlockIDBuffer[MaxValLen+1];
   char       ChainKeyBuffer[MaxValLen+1];
   char      *BlockKey, *ChainKey;
@@ -5304,97 +5901,106 @@ int locate_block( DFile * file , DBlock **pblock )
 //  const DFVersion  V1_0 = str2version("1.00");
   const DFVersion  V2_0 = str2version("2.00");
 
+  if (!file) goto locate_block_fatal;
+  if (pblock) *pblock = NULL;
+ 
+  channel = file->Channel;
+  version = file->Version;
+
   /* remember start position */
   text_pos        = (unsigned long) ftell (channel);
 
   /* CHECK HEADER START  */
   check_status = check_start( channel );
   if ( check_status ) {
-    if ( check_status == -1 ) return(-1);
-      else {
-        print_file_warning ( stderr, file, text_pos, 
-                             "Expecting EOF or header start" );
-        return(-2);
-        }
+    if ( check_status == -1 ) goto locate_block_eof;
+    else {
+      print_file_warning ( stderr, file, text_pos, 
+                           "Expecting EOF or header start" );
+      goto locate_block_trunc;
     }
+  }
 
   /* create temporary structure */
-  if ( insert_data_chain( file,  "_TEMP_", &chain_tmp ) ) return(-3);
-  if ( insert_data_block( chain_tmp, "_TEMP_", &block_tmp ) ) return(-3);
+  if ( insert_data_chain( file,  "_TEMP_", &chain_tmp ) ) goto locate_block_fatal;
+  if ( insert_data_block( chain_tmp, "_TEMP_", &block_tmp ) ) goto locate_block_fatal; 
 
   /* READ FORMAT SPECIFIC KEYWORDS (if Version<2.00 read all) */
   if ( compare_versions( version, V2_0 ) < 0 ) { /* VERSION < 2.00 */
     if ( get_symbol_list( block_tmp, 1 ) ) {
-      if ( free_data_chain( chain_tmp ) ) return(-3);
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal;
       print_file_warning ( stderr, file, text_pos, 
                            "Error reading header values V1.xx");
-      return(-2); } 
+      goto locate_block_trunc;
+    } 
   } else { /* VERSION >= 2.00 */
     if ( get_symbol_list( block_tmp, 0 ) ) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos, 
-                            "Error reading header values");
-       return(-2); }
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos, 
+                           "Error reading header values");
+      goto locate_block_trunc;
+    }
   }
 
   /* BLOCK_ID_KEY (alt: V1_IMAGE_KEY, alt2: HeaderID, alt3: SequenceNumber) */
   if ( !search_symbol( block_tmp, BLOCK_ID_KEY, &symbol ) ) {
     if ( split_block_id( BlockIDBuffer, MaxValLen+1, symbol->Value,
-       &BlockKey, &ChainKey ) ) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos, 
-                            "Error reading block id");
-       return(-2);}
-   }
-  else if ( !search_symbol( block_tmp, V1_IMAGE_KEY, &symbol ) ) {
+         &BlockKey, &ChainKey ) ) {
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos, 
+                           "Error reading block id");
+      goto locate_block_trunc;
+    }
+  } else if ( !search_symbol( block_tmp, V1_IMAGE_KEY, &symbol ) ) {
     // alt1: V1_IMAGE_KEY
     sprintf(BlockIDBuffer,"%s.%s",
       symbol->Value,default_chain_key(ChainKeyBuffer,1));
     if ( split_block_id( BlockIDBuffer, MaxValLen+1, BlockIDBuffer,
-       &BlockKey, &ChainKey ) ) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos, 
-                            "Error reading block id");
-       return(-2);} 
-   }
-  else if ( !search_symbol( block_tmp, V1_HEADER_ID_KEY, &symbol ) ) {
+         &BlockKey, &ChainKey ) ) {
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos, 
+                           "Error reading block id");
+      goto locate_block_trunc;
+    } 
+  } else if ( !search_symbol( block_tmp, V1_HEADER_ID_KEY, &symbol ) ) {
    // alt2: HeaderID 
     sprintf(BlockIDBuffer,"%ld.%s",
       header_id_number(symbol->Value),default_chain_key(ChainKeyBuffer,1));
     if ( split_block_id( BlockIDBuffer, MaxValLen+1, BlockIDBuffer,
-       &BlockKey, &ChainKey ) ) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos, 
-                            "Error reading V1.xx header id");
-       return(-2); }
-   }
-  else {
+         &BlockKey, &ChainKey ) ) {
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos, 
+                           "Error reading V1.xx header id");
+      goto locate_block_trunc;
+    }
+  } else {
    // alt3: SequenceNumber 
     fprintf(stderr,"WARNING: Missing block ID, using sequence number\n");
     sprintf(BlockIDBuffer,"%ld.%s", 
       file->NextSequenceNumber-1,
       default_chain_key(ChainKeyBuffer,1));
     if ( split_block_id( BlockIDBuffer, MaxValLen+1, BlockIDBuffer,
-       &BlockKey, &ChainKey ) ) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos,
-                            "Failed using sequence number");
-       return(-2); }
-   }
+         &BlockKey, &ChainKey ) ) {
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos,
+                           "Failed using sequence number");
+      goto locate_block_trunc;
+    }
+  }
 
   /* BINARY_SIZE_KEY (alt: V1_SIZE_KEY) */
   if ( !search_symbol( block_tmp, BINARY_SIZE_KEY, &symbol ) ) 
     binary_len = s2u_long( symbol->Value ); 
   else if ( !search_symbol( block_tmp, V1_SIZE_KEY, &symbol ) ) 
     binary_len = s2u_long( symbol->Value ); 
-  else if ( (data_dim = get_data_dim ( block_tmp )) ) { 
-     /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
-     data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
-     if (EDFIO_debug) {
-       printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%zu\n",\
-         data_dim[0],data_dim[1],data_dim[2],data_len);
-     }
-     binary_len = data_len;
+  else if ( (data_dim = get_data_dim ( block_tmp )) ) {
+    /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
+    data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
+    if (EDFIO_debug) {
+      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%lu\n",\
+        data_dim[0],data_dim[1],data_dim[2],data_len);
+    }
+    binary_len = data_len;
   } else binary_len = 0U; 
 
   /* BINARY_FILE_NAME_KEY (alt: null pointer */
@@ -5404,39 +6010,44 @@ int locate_block( DFile * file , DBlock **pblock )
     sprintf( fullname, "%s%s", path, symbol->Value );
     block_tmp->BinaryFileName = newstr( fullname );
     if (!block_tmp->BinaryFileName) {
-       if ( free_data_chain( chain_tmp ) ) return(-3);
-       print_file_warning ( stderr, file, text_pos, 
-                            "Error reading binary file name");
-       return(-2);
-     }
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
+      print_file_warning ( stderr, file, text_pos, 
+                           "Error reading binary file name");
+      goto locate_block_trunc;
+    }
     /* BINARY_FILE_POSITION_KEY (alt: ERROR) */
     if ( !search_symbol( block_tmp, BINARY_FILE_POSITION_KEY, &symbol ) ) {
-      block_tmp->BinaryFilePos = s2u_long( symbol->Value ); }
-    else { fprintf(stderr,"ERROR: The key \"%s\" requires the key \"%s\"\n",
+      block_tmp->BinaryFilePos = s2u_long( symbol->Value ); 
+    } else {
+      fprintf(stderr,"ERROR: The key \"%s\" requires the key \"%s\"\n",
       BINARY_FILE_NAME_KEY,BINARY_FILE_POSITION_KEY); 
-      if ( free_data_chain( chain_tmp ) ) return(-3);
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
       print_file_warning ( stderr, file, text_pos, 
                            "Missing binary file position");
-      return(-2); }
+      goto locate_block_trunc;
+    }
     if ( !search_symbol( block_tmp, BINARY_FILE_SIZE_KEY, &symbol ) ) {
-      block_tmp->BinaryFileLen = s2u_long( symbol->Value ); }
-    else block_tmp->BinaryFileLen = 0U;
+      block_tmp->BinaryFileLen = s2u_long( symbol->Value ); 
+    } else block_tmp->BinaryFileLen = 0U;
     
-    } /* BINARY_FILE_NAME_KEY */
+  } /* BINARY_FILE_NAME_KEY */
 
   /* SEARCH HEADER END */
-  if (stop) { if ( check_end ( channel ) < 0 ) return(-1); }
-    else { /* search end of this header section */
+  if (stop) { 
+    if ( check_end ( channel ) < 0 ) goto locate_block_eof;
+  } else {
+    /* search end of this header section */
     check_status = search_end( channel, text_pos, file->BlockBoundary );
     /* in case of EOF or '\0' search again */
     if ( check_status == -1 ) /* search again in 1 byte steps */
       check_status = search_end( channel, text_pos, 1 ); 
     if ( check_status ) {
-      if ( free_data_chain( chain_tmp ) ) return(-3);
+      if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
       print_file_warning ( stderr, file, text_pos, 
                            "Header end marker not found");
-      return(-2); } 
-    } /* if (stop) */
+      goto locate_block_trunc;
+    }
+  } /* if (stop) */
 
   binary_pos = (unsigned long) ftell (channel);
 
@@ -5451,15 +6062,15 @@ int locate_block( DFile * file , DBlock **pblock )
              binary_pos);
       fprintf(stderr,"         This is not a multiple of the block boundary %lu\n",
              block_boundary( block_tmp ) );
-      }
+    }
 
     fprintf(stderr,"\nINFO: Reading the file %s with block boundary 1.\n\n",
            block_tmp->Chain->File->Name);
     set_block_boundary( block_tmp, 1U );
-    }
+  }
 
-  if ( insert_data_chain( file, ChainKey, &chain ) ) return(-3);
-  if ( insert_data_block( chain, BlockKey, &block ) ) return(-3);
+  if ( insert_data_chain( file, ChainKey, &chain ) ) goto locate_block_fatal;
+  if ( insert_data_block( chain, BlockKey, &block ) ) goto locate_block_fatal;
 
   /* data block positions */
   block->TextPos         = text_pos;
@@ -5483,9 +6094,9 @@ int locate_block( DFile * file , DBlock **pblock )
   block->Flags.BadBlock          = False;
 
   /* remove temporary data_chain */
-  if ( free_data_chain( chain_tmp ) ) return(-3);
+  if ( free_data_chain( chain_tmp ) ) goto locate_block_fatal; 
 
-  *pblock = block;
+  if (pblock) *pblock = block;
 
   file->LastBlockInFile=block;
 
@@ -5493,10 +6104,30 @@ int locate_block( DFile * file , DBlock **pblock )
   if ( fseek( channel, binary_pos+binary_len, SEEK_SET) ) {
     print_file_warning ( stderr, file, binary_pos+binary_len, 
                        "Cannot find start of next block");
-    return(-2);
-   }
+    goto locate_block_trunc;
+  }
+
+  /* success */
 
   return(0);
+
+locate_block_eof:
+
+  /* end of file reached */
+
+  return(1);
+
+locate_block_trunc:
+
+  /* further read not possible */
+
+  return(2);
+
+locate_block_fatal:
+
+  /* fatal error */
+
+  return(-1);
 
 } /* locate_block */
 
@@ -5527,15 +6158,21 @@ int get_data_header( DBlock * block )
 
       /* search block position */
       if ( fseek( channel, cur_pos, SEEK_SET) ) {
-         perror("get_data_header->fseek"); return(-1); }
+        perror("get_data_header->fseek"); 
+        goto get_data_header_error;
+      }
 
       /* check StartHeader */
       if ( check_start( channel ) ) {
-         perror("get_data_header->check_start"); return(-1); }
+        perror("get_data_header->check_start");
+        goto get_data_header_error;
+      }
 
       /* read symbols */
       if ( get_symbol_list( block, 1 ) ) {
-         perror("get_data_header->get_symbol_list"); return(-1); }
+        perror("get_data_header->get_symbol_list");
+        goto get_data_header_error;
+      }
 
       /* update data block flags */
       block->Flags.DiskBlockUsed  = True;
@@ -5543,970 +6180,18 @@ int get_data_header( DBlock * block )
       block->Flags.HeaderExternal = False;
       block->Flags.HeaderChanged  = False;
   }
+
+  /* success */
  
   return(0);
+
+get_data_header_error:
+
+  return(-1);
 
 } /* get_data_header */
 
 /*===block_access END===================================================---*/
-
-/*===raster_conversion BEGIN=================================================*/
-
-/* public interface of raster_conversion -------------------------------------
-
-  int edf_raster_normalization ( void * dest, const void * src,
-                                 const long data_dim[],
-                                 long raster_configuration, size_t item )
-
-  long edf_raster_multiplication ( long a, long x );
-
-  long edf_raster_inversion ( long x );
-
-  long raster_number  ( long n );
-
-  long edf_order2raster   ( const long order[] );
-
-  long * raster2order ( long n , long raster_configuration );
-
-  long * order_multiplication ( const long a_order[] , const long x_order[] );
-
-  long * order_inversion ( const long x_order[] );
-
-  void rc_debug       ( int debug );
-  
-  ----------------------------- end of public interface of raster_conversion */
-
-# define MAX_RASTER_CONFIG_DIMENSION 9
-
-static int RN_debug = 0;
-/*--------------------------------------------------------------------------
-NAME
-
-  rc_debug --- set / reset module raster_conversion into debug mode
-
-SYNOPSIS
-
-  void rc_debug ( int debug );
-
-DESCRPTION
-
-  Writes 'debug' into RN_debug.
-
---------------------------------------------------------------------------*/
-void rc_debug ( int debug )
-{ RN_debug = debug;
-} /* rc_debug */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  raster_number --- number of raster configurations of an n-dimensional array
- 
-SYNOPSIS
-
-  long raster_number ( long n );
-
-DESCRIPTION
-  Calculates the number A(n) of raster configurations of an n-dimensional 
-  array:
-
-      A(n) = 2^n * (n!)
-
-  For n>9 the number of configuration are out of the value range of long int.
-  In this case the returned value is 0.
-
-ARGUMENTS
-  long n  dimension  (number of coordinates)
-
-RETURN VALUE
-  long  A(n) = 2^n * (n!)  (for 0<n<=9, otherwise 0)
-
-HISTORY
-  11-Mar-1998 Peter Boesecke
---------------------------------------------------------------------------*/
-long raster_number ( long n )
-{ const long max_n = MAX_RASTER_CONFIG_DIMENSION;
-  register long i;
-  long A;
-
-  if ((n<0) || (n>max_n)) return ( 0 );
-  A=1; 
-  for (i=1;i<=n;i++) A*=2*i; 
-  return( A );
-
-} /* raster_number */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  value2index --- return index of value in order
-
-SYNOPSIS
-
-  long value2index( const long order[], long n, long value );
-
-DESCRIPTION
-  Starting with 'index=1' at 'order[1]' ('order[0]' contains the length of the 
-  array) it increments 'index' at each array element which absolute value
-  is smaller than n until an array element with abs('order[i]') = 'value' 
-  is found. The 'index' of this array element is returned, positive if 
-  'value' is positive, negative otherwise.
-
-ARGUMENTS
-  const long order[0] == N dimension (number of coordinates)
-  long       order[n+1]    raster configuration array
-  long       value         value to be found 
-
-RETURN VALUE
-  long       index          
-
-HISTORY
-  12-Mar-1998 Peter Boesecke
---------------------------------------------------------------------------*/
-long value2index( const long order[], long n, long value )
-{ long i;
-  long N, index;
-
-  value = labs(value);
-  if ( (!order) || (value<1) || (n<value) ) return(0);
-
-  N = order[0];
-  index=1;
-  for (i=1;i<=N;i++) {
-    if (labs(order[i])<=n) {
-      if (order[i]==value) break; 
-      else if (order[i]==-value) { index=-index; break; }
-      index++;
-      }
-   } /* for */
-
-  if (index>n) index=0;
-
-  return(index);
-
-} /* value2index */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  value2order --- insert value at n-th free index
-
-SYNOPSIS
-
-  void value2order( long order[], long n, long index, long value );
-
-DESCRIPTION
-  Starting with order[1] (order[0] contains the length of the array) it skips 
-  all non-zero array elements and decrements 'index' at each zero array 
-  element. It replaces the 'index'ed zero array element with 'value'. 
-
-ARGUMENTS
-  long      order[n+1]   raster configuration array
-  long      n            dimension (number of coordinates)
-  long      index        index of FREE cell at which the value will be written.
-  long      value        value to be written 
-
-RETURN VALUE
-  void
-
-HISTORY
-  11-Mar-1998 Peter Boesecke
---------------------------------------------------------------------------*/
-void value2order( long order[], long N, long index, long value )
-{ long i;
-
-  if (index==0) return;
-  for (i=1;i<=N;i++) {
-    if (order[i]==0) 
-      if (--index==0) { order[i] = value; break; }
-   } 
-
-  return;
-
-} /* value2order */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  raster2order --- returns the coordinate order array of a raster configuration
-
-SYNOPSIS
-
-  long * raster2order ( long n , long raster_configuration );
-
-DESCRIPTION
-  The n-dimensional configuration order array corresponding to 
-  'raster_configuration' is returned. For n>9 not all configurations 
-  can be calculated due to the limited value range of long int. 
-
-ARGUMENTS
-  long      n                            dimension (number of coordinates)
-  long      raster_configuration         raster configuration number
-
-  An array with n+1 elements is allocated and must be free'ed by the
-  calling program.
-
-RETURN VALUE
-  long * raster_coordinate      (allocated array with n+1 elements
-         raster_coordinate[0]   dimension of array
-         raster_coordinate[1]   coordinate corresponding to fastest index (1)
-            ...
-         raster_coordinate[n]   coordinate corresponding to slowest index (n) 
-   In case of an error NULL is returned.
-
-HISTORY
-  14-Mar-1998 Peter Boesecke
---------------------------------------------------------------------------*/
-long * raster2order ( long n , long raster_configuration )
-{ const long max_n = MAX_RASTER_CONFIG_DIMENSION;
-  long AN, ANm1x2, ANm1;
-  long D = raster_configuration;
-  long N = n;
-
-  long * order = (long *) NULL;
-
-  long index;
-  long value;
-
-  long m;
-
-  /* allocate array and clear it */
-  if ( !(order = (long*) calloc( (N+2), sizeof(long) )) ) return(NULL);
-  order[0] = N;
-
-  /* special case for n>max_n */
-  if ( (D <= raster_number( max_n )) && ( n>max_n ) ) {
-    for (index=max_n+1;index<=n;index++) order[index]=index; n=max_n; }
-
-  AN     = raster_number ( n );
-
-  /* check parameters */
-  if ( !((0l<D) && (D<=AN)) ) {
-     free ( order ); return( NULL ); /* undefined */ }
-
-  for (n=n;n>0;--n) {
-    ANm1   = AN/(n+n); if (AN==0) AN=1;
-    ANm1x2 = ANm1+ANm1;
-
-    m = (D-1) / ANm1x2;   /* m = 0, ... ,n-1 */
-    D = D - m * ANm1x2;
-    index = n - m;        /* index = 1, ..., n */
-    if (D<=ANm1) value = n; else { value = -n;  D=D-ANm1; }
-    value2order( order, N , index, value ); 
-
-    AN     = ANm1;
-
-    } /* for */
-
-  return( order );
-
-} /* raster2order */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  edf_order2raster --- raster configuration_number of a configuration order array
-
-SYNOPSIS
-
-  long edf_order2raster ( long order[] );
-
-DESCRIPTION
-  The raster configuration number of the order[0]-dimensional configuration 
-  array 'order' is returned. For order[0]>9 not all configuration numbers
-  can be calculated due to the limited value range of long int. In this case
-  a zero is returned.
-
-ARGUMENTS
-  long      order[0]  number of dimensions (long order[order[0]+1]) 
-  long      order[n]  configuration order array 
- 
-The element 'order[0]' must contain the dimension. At least 'order[0]+1' 
-elements must be allocated for 'order[]'. 
-
-RETURN VALUE
-  success   long    raster_configuration
-  error     long    0 
-
-HISTORY
-  12-Mar-1998 Peter Boesecke
---------------------------------------------------------------------------*/
-long edf_order2raster ( const long order[] )
-{ long i, n;
-  long ANm1, D;
-  long index;
-
-  if (!order) return(0);
-
-  n = order[0];
-
-  if (MAX_RASTER_CONFIG_DIMENSION < n) {
-    for (i=MAX_RASTER_CONFIG_DIMENSION+1; i<=n; i++)
-      if (order[i]!=i) return(0); 
-    n = MAX_RASTER_CONFIG_DIMENSION;
-    }
-
-  D = 1;
-
-  ANm1 = raster_number ( 0 );
-  for (i=1;i<=n;i++) {
-    index = value2index( order, i, i );
-    if ( index == 0 ) return(0);
-    if ( index > 0 ) D += (i-index)*2*ANm1; 
-    else D += (i+index) * 2*ANm1 + ANm1;
-
-    ANm1 = ANm1 * 2 * i;   /* raster_number ( i ); */
-    }
-
-  return( D );
- 
-} /* edf_order2raster */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  order2wrap --- calculates the wrap array from order and data_dim 
-
-SYNOPSIS
-
-  int order2wrap ( long wrap[], const long dim[], const long order[] );
-
-DESCRIPTION
-  Calculates the array 'wrap' that contains for each index the displacement
-  in number of array elements when it is incremented by 1. For the fastest 
-  index wrap[fast] is 1.
-
-ARGUMENTS
-  long wrap[N+1]     output array element, must be sufficiently large
-  long dim[N+1]      data array dimensions, dim[0] is N
-  long order[N+1]    input order of dimensions
-  All three array us only index 1 to index N. The values for the n_th 
-  dimension is found in array[n], array[0] is used for the number of 
-  dimensions, array[n+1] is used for the total length of the data array.
-
-RETURN VALUE
-int status
-success : 0
-error   : -1
-
-AUTHOR
-  15-Mar-1998 Peter Boesecke
-
---------------------------------------------------------------------------*/
-int order2wrap ( long wrap[], const long dim[], const long order[] )
-{ long N = dim[0];
-  long i,j; 
-
-  wrap[0] = dim[0]; wrap[N+1] = dim[N+1];
-
-  for (i=1;i<=N;i++) {
-    wrap[i]=1l;
-    for (j=1;j<labs(order[i]);j++) wrap[i] *= dim[j];
-    }
-
-  return( 0 );
-
-} /* order2wrap */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  reorder_raster --- reorder recursively the array src and write to dest 
-
-SYNOPSIS
-
-  void reorder_raster ( long n, void * dest, const void ** pps, size_t item, 
-                        long I[], const long IS[], const long ILoop[], 
-                        const long IInc[], const long IWrap[] );
-
-DESCRIPTION
-  Recursive function for reordering of a n-dimensional array. 
-  The source array is read element by element. The elements of the 
-  destination array are written according to the numbers in IS, ILoop, 
-  IInc and IWrap.
-
-ARGUMENTS
-      long n           dimension of the data arrays
-      void * dest      destination array (must be allocated)
-const void ** pps      pointer to source array of dimension n 
-                       (must contain useful data)
-      t_size item      length of a single array element
-      long I[n+2]      array that contains the current indices 
-                       (must be allocated, will be used by this routine)
-const long IS[n+2]     array that contains the start value of each index 
-const long ILoop[n+2]  array that contains the number of loops of each index
-const long IInc[n+2]   array that contains the increment of each index
-const long IWrap[n+2]  array that contains the distance between elements in
-                       the destination array. For no reordering (type 1
-                       to type 1) IWrap[1] would be equal to 1, IWrap[2]
-                       would be equal to Dim[1], IWrap[3] would be equal
-                       to Dim[1]*Dim[2] etc. IWrap[0] must contain the
-                       number of dimensions.
-
-AUTHOR
-  15-Mar-1998 Peter Boesecke
-  17-May-1998 PB calculation of pd corrected: I[nn]  -> (I[nn]-1l)
-  26-Nov-1999 PB cc on dec alpha: statements of the form
-                 (void *) pp + (size_t) item; are not allowed, therefore
-                 changed to (char *) pp1 + (size_t) item; pp = (void *) pp1;
-  19-Dec-1999 PB pps1 correctly defined as char **pps1
------------------------------------------------------------------------------*/
-void reorder_raster ( long n, void * dest, const void ** pps, size_t item,
-                      long I[], const long IS[], const long ILoop[],
-                      const long IInc[], const long IWrap[] );
-void reorder_raster ( long n, void * dest, const void ** pps, size_t item, 
-                      long I[], const long IS[], const long ILoop[], 
-                      const long IInc[], const long IWrap[] )
-{ long ii, nn;
-  long N = IWrap[0];
-  char *pd, **pps1;
-
-  if (n>0) {
-    for (ii=0,I[n]=IS[n]; ii<ILoop[n]; ii++,I[n]+=IInc[n])
-      reorder_raster ( n-1, dest, pps, item, I, IS, ILoop, IInc, IWrap ); }
-  else { 
-    pd = (char *) dest;
-    for (nn=1;nn<=N;nn++) pd += item * (I[nn]-1l) * IWrap[nn];
-
-    memcpy ( (void *) pd, *pps, item );
-    pps1 = (char **) pps;
-    *pps1 += item; }
-
-} /* reorder_raster */
-
-/*+++--------------------------------------------------------------------------
-NAME
-
-  edf_raster_normalization --- conversion to raster configuration 1
-
-SYNOPSIS
-
-  int edf_raster_normalization ( void * dest, const void * src,
-                                 const long data_dim[],
-                                 long raster_configuration, size_t item )
-
-DESCRIPTION
-  Conversion of the multi-dimensional array src with raster configuration 
-  number 'raster_configuration' to the n-dimensional array dest with 
-  raster configuration number 1. The length n of data_dim is stored in 
-  data_dim[0]. The total length of the array is data_dim[n+1]. data_dim[i] 
-  is the length of coordinate i. Input and output array must be different. 
-  Sufficient memory must have been allocated for both arrays. 
-  The total number of elements in the array is specified in data_dim[n+1].
-
-  The raster configuration specifies only the way how data is stored. It does
-  not influence the number of dimensions. Therefore, the dimension array is
-  not changed even if, apparently, horizontal and vertical axes were changed.
-
-  To convert array src from any raster configuration 'a' to any other raster 
-  configuration 'b' the 'raster_configuration' argument is given by 
-
-  'raster_configuration' = 
-      edf_raster_multiplication( edf_raster_inversion('b'), 'a' );
-
-ARGUMENTS
-  void * dest                  output array (must be allocated), must
-                               be different from source array
-  const void * src             source array
-  const long data_dim[]        source dimensions
-  long raster_configuaration   raster configuration number of source array
-  size_t item                  size of an array element
-  
-GENERAL
-  An n-dimensional array has 'N = 2^n * (n!)' different ways of storing its
-  data in a regular raster. Each of the n axes can be stored in two different
-  ways: up and down. This results in 2^n different possibilities of data
-  storage. The n axes can be stored in any of the (n!) possible permutations.
-  This results in N = 2^n * (n!) different ways of storing the data. A
-  two dimensional array (n=2) can be stored in 2^2 * 2! = 8 different ways, a
-  three dimensional array (n=3) can be stored in 2^3 * 3! = 8*6 = 48 different
-  ways, and so on.
-
-  The data elements are stored in an array with dim_1 * dim_2 * ... * dim_n
-  cells with identical size. The number of dimension is n. The first
-  index (i_1) is the fastest. A specific raster configuration is given by 
-  the n-tupel (k_2, -k_3, -k_1), which means that the fastest index 
-  i_1 corresponds to the coordinate k_2, the medium fast index i_2 
-  corresponds to the invers k_3 direction and the slowest coordinate i_3 
-  corresponds to the invers k_1 direction. 
-
-RASTER CONFIGURATION 
-  Arrays can be stored in different ways depending on the relationship
-  between offsets and fast and slow array indices. The configuration of
-  the indices is specified by a raster configuration number D.
-
-  A unique raster configuration number for multi dimensional arrays is 
-  used that is defined on the basis of the following demands. The raster
-  configuration number is called D in the text:
-
-  - Array indices are numbered from 1 to N. 
-
-  - A one dimensional array can be stored from low array indices to high 
-    array indices (D=1) or from high array indices to low array indices
-    (D=2).
- 
-  - The array element Array(k_1, k_2, k_3, ... , k_N) is accessed with an
-    offset I from the first element measured in element size
-
-    I = (i_1-1) + (i_2-1) * Dim[1] + (i_3-1) * Dim[2] * Dim[1] + ...
-
-      = Sum[ J=1,J<=N,J++ ]( i_J * Product[i=1,i<=J,i++](Dim[i]) )
-
-      (Dim[0]==1)
-   
-    with i_1, i_2, i_3, ...  replaced by k_1, k_2, k_3, ... in a 
-    special order that is specified by the raster configuration number D.
-
-    The raster configuration is described by grouping the array indices 
-    k_nn and the offset indices i_nn, e.g. for a 2-dimensional array where 
-    the fast and slow indices are interchanged. 
-
-    Example for N=2 and D=5: 
-
-    i_n   1, 2 
-    k_nn  2, 1 
-
-  - The raster configuration number D is 1, when the array indices are ordered
-    from "fast" (i_1) to "slow" (i_N), e.g. when i_1 = k_1, i_2 = k_2, etc. 
-    
-  - The raster configuration D of the n-dimensional sub-array 
-    Array[Dim_1, Dim_2, ... Dim_n] is the same as for the (n+1) 
-    dimensional array Array[Dim_1, Dim_2, ... Dim_n, Dim_(n+1)] if 
-    Dim_(n+1) == 1.
-    
-       D ( Array[Dim_1, Dim_2, ... Dim_n, 1 ] ) 
-        == D ( Array[Dim_1, Dim_2, ... Dim_n] )
-
-  These demands give a unique description of multi-dimensional raster 
-  conformations with a configuration number D.
-
-  The raster configuration is defined as follows:
-
-  For the definition it is necessary to distinguish strictly between the 
-  array indices k_1, k_2, etc. and the offset indices i_1, i_2, etc.
-
-  A offset index with a small number, e.g. i_1 runs faster than an index 
-  with a higher number, e.g. i_3. The definition of 
-  the raster orientation is based on a standard orthogonal coordinate system 
-  with the first coordinate (x_1) horizontal and the second coordinate (x_2) 
-  vertical with respect to the observer. The position of the observer must be 
-  defined elsewhere. In standard scattering geometry the observer is located at
-  the sample position and is looking against the detector. The origin of the 
-  coordinate system is at the lower left corner of the detector, independently 
-  of any detector pixel readout coordinate. The direction of the third 
-  coordinate x_3 is found with the vector product x_1 X x_2 = x_3. It is 
-  pointing against the observer.  This might be usedful for representing three 
-  dimensional objects. It should be possible to find higher dimensional 
-  coordinates accordingly. 
-
-  An n-dimensional array has 'N = 2^n * (n!)' different ways of storing its 
-  data in a regular raster. Each of the n axes can be stored in two different 
-  ways: up and down. This results in 2^n different possibilities of data
-  storage. The n axes can be stored in any of the (n!) possible permutations.
-  This results in N = 2^n * (n!) different ways of storing the data. A
-  two dimensional array (n=2) can be stored in 2^2 * 2! = 8 different ways, a
-  three dimensional array (n=3) can be stored in 2^3 * 3! = 8*6 = 48 different
-  ways, and so on.
-
-  The data elements are stored in an array with dim_1 * dim_2 * ... * dim_n 
-  cells with identical size. The number of data elements is n. The first 
-  index is the fastest. A specific raster configuration is given by the n-tupel
-  (x_2, -x_3, -x_1), which means that the fastest index i_1 corresponds to 
-  the coordinate x_2, the medium fast index i_2 corresponds to the invers x_3 
-  direction and the slowest coordinate i_3 corresponds to the invers x_1 
-  direction. If the array has n_1, n_2 and n_3 elements in each direction the 
-  data origin X0 = (0,0,0) in the real world corresponds to the array element
-  IX0 = (0,n_2,n_3). 
-
-CONFIGURATION NUMBERS
-  In the standard configuration (D=1) all array indices k_nn are identical
-  to the offset indices i_nn. 
-
-  In the 1-dimensional case the standard configuration (numbered 1) is the 
-  configuration in which the array index increases with the coordinate. The 
-  second configuration is where the index is antiparallel to the coordinate 
-  (numbered 2).
-
-  n=1 has two configurations (A(2) = 2): 
-
-  n  raster_configuration D         Configuration
-  1    1                              1
-  1    2                             -1
-
-  If the number of configurations for n coordinates is A(n) = 2^n * (n!),
-  the number of configurations for n+1 coordinates is given by
-
-     2 * (n+1) * A(n) = 2^(n+1) * (n+1)!
-  
-  C(n) is the group of all possible configurations for n coordinates. If it is
-  given, the configurations for n+1 coordinates can be built by inserting the
-  configurations of the new coordinate (1 and -1) at each of the n+1 possible 
-  positions (n before each coordinate and 1 after the last coordinate). To
-  have a well defined ordering the new coordinate is first added non-inverted 
-  after the end of all A(n) configurations and then inverted (A(n)*2). This is 
-  repeated subsequently from the end to the start before all n remaining 
-  positions.   
-
-    (x1, x2, x3, ... , xn) -> (x1, x2, x3, ... , xn,  xn+1) 
-                              (x1, x2, x3, ... , xn, -xn+1)          +2 
-
-                              (x1, x2, x3, ... ,  xn+1, xn)
-                              (x1, x2, x3, ... , -xn+1, xn)          +2
-
-                                          ...
-
-                              ( xn+1, x1, x2, x3, ... , xn) 
-                              (-xn+1, x1, x2, x3, ... ,-xn)          +2
-
-                                                                   (n+1)*2
-                                       A(n) = 2^n * (n!)
-
-
-  The total number of configuration for n+1 coordinates is then
-
-           2 * (n+1) * A(n) = 2^(n+1) * (n+1)! ,
-
-  which is equal to A(n+1).   
-
-EXAMPLE
-
-  n  raster_configuration D        Configuration
-
-  1    1                              1
-  1    2                             -1
-
-  2    1                              1, 2
-  2    2                             -1, 2
-  2    3                              1,-2
-  2    4                             -1,-2
-  2    5                              2, 1
-  2    6                              2,-1
-  2    7                             -2, 1
-  2    8                             -2,-1
-
-  3    1                              1, 2, 3
-  3    2                             -1, 2, 3
-  3    3                              1,-2, 3
-  3    4                             -1,-2, 3
-  3    5                              2, 1, 3
-  3    6                              2,-1, 3
-  3    7                             -2, 1, 3
-  3    8                             -2,-1, 3
-  3    9                              1, 2,-3
-  3   10                             -1, 2,-3
-  3   11                              1,-2,-3
-  3   12                             -1,-2,-3
-  3   13                              2, 1,-3
-  3   14                              2,-1,-3
-  3   15                             -2, 1,-3
-  3   16                             -2,-1,-3
-  3   17                              1, 3, 2
-              ...
-  3   32                             -2,-3,-1
-  3   33                              3, 1, 2
-              ...
-  3   48                             -3,-2,-1
-
-  The raster configuration 13 for n=3 (2, 1,-3) means that the first offset 
-  index of the array (which is the fastest) corresponds to the coordinate 
-  k_2, the second index corresponds to the coordinate k_1 and the third index 
-  to the inverted coordinate k_3.
-
-  The largest D (D = A(n)) is always the conformation where the direction
-  and order of all array indices are inverted. 
-
-RETURN VALUE
-int status
-success : 0
-error   : -1
-
-AUTHOR
-  13-Mar-1998 Peter Boesecke
-  17-May-1998 PB calculation of IS for positive order corrected:
-                 IS[n_dim] = 0 changed to IS[n_dim] = 1.
------------------------------------------------------------------------------*/
-int edf_raster_normalization ( void * dest, const void * src, 
-                               const long data_dim[], 
-                               long raster_configuration, size_t item )
-{ static const char * RN_Error  = "ERROR: edf_raster_normalization:";
-  static const char * RN_NoDim  = "no or zero dimension";
-  static const char * RN_NoMem  = "cannot allocate memory";
-//  static const char * RN_NoSup  = "n>4 not supported";
-  static const char * RN_NoRas  = "bad raster configuration";
-  static const char * RN_Wrap   = "bad wrapping";
-
-  long * order;
-  long * IS, * IInc, * ILoop, * IWrap;
-  long * I;
-
-  const void * ps;
-  long   n, n_dim;
-
-  if (RN_debug) printf("\n edf_raster_normalization BEGIN\n");
-
-  /* check that input and output arrays are different */
-  if (dest==src) {
-    printf("SEVERE %s Source and destination arrays must be different!",
-            RN_Error); exit(-1); }
-
-  /* get dimension */
-  if (data_dim) n = data_dim[0]; else n = 0;
-  if (n<=0) { fprintf(stderr,"%s %s\n",RN_Error, RN_NoDim); return(-1); }
-
-  /* get index order */
-  if (!(order = raster2order ( n , raster_configuration )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoRas); return(-1);}
-
-  /* calculate loop parameters */
-  if (!(IS = (long *) malloc ( sizeof(long) * (n+2) )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoMem); return(-1);}
-  if (!(IInc = (long *) malloc ( sizeof(long) * (n+2) )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoMem); return(-1);}
-  if (!(ILoop = (long *) malloc ( sizeof(long) * (n+2) )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoMem); return(-1);}
-  if (!(IWrap = (long *) malloc ( sizeof(long) * (n+2) )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoMem); return(-1);}
-  if (!(I = (long *) malloc ( sizeof(long) * (n+2) )) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_NoMem); return(-1);}
-
-  /* calculate start, increment, loop count */
-  for (n_dim=1;n_dim<=n;n_dim++)
-    if (order[n_dim]<0) {
-      IS[n_dim] = data_dim[-order[n_dim]]; 
-      IInc[n_dim] = -1; ILoop[n_dim] = data_dim[-order[n_dim]]; }
-    else { IS[n_dim] = 1;
-      IInc[n_dim] = 1; ILoop[n_dim] = data_dim[order[n_dim]]; }
-
-  if ( order2wrap ( IWrap, data_dim, order ) ) {
-    fprintf(stderr,"%s %s\n",RN_Error, RN_Wrap); return(-1);}
-
-  if (RN_debug)
-    for (n_dim=1;n_dim<=n;n_dim++) {
-      printf(" raster_configuration = %ld\n", raster_configuration);
-      printf("         data_dim[%ld] = %ld\n", n_dim, data_dim[n_dim]);
-      printf("            order[%ld] = %ld\n", n_dim, order[n_dim]);
-      printf("            IWrap[%ld] = %ld\n", n_dim, IWrap[n_dim]);
-      printf("               IS[%ld] = %ld\n", n_dim, IS[n_dim]);
-      printf("             IInc[%ld] = %ld\n", n_dim, IInc[n_dim]);
-      printf("            ILoop[%ld] = %ld\n", n_dim, ILoop[n_dim]);
-    } 
-
-  ps = src;
-  reorder_raster ( n, dest, &ps, item, I, IS, ILoop, IInc, IWrap );
-
-  free ( I ); free ( IWrap ); free ( ILoop ); free ( IInc ); free ( IS );
-
-  free ( order ); 
-
-  if (RN_debug) printf(" edf_raster_normalization END\n");
-
-  return(0);
-
-} /* edf_raster_normalization */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  order_multiplication --- raster transformation of a configuration order array
-
-SYNOPSIS
-
-  long * order_multiplication ( const long a_order[] , const long x_order[] );
-
-DESCRIPTION
-
-ARGUMENTS
-  const long a_order[n]  raster transformation array
-  const long x_order[n]  raster configuration array
-
-The elements 'a_order[0]' and 'x_order[0]' must contain the dimensions. At
-least 'a_order[0]+1' and 'x_order[0]+1 elements must be allocated for
-each array. 
-
-RETURN VALUE
-  success   long    * x_order
-  error     long    NULL
-
-If the return value is not equal to NULL a pointer to allocated memory is 
-returned that must be free'd by the calling routine.
-
-HISTORY
-  2000-07-29 Peter Boesecke
---------------------------------------------------------------------------*/
-long * order_multiplication ( const long a_order[] , const long x_order[] )
-{ register int i;
-  long I;
-  long * y_order = (long *) NULL;
-  long N = 0l;
-
-  if (!(a_order && x_order)) return( 0 );
-  if (a_order[0]>x_order[0]) return( 0 );
-  N = a_order[0];
-
-  /* allocate array and clear it */
-  if ( !(y_order = (long*) calloc( (N+2), sizeof(long) )) ) return(NULL);
-  y_order[0] = N;
-
-  for (i=1;i<=N;i++) {
-    I = a_order[i];
-    if ( labs(I)<=x_order[0] ) {
-      if (I>0) y_order[i] = x_order[I];
-        else y_order[i] = - x_order[-I];
-      } else y_order[i] = 0l; // not defined
-    } // for
-
-  return( y_order );
-
-} /* order_multiplication */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  edf_raster_multiplication --- raster number after a raster transformation
-
-SYNOPSIS
-
-  long edf_raster_multiplication ( long a, long x );
-
-DESCRIPTION
-  The resulting raster configuration number of the transformations a*x 
-  is returned. x is the input raster configuration number, a is the 
-  raster transformation which is applied to x. 
-
-ARGUMENTS
-  long      a         raster transformation
-  long      x         input raster configuration
-
-  a and x must be smaller or equal to A(n) = 2^n * (n!)
-
-RETURN VALUE
-  success   long    raster_configuration
-  error     long    0
-
-HISTORY
-  2000-07-29 Peter Boesecke
---------------------------------------------------------------------------*/
-long edf_raster_multiplication ( long a, long x )
-{ long * a_order;
-  long * x_order;
-  long * y_order;
-  long value;
-
-  long n = MAX_RASTER_CONFIG_DIMENSION;
-
-  a_order = raster2order ( n , a );
-  x_order = raster2order ( n , x );
-
-  y_order = order_multiplication ( a_order , x_order );
-  
-  value = edf_order2raster ( y_order );
-
-  if (a_order) free ( a_order );
-  if (x_order) free ( x_order );
-  if (y_order) free ( y_order );
-
-  return ( value );
-
-} /* edf_raster_multiplication */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  order_inversion --- returns inverse raster order array 
-
-SYNOPSIS
-
-  long * order_inversion ( const long x_order[] );
-
-DESCRIPTION
-  Returns the inverted raster order array a_order = x_order^-1,
-  with a_order[] * x_order[] = 1[];
-
-ARGUMENTS
-  const long x_order[n]  input raster order array
-
-The element 'x_order[0]' must contain the dimension. At least 'x_order[0]+1 
-elements must be allocated for the array. 
-
-RETURN VALUE
-  success   long    * a_order 
-  error     long    NULL
-
-If the return value is not equal to NULL a pointer to allocated memory is 
-returned that must be free'd by the calling routine.
-
-HISTORY
-  2000-07-29 Peter Boesecke
---------------------------------------------------------------------------*/
-long * order_inversion ( const long x_order[] )
-{ register int i;
-  long I;
-  long * a_order = (long *) NULL;
-  long N = 0l;
-
-  if (!(x_order)) return( 0 );
-  N = x_order[0];
-
-  /* allocate array and clear it */
-  if ( !(a_order = (long*) calloc( (N+2), sizeof(long) )) ) return(NULL);
-  a_order[0] = N;
-
-  for ( i=1;i<=N;i++ ) {
-    I = x_order[i];
-    if ( labs(I)<=x_order[0] ) {
-      if (I>0) a_order[I] = i;
-        else a_order[-I] = -i;
-      } else a_order[i] = 0l; // not defined
-    } // for
-
-  return( a_order );
-
-} /* order_inversion */
-
-/*--------------------------------------------------------------------------
-NAME
-
-  edf_raster_inversion --- returns raster number of the inverse transformation
-
-SYNOPSIS
-
-  long edf_raster_inversion ( long x  );
-
-DESCRIPTION
-  The raster number of the transformation a = x^-1 is returned
-  that transforms configuration x to 1: a * x = 1 
-
-ARGUMENTS
-  long      x         input raster configuration
-
-RETURN VALUE
-  success   long    inverse raster configuration
-  error     long    0
-
-HISTORY
-  2000-07-29 Peter Boesecke
---------------------------------------------------------------------------*/
-long edf_raster_inversion ( long x )
-{ long * a_order;
-  long * x_order;
-  long value;
-
-  long n = MAX_RASTER_CONFIG_DIMENSION;
-
-  x_order = raster2order ( n , x );
-
-  a_order = order_inversion ( x_order );
-
-  value = edf_order2raster ( a_order );
-
-  if (a_order) free ( a_order );
-  if (x_order) free ( x_order );
-
-  return ( value );
-
-} /* edf_raster_inversion */
-
-/*===raster_conversion END===================================================*/
 
 /*---get_binary_array BEGIN================================================*/
 /*---------------------------------------------------------------------------
@@ -6519,10 +6204,10 @@ long edf_raster_inversion ( long x )
   void edf_bswap( void * dest, const void * src, size_t item, unsigned long n );
 
   DESCRIPTION
-  Swaps all bytes inside an item of 'src' consisting of 'item' bytes and
-  writes the result to the output buffer 'dest'. The output and input
+  Swaps all bytes inside an item of ´src´ consisting of ´item´ bytes and
+  writes the result to the output buffer ´dest´. The output and input
   buffers can be identical. The minimum size of both buffers in bytes
-  is 'item' * 'n'.
+  is ´item´ * ´n´.
 
          byte     byte     byte     byte    byte     byte     byte     byte
   src  :    0   |    1   |    2   |   3   |  ...  | item-3 | item-2 | item-1 |
@@ -6551,6 +6236,11 @@ void edf_bswap ( void * dest, const void * src, size_t item, unsigned long n )
   size_t               step = item;
   unsigned long        jmax = (step + 1u) / 2u;
 
+  if ( (!dest)||(!src) ) {
+    fprintf(stderr, "SEVERE: edf_bswap: NULL pointer\n");
+    exit(-1);
+  }
+
   pi1 = in  = (const unsigned char *) src;
   pi2 = in + step;
   po1 = out = (unsigned char *) dest;
@@ -6558,14 +6248,14 @@ void edf_bswap ( void * dest, const void * src, size_t item, unsigned long n )
 
   for (i=0;i<n;i++) {
     /* swap */
-    for (j=0;j<jmax;j++) { 
+    for (j=0;j<jmax;j++) {
       temp=*pi1;pi1++; 
       pi2--;*po1=*pi2;po1++; 
       po2--;*po2=temp; 
     }
     pi1 =  in += step; pi2 =  in + step;
     po1 = out += step; po2 = out + step;
-    } /* for */
+  } /* for */
 
 } /* edf_bswap */
 
@@ -6662,6 +6352,14 @@ int String2ByteOrder( const char * string )
     
 } /* String2ByteOrder */
 
+const char * edf_byteorder2string( int byte_order )
+{ return( ByteOrder2String( byte_order) );
+} /* edf_byteorder2string */
+
+int edf_string2byteorder( const char * string )
+{ return ( String2ByteOrder( string ) );
+} /* edf_string2byteorder */
+
 /*---------------------------------------------------------------------------
 NAME
 
@@ -6742,12 +6440,12 @@ int edf_string2datatype( const char * string )
 /*---------------------------------------------------------------------------
 NAME
 
-  Compression2String --- converts compression to a string
+  edf_compression2string --- converts compression to a string
 
 SYNOPSIS
 
   DCompression data_compression;
-  const char * Compression2String( int data_compression )
+  const char * edf_compression2string( int data_compression )
 
 DESCRIPTION
 
@@ -6758,26 +6456,24 @@ GCC AND G++
 RETURN VALUE
   Pointer to a constant result string.
 
-AUTHOR
-05-Mar-1998 PB 
   -------------------------------------------------------------------------*/
-PRIVATE const char * Compression2String( int data_compression )
+const char * edf_compression2string( int data_compression )
 {  
    if ( (data_compression < 0) || (data_compression >= EndDCompression) )
      data_compression = InValidDCompression;
 
    return( DCompressionStrings[data_compression] );
 
-} /* Compression2String */
+} /* edf_compression2string */
 
 /*---------------------------------------------------------------------------
 NAME
 
-  String2Compression --- converts a string to a byte order value
+  edf_string2compression --- converts a string to a compression value 
 
 SYNOPSIS
 
-  (DCompression) int String2Compression( const char * string );
+  (DCompression) int edf_string2compression( const char * string );
 
 DESCRIPTION
 
@@ -6787,36 +6483,47 @@ GCC AND G++
 
 RETURN VALUE
   DCompression == 0 : error, e.g. cannot convert
-  DCompression >  0 : valid byte order value
+  DCompression >  0 : valid compression 
 
-AUTHOR
-03-Mar-1998 PB Specification
   -------------------------------------------------------------------------*/
-int String2Compression( const char * string )
+int edf_string2compression( const char * string )
 { int  NE=True;
-  long i = 0;
+  int i = 0;
+  int value=InValidDCompression;
 
-  while ( (NE && DCompressionStrings[i]) )
+  while ( (NE && DCompressionStrings[i]) ) {
     NE = compare_keys( string, DCompressionStrings[i++], UpperCaseSort );
+  }
 
   /* aliases */
   if (NE) { i=0;
-    while ( (NE && DCompressionStringsAliases[i]) )
+    while ( (NE && DCompressionStringsAliases[i]) ) {
       NE = compare_keys(string,DCompressionStringsAliases[i++],UpperCaseSort);
     }
+  }
 
   /* aliases1 */
   if (NE) { i=0;
-    while ( (NE && DCompressionStringsAliases1[i]) )
+    while ( (NE && DCompressionStringsAliases1[i]) ) {
       NE = compare_keys(string,DCompressionStringsAliases1[i++],UpperCaseSort);
     }
+  }
 
   i = MAX(0,i-1);
 
-  if (NE) return( InValidDCompression );
-    else return( i );
 
-} /* String2Compression */
+  if (NE) {
+    i=(long) s2u_long( string );
+    if ( (0<i)&&(i<EndDCompression) ) NE = FALSE;
+  }
+
+
+  if (!NE) value= i;
+
+
+  return( value );
+
+} /* edf_string2compression */
 
 /*---------------------------------------------------------------------------
 NAME
@@ -6895,8 +6602,8 @@ SYNOPSIS
 DESCRIPTION
 
   The data type is read from the symbol list of block and converted
-  to the enumerated type DType, using the tables 'DTypeStrings' and
-  'DTypeStringsAliases'.
+  to the enumerated type DType, using the tables ´DTypeStrings´ and
+  ´DTypeStringsAliases´.
 
   If data type is not found the default is FloatIEEE32.
 
@@ -6973,8 +6680,11 @@ PRIVATE long *get_data_dim ( DBlock * block )
   data_dim = (long *) NULL;
   if ( dim > 0 ) {
     /* second run: store data_dim */    
-    if ( !(data_dim = (long *) malloc( sizeof( long )*(dim+1) )) )
+    if ( !(data_dim = newdim( dim )) )
       return( (long *) NULL );
+
+    //++++++++ if ( !(data_dim = (long *) malloc( sizeof( long )*(dim+1) )) )
+    //++++++++   return( (long *) NULL );
   
     product = 1l;
     data_dim[0] = maxdim = dim;
@@ -7005,7 +6715,7 @@ SYNOPSIS
 DESCRIPTION
 
   The byte order is read from the symbol list of block and converted
-  to the enumerated type BOrder, using the table 'BOrderStrings'.
+  to the enumerated type BOrder, using the table ´BOrderStrings´.
 
   If byte order is not found the default is HighByteFirst.
 
@@ -7041,8 +6751,8 @@ SYNOPSIS
 DESCRIPTION
 
   The compression is read from the symbol list of block and converted
-  to the enumerated type DCompression, using the table 'DCompressionStrings'
-  and 'DCompressionStringsAliases'.
+  to the enumerated type DCompression, using the table ´DCompressionStrings´
+  and ´DCompressionStringsAliases´.
 
   If compresssion is not found the default is UnCompressed.
 
@@ -7060,7 +6770,7 @@ int get_compression ( DBlock * block )
 
   if ( search_general( block, COMPRESSION_KEY, &symbol ) )
     compression = UnCompressed;
-  else compression = String2Compression( symbol->String );
+  else compression = edf_string2compression( symbol->String );
 
   return( compression );
 
@@ -7166,25 +6876,25 @@ SYNOPSIS
 
 
 DESCRIPTION
-  The binary data of 'block' is read from disk. 'block' must have been 
-  opened with 'open_read_block' and the header must be in memory.  
+  The binary data of ´block´ is read from disk. ´block´ must have been 
+  opened with ´open_read_block´ and the header must be in memory.  
 
   If buffer is the NULL-pointer a memory section is internally allocated
   for the data. It has the size
 
-     DataLen = PRODUCT('DataDim_nn')[nn=1,NN]*sizeof('DataType') bytes
+     DataLen = PRODUCT(´DataDim_nn´)[nn=1,NN]*sizeof(´DataType´) bytes
 
-  Otherwise, if 'buffer' is not the NULL-pointer and 'must_use_buffer' 
-  is set (True) the read data will be written to 'buffer'.
+  Otherwise, if ´buffer´ is not the NULL-pointer and ´must_use_buffer´ 
+  is set (True) the read data will be written to ´buffer´.
   If the buffer length (buflen) is too short to read all data the routine 
   exits with an error (return value -1).
-  If 'buffer' is not the NULL-pointer and 'must_use_buffer' is not set 
-  (False) the read data will be written to 'buffer' only if the buffer
+  If ´buffer´ is not the NULL-pointer and ´must_use_buffer´ is not set 
+  (False) the read data will be written to ´buffer´ only if the buffer
   length (buflen) is sufficiently large to read all data, otherwise
-  a memory section is allocated like in the case where 'buffer' is the 
+  a memory section is allocated like in the case where ´buffer´ is the 
   NULL-pointer.
 
-  'DataDim_nn' stands for the nn-th dimension and NN for the 
+  ´DataDim_nn´ stands for the nn-th dimension and NN for the 
   dimensionality of the array. PRODUCT indicates the product over all 
   array dimensions Dim_nn from nn=1 to NN. 
 
@@ -7198,7 +6908,7 @@ DESCRIPTION
   Compression (default None)
   DataValueOffset (default 0)
 
-  The following parameter are updated in 'block':
+  The following parameter are updated in ´block´:
   block->Data = pointer to the allocated data buffer
   block->DataBufferLen = length of the data buffer in bytes
   block->DataLen = length of the meaningful data in bytes
@@ -7209,11 +6919,15 @@ DESCRIPTION
   block->DataValueOffset = offset to be added to each data item
  *block->DataDim = pointer to the allocated dimension array
                    with DataDim[0] = NN.
+  block->Raw = pointer to the allocated raw data buffer
+  block->RawBufferLen = length of the raw data buffer in bytes
+  block->RawLen = length of the meaningful raw data in bytes
+
 
 DATA SOURCE 
-  According to 'block->BinaryFileName' the binary data is read from the channel
-  of the main file ('block->Chain->File->Channel') or from an external file.
-  The file pointer is in both cases positioned at 'block->BinaryFilePos' of
+  According to ´block->BinaryFileName´ the binary data is read from the channel
+  of the main file (´block->Chain->File->Channel´) or from an external file.
+  The file pointer is in both cases positioned at ´block->BinaryFilePos´ of
   the data file.
 
   block->BinaryFileName   input channel
@@ -7246,12 +6960,16 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   long          data_value_offset;
   long          raster_configuration;
 
-  size_t   data_size, data_len, data_buffer_len, data_read_len;
+  size_t   data_size, data_len, data_buffer_len;
+  size_t   bytes_to_read=(size_t) -1; // set to absolute maximum
+  size_t   bytes_read; // number of read bytes
   unsigned long   data_pos, data_number;
 
   FILE     *channel; 
 
-  /* check whether 'block' exists */
+  int errval;
+
+  /* check whether ´block´ exists */
   if (!block) return(-1); 
 
   /* get binary data description */
@@ -7263,53 +6981,55 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   data_value_offset = get_data_value_offset ( block );
   raster_configuration = get_raster_configuration ( block );
 
+  /* determine maximum number of bytes of uncompressed data */
   data_size   = edf_data_sizeof ( data_type );
   data_number = edf_dim_product ( data_dim ) ;
-  data_len    = data_size * data_number ;
-  data_read_len = data_len;
+  data_len    = data_size * data_number ; // uncompressed length
+
+  /* determine start and restrict bytes_to_read to length of block/binaryfile */
   if (block->BinaryFileName) {
     data_pos = block->BinaryFilePos;
-    // data_read_len <= BinaryFileLen
-    if (block->BinaryFileLen) // only if BinaryFileLen is set
-      data_read_len = MIN(data_read_len,block->BinaryFileLen);
+      if (block->BinaryFileLen) // only if BinaryFileLen is set
+        bytes_to_read = block->BinaryFileLen; 
   } else {
-    data_pos = block->BinaryPos; 
-    // data_read_len <= BinaryLen
-    data_read_len = MIN(data_read_len,block->BinaryLen);
+    data_pos = block->BinaryPos;
+    bytes_to_read = block->BinaryLen;
   }
+
+  /* restrict length of bytes_to_read to length of uncompressed data */
+  if ( compression>UnCompressed ) bytes_to_read = MIN(bytes_to_read,data_len);
 
   if (EDFIO_debug) {
     printf(" ---- get_binary_array BEGIN\n");
     printf(" block                = %p\n", block);
     printf(" buffer               = %p\n", buffer);
 //    printf(" buflen               = %zu\n", buflen);
-    printf(" buflen               = %zu | %zu\n", buflen, buflen);
+    printf(" buflen               = %zu | %lu\n", buflen, buflen);
     printf(" data_dim[0]          = %ld\n", data_dim[0]);
     for (i=1;i<=data_dim[0];i++) 
       printf("  data_dim[%d]         = %ld\n", i, data_dim[i]);
     printf(" data_type            = %d\n", data_type);
     printf(" byte_order           = %d\n", byte_order);
-    printf(" compression          = %d\n", compression);
     printf(" data_value_offset    = %ld\n", data_value_offset);
     printf(" raster_configuration = %ld\n", raster_configuration);
 //    printf(" data_size            = %zu\n", data_size);
-    printf(" data_size            = %zu | %zu\n", data_size, data_size);
+    printf(" data_size            = %zu | %lu\n", data_size, data_size);
     printf(" data_number          = %ld\n", data_number);
 //    printf(" data_len             = %zu\n", data_len);
-    printf(" data_len             = %zu | %zu\n", data_len, data_len);
-//    printf(" data_read_len        = %zu\n", data_read_len);
-    printf(" data_read_len        = %zu | %zu\n", data_read_len, data_read_len);
+    printf(" data_len             = %zu | %lu\n", data_len, data_len);
+    printf(" compression          = %s\n", edf_compression2string(compression));
     printf(" data_pos             = %ld\n", data_pos);
+//    printf(" bytes_to_read        = %zu\n", bytes_to_read);
+    printf(" bytes_to_read        = %zu | %lu\n", bytes_to_read, bytes_to_read);
   } /* EDFIO_debug */
 
   /* update DataDim array in block */
-  if (block->DataDim){ // copy dimensions into existing array, release data_dim
+  if ((block->DataDim)&&(block->DataDim[0]>=data_dim[0])) {
+    // copy dimensions into existing array, release data_dim
     if ( !(copydim( block->DataDim, block->DataDim[0], data_dim ) ) ) {
        free(data_dim); fprintf(stderr,"%s copydim\n",GBA_Error); return(-1); }
     free(data_dim);
-  } else { // use allocated buffer
-    block->DataDim  = data_dim;
-  }
+  } else block->DataDim  = data_dim; // use already allocated buffer
 
   if (block->BinaryFileName) {
     /* open external source read only */
@@ -7331,25 +7051,24 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   if ( fseek( channel, data_pos, SEEK_SET) ) {
       fprintf(stderr,"%s fseek\n",GBA_Error); return(-1); }
 
-  // do not use buffer if it is equal to block->Data
+  /* do not use buffer if it is equal to block->Data */
   if ( (block->Data == buffer) && (!must_use_buffer) ) {
     buffer = (void *) NULL; buflen = (size_t) 0; }
 
-  // unlink externally allocated memory or release internally allocated memory
+  /* unlink externally allocated memory or release internally allocated memory */
   if (block->Flags.ExternalDataAlloc) {
     block->Data = (void *) NULL;
     block->DataBufferLen = (unsigned long) 0;
     block->DataLen = (unsigned long) 0;
     block->Flags.ExternalDataAlloc = False;
-    } else {
+  } else {
     if ( ( (block->Data) && (block->DataBufferLen<data_len) ) ||
          (must_use_buffer) ) {
       free(block->Data); block->Data = (void *) NULL;
       block->DataBufferLen = (unsigned long) 0;
       block->DataLen = (unsigned long) 0;
-      }
-    }                                                                                                                                       
-
+    }
+  }                                                                                                                                       
   if ( (buffer == (void *) NULL) || 
        ((buflen<data_len)&&(!must_use_buffer)) ) {
     /* allocate memory, if necessary */
@@ -7359,25 +7078,42 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
         fprintf(stderr,"%s malloc\n",GBA_Error); return(-1); }
     data_buffer_len = data_len;
     block->Flags.ExternalDataAlloc = False;
-    } else {
+  } else {
     if (EDFIO_debug) printf(" Use supplied buffer\n");
     if (buflen<data_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",GBA_Error,data_len); 
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",GBA_Error,data_len,data_len); 
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
+        GBA_Error,data_len,data_len); 
       return(-1); }
     block->Flags.ExternalDataAlloc = True;
     block->Data = buffer;
     data_buffer_len = buflen;
-    }
+  }
 
-  /* read data */
-  if ( fread(block->Data,1,data_read_len,channel) < data_read_len ) {
-    fprintf(stderr,"%s fread\n",GBA_Error); return(-1); }
+  /* read data from file */
+  switch ( compression ) {
+    case GzipCompression:
+    case ZCompression:
+      /* read and decompress data */
+      if ( cmpr_frinflate ( block->Data, data_buffer_len, channel, 
+           bytes_to_read, compression, &bytes_read, &errval ) ) {
+        fprintf(stderr,"%s cmpr_frinflate errval=%d\n",GBA_Error,errval); 
+        return(-1); }
+      break;
 
-  if (data_len-data_read_len>0) {
-//    fprintf(stderr,"%s binary block/file size %zu smaller than array size %zu\n",
-    fprintf(stderr,"%s binary block/file size %zu | %zu smaller than array size %zu | %zu\n",
-      GBA_Error, data_read_len, data_read_len, data_len, data_len ); return(-1); }
+    default: // no decompression
+      /* restrict length of bytes_to_read to length of uncompressed data */
+      bytes_to_read = MIN(bytes_to_read,data_len);
+      /* read data */
+      if ( (bytes_read = fread(block->Data,1,bytes_to_read,channel)) < bytes_to_read ) {
+        fprintf(stderr,"%s fread\n",GBA_Error); return(-1); }
+  } // switch
+
+  /* check length */
+  if (data_len-bytes_read>0) {
+//    fprintf(stderr,"%s read bytes %zu less than array size %zu\n",
+    fprintf(stderr,"%s read bytes %zu | %lu less than array size %zu | %lu\n",
+      GBA_Error, bytes_read, bytes_read, data_len, data_len ); return(-1); }
     
   /* close external file */
   if ( !intern )
@@ -7390,8 +7126,8 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   block->DataType = data_type;
   block->DataByteOrder = byte_order;
   block->DataRasterConfiguration = raster_configuration;
-  block->DataCompression = compression;
   block->DataValueOffset = data_value_offset;
+  block->DataCompression = UnCompressed;
 
   block->Flags.DataExternal = False; /* data are read from file */
 
@@ -7426,24 +7162,28 @@ RETURN VALUE
 int find_chainkey ( int stream, int DataChain, char ChainKey[] )
 {
   SElement *symbol;
-  DFile    *file = &FileTable[stream];
+  DFile    *file = NULL;
 
   char ChainKeyDefinition[MaxKeyLen+1];
 
-  if (DataChain==0) {
-    strncpy(ChainKey,GENERAL_CHAIN_KEY,MaxKeyLen+1);
-    } else {
-    /* test, if general block exists */
-    if (file->GeneralBlock == (DBlock *) NULL) return(-1);
-    /* search chainkey in general block */
-    sprintf(ChainKeyDefinition,"%s%u",CHAIN_KEY_DEFINITION,DataChain);
-    if (!( search_symbol( file->GeneralBlock,
-                        ChainKeyDefinition, &symbol ) ) ) { 
-      strncpy(ChainKey,symbol->Value,MaxKeyLen+1);
-      } else { if (!(default_chain_key(ChainKey, DataChain))) return(-1); }
-    }
+  if ( (stream>=0)&&(stream<MaxFiles) ) {
+    file = &FileTable[stream];
 
-  return(0);
+    if (DataChain==0) {
+      strncpy(ChainKey,GENERAL_CHAIN_KEY,MaxKeyLen+1);
+      } else {
+      /* test, if general block exists */
+      if (file->GeneralBlock == (DBlock *) NULL) return(-1);
+      /* search chainkey in general block */
+      sprintf(ChainKeyDefinition,"%s%u",CHAIN_KEY_DEFINITION,DataChain);
+      if (!( search_symbol( file->GeneralBlock,
+                          ChainKeyDefinition, &symbol ) ) ) { 
+        strncpy(ChainKey,symbol->Value,MaxKeyLen+1);
+        } else { if (!(default_chain_key(ChainKey, DataChain))) return(-1); }
+      }
+
+    return(0);
+  } else return(-1);
 
 } /* find_chainkey */
 
@@ -7462,14 +7202,107 @@ int find_blockkey ( int DataChain, int DataNumber, char BlockKey[] )
 /*---------------------------------------------------------------------------
 NAME
 
+  put_compressed_block
+
+SYNOPSIS
+
+  int put_compressed_block( DBlock * block, int * pErrorValue );
+
+DESCRIPTION
+  Writes block->Data compressed or uncompressed, depending on
+  DataCompression.
+  If the flags HeaderChanged or DataChanged are set the data are
+  compressed and written.
+  
+
+INPUT VALUES
+  DBlock * block;
+
+OUTPUT VALUES
+  *pErrorValue update if not NULL
+
+MODIFIED
+
+RETURN VALUE
+  In case of success the returned value is 0 otherwise -1.
+  *pErrorValue is updated, if not NULL
+  --------------------------------------------------------------------------*/
+int put_compressed_block( DBlock * block, int * pErrorValue )
+{ int errval=RoutineFailed;
+  static const char * PCB_Error = "ERROR: put_compressed_block" ;
+
+  if (block) {
+
+    // the data need only to be compressed when they will be really written
+    if ( ((block->Flags.HeaderChanged)||(block->Flags.DataChanged)) &&
+         (!block->Flags.InternalData) ) {
+      // write the compressed data to Raw
+      switch ( block->DataCompression ) {
+
+        case GzipCompression:
+        case ZCompression: // assuming compressed<=uncompressed
+          if (!(block->Raw = malloc( block->DataLen ))) {
+            fprintf(stderr,"%s malloc\n",PCB_Error);
+            goto put_compressed_block_error;
+          }
+          block->RawBufferLen = block->DataLen;
+          if ( cmpr_deflate( block->Raw, block->RawBufferLen, block->Data, 
+               block->DataLen, block->DataCompression, &(block->RawLen),
+               &errval ) ) {
+            fprintf(stderr,"%s cmpr_deflate (errval=%d)\n",PCB_Error,errval);
+            goto put_compressed_block_error;
+          }
+          break;
+
+        default: ; // no compression here
+      }
+    }
+
+    if ( put_data_block( block ) ) {
+      errval = WriteDataError;
+      goto put_compressed_block_error;
+    }
+
+    if (block->RawBufferLen)
+      if (block->Raw)
+        free (block->Raw);
+    block->Raw=NULL;
+    block->RawBufferLen = (size_t) 0;
+    block->RawLen = (size_t) 0;
+  }
+
+  errval = RoutineSucceeded;
+
+  if (pErrorValue) *pErrorValue=errval;
+
+  return(0);
+
+put_compressed_block_error:
+
+  if (block->RawBufferLen)
+    if (block->Raw)
+      free (block->Raw);
+  block->Raw=NULL;
+  block->RawBufferLen = (size_t) 0;
+  block->RawLen = (size_t) 0;
+
+  if (pErrorValue) *pErrorValue=errval;
+
+  return(-1);
+
+} // put_compressed_block
+
+/*---------------------------------------------------------------------------
+NAME
+
   disk_write_block
 
 SYNOPSIS
 
-  int disk_write_block ( DBlock * block, int * pErrorValue, int * pstatus );
+  int disk_write_block ( DBlock * block, int * pErrorValue );
 
 DESCRIPTION
-  If 'block' exists header and binary data are written to disk.
+  If ´block´ exists header and binary data are written to disk.
   The symbol list and the link to the data are removed. DataLen 
   is set to 0. The data block flags DiskBlockUsed, DiskBlockFixed,
   HeaderExternal and DataExternal are set to True, HeaderChanged 
@@ -7480,43 +7313,39 @@ INPUT VALUES
   DBlock * block;
 
 OUTPUT VALUES
-  *pErrorValue, *pstatus
+  *pErrorValue
 
 MODIFIED
   Block is written to the output file and afterwards the symbol list 
   is removed from block. The data specification is cleared and the
   dynamic arrays (Data and DataDim) are released if they were not 
   externally allocated. Externally allocated arrays must be released
-  separately.
+  separately. block->DataLen binary bytes of block->Data are written.
 
 RETURN VALUE
-  In case of success the returned value is 1 otherwise 0.
-  The return value should not be used to check for an error, the returned
-  value of status should be used. In case of success the *pstatus is 0,
-  otherwise not. A more precise description of the error is returned in
-  *pErrorValue.
+  In case of success the returned value is 0 otherwise -1.
+  A more precise description of the error is returned in *pErrorValue.
   --------------------------------------------------------------------------*/
-int disk_write_block ( DBlock * block, int * pErrorValue, int * pstatus )
-{
-  DFile  * file;
-
-  *pstatus = status_error;
+int disk_write_block ( DBlock * block, int * pErrorValue )
+{ DFile  * file;
+  int errval;
 
   if ( block ) {
     file = block->Chain->File;
-    if ( put_data_block( block ) ) {
-      *pErrorValue = WriteDataError; return(0);
-      }
+
+    if ( put_compressed_block( block, &errval ) )
+      goto disk_write_block_error;
 
     /* free symbol list only if InternalHeader is not set 
        and if block is not the general block */
     if (( !block->Flags.InternalHeader ) && (block != file->GeneralBlock)) {
       if ( free_symbol_list( block ) ) {
-        *pErrorValue = CouldNotFreeHeaders; return(0);
-        }
+        errval = CouldNotFreeHeaders;
+        goto disk_write_block_error;
+      }
       /* update data block flags for header*/
       block->Flags.HeaderExternal = True;
-      }
+    }
 
     /* unlink data only if InternalData is not set
        and if block is not the general block */
@@ -7541,55 +7370,23 @@ int disk_write_block ( DBlock * block, int * pErrorValue, int * pstatus )
       block->Flags.DataExternal      = True;
       block->Flags.ExternalDataAlloc = False;
       block->Flags.ExternalDimAlloc  = False;
-      }
+    }
 
-    } /* if (block) ... */
+  } /* if (block) ... */
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
 
-  return(1);
+  if (pErrorValue) *pErrorValue = errval;
+
+  return(0);
+
+disk_write_block_error:
+
+  if (pErrorValue) *pErrorValue = errval;
+
+  return(-1);
 
 } /* disk_write_block */
-
-/*---------------------------------------------------------------------------
-NAME
-
-  disk_read_header
-
-SYNOPSIS
-
-  int disk_read_header ( DBlock * block, int * pErrorValue, int * pstatus );
-
-DESCRIPTION
-  The header of 'block' is read from disk. 
-
-INPUT VALUES
-  DBlock * block;
-
-OUTPUT VALUES
-  *pErrorValue, *pstatus
-
-RETURN VALUE
-  success: 1
-  otherwise: 0
-  The return value should not be used to check for an error, the returned
-  value of status should be used. In case of success *pstatus is 0,
-  otherwise not. A more precise description of the error is returned in
-  *pErrorValue.
-  --------------------------------------------------------------------------*/
-int disk_read_header ( DBlock * block, int * pErrorValue, int * pstatus )
-{
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_error;
-
-  if ( get_data_header( block ) ) { *pErrorValue = ReadDataError; return(0); }
-
-  *pstatus = status_success;
-
-  return(1);
-
-} /* disk_read_header */
 
 /*---------------------------------------------------------------------------
 NAME
@@ -7598,65 +7395,74 @@ NAME
 SYNOPSIS
 
       int open_write_block( int stream, long int DataNumber, int DataChain,
-                      DBlock ** pblock, int * pErrorValue, int * pstatus );
+                      DBlock ** pblock, int * pErrorValue );
 
 
 DESCRIPTION
   Opens a single write to the data_block file.
   Searches for header 'DataNumber' in 'DataChain' and returns pblock.
-  If it does not exists, it is created. 'DataChain' zero is the
+  If it does not exists, it is created. ´DataChain´ zero is the
   general block. It must be at the beginning of the file.
 
-  In case of success the return value is 1, otherwise 0.
-
 RETURN VALUE
-  In case of success the returned value is 1 otherwise 0.
-  The return value should not be used to check for an error, instead
-  the returned value of status should be used. In case of success 
-  the *pstatus is 0, otherwise not. A more precise description of the 
-  error is returned in *pErrorValue.
+  In case of success the returned value is 0 otherwise -1. A more precise 
+  description of the error is returned in *pErrorValue.
 
-STATUS
-  OK
   --------------------------------------------------------------------------*/
 int open_write_block( int stream, long int DataNumber, int DataChain,
-                      DBlock ** pblock, int * pErrorValue, int * pstatus )
+                      DBlock ** pblock, int * pErrorValue )
 {
-  DFile    * file = &FileTable[stream];
+  DFile    * file = NULL;
   DChain   * chain;
   DBlock   * block;
+
+  int errval;
 
   char BlockKey[MaxKeyLen+1];
   char ChainKey[MaxKeyLen+1];
 
-  *pstatus = status_error;
+  /* check stream */
+  if ( (stream<0)||(stream>=MaxFiles) ) {
+    errval = InvalidStream; 
+    goto open_write_block_error;
+  }
+
+  file = &FileTable[stream];
 
   /* GeneralBlock can only be modified when active */ 
   if (DataChain==0)
     if (file->GeneralBlock!=file->ActiveBlock) {
-    *pErrorValue=GeneralBlockNotFirst; return(0);
+      errval=GeneralBlockNotFirst; 
+      goto open_write_block_error;
     }
 
   /* get Channel */
   if ( !file->Used ) {
-    *pErrorValue = NoFileOpen; return(0);
-    }
+    errval=NoFileOpen; 
+    goto open_write_block_error;
+  }
 
   /* find 'ChainKey' */
   if ( find_chainkey ( stream, DataChain, ChainKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(0);
-    }
+    errval=MissingKeyDefinition;
+    goto open_write_block_error;
+  }
 
   /* find 'BlockKey' */
   if ( find_blockkey ( DataChain, DataNumber, BlockKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(0);
-    }
+    errval=MissingKeyDefinition; 
+    goto open_write_block_error;
+  }
 
   /* insert header */
   if (insert_data_chain( file, ChainKey, &chain) ) {
-    *pErrorValue = CouldNotInsertChain; return(0); }
+    errval=CouldNotInsertChain; 
+    goto open_write_block_error; 
+  }
   if (insert_data_block( chain, BlockKey, &block) ) {
-    *pErrorValue = CouldNotInsertBlock; return(0); }
+    errval=CouldNotInsertBlock; 
+    goto open_write_block_error; 
+  }
 
   /* update data block flags */
   if ( file->Flags.TemporaryFile ) {
@@ -7664,23 +7470,28 @@ int open_write_block( int stream, long int DataNumber, int DataChain,
     block->Flags.InternalData   = True;
     block->Flags.HeaderExternal = False;
     block->Flags.DataExternal   = False;
-    }
+  }
 
   /* flush previously active block */
   if ( file->ActiveBlock != block) {
     /* flush ActiveBlock */
-    disk_write_block ( block->Chain->File->ActiveBlock, pErrorValue, pstatus );
-    if ( *pstatus != status_success )  return(0);
+    if ( disk_write_block ( block->Chain->File->ActiveBlock, &errval ) )
+      goto open_write_block_error; 
     /* update ActiveBlock */
     file->ActiveBlock = block;
-    }
+  }
 
-  *pblock = block;
+  if (pblock) *pblock = block;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval=RoutineSucceeded;
 
-  return(1);
+  if (pErrorValue) *pErrorValue=errval;
+  return(0);
+
+open_write_block_error:
+
+  if (pErrorValue) *pErrorValue=errval;
+  return(-1);
 
 } /* open_write_block */
 
@@ -7690,19 +7501,17 @@ NAME
 
 SYNOPSIS
 
-      int close_write_block(DBlock * block, int * pErrorValue, int * pstatus);
+      int close_write_block(DBlock * block, int * pErrorValue );
 
 DESCRIPTION
+
   Closes a single write to the data_block, currently a dummy routine.
   
 RETURN VALUE
-  In case of success the returned value is 1 otherwise 0. 
-  The return value should not be used to check for an error, the returned
-  value of status should be used. In case of success the *pstatus is 0,
-  otherwise not. A more precise description of the error is returned in
-  *pErrorValue. 
+  In case of success the returned value is 0 otherwise -1. A more 
+  precise description of the error is returned in *pErrorValue. 
   --------------------------------------------------------------------------*/
-int close_write_block( DBlock * block, int * pErrorValue, int * pstatus )
+int close_write_block( DBlock * block, int * pErrorValue )
 {
   DFile  * file;
   DChain * chain;
@@ -7712,12 +7521,9 @@ int close_write_block( DBlock * block, int * pErrorValue, int * pstatus )
   chain   = block->Chain;
   file    = chain->File;
 
-  *pstatus = status_error;
-
   *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
 
-  return(1);
+  return(0);
 
 } /* close_write_block */
 
@@ -7728,67 +7534,74 @@ NAME
 SYNOPSIS
 
       int open_read_block(int stream, long int DataNumber, int DataChain,
-                      DBlock ** pblock, int * pErrorValue, int * pstatus );
+                      DBlock ** pblock, int * pErrorValue );
 
 DESCRIPTION
   Opens a single read from the data_block
   file. In case of success the return value is 1, otherwise 0.
 
 RETURN VALUE
-  In case of success the returned value is 1 otherwise 0.
-  The return value should not be used to check for an error, the returned
-  value of status should be used. In case of success the *pstatus is 0,
-  otherwise not. A more precise description of the error is returned in
-  *pErrorValue.
+  In case of success the returned value is 0. If the header was not found 
+  and without other error the return value is 1. In case of an error the 
+  return value is -1.
+  A more detailed description of the error is returned in *pErrorValue.
 
-STATUS
-  return value FALSE  : 'DataNumber' or 'DataChain' not found and no other 
-                         error
-                         *pstatus = status_error;
-                         *pErrorValue=(CouldNotFindHeader, RoutineSucceeded);
-                TRUE  : data header found or error,
-                         *pstatus = Success or status_error;
+  return value     1  : Warning
+                         ´DataNumber´ or ´DataChain´ not found, no other error
+                         *pErrorValue=CouldNotFindHeader;
+                   0  : OK, data header found
+                         *pErrorValue=RoutineSucceeded
+                  -1  : Error,
                          *pErrorValue = <any>
+
   --------------------------------------------------------------------------*/
 int open_read_block( int stream, long int DataNumber, int DataChain,
-                      DBlock ** pblock, int * pErrorValue, int * pstatus )
+                      DBlock ** pblock, int * pErrorValue )
 {
   DFile    * file;
   DChain   * chain;
   DBlock   * block;
 
+  int errval;
+
   char BlockKey[MaxKeyLen+1];
   char ChainKey[MaxKeyLen+1];
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
-
   /* check stream */
   if ((stream<0)||(stream>=MaxFiles)) {
-    *pErrorValue = InvalidStream; return(1);
-    }
+    errval = InvalidStream;
+    goto open_read_block_error;
+  }
+
   /* get file */
   file = &FileTable[stream];
   if ( !file->Used ) {
-    *pErrorValue = NoFileOpen; return(1);
-    }
+    errval = NoFileOpen;
+    goto open_read_block_error;
+  }
 
   /* find 'ChainKey' */
-
   if ( find_chainkey ( stream, DataChain, ChainKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(1);
-    }
+    errval = MissingKeyDefinition;
+    goto open_read_block_error;
+  }
 
   /* find 'BlockKey' */
   if ( find_blockkey ( DataChain, DataNumber, BlockKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(1);
-    }
+    errval = MissingKeyDefinition;
+    goto open_read_block_error;
+  }
 
   /* search header */
   if (search_data_chain( file, ChainKey, &chain) ) {
-    *pErrorValue = CouldNotFindHeader; return(0); }
+    errval = CouldNotFindHeader;
+    goto open_read_block_notfound;
+  }
+
   if (search_data_block( chain, BlockKey, &block) ) {
-    *pErrorValue = CouldNotFindHeader; return(0); }
+    errval = CouldNotFindHeader;
+    goto open_read_block_notfound;
+  }
 
   /* update data block flags */
   if ( file->Flags.TemporaryFile ) {
@@ -7796,26 +7609,41 @@ int open_read_block( int stream, long int DataNumber, int DataChain,
     block->Flags.InternalData   = True; 
     block->Flags.HeaderExternal = False;
     block->Flags.DataExternal   = False;
-    }
+  }
 
   /* flush previously active block and get block from disk */
-    if ( file->ActiveBlock != block) {
-      /* flush ActiveBlock */
-      disk_write_block( file->ActiveBlock, pErrorValue, pstatus );
-      if ( *pstatus != status_success )  return(1);
-      /* read block from disk */
-      disk_read_header ( block, pErrorValue, pstatus );
-      if ( *pstatus != status_success ) return(1);
-      /* update ActiveBlock */
-      file->ActiveBlock = block;
-      }
+  if ( file->ActiveBlock != block) {
+    /* flush ActiveBlock */
+    if ( disk_write_block( file->ActiveBlock, &errval ) )
+      goto open_read_block_error;
+
+    /* read header */
+    if ( get_data_header( block ) ) {
+      errval = ReadDataError; // error reading header
+      goto open_read_block_error;
+    }
+
+    /* update ActiveBlock */
+    file->ActiveBlock = block;
+  }
 
   *pblock = block;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
 
+  /* success */
+  if (pErrorValue) *pErrorValue = errval;
+  return(0);
+
+open_read_block_notfound:
+  /* warning */
+  if (pErrorValue) *pErrorValue = errval;
   return(1);
+
+open_read_block_error:
+  /* error */
+  if (pErrorValue) *pErrorValue = errval;
+  return(-1); 
 
 } /* open_read_block */
 
@@ -7825,23 +7653,18 @@ NAME
 
 SYNOPSIS
 
-      int close_read_block(DBlock * block, int * pErrorValue, int * pstatus);
+      int close_read_block(DBlock * block, int * pErrorValue);
 
 DESCRIPTION
-  Closes a single read from a data block file. In case of success the 
-  return value is 1.
+
+  Closes a single read from a data_block, currently a dummy routine.
 
 RETURN VALUE
-  In case of success the returned value is 1 otherwise 0.
-  The return value should not be used to check for an error, the returned
-  value of status should be used. In case of success  *pstatus is 0,
-  otherwise not. A more precise description of the error is returned in
-  *pErrorValue.
+  In case of success the returned value is 0 otherwise -1. 
+  A more precise description of the error is returned in *pErrorValue.
 
-STATUS
-  In preparation
   --------------------------------------------------------------------------*/
-int close_read_block( DBlock * block, int * pErrorValue, int * pstatus )
+int close_read_block( DBlock * block, int * pErrorValue )
 {
   DFile  * file;
   DChain * chain;
@@ -7851,12 +7674,9 @@ int close_read_block( DBlock * block, int * pErrorValue, int * pstatus )
   chain   = block->Chain;
   file    = chain->File;
 
-  *pstatus = status_error;
+  if (pErrorValue) *pErrorValue = RoutineSucceeded;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
-
-  return(1);
+  return(0);
 
 } /* close_read_block */
 
@@ -7893,32 +7713,56 @@ int read_header_string ( int stream, long int DataNumber, int DataChain,
   DBlock * block;
   SElement * symbol;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  const char *String;
+
+  int errval, status=status_error;
 
   if (EDFIO_debug) printf("read_header_string");
 
-  if ( !open_read_block (stream, DataNumber, DataChain,
-                     &block, pErrorValue, pstatus) ) {
-    /* data header not found */
-    if (EDFIO_debug) printf("\n"); return(0); }
-  if ( *pstatus != status_success )  return(1);
+  switch ( open_read_block (stream, DataNumber, DataChain,
+                            &block, &errval) ) {
+    case 1: /* data header not found */
+      if (EDFIO_debug) printf("\n"); 
+      goto read_header_string_notfound;
+    case -1: /* error */
+      goto read_header_string_error;
+  }
 
   /* read keyword value from symbol list */
   if (search_general( block, keyword, &symbol) ) {
     if (EDFIO_debug) printf(" %s missing;\n",keyword); 
-    *pstatus     = status_error;
-    *pErrorValue = CouldNotFindSymbol; return(0); }
+    errval = CouldNotFindSymbol;
+    goto read_header_string_notfound;
+  }
 
-  close_read_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return(1);
+  if ( close_read_block( block, &errval ) )
+    goto read_header_string_error;
 
-  *pString = symbol->String;
+  String = symbol->String;
 
-  if (EDFIO_debug) printf(" %s = \"%s\";\n",keyword,*pString);
+  if (pString) *pString = String;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  if (EDFIO_debug) printf(" %s = \"%s\";\n",keyword,String);
+
+  errval = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  return(1);
+
+read_header_string_notfound:
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  return(0);
+
+read_header_string_error:
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
 
   return(1);
 
@@ -7947,17 +7791,21 @@ int write_header_string ( int stream, long int DataNumber, int DataChain,
 
   if (EDFIO_debug) printf("write_header_string %s = \"%s\";\n",keyword,String);
 
-  open_write_block (stream, DataNumber, DataChain,
-                    &block, pErrorValue, pstatus);
-  if ( *pstatus != status_success )  return(0);
+  if ( open_write_block (stream, DataNumber, DataChain,
+                    &block, pErrorValue ) ) {
+    *pstatus=status_error; 
+    return(0);
+  }
 
   /* create/replace keyword and value in header */
   if (insert_string( block, keyword, String, &symbol) ) {
     *pstatus = status_error;
     *pErrorValue = CouldNotInsertSymbol; return(0); }
 
-  close_write_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return(0);
+  if ( close_write_block( block, pErrorValue ) ) {
+    *pstatus = status_error;
+    return(0);
+  }
 
   /* The header was changed and must be written to disk */
   block->Flags.HeaderChanged = True;
@@ -7968,6 +7816,87 @@ int write_header_string ( int stream, long int DataNumber, int DataChain,
   return(1);
 
 } /* write_header_string */
+
+/*---------------------------------------------------------------------------
+NAME
+
+  delete_key --- delete key, continuation keys and values
+
+DESCRIPTION
+  Searches for header 'DataNumber' in 'DataChain'.
+  and deletes non DATA FORMAT SPECIFIC keys, otherwise error.
+
+RETURN VALUE
+  In case of success the return value is 1, otherwise 0.
+  --------------------------------------------------------------------------+*/
+int delete_key ( int stream, long int DataNumber, int DataChain,
+                 const char * keyword,
+                 int * pErrorValue, int * pstatus )              /*---*/
+{
+  DBlock * block;
+
+  int errval, status;
+
+  if (EDFIO_debug) printf("delete_key %s BEGIN\n",keyword);
+
+  // check, if keyword is data format specific
+  if (!is_prefix(keyword,DATA_FORMAT_PREFIX,UpperCaseSort)) {
+
+    if ( edf_test_header ( stream, DataNumber,DataChain, NULL, NULL ) ) {
+
+      /* read header */
+      if ( open_read_block (stream, DataNumber, DataChain,
+                            &block, &errval) )
+        goto delete_key_error;
+
+      if ( close_read_block( block, &errval ) )
+        goto delete_key_error;
+
+      /* modify and write header */
+      if ( open_write_block (stream, DataNumber, DataChain,
+                             &block, &errval ) )
+        goto delete_key_error;
+
+      /* remove keyword, continuation keys and values from header */
+      if ( remove_string( block, keyword ) ) {
+        errval = CouldNotDeleteString; 
+        goto delete_key_error;
+      }
+
+      if ( close_write_block( block, &errval ) )
+        goto delete_key_error;
+
+      /* The header was changed and must be written to disk */
+      block->Flags.HeaderChanged = True;
+
+    }
+    errval = RoutineSucceeded;
+  } else {
+    errval = CouldNotDeleteString;
+    goto delete_key_error;
+  }
+
+  status = status_success;
+
+  if (pstatus) *pstatus=status;
+  if (pErrorValue) *pErrorValue=errval;
+
+  if (EDFIO_debug) printf("delete_key END 1\n");
+
+  return(1);
+
+delete_key_error:
+
+  status=status_error;
+
+  if (pstatus) *pstatus=status;
+  if (pErrorValue) *pErrorValue=errval;
+
+  if (EDFIO_debug) printf("delete_key END (status=%d) 0\n",status);
+
+  return(0);
+
+} /* delete_key */
 
 /*===machinetype BEGIN====================================================*/
 
@@ -8369,7 +8298,7 @@ void edf_showdatatypes ( int full )
     printf(" %15s               = %15s\n",  "DataType", "MachineType");
   for (i=1; i<EndDType; i++) {
     if ( (full) || (edf_datatype2machinetype(i)) ) { 
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         edf_datatype2string(i), edf_data_sizeof(i),
         MachineType2String(edf_datatype2machinetype(i)),
         edf_machine_sizeof(edf_datatype2machinetype(i)) );
@@ -8395,7 +8324,7 @@ void edf_showmachinetypes ( int full )
     printf(" %15s               = %15s\n", "MachineType", "DataType");
   for (i=1; i<EndMType; i++) {
     if ( (full) || (edf_machinetype2datatype(i)) ) {
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         MachineType2String(i), edf_machine_sizeof(i),
         edf_datatype2string(edf_machinetype2datatype(i)),
         edf_data_sizeof(edf_machinetype2datatype(i)) );
@@ -8434,9 +8363,9 @@ SYNOPSIS
 DESCRIPTION
  
   Conversion of MachineTypeIn array In to unsigned short (MUnsignedShort) 
-  array Out. The input data buffer 'In' with elements of the type 
-  'MachineTypeIn' is copied to the output data buffer 'Out' with elements 
-  of the type unsigned short. Both buffers contain 'DataCount' elements.
+  array Out. The input data buffer ´In´ with elements of the type 
+  ´MachineTypeIn´ is copied to the output data buffer ´Out´ with elements 
+  of the type unsigned short. Both buffers contain ´DataCount´ elements.
  
   The allocated memory for the output buffer must be sufficiently large.
   If the required memory for the output buffer is smaller or equal to the
@@ -8597,7 +8526,8 @@ int Convert2UnsignedShort( unsigned short * Out,
                               else
                                *pout = ACLIP_S2U(*pinint,advo,UShortMax);
                              }
-                          } else {                                                                                                                                       pinint = (int *) In;
+                          } else {
+                           pinint = (int *) In;
                            pout = Out;
                            for (i=0;i<DataCount;i++) {
                              if (dvo<0)
@@ -8659,42 +8589,38 @@ int Convert2UnsignedShort( unsigned short * Out,
                            pinfloat = (float *) In + DataCount;
                            pout = Out + DataCount;
                            for (i=DataCount;i>0;--i) { // round
-                             --pinfloat;
+                             pout--; --pinfloat;
                              tmp = floor( *pinfloat + 0.5 + dvo );
-                             pout--;
-                             *pout = CLIP_FLOAT(tmp, UShortMin, UShortMax);
-                             }
-                          } else {
+                             *pout = (short) CLIP_FLOAT(tmp, UShortMin, UShortMax);
+                           }
+                         } else {
                            pinfloat = (float *) In;
                            pout = Out;
                            for (i=0;i<DataCount;i++) { // round
                              tmp = floor( *pinfloat + 0.5 + dvo );
-                             pinfloat++;
-                             *pout = CLIP_FLOAT(tmp, UShortMin, UShortMax);
-                             pout++;
-                             }
-                          }
+                             *pout = (short) CLIP_FLOAT(tmp, UShortMin, UShortMax);
+                             pout++; pinfloat++;
+                           }
+                         }
                          break;
     case MDouble :       t_in = edf_machine_sizeof( MDouble );
                          if (t_in<t_out) {
                            pindouble = (double *) In + DataCount;
                            pout = Out + DataCount;
                            for (i=DataCount;i>0;--i) {
-                             --pindouble;
+                             --pout; --pindouble;
                              tmp = floor( *pindouble + 0.5 + dvo );
-                             --pout;
-                             *pout = CLIP_FLOAT(tmp, UShortMin, UShortMax);
-                             }
-                          } else {
+                             *pout = (short) CLIP_FLOAT(tmp, UShortMin, UShortMax);
+                           }
+                         } else {
                            pindouble = (double *) In;
                            pout = Out;
                            for (i=0;i<DataCount;i++) {
                              tmp = floor( *pindouble + 0.5 + dvo );
-                             pindouble++;
-                             *pout = CLIP_FLOAT(tmp, UShortMin, UShortMax);
-                             pout++;
-                             }
-                          }
+                             *pout = (short) CLIP_FLOAT(tmp, UShortMin, UShortMax);
+                             pout++; pindouble++;
+                           }
+                         }
                          break;
     default :            return(-1);
                          break;
@@ -8703,6 +8629,709 @@ int Convert2UnsignedShort( unsigned short * Out,
   return(0);
  
 } /* Convert2UnsignedShort */
+
+/*---------------------------------------------------------------------------
+NAME
+ 
+  Convert2Short
+ 
+SYNOPSIS
+ 
+  DType DataTypeIn;
+  int Convert2Short( short * Out,
+                     const void * In, long ValueOffset,
+                     int MachineTypeIn, unsigned long DataCount);
+ 
+DESCRIPTION
+ 
+  Conversion of MachineTypeIn array In to signed integer (MInteger) 
+  array Out. The input data buffer ´In´ with elements of the type 
+  ´MachineTypeIn´ is copied to the output data buffer ´Out´ with elements 
+  of the type signed integer. Both buffers contain ´DataCount´ elements.
+ 
+  The allocated memory for the output buffer must be sufficiently large.
+  If the required memory for the output buffer is smaller or equal to the
+  input buffer, the same buffer can be used for input and output.
+ 
+RETURN VALUE
+  success:  0
+  error:   -1
+ 
+AUTHOR
+  Peter Boesecke 
+ 
+HISTORY
+  2011-09-01 PB from Convert2Long
+  --------------------------------------------------------------------------*/
+int Convert2Short( short * Out, const void * In, long ValueOffset,
+                   int MachineTypeIn, unsigned long DataCount)
+{ register unsigned long i;
+
+  const unsigned char  * pinuchar;
+  const char           * pinchar;
+  const unsigned short * pinushort;
+  const short          * pinshort;
+  const unsigned int   * pinuint;
+  const int            * pinint;
+  const unsigned long  * pinulong;
+  const long           * pinlong;
+  const float          * pinfloat;
+  const double         * pindouble;
+
+  short                * pout;
+  short                  dvo = (short) ValueOffset;
+  double                 tmp;
+
+  size_t t_in, t_out = edf_machine_sizeof ( MShort );
+
+  if (EDFIO_debug) {
+    printf("Convert2Short\n");
+  } // EDFIO_debug
+
+  switch ( MachineTypeIn ) {
+    case MUnsignedChar : t_in = edf_machine_sizeof( MUnsignedChar );
+                         if (t_in<t_out) {
+                           pinuchar = (unsigned char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuchar;
+                             *pout = dvo + (short) *pinuchar;
+                           }
+                         } else {
+                           pinuchar = (unsigned char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinuchar;
+                             pout++; pinuchar++;
+                           }
+                         }
+                         break;
+     case MChar :         t_in = edf_machine_sizeof( MChar );
+                         if (t_in<t_out) {
+                           pinchar = (char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinchar;
+                             *pout = dvo + (short) *pinchar;
+                           }
+                         } else {
+                           pinchar = (char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinchar;
+                             pout++; pinchar++;
+                           }
+                         }
+                         break;
+     case MUnsignedShort: t_in = edf_machine_sizeof( MUnsignedShort );
+                         if (t_in<t_out) {
+                           pinushort = (unsigned short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinushort;
+                             *pout = dvo + (short) *pinushort;
+                           }
+                         } else {
+                           pinushort = (unsigned short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinushort;
+                             pout++; pinushort++;
+                           }
+                         }
+                         break;
+    case MShort:         t_in = edf_machine_sizeof( MShort );
+                         if ((In!=Out)||(ValueOffset!=0)) {
+                           pinshort = (short *) In + DataCount;
+                           pout = Out + DataCount; 
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinshort;
+                             *pout = dvo + (short) *pinshort;
+                           }
+                         }
+                         break;
+     case MUnsignedInteger: t_in = edf_machine_sizeof( MUnsignedInteger );
+                         if (t_in<t_out) {
+                           pinuint = (unsigned int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuint;
+                             *pout = dvo + (short) *pinuint;
+                           }
+                         } else {
+                           pinuint = (unsigned int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinuint;
+                             pout++; pinuint++;
+                           }
+                         }
+                         break;
+     case MInteger :     t_in = edf_machine_sizeof( MInteger );
+                         if (t_in<t_out) {
+                           pinint = (int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinint;
+                             *pout = dvo + (short) *pinint;
+                           }
+                         } else {
+                           pinint = (int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinint;
+                             pout++; pinint++;
+                           }
+                         }
+                         break;
+    case MUnsignedLong:  t_in = edf_machine_sizeof( MUnsignedLong );
+                         if (t_in<t_out) {
+                           pinulong = (unsigned long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinulong;
+                             *pout = dvo + (short) *pinulong;
+                           }
+                         } else {
+                           pinulong = (unsigned long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinulong;
+                             pout++; pinulong++;
+                           }
+                         }
+                         break;
+     case MLong :        t_in = edf_machine_sizeof( MLong );
+                         if (t_in<t_out) {
+                           pinlong = (long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinlong;
+                             *pout = dvo + (short) *pinlong;
+                           }
+                         } else {
+                           pinlong = (long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (short) *pinlong;
+                             pout++; pinlong++;
+                           }
+                         }
+                         break;
+
+     case MFloat:        t_in = edf_machine_sizeof( MFloat );
+                         if (t_in<t_out) {
+                           pinfloat = (float *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) { // round
+                             pout--; --pinfloat;
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (short) CLIP_FLOAT(tmp, ShortMin, ShortMax);
+                           }
+                         } else {
+                           pinfloat = (float *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) { // round
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (short) CLIP_FLOAT(tmp, ShortMin, ShortMax);
+                             pout++; pinfloat++;
+                           }
+                         }
+                         break;
+    case MDouble :       t_in = edf_machine_sizeof( MDouble );
+                         if (t_in<t_out) {
+                           pindouble = (double *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pindouble;
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (short) CLIP_FLOAT(tmp, ShortMin, ShortMax);
+                           }
+                         } else {
+                           pindouble = (double *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (short) CLIP_FLOAT(tmp, ShortMin, ShortMax);
+                             pout++; pindouble++;
+                           }
+                         }
+                         break;
+    default :            return(-1);
+                         break; 
+    } /* switch */
+
+  return(0);
+
+} /* Convert2Short */
+
+/*---------------------------------------------------------------------------
+NAME
+ 
+  Convert2Integer
+ 
+SYNOPSIS
+ 
+  DType DataTypeIn;
+  int Convert2Integer( int * Out,
+                       const void * In, long ValueOffset,
+                       int MachineTypeIn, unsigned long DataCount);
+ 
+DESCRIPTION
+ 
+  Conversion of MachineTypeIn array In to signed integer (MInteger) 
+  array Out. The input data buffer ´In´ with elements of the type 
+  ´MachineTypeIn´ is copied to the output data buffer ´Out´ with elements 
+  of the type signed integer. Both buffers contain ´DataCount´ elements.
+ 
+  The allocated memory for the output buffer must be sufficiently large.
+  If the required memory for the output buffer is smaller or equal to the
+  input buffer, the same buffer can be used for input and output.
+ 
+RETURN VALUE
+  success:  0
+  error:   -1
+ 
+AUTHOR
+  Peter Boesecke 
+ 
+HISTORY
+  2011-09-01 PB from Convert2Long
+  --------------------------------------------------------------------------*/
+int Convert2Integer( int * Out, const void * In, long ValueOffset,
+                  int MachineTypeIn, unsigned long DataCount)
+{ register unsigned long i;
+
+  const unsigned char  * pinuchar;
+  const char           * pinchar;
+  const unsigned short * pinushort;
+  const short          * pinshort;
+  const unsigned int   * pinuint;
+  const int            * pinint;
+  const unsigned long  * pinulong;
+  const long           * pinlong;
+  const float          * pinfloat;
+  const double         * pindouble;
+
+  int                  * pout;
+  int                    dvo = (int) ValueOffset;
+  double                 tmp;
+
+  size_t t_in, t_out = edf_machine_sizeof ( MInteger );
+
+  if (EDFIO_debug) {
+    printf("Convert2Integer\n");
+  } // EDFIO_debug
+
+  switch ( MachineTypeIn ) {
+    case MUnsignedChar : t_in = edf_machine_sizeof( MUnsignedChar );
+                         if (t_in<t_out) {
+                           pinuchar = (unsigned char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuchar;
+                             *pout = dvo + (int) *pinuchar;
+                           }
+                         } else {
+                           pinuchar = (unsigned char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinuchar;
+                             pout++; pinuchar++;
+                           }
+                         }
+                         break;
+     case MChar :         t_in = edf_machine_sizeof( MChar );
+                         if (t_in<t_out) {
+                           pinchar = (char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinchar;
+                             *pout = dvo + (int) *pinchar;
+                           }
+                         } else {
+                           pinchar = (char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinchar;
+                             pout++; pinchar++;
+                           }
+                         }
+                         break;
+     case MUnsignedShort: t_in = edf_machine_sizeof( MUnsignedShort );
+                         if (t_in<t_out) {
+                           pinushort = (unsigned short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinushort;
+                             *pout = dvo + (int) *pinushort;
+                           }
+                         } else {
+                           pinushort = (unsigned short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinushort;
+                             pout++; pinushort++;
+                           }
+                         }
+                         break;
+     case MShort :        t_in = edf_machine_sizeof( MShort );
+                         if (t_in<t_out) {
+                           pinshort = (short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinshort;
+                             *pout = dvo + (int) *pinshort;
+                           }
+                         } else {
+                           pinshort = (short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinshort;
+                             pout++; pinshort++;
+                           }
+                         }
+                         break;
+     case MUnsignedInteger: t_in = edf_machine_sizeof( MUnsignedInteger );
+                         if (t_in<t_out) {
+                           pinuint = (unsigned int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuint;
+                             *pout = dvo + (int) *pinuint;
+                           }
+                         } else {
+                           pinuint = (unsigned int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinuint;
+                             pout++; pinuint++;
+                           }
+                         }
+                         break;
+     case MInteger:      t_in = edf_machine_sizeof( MInteger );
+                         if ((In!=Out)||(ValueOffset!=0)) {
+                           pinint = (int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinint;
+                             *pout = dvo + (int) *pinint;
+                           }
+                         }
+                         break;
+    case MUnsignedLong:  t_in = edf_machine_sizeof( MUnsignedLong );
+                         if (t_in<t_out) {
+                           pinulong = (unsigned long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinulong;
+                             *pout = dvo + (int) *pinulong;
+                           }
+                         } else {
+                           pinulong = (unsigned long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinulong;
+                             pout++; pinulong++;
+                           }
+                         }
+                         break;
+     case MLong :        t_in = edf_machine_sizeof( MLong );
+                         if (t_in<t_out) {
+                           pinlong = (long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinlong;
+                             *pout = dvo + (int) *pinlong;
+                           }
+                         } else {
+                           pinlong = (long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (int) *pinlong; 
+                             pout++; pinlong++;
+                           }
+                         }
+                         break;
+     case MFloat:        t_in = edf_machine_sizeof( MFloat );
+                         if (t_in<t_out) {
+                           pinfloat = (float *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) { // round
+                             pout--; --pinfloat;
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (int) CLIP_FLOAT(tmp, IntMin, IntMax);
+                           }
+                         } else {
+                           pinfloat = (float *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) { // round
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (int) CLIP_FLOAT(tmp, IntMin, IntMax);
+                             pout++; pinfloat++;
+                           }
+                         }
+                         break;
+    case MDouble :       t_in = edf_machine_sizeof( MDouble );
+                         if (t_in<t_out) {
+                           pindouble = (double *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pindouble;
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (int) CLIP_FLOAT(tmp, IntMin, IntMax);
+                           }
+                         } else {
+                           pindouble = (double *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (int) CLIP_FLOAT(tmp, IntMin, IntMax);
+                             pout++; pindouble++;
+                           }
+                         }
+                         break;
+    default :            return(-1);
+                         break; 
+    } /* switch */
+
+  return(0);
+
+} /* Convert2Integer */
+
+/*---------------------------------------------------------------------------
+NAME
+ 
+  Convert2Long
+ 
+SYNOPSIS
+ 
+  DType DataTypeIn;
+  int Convert2Long( long * Out,
+                    const void * In, long ValueOffset,
+                    int MachineTypeIn, unsigned long DataCount);
+ 
+DESCRIPTION
+ 
+  Conversion of MachineTypeIn array In to signed long (MLong) 
+  array Out. The input data buffer ´In´ with elements of the type 
+  ´MachineTypeIn´ is copied to the output data buffer ´Out´ with elements 
+  of the type signed long. Both buffers contain ´DataCount´ elements.
+ 
+  The allocated memory for the output buffer must be sufficiently large.
+  If the required memory for the output buffer is smaller or equal to the
+  input buffer, the same buffer can be used for input and output.
+ 
+RETURN VALUE
+  success:  0
+  error:   -1
+ 
+AUTHOR
+  Peter Boesecke 
+ 
+HISTORY
+  2011-09-01 PB from Convert2Float
+  --------------------------------------------------------------------------*/
+int Convert2Long( long * Out, const void * In, long ValueOffset,
+                  int MachineTypeIn, unsigned long DataCount)
+{ register unsigned long i;
+
+  const unsigned char  * pinuchar;
+  const char           * pinchar;
+  const unsigned short * pinushort;
+  const short          * pinshort;
+  const unsigned int   * pinuint;
+  const int            * pinint;
+  const unsigned long  * pinulong;
+  const long           * pinlong;
+  const float          * pinfloat;
+  const double         * pindouble;
+
+  long                 * pout;
+  long                   dvo = ValueOffset;
+  double                 tmp;
+
+  size_t t_in, t_out = edf_machine_sizeof ( MLong );
+
+  if (EDFIO_debug) {
+    printf("Convert2Long\n");
+  } // EDFIO_debug
+
+  switch ( MachineTypeIn ) {
+    case MUnsignedChar : t_in = edf_machine_sizeof( MUnsignedChar );
+                         if (t_in<t_out) {
+                           pinuchar = (unsigned char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuchar;
+                             *pout = dvo + (long) *pinuchar;
+                           }
+                         } else {
+                           pinuchar = (unsigned char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinuchar;
+                             pout++; pinuchar++;
+                           }
+                         }
+                         break;
+     case MChar :         t_in = edf_machine_sizeof( MChar );
+                         if (t_in<t_out) {
+                           pinchar = (char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinchar;
+                             *pout = dvo + (long) *pinchar;
+                           }
+                         } else {
+                           pinchar = (char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinchar;
+                             pout++; pinchar++;
+                           }
+                         }
+                         break;
+     case MUnsignedShort: t_in = edf_machine_sizeof( MUnsignedShort );
+                         if (t_in<t_out) {
+                           pinushort = (unsigned short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinushort;
+                             *pout = dvo + (long) *pinushort;
+                           }
+                         } else {
+                           pinushort = (unsigned short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinushort;
+                             pout++; pinushort++;
+                           }
+                         }
+                         break;
+     case MShort :        t_in = edf_machine_sizeof( MShort );
+                         if (t_in<t_out) {
+                           pinshort = (short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinshort;
+                             *pout = dvo + (long) *pinshort;
+                           }
+                         } else {
+                           pinshort = (short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinshort;
+                             pout++; pinshort++;
+                           }
+                         }
+                         break;
+     case MUnsignedInteger: t_in = edf_machine_sizeof( MUnsignedInteger );
+                         if (t_in<t_out) {
+                           pinuint = (unsigned int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuint;
+                             *pout = dvo + (long) *pinuint;
+                           }
+                         } else {
+                           pinuint = (unsigned int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinuint;
+                             pout++; pinuint++;
+                           }
+                         }
+                         break;
+     case MInteger :     t_in = edf_machine_sizeof( MInteger );
+                         if (t_in<t_out) {
+                           pinint = (int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinint;
+                             *pout = dvo + (long) *pinint;
+                           }
+                         } else {
+                           pinint = (int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinint;
+                             pout++; pinint++;
+                           }
+                         }
+                         break;
+    case MUnsignedLong:  t_in = edf_machine_sizeof( MUnsignedLong );
+                         if (t_in<t_out) {
+                           pinulong = (unsigned long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinulong;
+                             *pout = dvo + (long) *pinulong;
+                           }
+                         } else {
+                           pinulong = (unsigned long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (long) *pinulong;
+                             pout++; pinulong++;
+                           }
+                         }
+                         break;
+    case MLong:          t_in = edf_machine_sizeof( MLong );
+                         if ((In!=Out)||(ValueOffset!=0)) {
+                           pinlong = (long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinlong;
+                             *pout = dvo + (long) *pinlong;
+                           }
+                         }
+                         break;
+     case MFloat:        t_in = edf_machine_sizeof( MFloat );
+                         if (t_in<t_out) {
+                           pinfloat = (float *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) { // round
+                             pout--; --pinfloat;
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (long) CLIP_FLOAT(tmp, LongMin, LongMax);
+                           }
+                         } else {
+                           pinfloat = (float *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) { // round
+                             tmp = floor( *pinfloat + 0.5 + dvo );
+                             *pout = (long) CLIP_FLOAT(tmp, LongMin, LongMax);
+                             pout++; pinfloat++;
+                           }
+                         }
+                         break;
+    case MDouble :       t_in = edf_machine_sizeof( MDouble );
+                         if (t_in<t_out) {
+                           pindouble = (double *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pindouble;
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (long) CLIP_FLOAT(tmp, LongMin, LongMax);
+                           }
+                         } else {
+                           pindouble = (double *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             tmp = floor( *pindouble + 0.5 + dvo );
+                             *pout = (long) CLIP_FLOAT(tmp, LongMin, LongMax);
+                             pout++; pindouble++;
+                           }
+                         }
+                         break;
+    default :            return(-1);
+                         break; 
+    } /* switch */
+
+  return(0);
+
+} /* Convert2Long */
 
 /*---------------------------------------------------------------------------
 NAME
@@ -8719,9 +9348,9 @@ SYNOPSIS
 DESCRIPTION
 
   Conversion of MachineTypeIn array In to float (MFloat) array Out.
-  The input data buffer 'In' with elements of the type 'MachineTypeIn'
-  is copied to the output data buffer 'Out' with elements of the
-  type float. Both buffers contain 'DataCount' elements.
+  The input data buffer ´In´ with elements of the type ´MachineTypeIn´
+  is copied to the output data buffer ´Out´ with elements of the
+  type float. Both buffers contain ´DataCount´ elements.
 
   The allocated memory for the output buffer must be sufficiently large. 
   If the required memory for the output buffer is smaller or equal to the
@@ -8938,6 +9567,230 @@ int Convert2Float( float * Out, const void * In, long ValueOffset,
 
 /*---------------------------------------------------------------------------
 NAME
+
+  Convert2Double
+
+SYNOPSIS
+
+  DType DataTypeIn;
+  int Convert2Double( double * Out, 
+                      const void * In, long ValueOffset, 
+                      int MachineTypeIn, unsigned long DataCount);
+
+DESCRIPTION
+
+  Conversion of MachineTypeIn array In to double (MDouble) array Out.
+  The input data buffer ´In´ with elements of the type ´MachineTypeIn´
+  is copied to the output data buffer ´Out´ with elements of the
+  type double. Both buffers contain ´DataCount´ elements.
+
+  The allocated memory for the output buffer must be sufficiently large. 
+  If the required memory for the output buffer is smaller or equal to the
+  input buffer, the same buffer can be used for input and output.
+
+RETURN VALUE
+  success:  0
+  error:   -1
+
+HISTORY
+  2010-07-08 PB from Convert2Float
+  --------------------------------------------------------------------------*/
+int Convert2Double( double * Out, const void * In, long ValueOffset,
+                   int MachineTypeIn, unsigned long DataCount)
+{ register unsigned long i;
+
+  const unsigned char  * pinuchar;
+  const char           * pinchar;
+  const unsigned short * pinushort;
+  const short          * pinshort;
+  const unsigned int   * pinuint;
+  const int            * pinint;
+  const unsigned long  * pinulong;
+  const long           * pinlong;
+  const float          * pinfloat;
+  const double         * pindouble;
+
+  double * pout;
+  double dvo = (double) ValueOffset;
+
+  size_t t_in, t_out = edf_machine_sizeof ( MFloat );
+
+  if (EDFIO_debug) {
+    printf("Convert2Double\n");
+  } // EDFIO_debug
+
+  switch ( MachineTypeIn ) {
+    case MUnsignedChar : t_in = edf_machine_sizeof( MUnsignedChar );
+                         if (t_in<t_out) {
+                           pinuchar = (unsigned char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuchar;
+                             *pout = dvo + (double) *pinuchar;
+                           }
+                         } else {
+                           pinuchar = (unsigned char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinuchar;
+                             pout++; pinuchar++;
+                           }
+                         }
+                         break;
+     case MChar :         t_in = edf_machine_sizeof( MChar );
+                         if (t_in<t_out) {
+                           pinchar = (char *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinchar;
+                             *pout = dvo + (double) *pinchar;
+                           }
+                         } else {
+                           pinchar = (char *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinchar;
+                             pout++; pinchar++;
+                           }
+                         }
+                         break;
+     case MUnsignedShort: t_in = edf_machine_sizeof( MUnsignedShort );
+                         if (t_in<t_out) {
+                           pinushort = (unsigned short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinushort;
+                             *pout = dvo + (double) *pinushort;
+                           }
+                         } else {
+                           pinushort = (unsigned short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinushort;
+                             pout++; pinushort++;
+                           }
+                         }
+                         break;
+     case MShort :        t_in = edf_machine_sizeof( MShort );
+                         if (t_in<t_out) {
+                           pinshort = (short *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinshort;
+                             *pout = dvo + (double) *pinshort;
+                           }
+                         } else {
+                           pinshort = (short *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinshort;
+                             pout++; pinshort++;
+                           }
+                         }
+                         break;
+     case MUnsignedInteger: t_in = edf_machine_sizeof( MUnsignedInteger );
+                         if (t_in<t_out) {
+                           pinuint = (unsigned int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinuint;
+                             *pout = dvo + (double) *pinuint;
+                           }
+                         } else {
+                           pinuint = (unsigned int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinuint;
+                             pout++; pinuint++;
+                           }
+                         }
+                         break;
+     case MInteger :     t_in = edf_machine_sizeof( MInteger );
+                         if (t_in<t_out) {
+                           pinint = (int *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinint;
+                             *pout = dvo + (double) *pinint;
+                           }
+                         } else {
+                           pinint = (int *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinint;
+                             pout++; pinint++;
+                           }
+                         }
+                         break;
+    case MUnsignedLong:  t_in = edf_machine_sizeof( MUnsignedLong );
+                         if (t_in<t_out) {
+                           pinulong = (unsigned long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinulong;
+                             *pout = dvo + (double) *pinulong;
+                           }
+                         } else {
+                           pinulong = (unsigned long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinulong;
+                             pout++; pinulong++;
+                           }
+                         }
+                         break;
+    case MLong :         t_in = edf_machine_sizeof( MLong );
+                         if (t_in<t_out) {
+                           pinlong = (long *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinlong;
+                             *pout = dvo + (double) *pinlong;
+                           }
+                         } else {
+                           pinlong = (long *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinlong;
+                             pout++; pinlong++;
+                           }
+                         }
+                         break;
+    case MFloat :        t_in = edf_machine_sizeof( MFloat );
+                         if (t_in<t_out) {
+                           pinfloat = (float *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i) {
+                             --pout; --pinfloat;
+                             *pout = dvo + (double) *pinfloat;
+                           }
+                         } else {
+                           pinfloat = (float *) In;
+                           pout = Out;
+                           for (i=0;i<DataCount;i++) {
+                             *pout = dvo + (double) *pinfloat;
+                             pout++; pinfloat++;
+                           }
+                         }
+                         break;
+    case MDouble :       t_in = edf_machine_sizeof( MDouble );
+                         if ((In!=Out)||(ValueOffset!=0)) {
+                           pindouble = (double *) In + DataCount;
+                           pout = Out + DataCount;
+                           for (i=DataCount;i>0;--i)
+                             *(--pout) = dvo + *(--pindouble);
+                           }
+                         break;
+    default :            return(-1);
+                         break; 
+    } /* switch */
+
+  return(0);
+
+} /* Convert2Double */
+
+/*---------------------------------------------------------------------------
+NAME
   
   edf_machine2machine
 
@@ -8951,11 +9804,11 @@ SYNOPSIS
 
 DESCRIPTION
 
-  The input data buffer 'src' with element of the type 'mtype_src' 
-  is copied to the output data buffer 'dest' with elements of the 
-  type 'mtype_dest'. Both buffers consists of 'n' elements.
+  The input data buffer ´src´ with element of the type ´mtype_src´ 
+  is copied to the output data buffer ´dest´ with elements of the 
+  type ´mtype_dest´. Both buffers consists of ´n´ elements.
 
-  The data types are listed in 'MType'.
+  The data types are listed in ´MType´.
 
   The allocated memory for the output buffer must be sufficiently large. 
   If the required memory for the output buffer is smaller or equal to the
@@ -8978,7 +9831,7 @@ int edf_machine2machine ( void * dest, int mtype_dest,
                           const void * src, long value_offset,
                           int mtype_src, unsigned long n)
 { int failed = True;
-  void * out = dest;
+  void *out = dest;
   const void *in = src;
 
   if (EDFIO_debug) {
@@ -8987,7 +9840,12 @@ int edf_machine2machine ( void * dest, int mtype_dest,
     printf("Conversion of %s to %s\n",
             MachineType2String( mtype_src ), 
             MachineType2String( mtype_dest ) );
-    } // EDFIO_debug
+  } // EDFIO_debug
+
+  if ( (!dest)||(!src) ) {
+    fprintf(stderr, "SEVERE: edf_machine2machine: NULL pointer\n");
+    exit(-1);
+  }
 
   if (!mtype_src) return(-1);
   switch ( mtype_dest ) {
@@ -8995,18 +9853,32 @@ int edf_machine2machine ( void * dest, int mtype_dest,
     case MChar           : break;
     case MUnsignedShort  : failed = Convert2UnsignedShort( 
                            (unsigned short *) out, in,
-                           value_offset, mtype_src, n ); break; 
-    case MShort          : break;
+                           value_offset, mtype_src, n ); 
+                           break; 
+    case MShort          : failed = Convert2Short(
+                           (short *) out, in,
+                           value_offset, mtype_src, n ); 
+                           break;
     case MUnsignedInteger: break;
-    case MInteger        : break;
+    case MInteger        : failed = Convert2Integer(
+                           (int *) out, in,
+                           value_offset, mtype_src, n ); 
+                           break;
     case MUnsignedLong   : break;
-    case MLong           : break;
+    case MLong           : failed = Convert2Long(
+                           (long *) out, in,
+                           value_offset, mtype_src, n ); 
+                           break;
     case MFloat          : failed = Convert2Float( 
                            (float *) out, in, 
-                           value_offset, mtype_src, n ); break;
-    case MDouble         : break;
+                           value_offset, mtype_src, n ); 
+                           break;
+    case MDouble         : failed = Convert2Double(
+                           (double *) out, in,
+                           value_offset, mtype_src, n ); 
+                           break;
     default              : break;  
-    } /* switch */
+  } /* switch */
 
   if (failed) return(-1);
 
@@ -9136,7 +10008,7 @@ SYNOPSIS
  
 DESCRPTION
  
-  Writes 'debug' into HIST_debug.
+  Writes ´debug´ into HIST_debug.
  
 -----------------------------------------------------------------------------*/
 void hist_debug ( int debug )
@@ -9160,11 +10032,11 @@ int print_history_list( FILE * out, int level, int verbose, HSymb * root )
       fprintf(out,"   key               = %s\n",hline->key);
       fprintf(out,"   line              = %s\n",hline->line);
 //      fprintf(out,"   size              = %zu\n",hline->size);
-      fprintf(out,"   size              = %zu | %zu\n",
+      fprintf(out,"   size              = %zu | %lu\n",
         hline->size,hline->size);
       fprintf(out,"   required          = %d\n",hline->required);
 //      fprintf(out,"   shortlen          = %zu\n",hline->shortlen);
-      fprintf(out,"   shortlen          = %zu | %zu\n",
+      fprintf(out,"   shortlen          = %zu | %lu\n",
         hline->shortlen, hline->shortlen);
       fprintf(out,"   Previous key      = ");
       if ((hline->Previous)!=(HSymb*) NULL)
@@ -9283,7 +10155,7 @@ SYNOPSIS
    int clear_header_history ( HBlock * hblock )
  
 DESCRIPTION
-Releases all allocated history lines of 'hblock'
+Releases all allocated history lines of ´hblock´
  
 RETURN VALUES
 In case of success the return value is 0, otherwise -1.
@@ -9313,8 +10185,8 @@ SYNOPSIS
    int insert_history_block( const char * history_key, HBlock **hblock );
  
 DESCRIPTION
-Searches for a history block with 'history_key' and clears it or inserts
-an empty history block with 'history_key'. The pointer to the history
+Searches for a history block with ´history_key´ and clears it or inserts
+an empty history block with ´history_key´. The pointer to the history
 block is returned in *hblock.
  
 RETURN VALUES
@@ -9376,8 +10248,8 @@ SYNOPSIS
                            HBlock *src )
  
 DESCRIPTION
-Searches for a history block with 'history_key' and clears it or inserts
-an empty history block with 'history_key'. The contents of src is copied 
+Searches for a history block with ´history_key´ and clears it or inserts
+an empty history block with ´history_key´. The contents of src is copied 
 into this block. The pointer to the history block is returned in *hblock.
  
 RETURN VALUES
@@ -9415,7 +10287,7 @@ SYNOPSIS
    int search_history_block( const char * history_key, HBlock ** hblock );
  
 DESCRIPTION
-Searches for history block 'history_key' and returns it in *hblock
+Searches for history block ´history_key´ and returns it in *hblock
  
 RETURN VALUES
 In case of success the return value is 0, otherwise -1.
@@ -9589,7 +10461,7 @@ int history_line_add  ( HSymb ** proot, const char * history_line_key,
   while( ( next!=(HSymb *) NULL ) && (notfound>0) ) {
     notfound = compare_keys(next->key,history_line_key,UpperCaseSort);
     if (notfound>0) {next = next->Next;}
-    }
+  }
  
   /* add arguments */
   if ( next!=(HSymb *) NULL ) {
@@ -9598,18 +10470,21 @@ int history_line_add  ( HSymb ** proot, const char * history_line_key,
     linelen = STRLEN(next->line);
     if ((linelen>0) && (linelen<next->size-1)) strcat(next->line, " ");
  
-    n = (size_t) MAX(0l,MIN((long) next->size - (long) STRLEN(next->line) - 1l,
+    linelen = STRLEN(next->line);
+    n = (size_t) MAX(0l,MIN((long) next->size - (long) linelen - 1l,
                             (long) STRLEN(substring)));
  
     if (n>0) {
-      strncat(next->line, substring, n );
-      strcat(next->line, "\0");
-      }
+      // strncat(next->line, substring, n ); // not ansic ++++++++++++++
+      // strcat(next->line, "\0"); // ++++++++++++++
+      strncpy(next->line+linelen, substring, n); // start at terminating 0
+      next->line[linelen+n]='\0'; // write terminating 0
+    }
  
     /* update shortlen if argument is required */
     if (next->required) next->shortlen = strlen(next->line);
     next->required = 1;
-    }
+  }
  
   return(0);
  
@@ -9627,9 +10502,9 @@ DESCRIPTION
 This routines must be called first. If not already initialized, it
 initializes all history lists. Existing history lines are
 removed and a new empty history line with size MaxHistoryLineSize is
-created. 'edf_history_argv' adds parameters to this line.
-'edf_write_header_history' appends it with a new key to the
-history lines that were read with 'edf_read_header_history'.
+created. ´edf_history_argv´ adds parameters to this line.
+´edf_write_header_history´ appends it with a new key to the
+history lines that were read with ´edf_read_header_history´.
  
 RETURN VALUES
 In case of success the return value is 1, otherwise 0.
@@ -9639,7 +10514,7 @@ int edf_history_new          ( const char * history_key )             /*---*/
 {  HBlock * hblock;
 
    if (HIST_debug) printf("\n edf_history_new BEGIN\n");
- 
+
    /* init history module */
    if (!InitHistory) init_history();
    /* create an empty history block */
@@ -9720,7 +10595,7 @@ int edf_history_skip (  const char * history_key  )                   /*---*/
   if (HIST_debug) printf("\n edf_history_skip BEGIN\n");
   if (!InitHistory) init_history();
  
-  /* search block 'history_key' */
+  /* search block ´history_key´ */
   if (search_history_block( history_key, &hblock )) return(0);
 
   if (history_line_required ( &hblock->history_argv_root, argv_key, 0 )) 
@@ -9757,7 +10632,7 @@ int edf_history_take ( const char * history_key )                     /*---*/
   if (HIST_debug) printf("\n edf_history_take BEGIN\n");
   if (!InitHistory) init_history();
 
-  /* search block 'history_key' */
+  /* search block ´history_key´ */
   if (search_history_block( history_key, &hblock )) return(0);
  
   if (history_line_required ( &hblock->history_argv_root, argv_key, 1 )) 
@@ -9797,7 +10672,7 @@ int edf_history_free         ( const char * history_key )             /*---*/
   if (!InitHistory) init_history();
 
   if ( history_key != (char *) NULL ) {
-    /* search block 'history_key' */
+    /* search block ´history_key´ */
     if (search_history_block( history_key, &hblock )) return(0);
     /* clear and remove history block */
     if (remove_history_block( hblock )) return(0);
@@ -9848,34 +10723,39 @@ int edf_read_header_history  (int stream, long int DataNumber,
    long depth=1;
 
    const char *String;
+
+   int ErrorValue = RoutineSucceeded, status = status_error;
  
    if (HIST_debug) printf("\n edf_read_header_history BEGIN\n");
  
-   *pErrorValue = RoutineSucceeded;
-   *pstatus     = status_error;
- 
    if (!InitHistory) init_history();
  
-   /* search block 'history_key' */
-   if (search_history_block( history_key, &hblock )) return(0);
+   /* search block ´history_key´ */
+   if (search_history_block( history_key, &hblock )) 
+     goto edf_read_header_history_error;
  
-   if (clear_header_history ( hblock ) ) return(0);
+   if (clear_header_history ( hblock ) )
+     goto edf_read_header_history_error;
  
    sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
  
    while ( edf_read_header_string ( stream, DataNumber, DataChain,
                                   history_line_key_buffer, &String,
-                                  pErrorValue, pstatus )) {
-     if (*pstatus != status_success) return(0);
+                                  &ErrorValue, &status )) {
+     if (status != status_success)
+       goto edf_read_header_history_error;
+
      /* Copy string to history line */
      if (String) {
        strncpy(history_line,String,MaxHistoryLineSize-1);
        history_line[MaxHistoryLineSize-1]='\0';
      } else history_line[0]='\0';
      if (history_line_new( &hblock->history_line_root, history_line_key_buffer,
-                          STRLEN(history_line)+1, (HSymb **) NULL )) return(0);
+                          STRLEN(history_line)+1, (HSymb **) NULL ))
+       goto edf_read_header_history_error;
      if (history_line_add( &hblock->history_line_root, history_line_key_buffer,
-                            history_line)) return(0);
+                            history_line))
+       goto edf_read_header_history_error;
      sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
      }
  
@@ -9891,13 +10771,25 @@ int edf_read_header_history  (int stream, long int DataNumber,
     print_history_list( stdout, 1, 1, hblock->history_line_root );
     }
  
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_success;
+  ErrorValue = RoutineSucceeded;
+  status     = status_success;
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
  
   if (HIST_debug) printf("\n edf_read_header_history END\n");
  
   return(1);
- 
+
+edf_read_header_history_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (HIST_debug) printf("\n edf_read_header_history END (status=%d)\n",status);
+
+  return(0);
+
 } /* edf_read_header_history */
 
 /*+++------------------------------------------------------------------------
@@ -9926,16 +10818,16 @@ int edf_write_header_history   ( int stream, long int DataNumber,
 { HBlock * hblock;
   HSymb * next;
   int retval = 1;
- 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_error;
+
+  int ErrorValue = RoutineSucceeded, status = status_error;
  
   if (HIST_debug) printf("\n edf_write_header_history BEGIN\n");
  
   if (!InitHistory) init_history();
  
-  /* search block 'history_key' */
-  if (search_history_block( history_key, &hblock )) return(0);
+  /* search block ´history_key´ */
+  if (search_history_block( history_key, &hblock ))
+    goto edf_write_header_history_error;
  
   if (HIST_debug) {
     printf(" history block key        = %s\n",hblock->key);
@@ -9943,7 +10835,7 @@ int edf_write_header_history   ( int stream, long int DataNumber,
            hblock->current_history_line_key);
     print_history_list( stdout, 1, 1, hblock->history_argv_root );
     print_history_list( stdout, 1, 1, hblock->history_line_root );
-    }
+  }
  
   /* history_argv_root */
   if (( hblock->history_argv_root != (HSymb *) NULL ) &&
@@ -9956,25 +10848,41 @@ int edf_write_header_history   ( int stream, long int DataNumber,
       if (!(edf_write_header_string ( stream, DataNumber, DataChain,
                                     hblock->current_history_line_key,
                                     hblock->history_argv_root->line,
-                                    pErrorValue, pstatus ) ) ) return( retval );
-      }
+                                    &ErrorValue, &status ) ) ) 
+        goto edf_write_header_history_return;
     }
+  }
  
   /* history_line_root */
   next = hblock->history_line_root;
   while ( next!=(HSymb *) NULL ) {
     if (!(edf_write_header_string ( stream, DataNumber, DataChain,
                                   next->key, next->line,
-                                  pErrorValue, pstatus ) ) ) return( retval );
+                                  &ErrorValue, &status ) ) )
+      goto edf_write_header_history_return;
     next = next->Next;
-    }
+  }
  
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_success;
+  ErrorValue = RoutineSucceeded;
+  status     = status_success;
+
+edf_write_header_history_return:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
  
   if (HIST_debug) printf("\n edf_write_header_history END\n");
  
   return( retval );
+
+edf_write_header_history_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (HIST_debug) printf("\n edf_write_header_history (status=%d)\n",status);
+
+  return(0);
  
 } /* edf_write_header_history */
 
@@ -10004,34 +10912,38 @@ int edf_history_read_header  ( const char * header_key,
                                int * pErrorValue, int * pstatus)      /*---*/
 {  HBlock *hblock;
 
-   const char * history_line;
-   char history_line_key_buffer[HistoryKeyBufferSize];
-   long depth=1;
+  const char * history_line;
+  char history_line_key_buffer[HistoryKeyBufferSize];
+  long depth=1;
  
-   if (HIST_debug) printf("\n edf_history_read_header BEGIN\n");
+  if (HIST_debug) printf("\n edf_history_read_header BEGIN\n");
 
-   *pErrorValue = RoutineSucceeded;
-   *pstatus     = status_error;
- 
-   if (!InitHistory) init_history();
+  int ErrorValue = RoutineSucceeded, status = status_error;
 
-   /* search block 'history_key' */
-   if (search_history_block( history_key, &hblock )) return(0);
+  if (!InitHistory) init_history();
+
+  /* search block ´history_key´ */
+  if (search_history_block( history_key, &hblock )) 
+    goto edf_history_read_header_error;
  
-   if (clear_header_history ( hblock ) ) return(0);
+  if (clear_header_history ( hblock ) )
+    goto edf_history_read_header_error;
  
-   sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
+  sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
  
-   while ( edf_search_header_element( header_key,
-                                      history_line_key_buffer, &history_line,
-                                      pErrorValue, pstatus )) {
-     if (*pstatus != status_success) return(0);
-     if (history_line_new( &hblock->history_line_root, history_line_key_buffer,
-                          STRLEN(history_line)+1, (HSymb **) NULL )) return(0);
-     if (history_line_add( &hblock->history_line_root, history_line_key_buffer,
-                            history_line)) return(0);
-     sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
-     }
+  while ( edf_search_header_element( header_key,
+                                     history_line_key_buffer, &history_line,
+                                     &ErrorValue, &status )) {
+    if (status != status_success)
+      goto edf_history_read_header_error;
+    if (history_line_new( &hblock->history_line_root, history_line_key_buffer,
+                         STRLEN(history_line)+1, (HSymb **) NULL ))
+      goto edf_history_read_header_error;
+    if (history_line_add( &hblock->history_line_root, history_line_key_buffer,
+                           history_line))
+      goto edf_history_read_header_error;
+    sprintf(history_line_key_buffer,"%s%lu",HISTORY_KEY_PREFIX,depth++);
+  }
  
   /* save current history key */
   if (hblock->current_history_line_key) free(hblock->current_history_line_key);
@@ -10043,15 +10955,27 @@ int edf_history_read_header  ( const char * header_key,
            hblock->current_history_line_key);
     print_history_list( stdout, 1, 1, hblock->history_argv_root );
     print_history_list( stdout, 1, 1, hblock->history_line_root );
-    }
+  }
  
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_success;
+  ErrorValue = RoutineSucceeded;
+  status     = status_success;
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
 
   if (HIST_debug) printf("\n edf_history_read_header END\n");
  
   return(1);
- 
+
+edf_history_read_header_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (HIST_debug) printf("\n edf_history_read_header END (status=%d)\n",status);
+
+  return(0);
+
 } /* edf_history_read_header */
 
 /*+++------------------------------------------------------------------------
@@ -10081,15 +11005,15 @@ int edf_history_write_header ( const char * header_key,
   HSymb * next;
   int retval = 1;
  
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_error;
- 
+  int ErrorValue = RoutineSucceeded, status = status_error;
+
   if (HIST_debug) printf("\n edf_history_write_header BEGIN\n");
  
   if (!InitHistory) init_history();
 
-  /* search block 'history_key' */
-  if (search_history_block( history_key, &hblock )) return(0);
+  /* search block ´history_key´ */
+  if (search_history_block( history_key, &hblock )) 
+    goto edf_history_write_header_error;
  
   if (HIST_debug) {
     printf(" history block key        = %s\n",hblock->key);
@@ -10110,7 +11034,8 @@ int edf_history_write_header ( const char * header_key,
       if (!( edf_add_header_element ( header_key,
                                       hblock->current_history_line_key, 
                                       hblock->history_argv_root->line,
-                                      pErrorValue, pstatus ) ) ) return(retval);
+                                      &ErrorValue, &status ) ) )
+        goto edf_history_write_header_return;
       }
     }
  
@@ -10118,16 +11043,32 @@ int edf_history_write_header ( const char * header_key,
   next = hblock->history_line_root;
   while ( next!=(HSymb *) NULL ) {
     if (!( edf_add_header_element ( header_key, next->key, next->line,
-                                    pErrorValue, pstatus ) ) ) return( retval );
+                                    &ErrorValue, &status ) ) )
+      goto edf_history_write_header_return;
     next = next->Next;
     }
  
-  *pErrorValue = RoutineSucceeded;
-  *pstatus     = status_success;
+  ErrorValue = RoutineSucceeded;
+  status     = status_success;
+
+edf_history_write_header_return:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
  
   if (HIST_debug) printf("\n edf_history_write_header END\n");
  
   return( retval );
+
+edf_history_write_header_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (HIST_debug) printf("\n edf_history_write_header END (status=%d)\n",status);
+
+  return(0);
+
  
 } /* edf_history_write_header */
 
@@ -10158,7 +11099,7 @@ int edf_history_copy ( const char * history_key_copy,
  
   if (!InitHistory) init_history();
  
-  /* search block 'history_key' */
+  /* search block ´history_key´ */
   if (search_history_block( history_key, &hblock )) return(0);
 
   /* copy hblock to history_key_copy */
@@ -10203,7 +11144,7 @@ int edf_history_argv ( const char * history_key,
  
   if (!InitHistory) init_history();
 
-  /* search block 'history_key' */
+  /* search block ´history_key´ */
   if (search_history_block( history_key, &hblock )) return(0);
  
   if (needquotes(argument)) {
@@ -10241,8 +11182,8 @@ SYNOPSIS
  
 DESCRIPTION
  
-   Prints contents of history 'history_key' to 'out', or contents of
-   all histories, if 'history_key' is NULL.
+   Prints contents of history ´history_key´ to ´out´, or contents of
+   all histories, if ´history_key´ is NULL.
  
 RETURN VALUE
     1: success
@@ -10318,17 +11259,17 @@ SYNOPSIS
                            int mtype, int * pErrorValue, int * pstatus );
 
 DESCRIPTION
-  Convert the data in 'block' into a machine readable form of type 'mtype'.
+  Convert the data in ´block´ into a machine readable form of type ´mtype´.
   - endian correction
   - binary decompression (not implemented)
   - raster order normalization 
   - conversion of data to mtype
 
-If 'buffer' is not the NULL-pointer the converted data are always written to
-'buffer' and  block->Flags.ExternalDataAlloc is set. 'buflen' is the available 
+If ´buffer´ is not the NULL-pointer the converted data are always written to
+´buffer´ and  block->Flags.ExternalDataAlloc is set. ´buflen´ is the available 
 memory in bytes. If the input data buffer was internally allocated it is 
 released. 
-If block->Flags.ExternalDataAlloc is set and 'buffer' is NULL the converted 
+If block->Flags.ExternalDataAlloc is set and ´buffer´ is NULL the converted 
 data are written back to the input data buffer. No additional memory is 
 allocated. 
 
@@ -10338,7 +11279,7 @@ The routine exits with an error if the buffer length is too small
 An endian correction is applied to the data if ByteOrder is different from 
 the InternalByteOrder of the machine. The data is decompressed, raster
 order is normalized and the data are converted into a machine readable
-form ('mtype').
+form (´mtype´).
 
 ERROR VALUES
   int * pErrorValue    returned ErrorValue,
@@ -10371,7 +11312,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
 
   internal_byte_order = byteorder();
 
-  /* check whether 'block' exists */
+  /* check whether ´block´ exists */
   if (!block) return(-1);
 
   /* check, if data available */
@@ -10402,14 +11343,14 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     if (block->Flags.ExternalDataAlloc) { // use input data buffer for output
       if (data_buffer_len<data_out_len) {
 //        fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-        fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+        fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
                RDA_Error,data_out_len,data_out_len);return(-1);
         }
       } 
     } else { // use supplied buffer for output
     if (buflen<data_out_len) {
 //      fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-      fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
              RDA_Error,data_out_len,data_out_len);return(-1);
       }
     }
@@ -10419,14 +11360,9 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
   current_len = data_buffer_len;
 
   /* --- endian correction */
-  if ( block->DataByteOrder != internal_byte_order ) 
+  if ( block->DataByteOrder != internal_byte_order )
     edf_bswap ( current, current, data_size, data_number );
   block->DataByteOrder = internal_byte_order;
-
-  /* --- binary decompression */
-  if ( block->DataCompression != UnCompressed ) {
-    fprintf(stderr,"%s Compression = %s is not implemented\n", RDA_Error,
-            Compression2String( block->DataCompression )); return(-1); }
 
   /* --- raster order normalization */
   if (block->DataRasterConfiguration!=1l) {
@@ -10434,21 +11370,22 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     dest_len = data_len;
     if (!(dest = malloc( dest_len ))) {
       *pErrorValue = CouldNotMallocMemory;
-//      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); }
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
-        RDA_Error,dest_len,dest_len);return(-1); }
+//      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1);
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
+        RDA_Error,dest_len,dest_len);return(-1); 
+    }
     als[alc++] = dest; // add allocated memory
 
-    if (edf_raster_normalization ( dest, current, data_dim,
-                            raster_configuration, data_size)) {
+    if (raster_normalization ( dest, current, data_dim,
+                            raster_configuration, data_size, NULL)) {
       for ( i=alc; i>0; --i ) if (als[i]) free(als[i]); return(-1); } 
     tmp = current; current = dest; dest = tmp;
     tmp_len = current_len; current_len = dest_len; dest_len = tmp_len;
     } /* if (raster_configuration!=1) */
   block->DataRasterConfiguration = 1l;
 
-  /* last step, if 'buffer' is set destination should be buffer, otherwise
-     destination should be 'block->Data', source is 'current' */
+  /* last step, if ´buffer´ is set destination should be buffer, otherwise
+     destination should be ´block->Data´, source is ´current´ */
   if ( buffer==(void *) NULL ) {
     dest = block->Data; 
     dest_len = data_buffer_len; 
@@ -10457,7 +11394,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     dest_len = buflen;
     if (dest_len<data_out_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",RDA_Error,data_out_len);
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
         RDA_Error,data_out_len,data_out_len);
       return(-1); }
     }
@@ -10469,12 +11406,12 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
       for ( i=alc; i>0; --i ) if (als[i]) free(als[i]);       
       *pErrorValue = CouldNotMallocMemory;
 //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); 
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
         RDA_Error,dest_len,dest_len);
       return(-1); 
     }
     als[alc++] = dest; // add allocated memory
-    } /* if (dest_len ... */
+  } /* if (dest_len ... */
 
   if ( edf_machine2machine ( dest, mtype,
                              current, data_value_offset,
@@ -10492,7 +11429,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
       else block->Flags.ExternalDataAlloc = False;
     /* remove from allocated memory list */
     for ( i=alc; i>0; --i ) if (als[i]==dest) als[i]=(void *) NULL;
-    }
+  }
 
   /* update data block description */
   block->DataLen = data_out_len;
@@ -10522,14 +11459,14 @@ SYNOPSIS
                         int * pErrorValue, int * pstatus )
  
 DESCRIPTION
-  Reads a data array from the block 'DataNumber' in 'DataChain'.
+  Reads a data array from the block ´DataNumber´ in ´DataChain´.
   If ( block->DataExternal ) the data is read from the file, if not, it is 
-  taken directy from 'block'.
+  taken directy from ´block´.
 
   buffer is an optional data buffer. If buffer!=NULL buflen describes the
-  available memory in bytes and 'must_use_buffer' is a flag that indicates
+  available memory in bytes and ´must_use_buffer´ is a flag that indicates
   whether this buffer must be used or whether it is optional. The data are 
-  written to buffer. If its size is too short and the flag 'must_use_buffer'
+  written to buffer. If its size is too short and the flag ´must_use_buffer´
   is set the routine stops with an error, otherwise an internal buffer with
   correct length is allocated. If buffer is NULL internal memory is always
   allocated. Internally allocated memory is released automatically after 
@@ -10549,7 +11486,7 @@ PARAMETERS
                               buffer != NULL
                               -> up to buflen bytes are written to *buffer
                                  (buflen is data buffer size in bytes)
-                                 If 'must_use_buffer' is False memory is
+                                 If ´must_use_buffer´ is False memory is
                                  allocated if external buffer is too short.
   size_t buflen        Size of input data buffer in bytes.
   int must_use_buffer  True: use always the supplied buffer
@@ -10586,25 +11523,25 @@ AUTHOR
 int read_data_array ( DBlock * block, void *buffer, size_t buflen, 
                       int must_use_buffer, long dim[],
                       int * pErrorValue, int * pstatus )
-{ 
+{
   *pstatus     = status_error;
   *pErrorValue = RoutineSucceeded;
 
-  /* check whether 'block' exists */
+  /* check whether ´block´ exists */
   if (!block) return(-1);
 
   /* get data array */
   if ( block->Flags.DataExternal ) {
     if ( get_binary_array ( block, buffer, buflen, must_use_buffer ) ) {
       *pErrorValue = CouldNotGetBinaryArray; return(-1); }
-    } 
+  } 
 
   /* copy dimensions to dim */
   if (dim) { // copy dimensions to dim 
     if ( !(copydim( dim, dim[0], block->DataDim ) ) ) {
       *pErrorValue = NotNdData; return(-1);
-      } 
     } 
+  } 
 
   *pstatus     = status_success;
   *pErrorValue = RoutineSucceeded;
@@ -10668,7 +11605,7 @@ SYNOPSIS
                            int *pErrorValue, int *pstatus );
 
 DESCRIPTION
-Opens 'fname' as a BSL file and, if successful, creates an edf file structure 
+Opens ´fname´ as a BSL file and, if successful, creates an edf file structure 
 with chains corresponding to bsl memories and data blocks corresponding to
 bsl frames. The translation is done in the following way:
 
@@ -10677,7 +11614,7 @@ memnum franum    chain key   block key  block id
 m      n         image.m     n          n.image.m
 
 The data block headers exist only in memory, they are not read a second time
-from the file. The only allowed opening mode is 'Old'. 
+from the file. The only allowed opening mode is ´Old´. 
 
 ERROR VALUES
 *pErrorValue
@@ -10686,10 +11623,6 @@ ERROR VALUES
 RETURN VALUE
 success:   int  stream (Channel not opened)
 error:     int  -1
-
-HISTORY
-22-Mar-1998 Peter Boesecke
-17-Mar-2000 chain key changed from image.psd.m to image.m
 ---------------------------------------------------------------------------*/
 int open_as_bsl_file (  const char *fname, const char * mode,
                         int *pErrorValue, int *pstatus )
@@ -10718,12 +11651,12 @@ int open_as_bsl_file (  const char *fname, const char * mode,
 
   if ( (STRCMP(mode,Old)!=0) && (STRCMP(mode,Read)!=0) ) {
     *pErrorValue = CannotOpenAsBslFile; return ( stream );
-    }
+  }
 
   if (!InitTable) init_file_table( FileTable );
   if ( ( stream=search_free_stream( FileTable ) ) < 0 ) {
     *pErrorValue = NoMoreStreamsAvailable; return(-1);
-    }
+  }
 
   if (EDFIO_debug) printf("\"%s\" : stream = %d (%s)\n",fname,stream,mode);
 
@@ -10739,11 +11672,13 @@ int open_as_bsl_file (  const char *fname, const char * mode,
 
   /* create general header */
   if ( new_general_block( file ) ) {
-      *pErrorValue = ErrorCreatingGeneralBlock; return(-1);
-      }
+    *pErrorValue = ErrorCreatingGeneralBlock; return(-1);
+  }
 
   bsl_stream = open_bsl_file ( fname , "read" );
-  if (bsl_stream<0) { *pErrorValue = CannotOpenAsBslFile; return( stream ); }
+  if (bsl_stream<0) { 
+    *pErrorValue = CannotOpenAsBslFile; return( stream ); 
+  }
 
   /* create edf file structure */
 
@@ -10781,26 +11716,27 @@ int open_as_bsl_file (  const char *fname, const char * mode,
 
         if (insert_string ( block, symbol_key, symbol_value, &symbol ))
            return(-1); 
-        }
+      }
 
       if (insert_string ( block, DATA_TYPE_KEY, 
           edf_datatype2string( data_spec->DataType ), &symbol )) return(-1);
 
       if ( bsl_input_byteorder == InValidBOrder ) {
         if (insert_string ( block, BYTE_ORDER_KEY,
-            ByteOrder2String( data_spec->ByteOrder ), &symbol )) return(-1); }
-       else { 
+            ByteOrder2String( data_spec->ByteOrder ), &symbol )) return(-1); 
+      } else { 
         if (insert_string ( block, BYTE_ORDER_KEY,
-            ByteOrder2String( bsl_input_byteorder ), &symbol )) return(-1); }
-
-      if (insert_string ( block, COMPRESSION_KEY,
-          Compression2String( data_spec->Compression ), &symbol )) return(-1);
+            ByteOrder2String( bsl_input_byteorder ), &symbol )) return(-1); 
+      }
 
       if (data_spec->RasterConfiguration!=1l) {
         sprintf(symbol_value,"%ld",data_spec->RasterConfiguration);
         if (insert_string ( block, RASTER_CONFIGURATION_KEY,
                             symbol_value, &symbol ) ) return(-1);
-        }
+      }
+
+      if (insert_string ( block, COMPRESSION_KEY,
+          edf_compression2string( data_spec->Compression ), &symbol )) return(-1);
 
     } /* for franum */
   } /* for memnum */
@@ -10840,7 +11776,7 @@ int open_as_edf_file ( const char *fname, const char * mode,
   if (!InitTable) init_file_table( FileTable );
   if ( ( stream=search_free_stream( FileTable ) ) < 0 ) {
     *pErrorValue = NoMoreStreamsAvailable; return(-1);
-    }
+  }
 
   if (EDFIO_debug) printf("\"%s\" : stream = %d (%s)\n",fname,stream,mode);
 
@@ -10909,20 +11845,21 @@ int open_as_edf_file ( const char *fname, const char * mode,
         file->LastBlockInFile = block;
         block->SequenceNumber = file->NextSequenceNumber++;
         locate_status = locate_block( file , &block );
-        } 
+      } 
       /* verify that end of file is reached */
-      if ( locate_status<-2 ) {
-        /* severe error */
+      if ( locate_status<0 ) {
+        /* fatal error */
         *pErrorValue = ErrorLocatingBlocks; return(-1);
-        }
-     } else { 
+      }
+    } else { 
       if (free_data_file ( file )) {
-        *pErrorValue = CouldNotCloseFile; return(-1); };
+        *pErrorValue = CouldNotCloseFile; return(-1); 
+      };
       *pErrorValue = ErrorReadingGeneralBlock;
       return(-1); 
-     } /* if read_general_block */ 
+    } /* if read_general_block */ 
 
-    } else file->GeneralBlock->Flags.HeaderChanged = True;
+  } else file->GeneralBlock->Flags.HeaderChanged = True;
 
   /* check, if something is in the file */
   if (STRCMP(mode,Old)==0) /* open old file */
@@ -10954,9 +11891,9 @@ DESCRIPTION
   If the file starts with the following sequence, it is opened as an edf
   type file.   
 
-   '\r' '\n' 'StartHeader'
-   '\n' 'StartHeader'
-   'StartHeader'
+   '\r' '\n' 'StartHeader´
+   '\n' 'StartHeader´
+   'StartHeader´
 
 REMARK
   All V2.0 Edf files must start with the following sequence
@@ -11044,26 +11981,30 @@ HISTORY
 int edf_open_data_file ( const char *fname, const char * mode,
                      int *pErrorValue, int *pstatus )                   /*---*/
 { int stream;
+  int ErrorValue = RoutineSucceeded, status = status_error;
 
   if (EDFIO_debug) printf("edf_open_data_file BEGIN\n");
 
   if ( (STRCMP(mode,Old)==0) || (STRCMP(mode,Read)==0) ) { /* open old file */
 
-    switch (data_file_type ( fname, pErrorValue, pstatus )) {
+    switch (data_file_type ( fname, &ErrorValue, &status )) {
       case EdfType: 
-           stream = open_as_edf_file ( fname, mode, pErrorValue, pstatus );
+           stream = open_as_edf_file ( fname, mode, &ErrorValue, &status );
            break;
       case BslType: 
-           stream = open_as_bsl_file ( fname, mode, pErrorValue, pstatus );
+           stream = open_as_bsl_file ( fname, mode, &ErrorValue, &status );
            break;
       default: 
            /* unknown data file type */
            stream = -1;
-           *pstatus = status_error;
+           status = status_error;
       }; 
-   } else stream = open_as_edf_file ( fname, mode, pErrorValue, pstatus );
+   } else stream = open_as_edf_file ( fname, mode, &ErrorValue, &status );
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
  
-  if (EDFIO_debug) printf("edf_open_data_file END\n");
+  if (EDFIO_debug) printf("edf_open_data_file END (status=%d)\n",status);
 
   if (EDFIO_debug) edf_print_filetable( stdout, 4, True );
  
@@ -11139,24 +12080,25 @@ int edf_search_stream ( const char *fname, const char * mode,
                         int *pErrorValue, int *pstatus )
 
 { int stream;
+  int ErrorValue=RoutineSucceeded, status=status_success;
 
-  if (EDFIO_debug) printf("edf_search_data_file BEGIN\n");
+  if (EDFIO_debug) printf("edf_search_stream BEGIN\n");
 
   if (!InitTable) init_file_table( FileTable );
   stream=search_stream( FileTable, fname ); 
 
-  *pstatus = status_success;
-  *pErrorValue = RoutineSucceeded;
-
-  if (stream>=0)
+  if ( (stream>=0)&&(stream<MaxFiles) )
     if (check_mode( stream, mode )) {
-      *pstatus     = status_error;
-      *pErrorValue = IncompatibleOpeningModes;
+      status     = status_error;
+      ErrorValue = IncompatibleOpeningModes;
     }
 
-  if (EDFIO_debug) printf("edf_search_stream END\n");
+  if (EDFIO_debug) printf("edf_search_stream END (status=%d)\n",status);
 
   if (EDFIO_debug) edf_print_filetable( stdout, 4, True );
+
+  if (pstatus) *pstatus = status;
+  if (pErrorValue) *pErrorValue = ErrorValue;
 
   return( stream );
 
@@ -11177,24 +12119,47 @@ DESCRIPTION
   --------------------------------------------------------------------------+*/
 void edf_close_data_file ( int stream, int *pErrorValue, int *pstatus ) /*---*/
 { 
-  DFile    *file = &FileTable[stream];
-  *pstatus = status_error;
+  int ErrorValue=RoutineSucceeded, status=status_error;
 
-  if (EDFIO_debug) printf("edf_close_data_file\n");
+  DFile    *file = NULL;
 
-  /* flush unsaved data block */
-  disk_write_block( file->ActiveBlock, pErrorValue, pstatus ); 
-  if (*pstatus) return;
+  if (EDFIO_debug) printf("edf_close_data_file BEGIN\n");
 
-  /* update active block */
-  file->ActiveBlock = (DBlock *) NULL;
+ if ( (stream>=0)&&(stream<MaxFiles) ) { // no need to close
+    file = &FileTable[stream];
 
-  if (free_data_file ( file )) {
-     *pErrorValue = CouldNotCloseFile; return;
-    }; 
+    /* flush unsaved data block */
+    if ( disk_write_block( file->ActiveBlock, &ErrorValue ) )
+      goto edf_close_data_file_error;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+    /* update active block */
+    file->ActiveBlock = (DBlock *) NULL;
+
+    if (free_data_file ( file )) {
+      status=status_error;
+      ErrorValue = CouldNotCloseFile; 
+      goto edf_close_data_file_error;
+    } 
+  } // if stream
+
+  ErrorValue = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_close_data_file END\n");
+
+  return;
+
+edf_close_data_file_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_close_data_file END (status=%d)\n",status);
+
+  return;
 
 } /* edf_close_data_file */
 
@@ -11277,7 +12242,33 @@ int edf_write_header_string ( int stream, long int DataNumber, int DataChain,
   return ( write_header_string ( stream, DataNumber, DataChain,
             keyword, Value, pErrorValue, pstatus ) );
 
-} /* edf_write_header_line */
+} /* edf_write_header_string */
+
+/*+++------------------------------------------------------------------------
+NAME
+
+  edf_delete_key
+
+SYNOPSIS
+  int edf_delete_key ( int stream, long int DataNumber, int DataChain,
+                       const char * keyword,
+                       int * pErrorValue, int * pstatus );
+
+DESCRIPTION
+  Searches for header 'DataNumber' in 'DataChain'.
+  It deletes keyword, associated continuation keys and values from the header.
+
+RETURN VALUE
+  In case of success the return value is 1, otherwise 0.
+  --------------------------------------------------------------------------+*/
+int edf_delete_key ( int stream, long int DataNumber, int DataChain,
+                     const char * keyword,
+                     int * pErrorValue, int * pstatus )        /*---*/
+{
+  return ( delete_key ( stream, DataNumber, DataChain,
+            keyword, pErrorValue, pstatus ) );
+
+} /* edf_delete_key */
 
 /*+++------------------------------------------------------------------------
 NAME
@@ -11413,10 +12404,6 @@ ARGUMENTS
                 ...
                 Dim[N]       (i) dimension N
 
-HISTORY
-  23-Jul-1999 DataValueOffset added
-  10-Nov-2000 changed for Dim[0] dimensions
-  06-Aug-2001 specifications updated
   --------------------------------------------------------------------------+*/
 void edf_write_data_raw ( int stream, long DataNumber,
                           int DataChain, const long Dim[], 
@@ -11431,17 +12418,20 @@ void edf_write_data_raw ( int stream, long DataNumber,
   DBlock   * block;
   SElement * symbol;
 
+  int DataCompression=UnCompressed;
+
   long  idim;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (EDFIO_debug) printf("edf_write_data_raw\n");
+  if (EDFIO_debug) printf("edf_write_data_raw BEGIN\n");
 
   /* open output to block */
-  open_write_block (stream, DataNumber, DataChain,
-                    &block, pErrorValue, pstatus);
-  if ( *pstatus != status_success )  return;
+  if ( open_write_block (stream, DataNumber, DataChain,
+                    &block, &errval ) )
+    goto edf_write_data_raw_error;
+
+  if (data_compression_out) DataCompression = data_compression_out;
 
   /* link raw data and Dim with block and write specification */
   block->Data                    = pData;
@@ -11452,8 +12442,8 @@ void edf_write_data_raw ( int stream, long DataNumber,
   block->DataValueOffset         = DataValueOffset;
   block->DataByteOrder           = ByteOrder; 
   block->DataRasterConfiguration = RasterConfiguration;
-  block->DataCompression         = UnCompressed; 
-  block->DataDim                 = newdim(Dim);
+  block->DataCompression         = DataCompression;
+  block->DataDim                 = newcopydim(Dim);
 
   /* write compulsary keywords */
 
@@ -11463,61 +12453,97 @@ void edf_write_data_raw ( int stream, long DataNumber,
     sprintf(KeyBuf,"%s%lu",DIMENSION_KEY_PREFIX,idim);
     long2s(ValBuf,Dim[idim]);
     if (insert_string( block, KeyBuf, ValBuf, &symbol) ) {
-      *pErrorValue = CouldNotWriteDimension; return; }
+      errval=CouldNotWriteDimension;
+      goto edf_write_data_raw_error;
     }
+  }
 
   /* --- DataType */
   if (insert_string( block, DATA_TYPE_KEY, edf_datatype2string( DataType ), 
                      &symbol) ) {
-    *pErrorValue = CouldNotWriteBinary; return; }
+    errval=CouldNotWriteBinary;
+    goto edf_write_data_raw_error;
+  }
 
   /* --- DataValueOffset */ 
   if (DataValueOffset!=0l) { /* write only if not zero, otherwise remove */
     if (insert_string( block, DATA_VALUE_OFFSET_KEY, 
                        long2s(ValBuf,DataValueOffset), &symbol) ) {
-      *pErrorValue = CouldNotWriteBinary; return; }
-   } else { /* remove if zero */
+      errval=CouldNotWriteBinary;
+      goto edf_write_data_raw_error;
+    }
+  } else { /* remove if zero */
     if (remove_symbol( block, DATA_VALUE_OFFSET_KEY , NULL )) {
-      *pErrorValue = CouldNotWriteBinary; return; }
-   }
+      errval=CouldNotWriteBinary;
+      goto edf_write_data_raw_error;
+    }
+  }
 
   /* --- ByteOrder */
   if (insert_string( block, BYTE_ORDER_KEY, ByteOrder2String( ByteOrder ), 
                      &symbol) ) {
-    *pErrorValue = CouldNotWriteBinary; return; }
-
-  /* --- Compression  */
-  if (insert_string( block, COMPRESSION_KEY, NONE, &symbol) ) {
-    *pErrorValue = CouldNotWriteBinary; return; }
+    errval=CouldNotWriteBinary;
+    goto edf_write_data_raw_error;
+  }
 
   /* --- RasterConfiguration  */
   if (RasterConfiguration!=1l) { // only compulsary for RasterConfiguration!=1
     if (insert_string( block, RASTER_CONFIGURATION_KEY,
                        long2s(ValBuf,RasterConfiguration), &symbol) ) {
-      *pErrorValue = CouldNotWriteBinary; return; }
-    } else { /* remove if 1 */
-    if (remove_symbol( block, RASTER_CONFIGURATION_KEY, NULL )) {
-      *pErrorValue = CouldNotWriteBinary; return; }
+      errval=CouldNotWriteBinary;
+      goto edf_write_data_raw_error;
     }
+  } else { /* remove if 1 */
+    if (remove_symbol( block, RASTER_CONFIGURATION_KEY, NULL )) {
+      errval=CouldNotWriteBinary;
+      goto edf_write_data_raw_error;
+    }
+  }
+
+  /* --- Compression  */
+  if (insert_string( block, COMPRESSION_KEY,
+                     edf_compression2string( DataCompression ), &symbol) ) {
+    errval=CouldNotWriteBinary;
+    goto edf_write_data_raw_error;
+  }
 
   /* end of compulsary keywords */
 
   /* close output to block */
-  close_write_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+  if ( close_write_block( block, &errval ) )
+    goto edf_write_data_raw_error;
 
   block->Flags.HeaderChanged = True;
   block->Flags.DataChanged   = True;
 
   /* write active data block to disk (this block) immediately */
-  disk_write_block ( block->Chain->File->ActiveBlock, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+  if ( disk_write_block ( block->Chain->File->ActiveBlock, &errval ) )
+    goto edf_write_data_raw_error;
 
   /* update ActiveBlock */
   block->Chain->File->ActiveBlock = (DBlock *) NULL;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = errval; 
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_write_data_raw END\n");
+
+  return;
+
+edf_write_data_raw_error:
+
+  status=status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) {
+    printf("edf_write_data_raw: %s",edf_report_data_error ( errval ));
+    printf("edf_write_data_raw END (status=%d)\n",status);
+  }
 
   return;
 
@@ -11530,7 +12556,7 @@ NAME
 
 SYNOPSIS
 
-  void edf_write_data             ( int stream, long DataNumber,
+  void edf_write_data       ( int stream, long DataNumber,
                               int DataChain, const long Dim[],
                               void *pData, int MachineType,
                               int * pErrorValue, int *pstatus );
@@ -11552,9 +12578,6 @@ DESCRIPTION
                 Dim[2] (i)   dimension 2
                 ...
                 Dim[N] (i)   dimension N
-
-HISTORY
-
   --------------------------------------------------------------------------+*/
 void edf_write_data        ( int stream, long DataNumber,
                              int DataChain, const long Dim[],
@@ -11570,24 +12593,24 @@ void edf_write_data        ( int stream, long DataNumber,
   long DataCount;
   void *tmp                = (void *) NULL;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (EDFIO_debug) printf("edf_write_data\n");
+  if (EDFIO_debug) printf("edf_write_data BEGIN\n");
 
   ByteOrder = byteorder();
 
   /* get output data type */
-  if (data_type_out!=InValidDType) {
-    /* convert */
-    DataTypeOut = data_type_out;
-    MachineTypeOut = edf_datatype2machinetype( DataTypeOut );
-    } else {
+  if (data_type_out==InValidDType) {
     /* do not convert */
     DataTypeOut = edf_machinetype2datatype( MachineType );
     MachineTypeOut = MachineType;
-    }
-  /* get machine type of output data type */
+  } else {
+    /* convert */
+    DataTypeOut = data_type_out;
+    /* get machine type of output data type */
+    MachineTypeOut = edf_datatype2machinetype( DataTypeOut );
+  }
+  /* get number of array elements */
   DataCount = edf_dim_product ( Dim );
 
   if (EDFIO_debug) {
@@ -11596,33 +12619,56 @@ void edf_write_data        ( int stream, long DataNumber,
             MachineType2String( MachineType ),
             edf_datatype2string( DataTypeOut ),
             MachineType2String( MachineTypeOut) );
-    } // EDFIO_debug
+  } // EDFIO_debug
 
   if ( (MachineTypeOut!=MachineType) || (DataValueOffsetOut!=0l) ) {
     /* allocate new memory */
     if (!(tmp = malloc( edf_machine_sizeof(MachineTypeOut) * DataCount ) )) {
-      *pErrorValue = CouldNotMallocMemory;
-      *pstatus     = status_error;
-      return; 
-      } 
+      errval=CouldNotMallocMemory;
+      goto edf_write_data_error;
+    } 
     DataOut = tmp;
     /* convert to MachineTypeOut */
     if ( edf_machine2machine ( DataOut, MachineTypeOut,
                                pData, -DataValueOffsetOut,
                                MachineType, DataCount ) ) {
-       *pErrorValue = DataConversionFailed; return; }
-   } // if MachineTypeOut!=MachineType
+      errval=DataConversionFailed;
+      goto edf_write_data_error;
+    }
+  } // if MachineTypeOut!=MachineType
 
   edf_write_data_raw ( stream, DataNumber,
                        DataChain, Dim, DataOut, DataTypeOut,
                        DataValueOffsetOut, ByteOrder, RasterConfiguration,
-                       pErrorValue, pstatus );
+                       &errval, &status );
+  if ( status != status_success )
+    goto edf_write_data_error;
+
   /* free tmp array */
   if (tmp) { free(tmp); tmp=(void *) NULL; }
-  if ( *pstatus != status_success )  return;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval=RoutineSucceeded;
+  status=status_success;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_write_data END\n");
+
+  return;
+
+edf_write_data_error:
+
+  if (tmp) { free(tmp); tmp=(void *) NULL; }
+
+  status = status_error;
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) {
+    printf("edf_write_data: %s",edf_report_data_error ( errval ));
+    printf("edf_write_data END (status=%d)\n",status);
+  }
 
   return;
 
@@ -11642,8 +12688,8 @@ DESCRIPTION
   Searches for 'keyword' in the header 'DataNumber' in 'DataChain'.
   If the header or the keyword does not exists, the return value is 0 and a 
   specific error value is returned. This error is not fatal and can be used 
-  as a test for the existence of the keyword or the header. The 'Value' 
-  string specified by 'keyword' is copied after the location pointed to by 
+  as a test for the existence of the keyword or the header. The ´Value´ 
+  string specified by ´keyword´ is copied after the location pointed to by 
   Value. The minimum allocated size for Value must be MaxValLen+1.
   The function has not changed Value when the return value is 0.
 
@@ -11899,24 +12945,23 @@ void edf_read_data_raw ( int stream, long int DataNumber,
                          int * pDataType, long * pDataValueOffset,
                          int * pByteOrder, long * pRasterConfiguration,
                          int * pErrorValue, int * pstatus )          /*---*/
-{ 
+{
   DBlock * block;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (EDFIO_debug) printf("edf_read_data_raw\n");
+  if (EDFIO_debug) printf("edf_read_data_raw BEGIN\n");
 
-  open_read_block(stream, DataNumber, DataChain, &block, pErrorValue, pstatus);
-  if ( *pstatus != status_success )  return;
+  if ( open_read_block(stream, DataNumber, DataChain, &block, &errval ) )
+    goto edf_read_data_raw_error;
 
   // read without conversion
   read_data_array ( block, *ppData, *pDataArraySize, True, *pDim,
-                    pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+                    &errval, &status );
+  if ( status != status_success ) goto edf_read_data_raw_error;
 
-  close_read_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+  if ( close_read_block( block, &errval ) )
+    goto edf_read_data_raw_error;
 
   *pDataType              = block->DataType;
   *pDataValueOffset       = block->DataValueOffset;
@@ -11927,8 +12972,24 @@ void edf_read_data_raw ( int stream, long int DataNumber,
   if (!(*pDim))     *pDim = block->DataDim;
           *pDataArraySize = block->DataBufferLen;
 
-  *pstatus     = status_success;
-  *pErrorValue = RoutineSucceeded;
+  status     = status_success;
+  errval     = RoutineSucceeded;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_read_data_raw END\n");
+
+  return;
+
+edf_read_data_raw_error:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_read_data_raw END (status=%d)\n",status);
 
   return;
 
@@ -11993,33 +13054,48 @@ void edf_read_data       ( int stream, long DataNumber, int DataChain,
 {
   DBlock * block;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (EDFIO_debug) printf("edf_read_data\n");
+  if (EDFIO_debug) printf("edf_read_data BEGIN\n");
 
-  open_read_block(stream, DataNumber, DataChain, &block, pErrorValue, pstatus);
-  if ( *pstatus != status_success )  return;
+  if ( open_read_block(stream, DataNumber, DataChain, &block, &errval ) )
+    goto edf_read_data_error;
 
   // read without conversion
   read_data_array ( block, *ppData, *pDataArraySize, False, *pDim,
-                    pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+                    &errval, &status ); 
+  if ( status != status_success ) goto edf_read_data_error;
 
   // conversion to MachineType
   renorm_data_array ( block, *ppData, *pDataArraySize, MachineType, 
-                      pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+                      &errval, &status );
+  if ( status != status_success ) goto edf_read_data_error;
 
                   *ppData = block->Data;
   if (!(*pDim))     *pDim = block->DataDim;
           *pDataArraySize = block->DataBufferLen;
 
-  close_read_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return;
+  if ( close_read_block( block, &errval ) )
+    goto edf_read_data_error;
 
-  *pstatus     = status_success;
-  *pErrorValue = RoutineSucceeded;
+  status     = status_success;
+  errval     = RoutineSucceeded;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_read_data END\n");
+
+  return;
+
+edf_read_data_error:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_read_data END (status=%d)\n",status);
 
   return;
 
@@ -12058,30 +13134,39 @@ int edf_search_minmax_number( int stream, int DataChain,
   DChain * chain;
   DFile  * file;
 
+  int ErrorValue = RoutineSucceeded, status = status_error;
+
   char   *min = (char *) NULL, *max = (char *) NULL;
   char ChainKey[MaxKeyLen+1];
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
-
-  if (EDFIO_debug) printf("edf_search_minmax_number\n");
+  if (EDFIO_debug) printf("edf_search_minmax_number BEGIN\n");
 
   *pMinNumber = -1l; *pMaxNumber = -2l;
+
+  /* check stream */
+  if ((stream<0)||(stream>=MaxFiles)) {
+    *pErrorValue = InvalidStream;
+    goto edf_search_minmax_number_error;
+  }
 
   /* get file */
   file = &FileTable[stream];
   if ( !file->Used ) {
-    *pErrorValue = NoFileOpen; return(0);
-    }
+    ErrorValue = NoFileOpen; 
+    goto edf_search_minmax_number_error;
+  }
 
   /* find 'ChainKey' */
   if ( find_chainkey ( stream, DataChain, ChainKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(0);
-    }
+    ErrorValue = MissingKeyDefinition;
+    goto edf_search_minmax_number_error;
+  }
 
   /* search chain */
   if (search_data_chain( file, ChainKey, &chain) ) {
-    *pErrorValue = CouldNotFindHeader; return(0); }
+    ErrorValue = CouldNotFindHeader;
+    goto edf_search_minmax_number_error;
+  }
 
   /* loop over all blocks */
   block = chain->BlockList;
@@ -12094,15 +13179,32 @@ int edf_search_minmax_number( int stream, int DataChain,
       else if ( compare_keys( block->BlockKey, max , NumberSort ) > 0 ) {
         max = block->BlockKey; }
       block = block->Next;
-      } /* while */
+    } /* while */
     *pMinNumber = (long int) s2u_long( min );
-    *pMaxNumber = (long int) s2u_long( max ); }
-  else { *pErrorValue = NoDataBlocksFound; return(0); }
+    *pMaxNumber = (long int) s2u_long( max ); 
+  } else { 
+    ErrorValue = NoDataBlocksFound; 
+    goto edf_search_minmax_number_error;
+  }
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  ErrorValue = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_search_minmax_number END (status=%d)\n",status);
 
   return(1);
+
+edf_search_minmax_number_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_search_minmax_number END (status=%d)\n",status);
+
+  return(0);
 
 } /* edf_search_minmax_number */
 
@@ -12120,7 +13222,7 @@ DESCRIPTION
   Searches for header 'DataNumber' in 'DataChain'
   and inquires for the dimension of the two dimensional data array.
 
-  If the header or the dimension of the data array does not exists,
+  If the header or the dimension of the data array does not exist,
   the return value is FALSE and a specific error value is returned.
   This error is not fatal and can be used as a test for the
   existence of a header.
@@ -12169,24 +13271,27 @@ int edf_read_data_dimension ( int stream, long int DataNumber,
                               int DataChain, long ** pDim,
                               size_t * pDataArraySize,
                               int * pErrorValue, int * pstatus )        /*---*/
-{ 
+{
   DBlock      * block;
 
   long        * data_dim;
   size_t        data_len;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (EDFIO_debug) printf("edf_read_data_dimension\n");
+  if (EDFIO_debug) printf("edf_read_data_dimension BEGIN\n");
 
-  if (!open_read_block (stream, DataNumber, DataChain,
-                    &block, pErrorValue, pstatus)) return(0);
-  if ( *pstatus != status_success )  return(1);
+  switch ( open_read_block (stream, DataNumber, DataChain,
+                            &block, &errval) ) {
+    case  1: goto edf_read_data_dimension_notfound;
+    case -1: goto edf_read_data_dimension_error;
+  }
 
   /* get dimension */
   if ( ! (data_dim = get_data_dim ( block )) ) {
-      *pErrorValue = CouldNotReadDimension; return(1); }
+    errval = CouldNotReadDimension; 
+    goto edf_read_data_dimension_error;
+  }
   data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block));
 
   *pDataArraySize = data_len;
@@ -12194,25 +13299,61 @@ int edf_read_data_dimension ( int stream, long int DataNumber,
   /* copy data_dim to *pDim */
   if (*pDim) { // use supplied buffer
     if ( !(copydim( *pDim, (*pDim)[0], data_dim ) ) ) {
-      *pErrorValue = NotNdData; return(1);
-      } 
-    } else { // use allocated buffer
+      errval = NotNdData; 
+      goto edf_read_data_dimension_error;
+    } 
+  } else { // use allocated buffer
     *pDim = data_dim;
-    }
+  }
 
   /* update DataDim array */
   if (block->DataDim) { // copy dimensions into existing array 
     if ( !(copydim( block->DataDim, block->DataDim[0], data_dim ) ) ) {
-       *pErrorValue = NotNdData; return(1); } 
-    } else { // use allocated buffer
+       errval = NotNdData; 
+       goto edf_read_data_dimension_error;
+    } 
+  } else { // use allocated buffer
     block->DataDim  = data_dim;
-    }
+  }
 
-  close_read_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success ) return(1);
+  if ( close_read_block( block, &errval ) )
+    goto edf_read_data_dimension_error;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_read_data_dimension END\n");
+
+  return(1);
+
+edf_read_data_dimension_notfound:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) {
+    printf("edf_read_data_dimension: %s",edf_report_data_error ( errval ));
+    printf("edf_read_data_dimension END (status=%d)\n",status);
+  }
+
+  return(0);
+
+edf_read_data_dimension_error:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) {
+    printf("edf_read_data_dimension: %s",edf_report_data_error ( errval ));
+    printf("edf_read_data_dimension END (status=%d)\n",status);
+  }
 
   return(1);
 
@@ -12242,37 +13383,60 @@ int edf_test_header         ( int stream, long DataNumber,
   DChain   * chain;
   DBlock   * block;
 
+  int ErrorValue = RoutineSucceeded, status = status_error;
+  int found = 0;
+
   char BlockKey[MaxKeyLen+1];
   char ChainKey[MaxKeyLen+1];
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  if (EDFIO_debug) printf("edf_test_header BEGIN\n");
 
-  if (EDFIO_debug) printf("edf_test_header\n");
+  /* check stream */
+  if ((stream<0)||(stream>=MaxFiles)) {
+    *pErrorValue = InvalidStream;
+    goto edf_test_header_error;
+  }
 
   /* get file */
   file = &FileTable[stream];
   if ( !file->Used ) {   
-    *pErrorValue = NoFileOpen; return(0);
-    }
+    ErrorValue = NoFileOpen;
+    goto edf_test_header_error;
+  }
 
   /* find 'ChainKey' */
   if ( find_chainkey ( stream, DataChain, ChainKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(0);
-    }
+    ErrorValue = MissingKeyDefinition;
+    goto edf_test_header_error;
+  }
 
   /* find 'BlockKey' */
   if ( find_blockkey ( DataChain, DataNumber, BlockKey ) ) {
-    *pErrorValue = MissingKeyDefinition; return(0);
-    }
+    ErrorValue = MissingKeyDefinition;
+    goto edf_test_header_error;
+  }
 
-  *pstatus     = status_success;
+  status     = status_success;
 
   /* search header */
-  if (search_data_chain( file, ChainKey, &chain) ) return(0); 
-  if (search_data_block( chain, BlockKey, &block) ) return(0); 
+  if ( (!search_data_chain( file, ChainKey, &chain) )
+    && (!search_data_block( chain, BlockKey, &block) ) ) found = 1;
 
-  return(1);
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_test_header END %d\n",found);
+
+  return(found);
+
+edf_test_header_error:
+
+  if (pErrorValue) *pErrorValue = ErrorValue;
+  if (pstatus) *pstatus = status;
+
+  if (EDFIO_debug) printf("edf_test_header END (status=%d)\n",status);
+
+  return(found);
 
 } /* edf_test_header */
 
@@ -12349,7 +13513,7 @@ SYNOPSIS
  
 DESCRPTION
  
-  Writes 'debug' into keyorder_debug.
+  Writes ´debug´ into keyorder_debug.
  
 -----------------------------------------------------------------------------*/
 void keyorder_debug ( int debug )
@@ -12382,12 +13546,12 @@ void keyorder_print_keyordertable ( FILE * out )
   }
   return;
   
-} // keyorder_debug                                                                                                                          
+} // keyorder_print_keyordertable 
 
 /*---------------------------------------------------------------------------
 NAME
  
-   keyorder_next_header_element_wild -- searches for next 'keyorder' in header
+   keyorder_next_header_element_wild -- searches for next ´keyorder´ in header
  
 SYNOPSIS
  
@@ -12396,12 +13560,12 @@ SYNOPSIS
                                            HElement ** element )
 
 DESCRIPTION
-   Searches the first header element matching 'keyorder'. 'keyorder' can 
+   Searches the first header element matching ´keyorder´. ´keyorder´ can 
    terminate with '*' as a wild card.
  
 RETURN VALUE
-  'keyorder' found, element pointer returned in **element
-  'keyorder' pointer (HElement *) NULL returned in **element
+  ´keyorder´ found, element pointer returned in **element
+  ´keyorder´ pointer (HElement *) NULL returned in **element
   return value 0: OK, -1 : ERROR
 ---------------------------------------------------------------------------*/
 int keyorder_next_header_element_wild( HList * header,  
@@ -12782,7 +13946,7 @@ int keyorder_copy_formatsymbols( DBlock * block, SElement *** ptable )
 /*---------------------------------------------------------------------------
 NAME
  
-   keyorder_next_symbol_wild -- searches for next 'keyorder' in block 
+   keyorder_next_symbol_wild -- searches for next ´keyorder´ in block 
  
 SYNOPSIS
  
@@ -12791,7 +13955,7 @@ SYNOPSIS
                                   SElement ** symbol )
  
 DESCRIPTION
-   Searches the first symbol matching 'keyorder'. 'keyorder' can terminate
+   Searches the first symbol matching ´keyorder´. ´keyorder´ can terminate
    with '*' as a wild card.
 
    To increase the speed in long lists the search starts at 
@@ -12801,8 +13965,8 @@ DESCRIPTION
    already been read.
  
 RETURN VALUE
-  'keyorder' found, symbol pointer returned in **symbol
-  'keyorder' pointer (HElement *) NULL returned in **symbol
+  ´keyorder´ found, symbol pointer returned in **symbol
+  ´keyorder´ pointer (HElement *) NULL returned in **symbol
   return value 0: OK, -1 : ERROR
 ---------------------------------------------------------------------------*/
 int keyorder_next_symbol_wild( DBlock * block,
@@ -13506,7 +14670,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-   Prints the header list to the file 'out'
+   Prints the header list to the file ´out´
 
 RETURN VALUE
     0: success
@@ -13549,42 +14713,54 @@ int print_header_list( FILE * out, HList * header, int level, int verbose )
 
 } /* print_header_list */
 
+/* print info about a single data block to out 
+   format 6: write lf, not crlf*/
 int edf_dump_format ( FILE * out, DBlock * block, int format, int newchain, 
                       char * keyword[] )
 {
   SElement * symbol;
   char **pkey;
+  char *crlf="\r\n", *lf="\n";
+  char *ps;
+
+      if (format==6) ps=lf;
+      else ps=crlf;
 
       switch (format) {
         case 0: // standard format
         case 10000:
         case 10001:
-            fprintf(out," chain = %s\r\n", block->Chain->ChainKey);
-            fprintf(out,"  block = %s\r\n", block->BlockKey);
+            fprintf(out,"chain = %s%s", block->Chain->ChainKey,ps);
+            fprintf(out,"  block = %s%s", block->BlockKey,ps);
             if (format>=10000) {
               fprintf(out,
-                "   HeaderBlockPos = %lu (%#lx), Length = %lu (%#lx)\r\n", 
-                block->TextPos, block->TextPos, block->TextLen, block->TextLen);
+                "   HeaderBlockPos = %lu (%#lx), Length = %lu (%#lx)%s", 
+                block->TextPos, block->TextPos, 
+                block->TextLen, block->TextLen,
+                ps);
               fprintf(out,
-                "   BinaryBlockPos = %lu (%#lx), Length = %lu (%#lx)\r\n", 
+                "   BinaryBlockPos = %lu (%#lx), Length = %lu (%#lx)%s", 
                 block->BinaryPos, block->BinaryPos, 
-                block->BinaryLen, block->BinaryLen);
+                block->BinaryLen, block->BinaryLen,
+                ps);
             }
             if ( (keyword) && (keyword[0]!=(char*) NULL) )
               // load data header
               if (!get_data_header( block )) {
                 for (pkey=keyword;*pkey!=(char*) NULL;pkey++) {
                   if (!search_general( block, *pkey, &symbol )) {
-                    fprintf(out,"   %s = %s\r\n",*pkey, symbol->String );
+                    fprintf(out,"   %s = %s%s",*pkey, symbol->String,ps);
                     if (format==10001) {
                       fprintf(out,
-                        "    KeyPos = %lu (%#lx), Length = %u (%#x)\r\n", 
+                        "    KeyPos = %lu (%#lx), Length = %u (%#x)%s", 
                         symbol->KeyPos, symbol->KeyPos, 
-                        symbol->KeyLen, symbol->KeyLen);
+                        symbol->KeyLen, symbol->KeyLen,
+                        ps);
                       fprintf(out,
-                        "    ValPos = %lu (%#lx), Length = %u (%#x)\r\n", 
+                        "    ValPos = %lu (%#lx), Length = %u (%#x)%s", 
                         symbol->ValPos, symbol->ValPos,
-                        symbol->ValLen, symbol->ValLen);
+                        symbol->ValLen, symbol->ValLen,
+                        ps);
                     }
                   }
                 }
@@ -13604,11 +14780,12 @@ int edf_dump_format ( FILE * out, DBlock * block, int format, int newchain,
                   }
                 }
               } // get_data_header
-              fprintf(out,"\r\n");
+              fprintf(out,"%s",ps);
             } // keyword
             break; // case 1
 
         case 2: // very short format
+        case 6:
             if ( (keyword) && (keyword[0]!=(char*) NULL) ) {
               // load data header
               if (!get_data_header( block )) {
@@ -13622,7 +14799,7 @@ int edf_dump_format ( FILE * out, DBlock * block, int format, int newchain,
                   }
                 }
               } // get_data_header
-              fprintf(out,"\r\n");
+              fprintf(out,"%s",ps);
             } // keyword
             break; // case 2
 
@@ -13657,14 +14834,18 @@ DESCRIPTION
   Prints the current structure of the file. When the keyword table is not 
   empty the contents of all headers are read.
 
-  format 0   : simple, all on separate lines
-
-         1   : short, one line per block key with keywords:
-               <filename> <chainkey> <blockkey> <keywords...>
-         101 : or one line per chain key without keywords:
-               <filename> <chainkey> <blockkeys...> 
-         2   : very short, one line per block key, keywords only
-               <keywords...>
+  format     0 : simple, all on separate lines
+         10000 : like 0 + write block positions
+         10001 : like 10000 + write keyword positions
+             1 : short, one line per block key with keywords:
+                 <filename> <chainkey> <blockkey> <keywords...>
+           101 : or one line per chain key without keywords:
+                 <filename> <chainkey> <blockkeys...> 
+             2 : very short, one line per block key, keywords only
+                 <keywords...>
+             6 : very short, one line per block key, keywords only,
+                 last line without crlf
+                 <keywords...>
 
 PARAMETERS
  
@@ -13683,13 +14864,16 @@ RETURN VALUE
 ---------------------------------------------------------------------------*/
 int edf_dump( FILE * out, int stream, int format,                   
               char * chainkey[], char * blockkey[], char * keyword[] )
-{ 
+{
   DFile    * file;
   DChain   * chain;
   DBlock   * block;
 
   char **pckey, **pbkey;
   int newchain, newline=0;
+
+  /* check stream */
+  if ((stream<0)||(stream>=MaxFiles)) return(0);
 
   /* get file */
   file = &FileTable[stream];
@@ -13700,67 +14884,67 @@ int edf_dump( FILE * out, int stream, int format,
   if ((format==0)||(format==10000)||(format==10001))
     fprintf(out,"file = %s\r\n",file->Name);
 
-  if ( chainkey && chainkey[0] ) {
+  if ( chainkey && chainkey[0] ) { // specific chains only
     for (pckey=chainkey;*pckey!=(char*) NULL;pckey++) {
       newchain = True;
       if (!search_data_chain( file, * pckey, &chain )) {
-        if ( blockkey && blockkey[0] ) {
+        if ( blockkey && blockkey[0] ) { // specific blocks only
           for (pbkey=blockkey;*pbkey!=(char*) NULL;pbkey++) {
             if (!search_data_block( chain, * pbkey, &block )) {
               if ( !(is_general_block( block )) ) {
                 edf_dump_format ( out, block, format, newchain, keyword );
                 newline=1;
-                }
-              newchain = False;
               }
-            } // for block
-          } else {
+              newchain = False;
+            }
+          } // for block
+        } else { // loop over all blocks
           block = chain->BlockList;
           while (block!=(DBlock*) NULL) {
             if ( !(is_general_block( block )) ) {
               edf_dump_format ( out, block, format, newchain, keyword );
               newline=1;
-              }
+            }
             block = block->Next;
             newchain = False;
-            } // while block
-          } // if (blockkey ..
+          } // while block
+        } // if (blockkey ..
         if ( (10<=format) && (newline) ) fprintf(out,"\r\n");
-        } 
-      } // for chain
-    } else {
+      } 
+    } // for chain
+  } else { // loop over all chains
 
     chain = file->ChainList;
     while(chain!=(DChain*) NULL) {
       newchain = True;
 
-      if ( blockkey && blockkey[0] ) {
+      if ( blockkey && blockkey[0] ) { // specific blocks only
         for (pbkey=blockkey;*pbkey!=(char*) NULL;pbkey++) {
           if (!search_data_block( chain, * pbkey, &block )) {
             if ( !(is_general_block( block )) ) {
               edf_dump_format ( out, block, format, newchain, keyword );
               newline=1;
-              }
-            newchain = False;
             }
-          } // for block
-        } else {
+            newchain = False;
+          }
+        } // for block
+      } else { // loop over all blocks
         block = chain->BlockList;
         while (block!=(DBlock*) NULL) {
           if ( !(is_general_block( block )) ) {
             edf_dump_format ( out, block, format, newchain, keyword );
             newline=1;
-            }
+          }
           block = block->Next;
           newchain = False;
-          } // while block
-        } // if (blockkey ..
+        } // while block
+      } // if (blockkey ..
       if ( (10<=format) && (newline) ) fprintf(out,"\r\n");
 
       chain = chain->Next;
-      } // wihle chain
+    } // while chain
 
-    } // if ( chainkey ..
+  } // if ( chainkey ..
 
  return(1);
 
@@ -13778,8 +14962,8 @@ SYNOPSIS
 
 DESCRIPTION
 
-   Prints contents of header 'header_key' to 'out', or contents of
-   all headers, if 'header_key' is NULL.
+   Prints contents of header ´header_key´ to ´out´, or contents of
+   all headers, if ´header_key´ is NULL.
 
 RETURN VALUE
     1: success
@@ -13844,8 +15028,8 @@ SYNOPSIS
 
 DESCRIPTION
   Reads all user keys and values from the data header and the general header.
-  It writes them to the element list with the name 'header_key'. 
-  The header can be released with edf_free_header( 'header_key' );
+  It writes them to the element list with the name ´header_key´. 
+  The header can be released with edf_free_header( ´header_key´ );
 
 RETURN VALUE
   return value FALSE if not found and no other error
@@ -13866,35 +15050,76 @@ int edf_read_header  ( int stream, long DataNumber,
   DBlock * block;
   HList * header;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
-  if (HEADER_debug) printf("edf_read_header\n");
+  if (HEADER_debug) printf("edf_read_header BEGIN\n");
 
   if (!InitHeader) init_header();
 
   search_header_list  ( header_root, header_key, &header );
   if ( header == (HList*)NULL ) // try to create it
      header_list_new  ( &header_root, header_key, &header ); 
-  if ( header == (HList*)NULL ) return(1); // cannot create 
+  if ( header == (HList*)NULL ) {
+    errval = CouldNotCreateHeader; // cannot create header
+    goto edf_read_header_error;
+  }
 
-  if ( !open_read_block (stream, DataNumber, DataChain,
-                     &block, pErrorValue, pstatus) ) {
-    /* data header not found */ return(0); }
-  if ( *pstatus != status_success )  return(1);
+  switch ( open_read_block (stream, DataNumber, DataChain,
+                            &block, &errval ) ) {
+    case  1: goto edf_read_header_notfound;
+    case -1: goto edf_read_header_error;
+  }
 
   /* read keyword list from general block and copy it to element list */
-  if ( read_header_list( block->Chain->File->GeneralBlock, header ) )
-     return(1);
+  if ( read_header_list( block->Chain->File->GeneralBlock, header ) ) {
+    errval = CouldNotReadGeneralHeader;
+    goto edf_read_header_error;
+  }
 
   /* read keyword list from block and copy it to element list */
-  if ( read_header_list( block, header ) ) return(1);
+  if ( read_header_list( block, header ) ) {
+    errval = CouldNotReadHeader;
+    goto edf_read_header_error;
+  }
 
-  close_read_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return(1);
+  if ( close_read_block( block, &errval ) )
+    goto edf_read_header_error;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (HEADER_debug) printf("edf_read_header END\n");
+
+  return(1);
+
+edf_read_header_notfound:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (HEADER_debug) {
+    printf("edf_read_header: %s",edf_report_data_error ( errval ));
+    printf("edf_read_header END (status=%d)\n",status);
+  }
+
+  return(0);
+
+edf_read_header_error:
+
+  status = status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (HEADER_debug) {
+    printf("edf_read_header: %s",edf_report_data_error ( errval ));
+    printf("edf_read_header END (status=%d)\n",status);
+  }
 
   return(1);
 
@@ -13912,7 +15137,7 @@ SYNOPSIS
                          int * pErrorValue, int * pstatus )
 
 DESCRIPTION
-  Writes the elementlist with the name 'header_key' into the header 
+  Writes the elementlist with the name ´header_key´ into the header 
   of the specified image.
 
 RETURN VALUE
@@ -13928,8 +15153,7 @@ int edf_write_header ( int stream, long DataNumber,
   DBlock * block;
   HList * header;
 
-  *pstatus     = status_error;
-  *pErrorValue = RoutineSucceeded;
+  int errval, status;
 
   if (HEADER_debug) printf("edf_write_header\n");
 
@@ -13937,33 +15161,56 @@ int edf_write_header ( int stream, long DataNumber,
 
   search_header_list  ( header_root, header_key, &header );
   if ( header == (HList*) NULL ) {
-     *pErrorValue=CouldNotFindHeaderKey; return(0); } // header key not found
+    errval=CouldNotFindHeaderKey;
+    goto edf_write_header_error;
+  }
 
-  open_write_block (stream, DataNumber, DataChain,
-                    &block, pErrorValue, pstatus);
-  if ( *pstatus != status_success )  return(0);
+  if ( open_write_block (stream, DataNumber, DataChain,
+                         &block, &errval ) )
+    goto edf_write_header_error;
 
   /* create/replace keyword and value in header */
   if ( write_header_list( block, header )) {
-    *pErrorValue = CouldNotInsertSymbol; return(0); }
+    errval = CouldNotInsertSymbol;
+    goto edf_write_header_error;
+  }
 
-  close_write_block( block, pErrorValue, pstatus );
-  if ( *pstatus != status_success )  return(0);
+  if ( close_write_block( block, &errval ) )
+    goto edf_write_header_error;
 
   /* The header was changed and must be written to disk */
   block->Flags.HeaderChanged = True;
 
-  *pErrorValue = RoutineSucceeded;
-  *pstatus = status_success;
+  errval = RoutineSucceeded;
+  status = status_success;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (HEADER_debug) printf("edf_write_header END\n");
 
   return(1);
+
+edf_write_header_error:
+
+  status=status_error;
+
+  if (pErrorValue) *pErrorValue = errval;
+  if (pstatus) *pstatus = status;
+
+  if (HEADER_debug) {
+    printf("edf_write_header: %s",edf_report_data_error ( errval ));
+    printf("edf_write_header END (status=%d)\n",status);
+  }
+
+  return(0);
 
 } /* edf_write_header */
 
 /*+++------------------------------------------------------------------------
 NAME
  
-  edf_first_header_element --- return first element of header 'header_key'
+  edf_first_header_element --- return first element of header ´header_key´
  
 SYNOPSIS
  
@@ -13972,7 +15219,7 @@ SYNOPSIS
                                 int * pErrorValue, int * pstatus )
  
 DESCRIPTION
-  The first element is read from the header list with the name 'header_key'.
+  The first element is read from the header list with the name ´header_key´.
   A pointer to the key of this element is returned in *pkey and a pointer
   to the value of this key is returned in *pvalue.
   If the end of the header list is reached or in case of an error
@@ -14020,7 +15267,7 @@ int edf_first_header_element( const char * header_key,
 /*+++------------------------------------------------------------------------
 NAME
  
-  edf_next_header_element --- return next element from header 'header_key'
+  edf_next_header_element --- return next element from header ´header_key´
  
 SYNOPSIS
  
@@ -14029,7 +15276,7 @@ SYNOPSIS
                                int * pErrorValue, int * pstatus )
  
 DESCRIPTION
-  The next element is read from the header list with the name 'header_key'.
+  The next element is read from the header list with the name ´header_key´.
   A pointer to the key of this element is returned in *pkey and a pointer
   to the value of this key is returned in *pvalue.
   If the end of the header list is reached or in case of an error
@@ -14088,7 +15335,7 @@ SYNOPSIS
 
 DESCRIPTION
   The value of the element with name 'key' is read from the header list 
-  with the name 'header_key'. A pointer to the value of this key is 
+  with the name ´header_key´. A pointer to the value of this key is 
   returned in *pvalue. If the key was not found or in case of an error
   NULL-pointers are returned.
 
@@ -14134,7 +15381,7 @@ int edf_search_header_element( const char * header_key,
 /*+++------------------------------------------------------------------------
 NAME
  
-  edf_add_header_element --- add an element to header 'header_key'
+  edf_add_header_element --- add an element to header ´header_key´
  
 SYNOPSIS
  
@@ -14144,7 +15391,7 @@ SYNOPSIS
  
 DESCRIPTION
   An element with key and value is inserted into the header list with the
-  name 'header_key'. If a key with the same name already exists its value
+  name ´header_key´. If a key with the same name already exists its value
   is replaced by the new value.
   Before using this function a header must have been created with 
   edf_new_header.
@@ -14187,7 +15434,7 @@ int edf_add_header_element ( const char * header_key,
 /*+++------------------------------------------------------------------------
 NAME
  
-  edf_delete_header_element --- remove an element from header 'header_key'
+  edf_delete_header_element --- remove an element from header ´header_key´
  
 SYNOPSIS
  
@@ -14197,7 +15444,7 @@ SYNOPSIS
  
 DESCRIPTION
   If an element with the name 'key' is found in the header with the name
-  'header_key' it is removed otherwise nothing is done. In both cases the
+  ´header_key´ it is removed otherwise nothing is done. In both cases the
   function returns with success.
 
   Before using this function a header must have been created with
@@ -14233,7 +15480,7 @@ int edf_delete_header_element( const char * header_key,
  
   return(1);
  
-} /* edf_add_header_element */
+} /* edf_delete_header_element */
 
 /*+++------------------------------------------------------------------------
 NAME
@@ -14317,7 +15564,7 @@ SYNOPSIS
 
 DESCRPTION
 
-  Writes 'debug' into HEADER_debug.
+  Writes ´debug´ into HEADER_debug.
 
 -----------------------------------------------------------------------------*/
 void header_debug ( int debug )
@@ -14358,7 +15605,7 @@ SYNOPSIS
 
 DESCRIPTION
   Allocates a buffer and copies the error message corresponding to 
-  'ErrorValue'. It returns a pointer to the allocated buffer.
+  ´ErrorValue´. It returns a pointer to the allocated buffer.
 
 HISTORY
   --------------------------------------------------------------------------+*/
@@ -14388,6 +15635,7 @@ PRIVATE const char *FINW = "FileIsNotWritable";
 PRIVATE const char *FINO = "FileIsNotOpened";
 PRIVATE const char *IOM  = "IncompatibleOpeningModes";
 PRIVATE const char *CNCF = "CouldNotCloseFile";
+PRIVATE const char *CNCB = "CouldNotCloseBlock";
 PRIVATE const char *CNIC = "CouldNotInsertChain";
 PRIVATE const char *CNIB = "CouldNotInsertBlock";
 PRIVATE const char *CNIS = "CouldNotInsertSymbol";
@@ -14409,7 +15657,11 @@ PRIVATE const char *CNWB = "CouldNotWriteBinary";
 PRIVATE const char *CROG = "CannotReOpenGeneralBlock";
 PRIVATE const char *COAB = "CannotOpenAsBslFile";
 PRIVATE const char *CNIE = "CouldNotInsertElement";
+PRIVATE const char *CNDS = "CouldNotDeleteString";
 PRIVATE const char *CNFY = "CouldNotFindHeaderKey";
+PRIVATE const char *CNCH = "CouldNotCreateHeader";
+PRIVATE const char *CNRG = "CouldNotReadGeneralHeader";
+PRIVATE const char *CNRH = "CouldNotReadHeader";
 
 char * edf_report_data_error ( int ErrorValue )                      /*---*/
 { char * errmsg;
@@ -14438,6 +15690,7 @@ char * edf_report_data_error ( int ErrorValue )                      /*---*/
       case FileIsNotOpened          : sprintf(errmsg,"\n%s\n",FINO); break;
       case IncompatibleOpeningModes : sprintf(errmsg,"\n%s\n",IOM);  break;
       case CouldNotCloseFile        : sprintf(errmsg,"\n%s\n",CNCF); break;
+      case CouldNotCloseBlock       : sprintf(errmsg,"\n%s\n",CNCB); break;
       case CouldNotInsertChain      : sprintf(errmsg,"\n%s\n",CNIC); break;
       case CouldNotInsertBlock      : sprintf(errmsg,"\n%s\n",CNIB); break;
       case CouldNotInsertSymbol     : sprintf(errmsg,"\n%s\n",CNIS); break;
@@ -14459,7 +15712,11 @@ char * edf_report_data_error ( int ErrorValue )                      /*---*/
       case CannotReOpenGeneralBlock : sprintf(errmsg,"\n%s\n",CROG); break;
       case CannotOpenAsBslFile      : sprintf(errmsg,"\n%s\n",COAB); break; 
       case CouldNotInsertElement    : sprintf(errmsg,"\n%s\n",CNIE); break;
+      case CouldNotDeleteString     : sprintf(errmsg,"\n%s\n",CNDS); break;
       case CouldNotFindHeaderKey    : sprintf(errmsg,"\n%s\n",CNFY); break;
+      case CouldNotCreateHeader     : sprintf(errmsg,"\n%s\n",CNCH); break;
+      case CouldNotReadGeneralHeader: sprintf(errmsg,"\n%s\n",CNRG); break;
+      case CouldNotReadHeader       : sprintf(errmsg,"\n%s\n",CNRH); break;
  
       default : sprintf(errmsg,"\n%s : %d\n",UEV,ErrorValue);
       } 
@@ -14485,7 +15742,8 @@ DESCRPTION
 ----------------------------------------------------------------------------+*/
 void edfio_debug ( int debug )                                          /*---*/
 { EDFIO_debug = debug;
-  rc_debug ( EDFIO_debug );
+  cmpr_debug ( EDFIO_debug );
+  raster_debug ( EDFIO_debug );
   hist_debug ( EDFIO_debug );
   header_debug ( EDFIO_debug );
   keyorder_debug ( EDFIO_debug );

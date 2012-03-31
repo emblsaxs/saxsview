@@ -22,7 +22,7 @@
  *   and the GNU Lesser General Public License  along with this program.
  *   If not, see <http://www.gnu.org/licenses/>.
  */
-# define POLARIZATION_VERSION "polarization : V1.4 Peter Boesecke 2010-05-31"
+# define POLARIZATION_VERSION "polarization : V1.61 Peter Boesecke 2011-07-11"
 /*+++------------------------------------------------------------------------
 NAME
 
@@ -39,17 +39,54 @@ HISTORY
   2004-07-28 V1.1 polarization_Init(..., int Invert) added
   2004-10-31 V1.2 polarization_Init(..., double Factor, ...) added
   2010-03-18 V1.3 include reference.h for ProjectionType
+  2010-12-12-V1.5 unused PolarizationParams removed
+  2011-06-22 V1.6 orientation recalculation 1..16 added
+  2011-07-11 V1.61 polarization.h: Ori was double, defined as long int
 
 DESCRIPTION
 
-The input image must be an Ewald-sphere projection of a scattering pattern.
-The routine polarization_factor calculates the polarization factor from the
-SAXS-coordinates sp of the projection (see *).
+The function polarization_factor calculates the polarization factor for
+coordinates in the SAXS reference system (see *). The image can 
+either be an Ewald-sphere projection of a scattering pattern 
+(waxs-projection) or a flat detector pattern (saxs-projection).
 
-The polarization of the incident beam is described by three parameters:
-the polarization P (0<=P<=1), the ellipticity PChi (-pi/4<=PChi<=pi/4) and 
-the orientation PPsi. The basic range of PPsi is from 0 to pi. Values outside
-this range are accepted because the polarization factor is periodic with pi. 
+Three parameters describe the polarization of the incident beam: the 
+polarization P (0<=P<=1), the ellipticity PChi (-pi/4<=PChi<=pi/4) and 
+the inclination PPsi (0<=PPsi<=pi) of the polarization plane. The 
+ellipticity PChi is zero for linear polarization. For circular
+polarization its absolute value is pi/4 and smaller for elliptical
+polarization. The polarization factor is symmetric for PChi and 
+therefore independent of the helicity.
+
+The angle PPsi describes a ccw rotation of the polarization plane 
+around axis x_3 with respect to the x_1 axis in orientation 1. 
+
+Orientation 1 corresponds to a righhanded coordinate system with the axes
+x_1, x_2 and x_3 where x_1 is horizontal and pointing to the right,
+axis x_2 is pointing upwards and axis x_3 against the observer and against
+the travelling direction of the incident beam. The image is observed in
+the x_1, x_2 plane.
+
+For a different orientation an internal OPsi is recalculated accordingly:
+
+orientation      OPsi
+
+1 :  1, 2, 3     PPsi
+2 : -1, 2, 3    -PPsi+pi
+3 :  1,-2, 3    -PPsi
+4 : -1,-2, 3     PPsi-pi
+5 :  2, 1, 3    -PPsi+pi/2
+6 :  2,-1, 3     PPsi-pi/2
+7 : -2, 1, 3     PPsi+pi/2
+8 : -2,-1, 3    -PPsi-pi/2
+9 :  1, 2,-3     PPsi
+10: -1, 2,-3    -PPsi+pi
+11:  1,-2,-3    -PPsi
+12: -1,-2,-3     PPsi-pi
+13:  2, 1,-3    -PPsi+pi/2
+14:  2,-1,-3     PPsi-pi/2
+15: -2, 1,-3     PPsi+pi/2
+16: -2,-1,-3    -PPsi-pi/2
 
 In the following, 3d vectors are followed by '~', the length of a vector 
 is just its name: e.g. kin = ||kin~||. Vectors with unit length are
@@ -66,7 +103,7 @@ The scattering is elastic. The wavenumber k of kin~ and kout~ is:
 Scattering Geometry
 
 The input image must be an Ewald sphere projection of the scattering pattern
-as as created with saxs_waxs. The unit vectors in lab space are: e1^, e2^, e3^. 
+as created with saxs_waxs. The unit vectors in lab space are: e1^, e2^, e3^. 
 Axis 3 in lab space is parallel to axis 3 of the projection. The azimuths of 
 the axes 1 and 2 of the projections are identical to the azimuths of the axes 1
 and 2 in lab space. For details see waxs.c.
@@ -87,7 +124,7 @@ using the routine waxs_sp2kdir:
 (v)   kout^ =  | sin(2Theta)*sin(alpha) | = | kout2 |
                (     -cos(2Theta)       )   ( kout3 )
 
-*) SAXS-Coordinates of the Ewald sphere projection
+*) coordinates in the SAXS reference system:
 
      sp_1 =  k * ((x_1+off_1) - cen_1) * (pix_1/dis)    
      sp_2 =  k * ((x_2+off_2) - cen_2) * (pix_2/dis)
@@ -113,7 +150,7 @@ The scattered intensity Iout is given by
 where Eout* denotes the complex conjugate of Eout. Applying eq. vii to eq. vi
 gives the result
 
-(viii) Iout = f*f ( <Ein * Ein*> - <(kout * Ein)*(kout * Ein*)> )
+(viii) Iout = f*f ( <Ein * Ein*> - <(kout^ * Ein)*(kout^ * Ein*)> )
 
 Die incident wave is transverse to axis 3 and can be described with
 
@@ -165,8 +202,8 @@ PChi  : ellipticity (after Poincaré) (-pi/4<=PChi<=+pi/4)
         PChi==0 linear polarization
         PChi>0 right hand polarization
         PChi=pi/4 right hand (ccw) circular polarization
-PPsi  : polarization direction (after Poincaré) (0<=PPsi<pi)
-        PPsi is the angle between axis x_1 and the polarization direction
+PPsi  : inclination of the plane of polarization (after Poincaré) (0<=PPsi<pi)
+        PPsi is the angle between axis x_1 and the plane of polarization 
 
 Because the angles PChi and PPsi are defined in a mirrored coordinate system 
 with the incident beam parallel to e3^ (and not antiparallel) the signs of the
@@ -235,8 +272,8 @@ USAGE
       //    PChi==0 linear polarization
       //    PChi>0 right hand polarization
       //    PChi=pi/4 right hand (ccw) circular polarization
-  ppsi = 0.0; // polarization direction (after Poincaré) (0<=PPsi<pi)
-      //    ppsi is the angle between axis x_1 and the polarization direction
+  ppsi = 0.0; // inclination of the plane of polarization  (after Poincaré) 
+      //    (0<=PPsi<pi)
 
   Because the angles pchi and ppsi are defined for a mirrored coordinate system
   with the incident beam parallel to e3^ (and not antiparallel) the sign of the
@@ -244,7 +281,7 @@ USAGE
   used (beam antiparallel to e3^). The polarization factor is independent of
   the sign of pchi.
 
-  polarization_Init(&pparams,
+  polarization_Init(&pparams, ori,
                     K, rot1, rot2, rot3, pol, pchi, -ppsi, factor, invert);
 
   for (i2) {
@@ -287,12 +324,6 @@ static const double quarterpi = R_PI*0.25;
 static const double qpi_eps   = 1e-6;
 
 /******************************************************************************
-* Private Variables                                                           *
-******************************************************************************/
-
-static PParams PolarizationParams;
-
-/******************************************************************************
 * Routines                                                                    *
 ******************************************************************************/
 
@@ -300,16 +331,17 @@ void polarization_PrintParams ( FILE * out, PParams Params )
 { PParams * pParams = &Params;
   if (!pParams->Init) return;
   fprintf(out," Init                       = %d\n", pParams->Init);
-  fprintf(out," P                          = %g\n", pParams->P);
-  fprintf(out," PChi                       = %g\n", pParams->PChi);
-  fprintf(out," PPsi                       = %g\n", pParams->PPsi);
-  fprintf(out," Factor                     = %g\n", pParams->Factor);
+  fprintf(out," Ori                        = %ld\n", pParams->Ori);
+  fprintf(out," P                          = %lg\n", pParams->P);
+  fprintf(out," PChi                       = %lg\n", pParams->PChi);
+  fprintf(out," PPsi                       = %lg\n", pParams->PPsi);
+  fprintf(out," Factor                     = %lg\n", pParams->Factor);
   fprintf(out," Invert                     = %d\n", pParams->Invert);
-  fprintf(out," halfOnePlusCos2ChiCos2Psi  = %g\n",
+  fprintf(out," halfOnePlusCos2ChiCos2Psi  = %lg\n",
     pParams->halfOnePlusCos2ChiCos2Psi);
-  fprintf(out," halfOneMinusCos2ChiCos2Psi = %g\n",
+  fprintf(out," halfOneMinusCos2ChiCos2Psi = %lg\n",
     pParams->halfOneMinusCos2ChiCos2Psi);
-  fprintf(out," Cos2ChiSin2Psi             = %g\n", pParams->Cos2ChiSin2Psi);
+  fprintf(out," Cos2ChiSin2Psi             = %lg\n", pParams->Cos2ChiSin2Psi);
 
   waxs_PrintParams( out, pParams->wparams );
 
@@ -321,7 +353,7 @@ NAME
 
 SYNOPSIS
 
-  int polarization_Init ( PParams * pParams,
+  int polarization_Init ( PParams * pParams, long ori,
                           double k, double rot1, double rot2, double rot3,
                           double P, double PChi, double PPsi, double Factor,
                           int Invert );
@@ -330,6 +362,7 @@ DESCRIPTION
 It initializes all static parameters.
 
 ARGUMENTS
+ori   : orientation (default: 1)
 k     : wavenumber
 rot1, 
 rot2, 
@@ -341,8 +374,7 @@ PChi  : ellipticity (after Poincaré) (-pi/4<=PChi<=+pi/4)
         PChi==0 linear polarization
         PChi>0 right hand polarization
         PChi=pi/4 right hand (ccw) circular polarization
-PPsi  : polarization direction (after Poincaré) (0<=PPsi<pi)
-        PPsi is the angle between axis x_1 and the polarization direction
+PPsi  : inclination of the plane of polarization  (after Poincaré) (0<=PPsi<pi)
 Factor: positive multiplication factor larger than 0
 Invert: switch for the function polarization_factor:
         0: the polarization factor P multiplied with Factor is calculated
@@ -358,12 +390,13 @@ RETURN VALUE
   otherwise error
 
 ----------------------------------------------------------------------------*/
-int polarization_Init ( PParams * pParams,
+int polarization_Init ( PParams * pParams, long ori,
                         double k, double rot1, double rot2, double rot3,
                         double P, double PChi, double PPsi, double Factor,
                         int Invert )
-{ 
+{
   double Cos2Chi, Sin2Chi, Cos2Psi, Sin2Psi;
+  double OPsi;
 
   if (!pParams) return(-2);
 
@@ -373,26 +406,63 @@ int polarization_Init ( PParams * pParams,
   if ( waxs_Init ( &(pParams->wparams), k, rot1, rot2, rot3 ) ) return( -1 );
 
   // Polarization
-  if ( ( P < 0 ) || ( P > 1 ) ) return( -1 );
+  if ( ( P < 0.0 ) || ( P > 1.0 ) ) return( -1 );
   pParams->P    = P;
+
+  // Orientation change
+  if (ori<0) ori=raster_inversion ( -ori  );
+  pParams->Ori = ori;
+
+  switch (ori) {
+    case 2: // 2 : -1, 2, 3     -PPsi+R_PI
+    case 10: // 10: -1, 2,-3    -PPsi+R_PI
+      OPsi=-PPsi+R_PI;
+      break;
+    case 3: // 3 :  1,-2, 3     -PPsi
+    case 11: // 11:  1,-2,-3    -PPsi 
+      OPsi=-PPsi;
+      break;
+    case 4: // 4 : -1,-2, 3      PPsi-R_PI
+    case 12: // 12: -1,-2,-3     PPsi-R_PI
+      OPsi=PPsi-R_PI;
+      break;
+    case 5: // 5 :  2, 1, 3     -PPsi+R_PI/2
+    case 13: // 13:  2, 1,-3    -PPsi+R_PI/2
+      OPsi=-PPsi+R_PI/2;
+    case 6: // 6 :  2,-1, 3      PPsi-R_PI/2
+    case 14: // 14:  2,-1,-3     PPsi-R_PI/2
+      OPsi=PPsi-R_PI/2;
+      break;
+    case 7: // 7 : -2, 1, 3      PPsi+R_PI/2
+    case 15: // 15: -2, 1,-3     PPsi+R_PI/2
+      OPsi=PPsi+R_PI/2;
+      break;
+    case 8: // 8 : -2,-1, 3     -PPsi-R_PI/2
+    case 16: // 16: -2,-1,-3    -PPsi-R_PI/2
+      OPsi=-PPsi-R_PI/2;
+      break;
+    default: // 1 :  1, 2, 3     PPsi
+             // 9 :  1, 2,-3     PPsi
+      OPsi=PPsi;
+  }
 
   // Poincaré parameters
   if ( ( PChi<-quarterpi-qpi_eps ) || ( PChi>quarterpi+qpi_eps ) ) return( -1 );
   pParams->PChi = PChi;
-  pParams->PPsi = PPsi;
+  pParams->PPsi = OPsi;
 
   if ( Factor <= 0 ) return( -1 );
   pParams->Factor=Factor;
 
   pParams->Invert=Invert;
 
-  Cos2Chi=cos(2*PChi);
-  Sin2Chi=sin(2*PChi);
-  Cos2Psi=cos(2*PPsi);
-  Sin2Psi=sin(2*PPsi);
+  Cos2Chi=cos(2.0*PChi);
+  Sin2Chi=sin(2.0*PChi);
+  Cos2Psi=cos(2.0*OPsi);
+  Sin2Psi=sin(2.0*OPsi);
 
-  pParams->halfOnePlusCos2ChiCos2Psi  = (1+Cos2Chi*Cos2Psi)*0.5;
-  pParams->halfOneMinusCos2ChiCos2Psi = (1-Cos2Chi*Cos2Psi)*0.5;
+  pParams->halfOnePlusCos2ChiCos2Psi  = (1.0+Cos2Chi*Cos2Psi)*0.5;
+  pParams->halfOneMinusCos2ChiCos2Psi = (1.0-Cos2Chi*Cos2Psi)*0.5;
   pParams->Cos2ChiSin2Psi             = Cos2Chi*Sin2Psi;
 
   pParams->Init = 1;
@@ -462,11 +532,11 @@ double polarization_factor ( PParams * pParams,
   kvec[2] = -kdir.cosTwoTheta;
 
   // unpolarized part 
-  Iu = (1-pParams->P)*0.5*(1+kvec[2]*kvec[2]);
+  Iu = (1.0-pParams->P)*0.5*(1.0+kvec[2]*kvec[2]);
 
-  Ip = pParams->P * (   (1-kvec[0]*kvec[0])*pParams->halfOnePlusCos2ChiCos2Psi
-                      + (1-kvec[1]*kvec[1])*pParams->halfOneMinusCos2ChiCos2Psi
-                      +    kvec[0]*kvec[1] *pParams->Cos2ChiSin2Psi   );
+  Ip = pParams->P*(   (1.0-kvec[0]*kvec[0])*pParams->halfOnePlusCos2ChiCos2Psi
+                    + (1.0-kvec[1]*kvec[1])*pParams->halfOneMinusCos2ChiCos2Psi
+                    +    kvec[0]*kvec[1] *pParams->Cos2ChiSin2Psi   );
 
   Value = (Iu+Ip)*pParams->Factor;
 

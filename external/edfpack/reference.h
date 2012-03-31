@@ -39,6 +39,9 @@ HISTORY
 
   2009-10-02 PB V2.31 extracted from SaxsDefinitions.h  V2.30
   2010-03-18 PB V2.32 Reference systems and projections (from SaxsOptions.h)
+  2011-04-07 PB V2.33 CSWAP2, OSWAP2, RASREG added.
+  2011-05-14 PB V2.34 Axis types (from SaxsOptions.h)
+  2011-07-24 PB V2.35 Reference system Tangens added (IO_Tangens)
 
 DESCRIPTION
 
@@ -49,7 +52,7 @@ DESCRIPTION
 ****************************************************************************/
 
 #ifndef _REFERENCE_
-# define REFERENCE_VERSION "reference : V2.32 Peter Boesecke 2009-10-02"
+# define REFERENCE_VERSION "reference : V2.34 Peter Boesecke 2011-05-14"
 
 /* ---------------------------------------------------------------------------
   General Constants
@@ -109,13 +112,15 @@ DESCRIPTION
  reference system. All basic lengths (pixel size, wave length,
  sample distance etc.) are given in meters. Four different systems are used:
 
- ARRAY  coordinate = pixel coordinate
- IMAGE  coordinate = array coordinate + offset
- CENTER coordinate = image coordinate - center
- REAL   coordinate = image coordinate * pixel size
- NORMAL coordinate = (image coordinate - center) * pixel size
- SAXS   coordinate = (image coordinate - center) *
-                      (pixel size/sample distance) * (WaveLength0/wave length)
+ ARRAY   coordinate = pixel coordinate
+ IMAGE   coordinate = array coordinate + offset
+ CENTER  coordinate = image coordinate - center
+ REAL    coordinate = image coordinate * pixel size
+ NORMAL  coordinate = (image coordinate - center) * pixel size
+ TANGENS coordinate = (image coordinate - center) *
+                       (pixel size/sample distance)
+ SAXS    coordinate = (image coordinate - center) *
+                       (pixel size/sample distance) * (WaveLength0/wave length)
 
  The principal coordinate system is IMAGE.
 
@@ -153,9 +158,9 @@ DESCRIPTION
   upper column = WORLD(INDEXSTART+DIM-1,Off,Ps);
 
  ARRAYREF, IMAGEREF, CENTERREF, REALREF, NORMALREF, SAXSREF, WORLD, INDEX
-  The preprocessor macros ARRAYREF, IMAGEREF, CENTERREF, REALREF, NORMALREF 
-  and SAXSREF calculate offsets and pixel sizes to allow a direct affin 
-  transformation between pixel indices and world coordinates. The 
+  The preprocessor macros ARRAYREF, IMAGEREF, CENTERREF, REALREF, NORMALREF,
+  TANGENSREF and SAXSREF calculate offsets and pixel sizes to allow a direct 
+  affin transformation between pixel indices and world coordinates. The 
   transformations are done with WORLD and INDEX. The calculated internal 
   offsets (Off) and pixel sizes (Ps) must not be confused with the basic 
   offsets and pixel sizes which are given in pixel coordinates and meters.
@@ -180,33 +185,38 @@ DESCRIPTION
   {NORMALREF(Off,Ps,Offset,PSize,Center);}
   WNormal = WORLD( IIndex, Off, Ps );
   IIndex = INDEX( WNormal, Off, Ps );
+  {TANGENSREF(Off,Ps,Offset,PSize,Center,SampleDistance);}
+  WTangens = WORLD( IIndex, Off, Ps );
+  IIndex = INDEX( WSaxs, Off, Ps );
   {SAXSREF(Off,Ps,Offset,PSize,Center,SampleDistance,WaveLength);}
   WSaxs = WORLD( IIndex, Off, Ps );
   IIndex = INDEX( WSaxs, Off, Ps );
 
- A2INDEX, I2INDEX, R2INDEX, C2INDEX, S2INDEX, INDEX2A, INDEX2I, INDEX2R, 
-  INDEX2C, INDEX2S
-  The preprocessor macros A2INDEX, I2INDEX, R2INDEX, C2INDEX and S2INDEX 
-  transform a world coordinate W directly directly into a pixel index IIndex.
-  INDEX2A, INDEX2I, INDEX2R, INDEX2C and INDEX2S transform a pixel index 
-  directly into a world coordinate W.
+ A2INDEX, I2INDEX, C2INDEX, R2INDEX, N2INDEX, T2INDEX, S2INDEX, 
+  INDEX2A, INDEX2I, INDEX2C, INDEX2R, INDEX2N, INDEX2T, INDEX2S
+  The preprocessor macros A2INDEX, I2INDEX, C2INDEX, R2INDEX, N2INDEX, 
+  T2INDEX and S2INDEX transform a world coordinate W directly into a pixel 
+  index IIndex. INDEX2A, INDEX2I, INDEX2C, INDEX2R, INDEX2N, INDEX2T and 
+  INDEX2S transform a pixel index directly into a world coordinate W.
 
  Usage (direct transformation of coordinates) :
   float Offset, PSize, Center, SampleDistance, WaveLength;
   float IIndex;
   float WArray, WImage, WCenter, WReal, WNormal, WSaxs;
-  IIndex  = A2INDEX(WArray);
-  IIndex  = I2INDEX(WImage,Offset);
-  IIndex  = C2INDEX(WCenter,Offset,Center);
-  IIndex  = R2INDEX(WReal,Offset,PSize);
-  IIndex  = N2INDEX(WNormal,Offset,PSize,Center);
-  IIndex  = S2INDEX(WSaxs,Offset,PSize,Center,SampleDistance,WaveLength);
-  WArray  = INDEX2A(IIndex);
-  WImage  = INDEX2I(IIndex,Offset);
-  WCenter = INDEX2C(IIndex,Offset,Center);
-  WReal   = INDEX2R(IIndex,Offset,PSize);
-  WNormal = INDEX2N(IIndex,Offset,PSize,Center);
-  WSaxs   = INDEX2S(IIndex,Offset,PSize,Center,SampleDistance,WaveLength);
+  IIndex   = A2INDEX(WArray);
+  IIndex   = I2INDEX(WImage,Offset);
+  IIndex   = C2INDEX(WCenter,Offset,Center);
+  IIndex   = R2INDEX(WReal,Offset,PSize);
+  IIndex   = N2INDEX(WNormal,Offset,PSize,Center);
+  IIndex   = T2INDEX(WSaxs,Offset,PSize,Center,SampleDistance);
+  IIndex   = S2INDEX(WSaxs,Offset,PSize,Center,SampleDistance,WaveLength);
+  WArray   = INDEX2A(IIndex);
+  WImage   = INDEX2I(IIndex,Offset);
+  WCenter  = INDEX2C(IIndex,Offset,Center);
+  WReal    = INDEX2R(IIndex,Offset,PSize);
+  WNormal  = INDEX2N(IIndex,Offset,PSize,Center);
+  WTangens = INDEX2S(IIndex,Offset,PSize,Center,SampleDistance);
+  WSaxs    = INDEX2S(IIndex,Offset,PSize,Center,SampleDistance,WaveLength);
 
  REF2USER, USER2REF
   Transformation between a user system coordinate and
@@ -231,7 +241,7 @@ DESCRIPTION
  Usage (binning) :
   AREBIN(Offset,BSize,PSize,Center,Bin)
 
- I2OFFSET, C2OFFSET, R2OFFSET, N2OFFSET, S2OFFSET
+ I2OFFSET, C2OFFSET, R2OFFSET, N2OFFSET, T2OFFSET, S2OFFSET
   Calculation of the offset value. The input value must be the coordinate 
   of the lower edge of the region or pixel (Image, Center, Real, 
   Normal and Saxs). An offset cannot be calculated for Array.
@@ -241,15 +251,17 @@ DESCRIPTION
   Offset = C2OFFSET(WNormal,Center);
   Offset = R2OFFSET(WReal,PSize);
   Offset = N2OFFSET(WNormal,PSize,Center);
+  Offset = T2OFFSET(WSaxs,PSize,Center,SampleDistance);
   Offset = S2OFFSET(WSaxs,PSize,Center,SampleDistance,WaveLength);
 
- R2PSIZE, N2PSIZE, S2PSIZE
+ R2PSIZE, N2PSIZE, T2PSIZE, S2PSIZE
   Calculation of the pixel size from a distance in Real coordinates,
   Normal coordinates and Saxs coordinates.
 
  Usage :
   PSize = R2PSIZE(WRealDistance);
   PSize = N2PSIZE(WNormalDistance);
+  PSize = T2PSIZE(WSaxsDistance,SampleDistance);
   PSize = S2PSIZE(WSaxsDistance,SampleDistance,WaveLength);
 
  R2CENTER
@@ -258,23 +270,45 @@ DESCRIPTION
  Usage :
   Center = R2CENTER(WReal,PSize)
 
- CSWAP
+ RASREG 
+  Calculation of the raster region. RasReg is the outer dimension 
+  of a region, i.e. the dimension of a region with binning size 1 
+  and offset 0 that covers the region exactly.
+
+ Usage :
+  RasReg = RASREG(BSize,Offset,Dim)
+
+ OSWAP2
+  Calculation of a new offset value after a swap of a data REGION.
+  The new offset is calculated in such a way that REGIONs are swapped
+  coherently. 
+
+ Usage :
+  Offset' = OSWAP2(RasReg,BSize,Offset,Dim)
+
+ CSWAP2
   Calculation of a new center coordinate after a swap of the data ARRAY. 
   The new center coordinate is calculated in such a way that it points to 
-  the same pixel as before the swap. Offset, PSize and Dim do not change
-  when the array is swapped.
+  the same pixel as before the swap. PSize and Dim do not change
+  when the array is swapped, the Offset can be changed.
 
- Usage:
-  Center = CSWAP(Center,Offset,Dim);
+ Usage :
+  Center' =  CSWAP2(Offset',Center,Offset,Dim)
+
+ CSWAP
+  Like CSWAP2 but keeping the offset.
+
+ Usage :
+  Center' = CSWAP(Center,Offset,Dim);
 
  N2S
   Transformation of a Normal coordinate to a Saxs coordinate
 
- Usage:
+ Usage :
   WSaxs = N2S(WNormal,SampleDistance,WaveLength);
 
 ----------------------------------------------------------------------------*/
-/* Reference systems */
+/* reference systems */
 # define IO_NoRSys 0
 # define IO_Array 1
 # define IO_Image 2
@@ -282,11 +316,17 @@ DESCRIPTION
 # define IO_Region 4
 # define IO_Real 5
 # define IO_Normal 6
-# define IO_Saxs 7
-/* Projections */
+# define IO_Tangens 7
+# define IO_Saxs 8
+/* projections */
 # define IO_NoPro 0
 # define IO_ProSaxs 1
 # define IO_ProWaxs 2
+/* axis types */
+# define IO_NoAxisType 0
+# define IO_AxisTypeDistance 1
+# define IO_AxisTypeAngle 2
+# define IO_AxisTypeNumerator 3
 /* array specifications */
 # define INDEXSTART  0
 # define NUMBERSTART 1
@@ -305,19 +345,22 @@ DESCRIPTION
 # define CENTERREF(Off,Ps,O,C) Off=(O)-(C)+DAI; Ps=1.0;
 # define REALREF(Off,Ps,O,P) Off=(O)+DAI; Ps=(P)
 # define NORMALREF(Off,Ps,O,P,C) Off=(O)-(C)+DAI; Ps=(P);
-# define SAXSREF(Off,Ps,O,P,C,S,W) NORMALREF(Off,Ps,O,((P)/(S))*WAVENUMBER(W),C)
+# define TANGENSREF(Off,Ps,O,P,C,S) NORMALREF(Off,Ps,(O),((P)/(S)),(C))
+# define SAXSREF(Off,Ps,O,P,C,S,W) NORMALREF(Off,Ps,(O),((P)/(S))*WAVENUMBER(W),(C))
 /* direct transformations */
 # define A2INDEX(I) ((I)-DAI)
 # define I2INDEX(I,O) ((I)-(O)-DAI)
 # define C2INDEX(I,O,C) I2INDEX(I,(O)-(C))
 # define R2INDEX(I,O,P) ((((I)/(P))-(O))-DAI)
 # define N2INDEX(I,O,P,C) R2INDEX((I),(O)-(C),(P))
+# define T2INDEX(I,O,P,C,S) N2INDEX((I),(O),((P)/(S)),(C))
 # define S2INDEX(I,O,P,C,S,W) N2INDEX((I),(O),((P)/(S))*WAVENUMBER(W),(C))
 # define INDEX2A(I) ((I)+DAI)
 # define INDEX2I(I,O) ((I)+(O)+DAI)
 # define INDEX2C(I,O,C) INDEX2I(I,(O)-(C))
 # define INDEX2R(I,O,P) (((I)+(O)+DAI)*(P))
 # define INDEX2N(I,O,P,C) INDEX2R((I),(O)-(C),(P))
+# define INDEX2T(I,O,P,C,S) INDEX2N((I),(O),((P)/(S)),(C))
 # define INDEX2S(I,O,P,C,S,W) INDEX2N((I),(O),((P)/(S))*WAVENUMBER(W),(C))
 /* transformation of coordinates between user system and reference system */
 # define REF2USER(RW,ROff,RPs,UOff,UPs) WORLD(INDEX(RW,ROff,RPs),UOff,UPs)
@@ -334,20 +377,29 @@ DESCRIPTION
 # define C2OFFSET(I,C) ((I) + (C) - (ARRAYSTART + LOWERBORDER) )
 # define R2OFFSET(I,P) ((I)/(P) - (ARRAYSTART + LOWERBORDER) )
 # define N2OFFSET(I,P,C) (((I)/(P)) + (C) - (ARRAYSTART + LOWERBORDER) )
+# define T2OFFSET(I,P,C,S) \
+          ( (((I)/(P))*(S)) + (C) - (ARRAYSTART + LOWERBORDER) )
 # define S2OFFSET(I,P,C,S,W) \
           ( (((I)/(P))*(S)*WAVENUMBER(W)) + (C) - (ARRAYSTART + LOWERBORDER) )
 /* calculation of PSize */
 # define R2PSIZE(D) (D)
 # define N2PSIZE(D) R2PSIZE(D)
+# define T2PSIZE(D,S) ( ((D) * (S)) )
 # define S2PSIZE(D,S,W) ( ((D) * (S)) / WAVENUMBER(W) )
 # define PSIZE2R(P) (P)
 # define PSIZE2N(P) PSIZE2R(P)
+# define PSIZE2T(P,S) ( ((P) / (S)) )
 # define PSIZE2S(P,S,W) ( ((P) / (S)) * WAVENUMBER(W) )
 /* calculation of Center */
 # define R2CENTER(I,P) ((I)/(P))
 # define CENTER2R(I,P) ((I)*(P))
-/* calculation of new center after swapping the data array */
-# define CSWAP(C,O,D) ( (O) + (O) + (D) - (C) )
+/* calculation of the raster region from the full image without offset */
+# define RASREG(B,D)  ( INDEX2R((INDEXSTART)+(LOWERBORDER)+(D),0,B) )
+/* calculation of new offset and center after swapping the data array */
+# define OSWAP2(R,B,O,D)   ( ( (R) / (B) ) - ( (O) + (D) ) )
+# define CSWAP2(OO,C,O,D)  ( (OO) + (O) + (D) - (C) )
+/* calculation of new center after swapping the data array and keeping offset */
+# define CSWAP(C,O,D) ( CSWAP2(O,C,O,D) )
 /* direct transformations between reference systems */
 # define N2S(I,S,W) (((I)/(S))*WAVENUMBER(W))
 # define S2N(I,S,W) (((I)*(S))/WAVENUMBER(W))

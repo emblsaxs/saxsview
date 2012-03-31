@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 2001-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -44,6 +44,10 @@ SYNOPSIS
                              float f1_2, float f3_2, float Df_2,
                              float dummy, float ddummy, int ave );
 
+HISTORY
+  2009-10-06 V1.00 PB extracted from SaxsRoutine (Projection_1, Projection_2)
+                      without testbit
+  2009-11-10 V1.01 PB unused variables removed
 
 ***********************************************************************---*/
 

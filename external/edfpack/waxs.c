@@ -23,10 +23,10 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define WAXS_VERSION      "waxs : V1.10 Peter Boesecke 2010-05-31"
+# define WAXS_VERSION      "waxs : V1.12 Peter Boesecke 2011-07-23"
 /*+++------------------------------------------------------------------------
 NAME
-   waxs --- routines for waxs detector projections 
+   waxs --- Transformation between coordinates of rotated detectors
 
 SYNOPSIS
 
@@ -55,7 +55,17 @@ HISTORY
   2010-03-18 V1.8  PB waxs_Range, waxs_Transform, waxs_not_init added
                       waxs_Range and waxs_Transform arguments changed
   2010-05-31 V1.9  PB waxs_kdir2svec: calculation of s corrected
-  2010-05-31 V1.10 PB work: no global WaxsParams
+  2010-05-31 V1.10 PB no global WaxsParams
+  2011-06-27 V1.11 PB new waxs_S2S, waxs_get_transform and
+                      waxs_Transform updated,
+                      waxs_Saxs -> waxs_Waxs2Saxs,
+                      waxs_Waxs -> waxs_Saxs2Waxs,
+                      all conversion function with input and output params
+  2011-07-23 V1.12 PB rename functions
+                      waxs_Saxs2Saxs -> waxs_S2S,
+                      waxs_Waxs2Saxs -> waxs_Sp2S,
+                      waxs_Saxs2Waxs -> waxs_S2Sp,
+                      waxs_Uni2Iso, waxs_Iso2Uni -> no change
                       
 DESCRIPTION
 
@@ -339,6 +349,7 @@ void _fprint_vec ( FILE * out, double V[3] )
   for (i=0;i<3;i++)
     fprintf(out," %15g\n", V[i] );
 } // _fprint_vec                                                                                                                              
+
 void waxs_PrintDir ( FILE * out, WaxsDir Beam )
 {
   fprintf(out," sinAlpha           = %g\n", Beam.sinAlpha );
@@ -348,6 +359,7 @@ void waxs_PrintDir ( FILE * out, WaxsDir Beam )
   fprintf(out," cosTwoTheta        = %g   (%g deg)\n",
           Beam.cosTwoTheta, atan2(Beam.sinTwoTheta,Beam.cosTwoTheta)*rad2deg );
 } // waxs_PrintDir                                                                                                                              
+
 void waxs_PrintParams ( FILE * out, WParams Params )
 {
   WParams *pParams = &Params;
@@ -625,12 +637,12 @@ WaxsDir waxs_sp2kdir ( WParams * pParams, WaxsCoord sp )
   Beam.sinTwoTheta = sqrt(tmp);
 
   if (s>eps) {
-   Beam.cosAlpha = sp.s_1/s;
-   Beam.sinAlpha = sp.s_2/s;
-   } else {
-   Beam.cosAlpha = 0.0;
-   Beam.sinAlpha = 0.0;
-   }
+    Beam.cosAlpha = sp.s_1/s;
+    Beam.sinAlpha = sp.s_2/s;
+  } else {
+    Beam.cosAlpha = 0.0;
+    Beam.sinAlpha = 0.0;
+  }
 
   return( _beam_set( &Beam, 0 ) );
 
@@ -1062,20 +1074,22 @@ SYNOPSIS
   int waxs_Init ( double k, double rot_1, double rot_2, double rot_3 )
 
 DESCRIPTION
-It initializes all static parameters.
+
+  It initializes all static parameters.
 
 ARGUMENTS
-k     : wavenumber                                                                                                                  
-rot_1 : ccw rotation around axis 1
-rot_2 : ccw rotation around axis 2
-rot_3 : ccw rotation around axis 3
+
+  k     : wavenumber                                                                                                                  
+  rot_1 : ccw rotation around axis 1
+  rot_2 : ccw rotation around axis 2
+  rot_3 : ccw rotation around axis 3
 
 RETURN VALUE
   returns 0 if OK
 
 ----------------------------------------------------------------------------*/
 int waxs_Init ( WParams * pParams,
-                 double k, double rot_1, double rot_2, double rot_3 )
+                double k, double rot_1, double rot_2, double rot_3 )
 { 
   double Rot_1[3][3], Rot_2[3][3], Rot_3[3][3];
   double tmp[3][3];
@@ -1155,9 +1169,11 @@ ARGUMENTS
   output projection type proout (IO_ProSaxs, IO_ProWaxs)
 
 RETURN VALUE
-  -1: inverse transformation (WAXS->SAXS)
+  -1: inverse transformation (WAXS->SAXS_pParams)
    0: no transformation
-   1: normal transformation (SAXS->WAXS)
+   1: normal transformation (SAXS_pParams->WAXS)
+   2: transformation between different rotations (SAXS_pParams->SAXS_pParamsOut)
+
 ----------------------------------------------------------------------------*/
 int waxs_get_transform( int proin, int proout )
 { int transform=0;
@@ -1166,6 +1182,8 @@ int waxs_get_transform( int proin, int proout )
     /* There can be more projections defined as saxs and waxs */
     if ((proin==IO_ProSaxs)&&(proout==IO_ProWaxs)) transform=1; // normal transformation
      else if ((proin==IO_ProWaxs)&&(proout==IO_ProSaxs)) transform=-1; // inverse transformation
+  } else {
+    if ((proin==IO_ProSaxs)&&(proout==IO_ProSaxs)) transform=2; // different rotations 
   }
 
   return( transform );
@@ -1175,19 +1193,23 @@ int waxs_get_transform( int proin, int proout )
 /*+++------------------------------------------------------------------------
 NAME
 
-  waxs_Saxs --- calculation of saxs coordinate from s-projection 
+  waxs_Sp2S --- calculation of saxs coordinate from s-projection 
 
 SYNOPSIS
 
-  WaxsCoord waxs_Saxs ( WaxsCoord sp )
+  WaxsCoord waxs_Sp2S ( WParams * pParamsIn, WParams * pParamsOut,
+                             WaxsCoord sp );
 
 DESCRIPTION
 
   Calculates the saxs-coordinate s of the inclined detector image 
   from the saxs-coordinate sp of the Ewald sphere-projection.
+  The parameter SymType is used.
 
 ARGUMENT
 
+  WParams * pParams : parameters of input image (Ewald sphere projection)
+  WParams * pParamsOut : parameters of output image (if NULL, uses pParams)
   WaxsCoord sp : saxs-coordinate of the Ewald sphere projection
 
 RETURN VALUE
@@ -1197,7 +1219,8 @@ RETURN VALUE
   .status<-1 : no solution
 
 ----------------------------------------------------------------------------*/
-WaxsCoord waxs_Saxs ( WParams * pParams, WaxsCoord sp ) 
+WaxsCoord waxs_Sp2S ( WParams * pParams, WParams * pParamsOut,
+                           WaxsCoord sp ) 
 {
   WaxsDir kdir;
   WaxsCoord sout;
@@ -1207,34 +1230,45 @@ WaxsCoord waxs_Saxs ( WParams * pParams, WaxsCoord sp )
   // pParams initialized
   if (!pParams->Init) return(_s_set( &sout,-1));
   
+  if (!pParamsOut) pParamsOut = pParams;
+
+  // pParamsOut initialized
+  if (!pParamsOut->Init) return(_s_set( &sout,-1));
+
   if (pParams->SymType)
     kdir = waxs_ssym2kdir ( pParams, sp );
   else kdir = waxs_sp2kdir ( pParams, sp );
   if (kdir.status) return( _s_set( &sout,kdir.status*10-2) );
 
-  sout = waxs_kdir2s ( pParams, kdir );
+  sout = waxs_kdir2s ( pParamsOut, kdir );
   if (sout.status) return( _s_set( &sout,sout.status*10-2) );
 
   return( _s_set( &sout, 0 ) );
 
-} // waxs_Saxs
+} // waxs_Sp2S
 
 /*+++------------------------------------------------------------------------
 NAME
  
-  waxs_Waxs --- calculation of s-projection from saxs coordinate s
+  waxs_S2Sp --- calculation of s-projection from saxs coordinate s
  
 SYNOPSIS
  
-  WaxsCoord waxs_Waxs ( WaxsCoord s )
+  WaxsCoord waxs_S2Sp ( WParams * pParams, WParams * pParamsOut,
+                             WaxsCoord s );
  
 DESCRIPTION
  
   Calculates the saxs-coordinate sp of the Ewald sphere-projection
   from the saxs-coordinate s of the inclined detector image.
+  The parameter SymType is used.
  
 ARGUMENT
  
+  WParams * pParams : parameters of the input coordinate (inclined detector)
+  WParams * pParamsOut : parameters of the output coordinate (Ewald sphere 
+                         projection) (if NULL, pParams is used)
+
   WaxsCoord s : saxs-coordinate s of the inclined detector image
  
 RETURN VALUE
@@ -1244,7 +1278,8 @@ RETURN VALUE
   .status<-1 : no solution
  
 ----------------------------------------------------------------------------*/
-WaxsCoord waxs_Waxs ( WParams * pParams, WaxsCoord s )
+WaxsCoord waxs_S2Sp ( WParams * pParams, WParams * pParamsOut,
+                           WaxsCoord s )
 {
   WaxsDir kdir;
   WaxsCoord spout;
@@ -1254,17 +1289,96 @@ WaxsCoord waxs_Waxs ( WParams * pParams, WaxsCoord s )
   // pParams initialized
   if (!pParams->Init) return(_s_set( &spout,-1));
 
+  if (!pParamsOut) pParamsOut = pParams;
+
+  // pParamsOut initialized
+  if (!pParamsOut->Init) return(_s_set( &spout,-1));
+
   kdir = waxs_s2kdir ( pParams, s );
   if (kdir.status) return( _s_set( &spout,kdir.status*10-2) );
 
   if (pParams->SymType)
-    spout = waxs_kdir2ssym ( pParams, kdir );
-  else spout = waxs_kdir2sp ( pParams, kdir );
+    spout = waxs_kdir2ssym ( pParamsOut, kdir );
+  else spout = waxs_kdir2sp ( pParamsOut, kdir );
   if (spout.status) return( _s_set( &spout,spout.status*10-2) );
 
   return( _s_set( &spout, 0 ) );
  
-} // waxs_Waxs
+} // waxs_S2Sp
+
+/*+++------------------------------------------------------------------------
+NAME
+
+  waxs_S2S --- saxs coordinate transformation between rotated detectors
+
+SYNOPSIS
+
+  WaxsCoord waxs_S2S ( WParams * pParams, WParams * pParamsOut, 
+                             WaxsCoord s )
+
+DESCRIPTION
+
+  Returns the saxs-coordinate of an inclined detector (*pParamsOut) 
+  which is calculated from the saxs-coordinate s of another inclined 
+  detector (pParams). The parameter SymType has no effect and is not used.
+  If one of pParams or pParamsOut is NULL, the parameters for an
+  unrotated detector are used. At least one parameter set needs to
+  be initialized.
+
+ARGUMENTS
+
+  WParams * pParams    : Waxs Parameters of the input coordinate (inclined 
+                         detector)
+                         if NULL: calculate for perpendicular detector
+  WParams * pParamsOut : Waxs Parameters of the output coordinate (inclined
+                         detector)
+                         if NULL: calculate for perpendicular detector
+  WaxsCoord s : saxs-coordinate corresponding to *pParams
+
+RETURN VALUE
+  WaxsCoord s  : saxs-coordinate corresponding to *pParamsOut
+  s.status==0 in case of success
+  .status<0  : error
+  .status<-1 : no solution
+
+----------------------------------------------------------------------------*/
+WaxsCoord waxs_S2S ( WParams * pParams, WParams * pParamsOut, 
+                           WaxsCoord s )
+{
+  WaxsDir kdir;
+  WaxsCoord sout;
+  WParams DefaultParams;
+
+  // only 1 parameter set can be NULL
+  if ((!pParams)&&(!pParamsOut)) return(_s_set( &sout,-2));
+
+  // pParams initialized
+  if (!pParams) {
+    if (!pParamsOut) return(_s_set( &sout,-2));
+    if (!pParamsOut->Init) return(_s_set( &sout,-1));
+    pParams = &DefaultParams;
+    if ( waxs_Init ( pParams, pParamsOut->k, 0.0, 0.0, 0.0 ) )
+      return(_s_set( &sout,-2));
+  } 
+  if (!pParams->Init) return(_s_set( &sout,-1));
+
+  // pParamsOut initialized
+  if (!pParamsOut) {
+    pParamsOut = &DefaultParams;
+    if ( waxs_Init ( pParamsOut, pParams->k, 0.0, 0.0, 0.0 ) )
+      return(_s_set( &sout,-2));
+  }
+  if (!pParamsOut->Init) return(_s_set( &sout,-1));
+
+  kdir = waxs_s2kdir ( pParams, s );
+  if (kdir.status) return( _s_set( &sout,kdir.status*10-2) );
+
+  sout = waxs_kdir2s ( pParamsOut, kdir );
+  if (sout.status) return( _s_set( &sout,sout.status*10-2) );
+
+  return( _s_set( &sout, 0 ) );
+
+} // waxs_S2S
 
 /*+++------------------------------------------------------------------------
 NAME
@@ -1318,7 +1432,8 @@ NAME
 
 SYNOPSIS
 
-  WaxsCoord waxs_Uni2Iso ( WaxsCoord ssym );
+  WaxsCoord waxs_Uni2Iso ( WParams * pParams, WParams * pParamsOut,
+                           WaxsCoord ssym );
 
 DESCRIPTION
 
@@ -1326,6 +1441,10 @@ DESCRIPTION
   from the saxs-coordinate ssym of an uniaxial symmetric WAXS projection.
 
 ARGUMENT
+
+  WParams * pParams : parameters of the uniaxial symmetric Ewald sphere projection
+  WParams * pParamsOut : parameters of the isotropic Ewald sphere projection
+                         (if NULL, uses pParams)
 
   WaxsCoord ssym : saxs-coordinate of the uniaxial symmetric 
                    Ewald sphere projection 
@@ -1337,7 +1456,8 @@ RETURN VALUE
   .status<-1 : no solution
 
 ----------------------------------------------------------------------------*/
-WaxsCoord waxs_Uni2Iso ( WParams * pParams, WaxsCoord ssym )
+WaxsCoord waxs_Uni2Iso ( WParams * pParams, WParams * pParamsOut, 
+                         WaxsCoord ssym )
 {
   WaxsDir kdir;
   WaxsCoord spout;
@@ -1346,11 +1466,17 @@ WaxsCoord waxs_Uni2Iso ( WParams * pParams, WaxsCoord ssym )
 
   // pParams initialized
   if (!pParams->Init) return(_s_set( &spout,-1));
+
+  if (!pParamsOut) pParamsOut = pParams; 
+
+  // pParams initialized
+  if (!pParamsOut->Init) return(_s_set( &spout,-1));
+
   
   if (pParams->SymType) {
     kdir = waxs_ssym2kdir ( pParams, ssym );
     if (kdir.status) return( _s_set( &spout,kdir.status*10-2) );
-    spout = waxs_kdir2sp ( pParams, kdir );
+    spout = waxs_kdir2sp ( pParamsOut, kdir );
     if (spout.status) return( _s_set( &spout,spout.status*10-2) );
   } else spout = ssym;
   
@@ -1365,7 +1491,8 @@ NAME
 
 SYNOPSIS
   
-  WaxsCoord waxs_Iso2Uni ( WaxsCoord sp );
+  WaxsCoord waxs_Iso2Uni ( WParams * pParams, WParams * pParamsOut,
+                           WaxsCoord sp );
 
 DESCRIPTION
 
@@ -1373,6 +1500,10 @@ DESCRIPTION
   from the saxs-coordinate sp of an isotropic WAXS projection.
 
 ARGUMENT
+
+  WParams * pParams : parameters of the isotropic Ewald sphere projection
+  WParams * pParamsOut : parameters of the uniaxial symmetric Ewald sphere 
+                         projection (if NULL, uses pParams)
 
   WaxsCoord sp : saxs-coordinate of the isotropic Ewald sphere projection
 
@@ -1384,7 +1515,8 @@ RETURN VALUE
   .status<-1 : no solution
   
 ----------------------------------------------------------------------------*/
-WaxsCoord waxs_Iso2Uni ( WParams * pParams, WaxsCoord sp )
+WaxsCoord waxs_Iso2Uni ( WParams * pParams, WParams * pParamsOut,
+                         WaxsCoord sp )
 {
   WaxsDir kdir;
   WaxsCoord ssymout;
@@ -1393,6 +1525,11 @@ WaxsCoord waxs_Iso2Uni ( WParams * pParams, WaxsCoord sp )
 
   // pParams initialized
   if (!pParams->Init) return(_s_set( &ssymout,-1));
+
+  if (!pParamsOut) pParamsOut = pParams;
+
+  // pParamsOut initialized
+  if (!pParamsOut->Init) return(_s_set( &ssymout,-1));
   
   if (pParams->SymType) {
     kdir = waxs_sp2kdir ( pParams, sp );
@@ -1412,7 +1549,8 @@ WaxsCoord waxs_Iso2Uni ( WParams * pParams, WaxsCoord sp )
 
  SYNOPSIS
 
-    WaxsCoord waxs_Transform(int transform, WaxsCoord W);
+    WaxsCoord waxs_Transform( WParams * pParams, WParams *pParamsOut,
+                              int transform, WaxsCoord W)
 
  DESCRIPTION
 
@@ -1420,23 +1558,37 @@ WaxsCoord waxs_Iso2Uni ( WParams * pParams, WaxsCoord sp )
     If transform is 0 the coordinate W is returned, 
     if transform is -1 the Waxs coordinate of W is returned,
     if transform is  1 the SAXS coordinate of W is returned
+    If transform is 2 the Saxs coordinate W for a
+    perpendicular detector is returned, 
 
-    The arguemtn transform can be multiplied by -1 to
+    The arguent transform can be multiplied by -1 to
     invert the calculation.
+
+ ARGUMENTS
+
+    WParams * pParams    : Waxs Parameters of the input coordinate 
+    WParams * pParamsOut : Waxs Parameters of the output coordinate,
+
+    WaxsCoord s : saxs-coordinate of the inclined input detector (*pParams)
 
  RETURN VALUE
 
     transformed coordinate
  
 ---------------------------------------------------------------------------*/
-WaxsCoord waxs_Transform(WParams * pParams, int transform, WaxsCoord W)
+WaxsCoord waxs_Transform( WParams *pParams, WParams * pParamsOut, 
+                          int transform, WaxsCoord W)
 { WaxsCoord WT;
 
   if (transform) {
     switch (transform) {
-      case -1: WT = waxs_Waxs ( pParams, W ); // inverse
+      case -1: WT = waxs_S2Sp ( pParams, pParamsOut, W ); // inverse
                break;
-      case  1: WT = waxs_Saxs ( pParams, W ); // direct
+      case  1: WT = waxs_Sp2S ( pParams, pParamsOut, W ); // direct
+               break;
+      case -2: WT = waxs_S2S ( pParams, pParamsOut, W );
+               break;
+      case  2: WT = waxs_S2S ( pParams, pParamsOut, W );
                break;
       default: W.status=1; WT = W;   // error
     }
@@ -1453,7 +1605,8 @@ WaxsCoord waxs_Transform(WParams * pParams, int transform, WaxsCoord W)
 
  SYNOPSIS
 
-  int waxs_Range( int proin, int proout,
+  int waxs_Range( WParams * pParams, WParams * pParamsOut, 
+                  int proin, int proout,
                   long  dim_1, long dim_2,
                   float off_1, float pix_1, float cen_1,
                   float off_2, float pix_2, float cen_2,
@@ -1470,19 +1623,21 @@ WaxsCoord waxs_Transform(WParams * pParams, int transform, WaxsCoord W)
 
  RETURN VALUE
    (returns value determined with waxs_get_transform)
-  -1: inverse transformation (WAXS->SAXS)
+  -1: inverse transformation (WAXS->SAXS_pParams)
    0: no transformation
-   1: normal transformation (SAXS->WAXS)
+   1: normal transformation (SAXS_pParams->WAXS)
+   2: transformation between different rotations (SAXS_pParams->SAXS_pParamsOut)
 
    status returned in *pstatus : 0: success, otherwise failed
 
 ---------------------------------------------------------------------------*/
-int waxs_Range( WParams * pParams, int proin, int proout,
-                 long  dim_1, long dim_2,
-                 float off_1, float pix_1, float cen_1,
-                 float off_2, float pix_2, float cen_2,
-                 float dis, float wvl,
-                 WaxsCoord *Wmin, WaxsCoord *Wmax, int * pstatus)
+int waxs_Range( WParams * pParams, WParams * pParamsOut, 
+                int proin, int proout,
+                long  dim_1, long dim_2,
+                float off_1, float pix_1, float cen_1,
+                float off_2, float pix_2, float cen_2,
+                float dis, float wvl,
+                WaxsCoord *Wmin, WaxsCoord *Wmax, int * pstatus)
 
 { const float eps=1e-32;
 
@@ -1509,25 +1664,25 @@ int waxs_Range( WParams * pParams, int proin, int proout,
   s_22 = INDEX2S(INDEXSTART+LOWERBORDER+dim_2,off_2,pix_2,cen_2,dis,wvl);
 
   W.s_1 = s_11; W.s_2 = s_21;
-  WOut = waxs_Transform(pParams, -transform, W);
+  WOut = waxs_Transform(pParams, pParamsOut, -transform, W);
   if (WOut.status) goto waxs_Range_error;
   smin_1 = WOut.s_1; smax_1 = WOut.s_1;
   smin_2 = WOut.s_2; smax_2 = WOut.s_2;
 
   W.s_1 = s_12; W.s_2 = s_21;
-  WOut = waxs_Transform(pParams, -transform, W);
+  WOut = waxs_Transform(pParams, pParamsOut, -transform, W);
   if (WOut.status) goto waxs_Range_error;
   smin_1 = MIN2(smin_1,WOut.s_1); smax_1 = MAX2(smax_1,WOut.s_1);
   smin_2 = MIN2(smin_2,WOut.s_2); smax_2 = MAX2(smax_2,WOut.s_2);
 
   W.s_1 = s_12; W.s_2 = s_22;
-  WOut = waxs_Transform(pParams, -transform, W);
+  WOut = waxs_Transform(pParams, pParamsOut, -transform, W);
   if (WOut.status) goto waxs_Range_error;
   smin_1 = MIN2(smin_1,WOut.s_1); smax_1 = MAX2(smax_1,WOut.s_1);
   smin_2 = MIN2(smin_2,WOut.s_2); smax_2 = MAX2(smax_2,WOut.s_2);
 
   W.s_1 = s_11; W.s_2 = s_22;
-  WOut = waxs_Transform(pParams, -transform, W);
+  WOut = waxs_Transform(pParams, pParamsOut, -transform, W);
   if (WOut.status) goto waxs_Range_error;
   smin_1 = MIN2(smin_1,WOut.s_1); smax_1 = MAX2(smax_1,WOut.s_1);
   smin_2 = MIN2(smin_2,WOut.s_2); smax_2 = MAX2(smax_2,WOut.s_2);
@@ -1544,7 +1699,7 @@ int waxs_Range( WParams * pParams, int proin, int proout,
        (2*WAVENUMBER(WaveLength). */
 
     W.s_1 = 0.0; W.s_2 = 0.0;
-    WOut = waxs_Transform(pParams, transform, W);
+    WOut = waxs_Transform(pParams, pParamsOut, transform, W);
 
     if (WOut.status) {
       /* backward projection */

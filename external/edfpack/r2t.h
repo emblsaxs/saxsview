@@ -22,19 +22,24 @@
  *   and the GNU Lesser General Public License  along with this program.
  *   If not, see <http://www.gnu.org/licenses/>.
  */
-
 /*+++***********************************************************************
 NAME
 
-    project.h
+    r2t.h
 
 SYNOPSIS
 
-    #include "project.h"
+    #include "r2t.h"
 
 DESCRIPTION
-    Header of the module "project.c"
+    Header of the module "r2t.c"
+
+    Routines to convert beam distance and beam center to
+    sample distance and center and vice versa.
+
 ***********************************************************************---*/
+#ifndef _r2t_
+# define _r2t_
 
 /****************************************************************************
 *  Include                                                                  *
@@ -42,33 +47,47 @@ DESCRIPTION
 
 # include <stdio.h>
 # include <stdlib.h>
-# include "ipol.h"
-# include "reference.h"
+# include <string.h>
+# include <ctype.h>
+# include <limits.h>
+# include <errno.h>
+# include <stdio.h>
+# include <fcntl.h>
+# include <math.h>
+# include <float.h>
 
 /***************************************************************************
-* Functions                                                                *
+* Definitions                                                              *
 ***************************************************************************/
 
-#ifndef _PROJECT_
-# define PROJECT_VERSION "project : V1.01 Peter Boesecke 2009-11-10"
-
-  extern void           
-   project_1               ( float *line, float *varline, int dim,
-                             int imin, int imax, float initvalue, float factor,
-                             float *data, float *vardat, int dim_1, int dim_2,
-                             float f1_1, float f3_1, float Df_1,
-                             float f1_2, float f3_2,
-                             float dummy, float ddummy, int ave ),
-   project_2               ( float *line, float *varline, int dim,
-                             int imin, int imax, float initvalue, float factor,
-                             float *data, float *vardat, int dim_1, int dim_2,
-                             float f1_1, float f3_1,
-                             float f1_2, float f3_2, float Df_2,
-                             float dummy, float ddummy, int ave );
-
-# define _PROJECT_
-#endif /* _PROJECT_ */
+/****************************************************************************
+* Enums and Structures                                                      *
+****************************************************************************/
 
 /****************************************************************************
-*                                                                           *
+* Functions                                                                 *
 ****************************************************************************/
+
+const char *r2t_version ( void );
+
+int r2t_bcen1( double *bcen1, 
+               double pix1, double cen1, double dis, double R[3][3] );
+
+int r2t_bcen2( double *bcen2, 
+               double pix2, double cen2, double dis, double R[3][3] );
+
+int r2t_bdis ( double *bdis, 
+               double dis, double R[3][3] );
+
+int r2t_cen1 ( double *cen1,
+               double pix1, double bcen1, double bdis, double R[3][3] );
+
+int r2t_cen2 ( double *cen2,
+               double pix2, double bcen2, double bdis, double R[3][3] );
+
+int r2t_dis  ( double *dis,
+               double bdis, double R[3][3] );
+
+/***************************************************************************/
+
+#endif

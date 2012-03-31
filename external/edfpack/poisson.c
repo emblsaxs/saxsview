@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 2000-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -32,6 +32,15 @@ SYNOPSIS
 
    # include poisson.h
 
+HISTORY
+  2000-11-17 V0.0 Peter Boesecke creation, problem in SumPoisson20
+                  All routines to approximate SumPoisson taken from
+                  http://www.io.com/~ritter/JAVASCRP/BINOMPOI.HTM
+  2000-11-18 V0.1 PB InvSumPoisson loop improved
+  2000-11-18 V0.2 SumPoisson works now correctly 
+  2000-11-22 V1.0 Generates now correct mean and sigma
+  2007-02-21 V1.1 POISSON_VERSION updated and pi defined as constant. 
+                  SaxsDefinition.h is not needed any more
 ----------------------------------------------------------------------------*/
 # include "poisson.h"
 

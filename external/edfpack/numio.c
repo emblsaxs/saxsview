@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 1995-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define NUMIO_VERSION      "numio : V1.29 Peter Boesecke 2009-10-06"
+# define NUMIO_VERSION      "numio : V1.34 Peter Boesecke 2011-06-16"
 /*+++------------------------------------------------------------------------
 NAME
   numio.c --- number expressions
@@ -48,6 +48,113 @@ CALL
 
 AUTHOR
   1995 Peter Boesecke (PB)
+
+HISTORY
+  11-Oct-1996 PB extracted from input.c
+  13-Oct-1996 PB dpconstant : physical constants and units,
+                 units are preceeded by an underscore '_'
+  02-Aug-2000 PB dpterm : case '%' added
+                 function doubleexpr added
+  28-Nov-2000 PB dpfunction : GAMMA_ added
+                 dpconstant : km3, ..., m3 added
+  04-Dec-2000 PB ->numio.c, .h
+  04-Feb-2003 PB Inf
+  03-Aug-2003 PB longexpr, floatexpr, doubleexpr: char * ->  const char *
+  19-Feb-2004 PB dpfunction : min, max
+  02-Mar-2004 PB If a factor is followed by the underscore operator '_' 
+                 it is immediately multiplied with the factor following the
+                 underscore. Parentheses around both factors are not necessary
+                 in this case. This simplifies the use of units, e.g. 
+                 "1/1_nm" is identical to "1/(1*nm)". 
+                 It was necessar to change the following functions: 
+                 dpconstant: unit identifier '_' removed,
+                             no distinction between units and names any more
+                             names and units ordered by length
+                 dpfactor:   new multiplicator '_'
+                 Because a unit does not start any more with an underscore 
+                 all macros using units must be adapted. 
+  16-Mar-2004 PB SaxsExpression -> numio V1.00
+  24-Mar-2004 PB STRNCASECMP -> num_strncasecmp
+  30-Mar-2004 PB error corrected: 
+                 dpexpression and lvexpression stop at white space or comma
+  02-Apr-2004 PB parameter tail added to argument list of num_str2...
+                 num_str2... stops at a white space, a comma or a semicolon.
+                 If the evaluated expression is not complete or faulty, an 
+                 error is returned.
+  03-Apr-2004 PB new units kg, J, W, pixel, photon
+  13-Jun-2004 PB double constant list (pixel and photon no longer defined)
+  19-Jun-2004 PB list rearranged, numio_debug created,
+                 name of electron charge changed from e to ec
+                 new units and constants: erg, dyn, cal, Pa, bar, 
+                 N, V, A, C, lb, in, ft, lbf, psi, gN, ga
+  20-Jun-2004 PB debug mode 0|1|2, consistency check of units
+  07-Jul-2004 PB show quantity in debug mode,
+                 barn symbol is b instead of barn,
+                 new units Ar (a), poundal (pdl)
+  08-Jul-2004 PB new units Neugrad (gon), knots (kn), Kelvin (K)
+  05-Feb-2005 PB physical constants from CODATA 2002, 
+                 SI prefixes extended: Peta - Yotta, zepto - yocto
+                 previous definition of Exa corrected to Peta
+                 Units from PTB 2004
+                 mi -> mile after PTB 2004, unit Hz, constant mn
+                 inconsistent definition of amu in 2002 and 2004, using 2002,
+                 unit pond without prefixes, because mp hides proton rest
+                 mass mp
+  16-May-2005 PB Loop in dpfactor removed and dpfactor splitted into 
+                 dpfactor1 and dpfactor2
+  21-May-2005 PB isvariable added
+  28-Jun-2005 PB test version 
+                 NumProgramError, NumNoVariable, NumVar, dpprogram_run
+                 num_str2long calculates dp values with temporary program.
+                 next step: remove return value from all dp routines
+  29-Jun-2005 PB The file numprog.h has been included into numio.h.
+                 The file numprog.c is included into the code of numio.c.
+                 num_str2double creates a temporary program that is 
+                 executed to calculate the value, new functions
+                 num_str2prog4, num_runprog4, num_rmprog.
+  30-Jun-2005 PB num_str2prog4 and num_runprog4 replaced by 
+                 num_str2prog and num_runprog using a variable argument
+                 list (stdarg.h), numprog.c and numprog.h copied into
+                 numio.c and numio.h
+  06-Aug-2005 PB num_chkvar added
+  15-Sep-2005 PB dpvariable: Used is incremented and not Value
+                 num_chkvar corrected
+  11-Dec-2005 PB print routines declared in numio.h
+                 length routines: num_prog_variables, num_prog_accumulators,
+                 num_prog_instructions, num_prog_variable_size,
+                 num_prog_accumulator_size, num_prog_instruction_size
+                 num_prog_size, num_prog_size_all
+                 numprog_up_accumulator: If CurrentAccumulator is NULL,
+                 next is initialized with next = program->AccumulatorList
+                 and not with NULL, to force the reuse of already allocated
+                 accumulators. Otherwise each call to dpprogram_run would
+                 allocate an accumulator with number 1. 
+  15-Mar-2006 PB dpconstant_print: printf argument mismatch corrected
+  13-Jun-2006 PB units added: liter, minute, hour, day,
+                       POW calculation corrected
+  19-Apr-2007 PB code corrected to avoid compiler warnings with -Wall
+  18-Jun-2007 V1.21 PB num_str2double, num_str2num: If str is the null pointer
+                       it is handled like an empty string.
+  19-Jul-2007 V1.22 PB units degK, degC, degF added, functions degC2K, 
+                       degF2K, degK2K, K2degC, K2degF, K2degK added,
+                       isfunction: extended to capital characters 'A'-'Z'
+  08-Feb-2008 V1.23 PB CEIL: cosh corrected to ceil
+  21-May-2008 V1.24 PB binary constants added
+  22-May-2008 V1.25 PB num_double2hex added 
+  23-May-2008 V1.26 PB num_double2hex
+  20-Mar-2009 V1.27 PB char **tail -> const char **tail
+  21-Mar-2009 V1.28 PB logical operators added:
+                       NOT, EQU, NEQ, LE, LT, GE, GT, AND, OR, IF
+  06-Oct-2009 V1.29 PB pi constant NUM_PI defined in numio.h
+                       (not used internally)
+  30-Jan-2011 V1.30 PB %g -> %lg
+                       double2s shortened
+  31-Jan-2011 V1.31 PB lcc does not like %ld and %lg on the same line,
+                       splitted to make compiler happy
+  09-Mar-2011 V1.32 PB double2s: format corrected to avoid leading spaces,
+                       in all public functions: perrval can be NULL
+  01-Jun-2011 V1.33 PB dpprogram_step: unique error exit
+  16-Jun-2011 V1.34 PB double constants marked, e.g. 1->1.0 
 
 --------------------------------------------------------------------------*/
 
@@ -172,10 +279,10 @@ SYNOPSIS
    char * numprog_newstr( const char * string );
  
 DESCRIPTION
-  Allocates strlen('string')+1 bytes of memory and copies 'string' into it.
+  Allocates strlen(´string´)+1 bytes of memory and copies ´string´ into it.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
-  If 'string' is the NULL pointer the NULL pointer is returned.
+  If ´string´ is the NULL pointer the NULL pointer is returned.
  
 RETURN VALUE
   Returns the pointer to the allocated string or (char *) NULL in case
@@ -554,7 +661,7 @@ int numprog_remove ( const char * Name )
   if (!NUMPROG_init) numprog_init();
 
   if ( Name != (char *) NULL ) {
-    /* search program 'Name' */
+    /* search program ´Name´ */
     if (numprog_search( Name, &current )) return(-1);
     /* remove current program */
     if (numprog_free( current )) return(-1);
@@ -693,11 +800,13 @@ PUBLIC int num_prog_print_list( FILE * out, NumProg * program,
       if ((currentprogram->Next)!=(NumProg *) NULL)
         fprintf(out,"%s\n", currentprogram->Next->Name);
         else fprintf(out,"(no next program)\n");
-      if (currentprogram->CurrentAccumulator) 
-        fprintf(out," CurrentAccumulator  = #%ld (Value = %g)\n",
-          currentprogram->CurrentAccumulator->Number,
+      if (currentprogram->CurrentAccumulator) {
+        // fprintf splitted to make lcc happy
+        fprintf(out," CurrentAccumulator  = #%ld", 
+          currentprogram->CurrentAccumulator->Number);
+        fprintf(out," (Value = %lg)\n",
           currentprogram->CurrentAccumulator->Value);
-      else fprintf(out," CurrentAccumulator  = (no current accumulator)\n");
+      } else fprintf(out," CurrentAccumulator  = (no current accumulator)\n");
     } else {
       fprintf(out," Program             = '%s'\n",currentprogram->Name);
       num_prog_print_variable_list(out,currentprogram,level-1,verbose );
@@ -723,7 +832,7 @@ NAME
 SYNOPSIS
  
   int numprog_append_variable  ( NumProg *program, const char * Key,
-                                   double InitValue, NumVar **pvariable );
+                                 double InitValue, NumVar **pvariable );
  
 DESCRPTION
  
@@ -739,7 +848,7 @@ RETURN VALUE
  
 ---------------------------------------------------------------------------*/
 PUBLIC int numprog_append_variable  ( NumProg *program, const char * Key,
-                                     double InitValue, NumVar **pvariable )
+                                      double InitValue, NumVar **pvariable )
 { NumVar * newvariable, * next, * previous;
   int notfound = 1;
  
@@ -1000,7 +1109,7 @@ PUBLIC int num_prog_print_variable_list ( FILE * out, NumProg *program,
     if (verbose) {
       fprintf(out,"  %s\n",SeparationLine);
       fprintf(out,"  Variable            = %s\n",variable->Key);
-      fprintf(out,"  Value               = %g\n",variable->Value);
+      fprintf(out,"  Value               = %lg\n",variable->Value);
       fprintf(out,"  Used                = %d\n",variable->Used);
 
       fprintf(out,"  Previous variable = ");
@@ -1012,7 +1121,7 @@ PUBLIC int num_prog_print_variable_list ( FILE * out, NumProg *program,
         fprintf(out,"%s\n", variable->Next->Key);
         else fprintf(out,"(no next variable)\n");
     } else {
-      fprintf(out,"  '%s' = %g = *%p\n",
+      fprintf(out,"  '%s' = %lg = *%p\n",
         variable->Key,variable->Value,&(variable->Value));
     }
     variable=variable->Next;
@@ -1268,7 +1377,7 @@ PUBLIC int num_prog_print_accumulator_list ( FILE * out, NumProg *program,
     if (verbose) {
       fprintf(out,"  %s\n",SeparationLine);
       fprintf(out,"  Accumulator          = #%ld\n",accumulator->Number);
-      fprintf(out,"  Value                = %g\n",accumulator->Value);
+      fprintf(out,"  Value                = %lg\n",accumulator->Value);
 
       fprintf(out,"  Previous accumulator = ");
       if ((accumulator->Previous)!=(NumAccu *) NULL)
@@ -1279,8 +1388,9 @@ PUBLIC int num_prog_print_accumulator_list ( FILE * out, NumProg *program,
         fprintf(out,"#%ld\n", accumulator->Next->Number);
         else fprintf(out,"(no next accumulator)\n");
     } else {
-      fprintf(out,"  Accumulator #%ld = %g\n",
-        accumulator->Number,accumulator->Value);
+      // fprintf splitted to make lcc happy
+      fprintf(out,"  Accumulator #%ld =", accumulator->Number);
+      fprintf(out," %lg\n", accumulator->Value);
     }
     accumulator=accumulator->Next;
   }
@@ -1687,10 +1797,10 @@ SYNOPSIS
    char * num_newstr( const char * string );
 
 DESCRIPTION
-  Allocates strlen('string')+1 bytes of memory and copies 'string' into it.
+  Allocates strlen(´string´)+1 bytes of memory and copies ´string´ into it.
   In case of success the pointer to the allocated memory is returned. The
   null pointer is returned in case of an error.
-  If 'string' is the NULL pointer the NULL pointer is returned.
+  If ´string´ is the NULL pointer the NULL pointer is returned.
 
 RETURN VALUE
   Returns the pointer to the allocated string or (char *) NULL in case
@@ -1766,7 +1876,9 @@ RETURN VALUE
 ---------------------------------------------------------------------------*/
 int dpprogram_step ( NumProg * program, NumInstr * instruction,
                      int * perrval )
-{ 
+{
+  int errval;
+
   const double pi = 3.1415926535897932384626;
   const double degtorad = pi/180.0;
   const double radtodeg = 180.0/pi;
@@ -1774,14 +1886,16 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
   double argument1, argument2, argument3;
   NumAccu * accumulator;
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
 
   if (!program) {
-    *perrval = NumProgramError; return( -1 );
+    errval = NumProgramError;
+    goto dpprogram_step_error;
   }
 
   if (!instruction) {
-    *perrval = NumNoInstruction; return( -1 );
+    errval = NumNoInstruction;
+    goto dpprogram_step_error;
   }
 
   accumulator = program->CurrentAccumulator;
@@ -1792,7 +1906,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_up_accumulator( program, instruction->Value );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       break;
@@ -1801,7 +1916,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_up_accumulator( program,*(instruction->Address) );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       break;
@@ -1817,7 +1933,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -1829,7 +1946,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
     case NOT:
 
       argument1 = accumulator->Value;
-      accumulator->Value = argument1?0:1;
+      accumulator->Value = argument1?0.0:1.0;
 
       break;
 
@@ -1837,12 +1954,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 == argument2)?1:0;
+      accumulator->Value = (argument1 == argument2)?1.0:0.0;
 
       break;
 
@@ -1850,12 +1968,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 != argument2)?1:0;
+      accumulator->Value = (argument1 != argument2)?1.0:0.0;
 
       break;
 
@@ -1863,12 +1982,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 <= argument2)?1:0;
+      accumulator->Value = (argument1 <= argument2)?1.0:0.0;
 
       break;
 
@@ -1876,12 +1996,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 < argument2)?1:0;
+      accumulator->Value = (argument1 < argument2)?1.0:0.0;
 
       break;
 
@@ -1889,12 +2010,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 >= argument2)?1:0;
+      accumulator->Value = (argument1 >= argument2)?1.0:0.0;
 
       break;
 
@@ -1902,12 +2024,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 > argument2)?1:0;
+      accumulator->Value = (argument1 > argument2)?1.0:0.0;
 
       break;
 
@@ -1915,12 +2038,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 && argument2)?1:0;
+      accumulator->Value = (argument1 && argument2)?1.0:0.0;
 
       break;
 
@@ -1928,12 +2052,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
-      accumulator->Value = (argument1 || argument2)?1:0;
+      accumulator->Value = (argument1 || argument2)?1.0:0.0;
 
       break;
 
@@ -1941,11 +2066,13 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -1959,14 +2086,15 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
       if ( argument2 != 0.0 ) {
         accumulator->Value = argument1 / argument2;
-      } else *perrval = NumDivByZero;
+      } else errval = NumDivByZero;
 
       break;
 
@@ -1974,7 +2102,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -1982,7 +2111,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       if ( argument2 != 0.0 ) {
         accumulator->Value =
           (double) ((long)floor(argument1+0.5)%(long)floor(argument2+0.5));
-      } else *perrval = NumDivByZero;
+      } else errval = NumDivByZero;
 
       break;
 
@@ -1990,7 +2119,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2003,7 +2133,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2030,7 +2161,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_up_accumulator( program, pi );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       break;
@@ -2059,18 +2191,18 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
     case ASIN:
 
       argument1 = accumulator->Value;
-      if (fabs(argument1)<=1) {
+      if (fabs(argument1)<=1.0) {
         accumulator->Value = asin( argument1 );
-      } else *perrval=NumDomainError;
+      } else errval=NumDomainError;
 
       break;
 
     case ACOS:
 
       argument1 = accumulator->Value;
-      if (fabs(argument1)<=1) {
+      if (fabs(argument1)<=1.0) {
         accumulator->Value = acos( argument1 );
-      } else *perrval=NumDomainError;
+      } else errval=NumDomainError;
 
       break;
 
@@ -2085,7 +2217,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2148,7 +2281,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       argument1 = accumulator->Value;
       if (argument1>0.0) {
         accumulator->Value = log( argument1 );
-      } else *perrval=NumDomainError;
+      } else errval=NumDomainError;
 
       break;
 
@@ -2157,7 +2290,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       argument1 = accumulator->Value;
       if (argument1>0.0) {
         accumulator->Value = log10( argument1 );
-      } else *perrval=NumDomainError; 
+      } else errval=NumDomainError; 
 
       break;
 
@@ -2165,7 +2298,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2188,7 +2322,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
             // argument1 is zero
             if ( argument2 > 0.0 ) {
               accumulator->Value = 0.0;
-            } else *perrval=NumDomainError; 
+            } else errval=NumDomainError; 
           } else {
             // argument1 is negative
             if ( (floor(argument2+0.5)-argument2)==0.0 ) {
@@ -2198,7 +2332,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
               } else {
                 accumulator->Value = 1.0/pow( argument1 , -argument2 );
               }
-            } else *perrval=NumDomainError;
+            } else errval=NumDomainError;
           }
         }
       }
@@ -2210,7 +2344,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       argument1 = accumulator->Value;
       if (argument1>=0.0) {
         accumulator->Value = sqrt( argument1 );
-      } else *perrval=NumDomainError;
+      } else errval=NumDomainError;
 
       break;
 
@@ -2232,7 +2366,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2246,7 +2381,8 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       accumulator = numprog_down_accumulator( program );
       if (!accumulator) {
-        *perrval = NumNoAccumulator; return ( -1 );
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
       }
 
       argument1 = accumulator->Value;
@@ -2313,12 +2449,18 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       break;
 
     default: 
-      *perrval = NumNoInstruction; 
-      return( -1 );
+      errval = NumNoInstruction; 
+      goto dpprogram_step_error;
 
   } /* cmd */
 
+  if (perrval) *perrval=errval;
   return( 0 );
+
+dpprogram_step_error:
+
+  if (perrval) *perrval=errval;
+  return( -1 );
 
 } /* dpprogram_step */
 
@@ -2884,7 +3026,7 @@ SYNOPSIS
 
 DESCRIPTION
 
-   Prints all constants to the file 'out'
+   Prints all constants to the file ´out´
 
 RETURN VALUE
 
@@ -2905,7 +3047,7 @@ int dpconstant_print( FILE * out, int level, int verbose )
     if (verbose) {
       fprintf(out,"   %s\n",SeparationLine);
       fprintf(out,"   Key               = %s\n",current->Key);
-      fprintf(out,"   Value             = %g\n",current->Value);
+      fprintf(out,"   Value             = %lg\n",current->Value);
       if (current->Quantity)
         fprintf(out,"   Quantity       = %s\n",current->Quantity);
       if (current->Unit)
@@ -2921,17 +3063,17 @@ int dpconstant_print( FILE * out, int level, int verbose )
     } else {
       if (current->Quantity)
         if (current->Unit)
-          fprintf(out,"   '%s' = %g %s (%s)\n",
+          fprintf(out,"   '%s' = %lg %s (%s)\n",
             current->Key,current->Value,current->Unit, current->Quantity);
         else
-          fprintf(out,"   '%s' = %g (%s)\n",
+          fprintf(out,"   '%s' = %lg (%s)\n",
             current->Key,current->Value,current->Quantity);
       else
         if (current->Unit)
-          fprintf(out,"   '%s' = %g %s\n",
+          fprintf(out,"   '%s' = %lg %s\n",
             current->Key,current->Value,current->Unit);
         else
-          fprintf(out,"   '%s' = %g\n",current->Key,current->Value);
+          fprintf(out,"   '%s' = %lg\n",current->Key,current->Value);
     }
     current=current->Next;
   }
@@ -3335,20 +3477,20 @@ int dpconstant_init ( void )
   const double rad_    = 1.0;                      /* angle (rad)  */
   const double deg_    = pi/180.0;                 /* angle (rad)  */
   const double gon_    = pi/200.0;                 /* angle (rad)  */
-  const double arcmin_ = pi/180/60;                /* angle (rad)  */
-  const double arcsec_ = pi/180/3600;              /* angle (rad)  */
+  const double arcmin_ = pi/180.0/60.0;            /* angle (rad)  */
+  const double arcsec_ = pi/180.0/3600.0;          /* angle (rad)  */
 
   const double inf     = DBL_MAX;                  /* "infinity" (workaround) */
 
 //  const double k     = 1.380662e-23;    /* Boltzmann constant (J/K) 86 */
-  const double k     = 1.3806505e-23;   /* Boltzmann constant (J/K) 2002 */
+  const double k     = 1.3806505e-23;    /* Boltzmann constant (J/K) 2002 */
 //  const double me    = 9.109534e-31;    /* electron rest mass (kg) 86 */
   const double me    = 9.1093826e-31;    /* electron rest mass (kg) 2002 */
 //  const double mp    = 1.6726485e-27;   /* proton rest mass (kg) 86 */
   const double mp    = 1.67262171e-27;   /* proton rest mass (kg) 2002 */
 //  const double md    = 3.3436369e-27;   /* deuteron rest mass (kg) 86+ */
-  const double md    = 3.34358335e-27;   /* deuteron rest mass (kg) 2002 */
-  const double mn    = 1.67492728e-27;   /* neutron rest mass (kg) 2002 */
+  const double md    = 3.34358335e-27;    /* deuteron rest mass (kg) 2002 */
+  const double mn    = 1.67492728e-27;    /* neutron rest mass (kg) 2002 */
 //const double NA    = 6.022045e23;     /* Avogadro number (1/mol) 86 */
 //  const double NA    = 6.0221367e23;    /* Avogadro number (1/mol) 91 */
   const double NA    = 6.0221415e23;    /* Avogadro number (1/mol) 2002 */
@@ -3358,97 +3500,97 @@ int dpconstant_init ( void )
 //  const double ec    = 1.6021892e-19;   /* electron charge magnitude (C) 86 */
   const double ec    = 1.60217653e-19;  /* elementary charge (C) 2002 */
 //  const double h     = 6.626176e-34;    /* Planck's number (J*s) 86 */
-  const double h     = 6.6260693e-34;    /* Planck constant (J*s) 2002 */
+  const double h     = 6.6260693e-34;     /* Planck constant (J*s) 2002 */
 //  const double gN    = 6.6720e-11;  /* gravitational constant (m3/kg/s2) 86 */
-  const double gN    = 6.6742e-11;    /* Newtonian constant of gravitation 
-                                         (m3/kg/s2) 2002 */
+  const double gN    = 6.6742e-11;       /* Newtonian constant of gravitation 
+                                           (m3/kg/s2) 2002 */
 //const double ga    = 9.8062;          /* gravitational acceleration at sea
 //                                         level at 45 deg latitude (m/s2) 86 */
   const double ga    = 9.80665;    /* gravitational acceleration (m/s2) 2004 */
-  const double u0    = 4e-7*pi;         /* permeability of vacuum (H/m) 86 */
-  const double e0    = 1/(u0*c*c);      /* permittivity of vacuum (F/m) 86 */
+  const double u0    = 4e-7*pi;           /* permeability of vacuum (H/m) 86 */
+  const double e0    = 1.0/(u0*c*c);      /* permittivity of vacuum (F/m) 86 */
 
-  const double m_     = 1.0;            /* length (m) meter */
-  const double in_    = 2.54e-2;        /* length (m) inch 86 2004 */
-  const double ft_    = 0.3048;         /* length (m) foot 91 2004 */
-  const double yd_    = 0.9144;         /* length (m) yard 91 2004 */
-  const double mile_  = 1609.344;       /* length (m) mile 91 2004 */
-  const double sm_    = 1852;           /* length (m) nautical mile 91 2004 */
+  const double m_     = 1.0;              /* length (m) meter */
+  const double in_    = 2.54e-2;          /* length (m) inch 86 2004 */
+  const double ft_    = 0.3048;           /* length (m) foot 91 2004 */
+  const double yd_    = 0.9144;           /* length (m) yard 91 2004 */
+  const double mile_  = 1609.344;         /* length (m) mile 91 2004 */
+  const double sm_    = 1852;             /* length (m) nautical mile 91 2004 */
 
-  const double barn_  = 1e-28;          /* area (m2) barn 86 2004 */
-  const double a_     = 1e2;            /* area (m2) Ar 91 2004 */
+  const double barn_  = 1e-28;            /* area (m2) barn 86 2004 */
+  const double a_     = 1e2;              /* area (m2) Ar 91 2004 */
 
-  const double sec_   = 1.0;            /* time (s) second */
-  const double min_   = 60.0*sec_;      /* time (s) minute */
-  const double hr_    = 60.0*min_;      /* time (s) hour */
-  const double d_     = 24*hr_;         /* time (s) day */
+  const double sec_   = 1.0;              /* time (s) second */
+  const double min_   = 60.0*sec_;        /* time (s) minute */
+  const double hr_    = 60.0*min_;        /* time (s) hour */
+  const double d_     = 24.0*hr_;         /* time (s) day */
 
-  const double Hz_    = 1.0;            /* frequency (1/s) Herz */
+  const double Hz_    = 1.0;              /* frequency (1/s) Herz */
 
-  const double kn_    = sm_/3600/sec_;  /* speed (m/s) knots 91 2004 */
+  const double kn_    = sm_/3600.0/sec_;  /* speed (m/s) knots 91 2004 */
 
-  const double l_     = 1e-3;           /* volume (m3) liter */
+  const double l_     = 1e-3;             /* volume (m3) liter */
 
-  const double g_     = 1e-3;           /* mass (kg) gram */
-//  const double amu_   = 1.6605402e-27;  /* mass (kg) atomic mass unit 91 */
-//  const double amu_   = 1.6605655e-27;  /* mass (kg) atomic mass unit 86 2004 */
-  const double amu_   = 1.66053886e-27; /* 0.00000028e-27 
-                                           mass (kg) atomic mass constant 2002*/
-  const double lb_    = 0.45359237;     /* mass (kg) pound 91 2004 */
-//  const double oz_    = 0.02834952;     /* mass (kg) ounze 91 */
-  const double oz_    = 0.0283495;     /* mass (kg) ounze (avoirdupois) 2004 */
+  const double g_     = 1e-3;             /* mass (kg) gram */
+//  const double amu_   = 1.6605402e-27;    /* mass (kg) atomic mass unit 91 */
+//  const double amu_   = 1.6605655e-27;    /* mass (kg) atomic mass unit 86 2004 */
+  const double amu_   = 1.66053886e-27;   /* 0.00000028e-27 
+                                             mass (kg) atomic mass constant 2002*/
+  const double lb_    = 0.45359237;       /* mass (kg) pound 91 2004 */
+//  const double oz_    = 0.02834952;       /* mass (kg) ounze 91 */
+  const double oz_    = 0.0283495;        /* mass (kg) ounze (avoirdupois) 2004 */
 
   const double J_     = 1.0;            /* energy (J) Joule */
 //  const double cal_   = 4.184;          /* energy (J) calorie 86 */
-  const double cal_   = 4.1868;          /* energy (J) calorie 2004 */
-  const double erg_   = 1e-7;           /* energy (J) erg 91 2004 */
+  const double cal_   = 4.1868;           /* energy (J) calorie 2004 */
+  const double erg_   = 1e-7;             /* energy (J) erg 91 2004 */
 
-  const double W_     = 1.0;            /* power (W) Watt */
+  const double W_     = 1.0;              /* power (W) Watt */
 
-  const double K_     = 1.0;            /* temperature (K) Kelvin */
+  const double K_     = 1.0;              /* temperature (K) Kelvin */
 
   const double degK_  = K_;
   const double degC_  = K_;
   const double degF_  = (5.0/9.0)*K_;
 
-  const double N_     = 1.0;            /* force (N) Newton */
-  const double p_     = 9.80665e-3;     /* force (N) pond 91 2004 */
-  const double dyn_   = 1e-5;           /* force (N) dyn 91 2004 */
-//const double lbf_   = 4.44822;        /* force (N) pound force 91 */
-  const double lbf_   = lb_*ga;         /* force (N) pound force */
-  const double pdl_   = 0.138255;       /* force (N) poundal 91 */
+  const double N_     = 1.0;              /* force (N) Newton */
+  const double p_     = 9.80665e-3;       /* force (N) pond 91 2004 */
+  const double dyn_   = 1e-5;             /* force (N) dyn 91 2004 */
+//const double lbf_   = 4.44822;          /* force (N) pound force 91 */
+  const double lbf_   = lb_*ga;           /* force (N) pound force */
+  const double pdl_   = 0.138255;         /* force (N) poundal 91 */
 
-  const double Pa_    = 1.0;            /* pressure (Pa) Pascal */
-  const double bar_   = 1e5;            /* pressure (Pa) bar 91 2004 */
-  const double Torr_  = 133.3224;       /* pressure (Pa) Torr 91 2004 */
-  const double atm_   = 1.01325e5;      /* pressure (Pa) 
-                                           physical atmosphere 2004 */
-  const double at_    = 0.980665e5;     /* pressure (Pa) 
-                                           technical atmosphere 2004 */
-// const double psi_   = 6894.76;       /* pressure (Pa) lbf per square in 91 */
-  const double psi_   = lbf_/in_/in_;   /* pressure (Pa) lbf per square in */
+  const double Pa_    = 1.0;              /* pressure (Pa) Pascal */
+  const double bar_   = 1e5;              /* pressure (Pa) bar 91 2004 */
+  const double Torr_  = 133.3224;         /* pressure (Pa) Torr 91 2004 */
+  const double atm_   = 1.01325e5;        /* pressure (Pa) 
+                                             physical atmosphere 2004 */
+  const double at_    = 0.980665e5;       /* pressure (Pa) 
+                                             technical atmosphere 2004 */
+// const double psi_   = 6894.76;         /* pressure (Pa) lbf per square in 91 */
+  const double psi_   = lbf_/in_/in_;     /* pressure (Pa) lbf per square in */
 
-  const double V_     = 1.0;            /* voltage (V) Volt */
+  const double V_     = 1.0;              /* voltage (V) Volt */
 
-  const double A_     = 1.0;            /* electric current (A) Ampere */
+  const double A_     = 1.0;              /* electric current (A) Ampere */
 
-  const double C_     = 1.0;            /* electric charge (C) Coulomb */
+  const double C_     = 1.0;              /* electric charge (C) Coulomb */
 
-  const double F_     = 1.0;            /* electric capacity (F=A*s/V) Farad */
+  const double F_     = 1.0;              /* electric capacity (F=A*s/V) Farad */
 
-  const double Ohm_   = 1.0;            /* electric resistance (Ohm=V/A) */
-  const double S_     = 1.0;         /* electric conductivity (S=A/V) Siemens */
+  const double Ohm_   = 1.0;              /* electric resistance (Ohm=V/A) */
+  const double S_     = 1.0;              /* electric conductivity (S=A/V) Siemens */
 
-  const double T_     = 1.0;           /* magnetic induction (T=V*s/m2) Tesla */
+  const double T_     = 1.0;              /* magnetic induction (T=V*s/m2) Tesla */
 
-  const double Wb_    = 1.0;            /* magnetic flux (Wb=V*s) Weber */
+  const double Wb_    = 1.0;              /* magnetic flux (Wb=V*s) Weber */
 
-  const double H_     = 1.0;          /* magnetic inductivity (H=V*s/A) Henry */
+  const double H_     = 1.0;              /* magnetic inductivity (H=V*s/A) Henry */
 
-  const double mol_   = 1.0;            /* molecular amount */
+  const double mol_   = 1.0;              /* molecular amount */
 
-  const double Byte_  = 1.0;            /* binary, B means Bel and
-                                           cannot be used here */
+  const double Byte_  = 1.0;              /* binary, B means Bel and
+                                             cannot be used here */
 
   DPConstant * element;
 
@@ -4690,31 +4832,35 @@ void dpcomparison( NumProg * program, const char **ps,
                                  etc.
   --------------------------------------------------------------------------*/
 PUBLIC double num_str2double(const char *str, const char **tail, int *perrval)
-{ double value=0.0;
+{
+  int errval;
+
+  double value=0.0;
   const char * ps="";
 
   NumProg * program;
 
   if (str) ps = str;
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
 
   while (isspace(*ps)) ps++; // skip leading white space
 
-  if ( !(program = numprog_new( "str2double" )) ) *perrval = NumProgramError;
+  if ( !(program = numprog_new( "str2double" )) ) errval = NumProgramError;
 
-  if (!*perrval) EXPRESSION( program, &ps, 0 , perrval);
+  if (!errval) EXPRESSION( program, &ps, 0 , &errval);
 
   if (tail) *tail = ps;
 
-  if (!*perrval) dpprogram_run ( program, perrval );
-  if (!*perrval) value = program->CurrentAccumulator->Value;
+  if (!errval) dpprogram_run ( program, &errval );
+  if (!errval) value = program->CurrentAccumulator->Value;
 
-  if (*perrval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
+  if (errval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
   else if (NUMIO_debug>2) num_prog_print_list ( stdout, program, 2, 0 );
 
-  if (numprog_free( program )) *perrval = NumProgramError; 
+  if (numprog_free( program )) errval = NumProgramError; 
  
+  if (perrval) *perrval=errval;
   return( value );
  
 } /* num_str2double */
@@ -4741,6 +4887,8 @@ PUBLIC NumProg * num_str2prog( const char *name,
                                const char *str, const char **tail, int *perrval,
                                int nvar, ... )
 {
+  int errval;
+
   va_list ap;
   const char * vname;
   int n;
@@ -4751,37 +4899,38 @@ PUBLIC NumProg * num_str2prog( const char *name,
  
   if (str) ps = str;
  
-  *perrval = NumSuccess;
+  errval = NumSuccess;
 
   while (isspace(*ps)) ps++; // skip leading white space
  
-  if ( !(program = numprog_new( name )) ) *perrval = NumProgramError;
+  if ( !(program = numprog_new( name )) ) errval = NumProgramError;
 
-  if (!*perrval) {
+  if (!errval) {
     va_start(ap, nvar);
     for (n=0;n<nvar;n++) {
       vname = va_arg(ap, const char *);
-      if (!*perrval)
+      if (!errval)
         if (numprog_append_variable ( program, vname, 1.0, NULL ))
-          *perrval = NumVariableError;
+          errval = NumVariableError;
     }
     va_end(ap);
   }
 
-  if (!*perrval) EXPRESSION( program, &ps, 0 , perrval);
+  if (!errval) EXPRESSION( program, &ps, 0 , &errval);
  
   if (tail) *tail = ps;
  
-  if (!*perrval) dpprogram_compile  ( program, perrval );
+  if (!errval) dpprogram_compile  ( program, &errval );
  
-  if (*perrval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
+  if (errval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
   else if (NUMIO_debug>2) num_prog_print_list ( stdout, program, 2, 0 );
  
-  if (*perrval) {
-    if (numprog_free( program )) *perrval = NumProgramError;
+  if (errval) {
+    if (numprog_free( program )) errval = NumProgramError;
     program = (NumProg *) NULL;
   }
- 
+
+  if (perrval) *perrval = errval;
   return( program );
  
 } /* num_str2prog */
@@ -4798,16 +4947,18 @@ PUBLIC NumProg * num_str2prog( const char *name,
   
   --------------------------------------------------------------------------*/
 PUBLIC int num_chkvar ( NumProg * program, int n, int *perrval )
-{ 
+{
+  int errval;
+ 
   NumVar * variable = (NumVar *) NULL;
   int used = 0;
   int i;
  
-  *perrval = NumSuccess;
+  errval = NumSuccess;
  
-  if (!program) *perrval=NumProgramError;
+  if (!program) errval=NumProgramError;
 
-  if (!*perrval) { 
+  if (!errval) { 
     variable=program->VariableList;
     /* go to n-th variable */ 
     for (i=1;i<n;i++) {
@@ -4815,9 +4966,10 @@ PUBLIC int num_chkvar ( NumProg * program, int n, int *perrval )
       else break;
     }
     if (variable) used = variable->Used;
-    else *perrval=NumNoVariable;
+    else errval=NumNoVariable;
   }
 
+  if (perrval) *perrval=errval;
   return( used );
  
 } /* num_chkvar */
@@ -4841,22 +4993,24 @@ PUBLIC int num_chkvar ( NumProg * program, int n, int *perrval )
   
   --------------------------------------------------------------------------*/
 PUBLIC double num_runprog( NumProg * program, int *perrval, ... )
-{ 
+{
+  int errval;
+
   va_list ap;
   double var;
 
   NumVar * variable = (NumVar *) NULL;
   double value=0.0;
- 
-  *perrval = NumSuccess;
- 
-  if (!program) *perrval=NumProgramError;
- 
-  if (!*perrval) {
+
+  errval = NumSuccess;
+
+  if (!program) errval=NumProgramError;
+
+  if (!errval) {
 
     variable  = program->VariableList;
 
-    va_start(ap, perrval);
+    va_start(ap, perrval); // perrval is the last argument before ...
     while (variable) {
       var = va_arg(ap, double);
       variable->Value = var; variable=variable->Next;
@@ -4864,15 +5018,17 @@ PUBLIC double num_runprog( NumProg * program, int *perrval, ... )
     va_end(ap);
   }
 
-  if (!*perrval) dpprogram_run ( program, perrval );
- 
-  if (!*perrval) value = program->CurrentAccumulator->Value;
- 
-  if (*perrval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
+  if (!errval) dpprogram_run ( program, &errval );
+
+  if (!errval) value = program->CurrentAccumulator->Value;
+
+  if (errval>=NumProgramError) num_prog_print_list ( stderr, program, 2, 0 );
   else if (NUMIO_debug>2) num_prog_print_list ( stdout, program, 2, 0 );
- 
+
+  if (perrval) *perrval=errval; 
+
   return( value );
- 
+
 } /* num_runprog */
 
 /*--------------------------------------------------------------------------  
@@ -4888,10 +5044,16 @@ PUBLIC double num_runprog( NumProg * program, int *perrval, ... )
   
   --------------------------------------------------------------------------*/
 PUBLIC NumProg *num_searchprog ( const char *name, int *perrval )
-{ NumProg *program;
+{ 
+  int errval;
 
-  if ( numprog_search ( name, &program ) ) *perrval=NumProgramError;
+  NumProg *program;
 
+  errval = NumSuccess;
+
+  if ( numprog_search ( name, &program ) ) errval=NumProgramError;
+
+  if (perrval) *perrval=errval;
   return( program );
 
 } /* num_searchprog */
@@ -4907,12 +5069,15 @@ PUBLIC NumProg *num_searchprog ( const char *name, int *perrval )
   
   --------------------------------------------------------------------------*/
 PUBLIC int num_rmprog( NumProg * program, int *perrval ) 
-{ int status;
+{
+  int errval;
+  int status;
  
-  *perrval = NumSuccess;
+  errval = NumSuccess;
 
-  if ( (status = numprog_free( program )) ) *perrval = NumProgramError;
+  if ( (status = numprog_free( program )) ) errval = NumProgramError;
 
+  if (perrval) *perrval=errval;
   return( status );
 
 } /* num_rmprog */
@@ -5163,17 +5328,20 @@ long int lvexpression( const char **ps, int level, int * perrval)
                                  NumNoIntegerNumber : mysterious character found
   --------------------------------------------------------------------------*/
 PUBLIC long num_str2long(const char *str, const char **tail, int *perrval)
-{ long int value;
+{ 
+  int errval;
+  long int value;
   const char * ps="";
 
   if (str) ps = str;
 
   while (isspace(*ps)) ps++; // skip leading white space
 
-  value = lvexpression( &ps, 0 , perrval);
+  value = lvexpression( &ps, 0 , &errval);
 
   if (tail) *tail = ps;
 
+  if (perrval) *perrval=errval;
   return( value );
 
 } /* num_str2long */
@@ -5189,17 +5357,26 @@ PUBLIC long num_str2long(const char *str, const char **tail, int *perrval)
   --------------------------------------------------------------------------*/
 PUBLIC char *num_long2str( char buffer[], unsigned long buflen,
                            long value, int * perrval )
-{ char tmp[128];
+{
+  int errval;
+  char tmp[128];
   
-  *perrval = NumWriteError;
+  errval = NumWriteError;
 
-  if ( sprintf(tmp,"%ld", value ) < 1 ) return( (char *) NULL);
+  if ( sprintf(tmp,"%ld", value ) < 1 ) goto num_long2str_error;
   strncpy( buffer, tmp, buflen-1 );
   buffer[buflen-1] = '\0';
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
+
+  if (perrval) *perrval=errval;
   return( buffer );
- 
+
+num_long2str_error:
+
+  if (perrval) *perrval=errval;
+  return( (char *) NULL );
+
 } /* num_long2str */
 
 /*--------------------------------------------------------------------------
@@ -5213,47 +5390,48 @@ PUBLIC char *num_long2str( char buffer[], unsigned long buflen,
   --------------------------------------------------------------------------*/
 PUBLIC char *num_long2hex( char buffer[], unsigned long buflen,
                            long value, int * perrval )
-{ char tmp[128];
+{
+  int errval;
+  char tmp[128];
 
-  *perrval = NumWriteError;
+  errval = NumWriteError;
 
-  if ( sprintf(tmp,"0x%lx", value ) < 1 ) return( (char *) NULL);
+  if ( sprintf(tmp,"0x%lx", value ) < 1 ) goto num_long2hex_error;
   strncpy( buffer, tmp, buflen-1 );
   buffer[buflen-1] = '\0';
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
+
+  if (perrval) *perrval=errval;
   return( buffer );
+
+num_long2hex_error:
+
+  if (perrval) *perrval=errval;
+  return( (char *) NULL );
+
 
 } /* num_long2hex */
 
 /*---------------------------------------------------------------------------
-double2s( buffer, value )
+double2s( buffer, value, ndigits )
 Conversion of double to string and output to buffer. The pointer to
 buffer is returned. In case of an error the null pointer is returned.
 The length of buffer must be 32 or larger.
 Only the absolute value of ndigits is used.
 ---------------------------------------------------------------------------*/
 char * double2s( char buffer[], double value, int ndigits )
-{
+# define FORMAT_LEN 20
+{ char format[FORMAT_LEN];
+
   if (ndigits<0) ndigits=-ndigits;
-  switch (ndigits) {
-    case 0: if ( sprintf(buffer,"%g",value)<1) return((char *) NULL); break;
-    case 1: if ( sprintf(buffer,"%.1g",value)<1) return((char *) NULL); break;
-    case 2: if ( sprintf(buffer,"%.2g",value)<1) return((char *) NULL); break;
-    case 3: if ( sprintf(buffer,"%.3g",value)<1) return((char *) NULL); break;
-    case 4: if ( sprintf(buffer,"%.4g",value)<1) return((char *) NULL); break;
-    case 5: if ( sprintf(buffer,"%.5g",value)<1) return((char *) NULL); break;
-    case 6: if ( sprintf(buffer,"%.6g",value)<1) return((char *) NULL); break;
-    case 7: if ( sprintf(buffer,"%.7g",value)<1) return((char *) NULL); break;
-    case 8: if ( sprintf(buffer,"%.8g",value)<1) return((char *) NULL); break;
-    case 9: if ( sprintf(buffer,"%.9g",value)<1) return((char *) NULL); break;
-    case 10: if ( sprintf(buffer,"%.10g",value)<1) return((char *) NULL); break;
-    case 11: if ( sprintf(buffer,"%.11g",value)<1) return((char *) NULL); break;
-    case 12: if ( sprintf(buffer,"%.12g",value)<1) return((char *) NULL); break;
-    case 13: if ( sprintf(buffer,"%.13g",value)<1) return((char *) NULL); break;
-    case 14: if ( sprintf(buffer,"%.14g",value)<1) return((char *) NULL); break;
-    default: if ( sprintf(buffer,"%.15g",value)<1) return((char *) NULL); break;
-  }
+  if (ndigits>80) ndigits=80;
+
+  if (ndigits==0) sprintf(format,"%%lg");
+  else sprintf(format,"%%.%dlg",ndigits);
+
+  if ( sprintf(buffer,format,value)<1) return((char *) NULL);
+
   return(buffer);
 
 } /* double2s */
@@ -5277,53 +5455,62 @@ char * double2s( char buffer[], double value, int ndigits )
 PUBLIC char *num_double2str( char buffer[], unsigned long buflen,
                              double value, const char * unit, int ndigits,
                              int * perrval )
-{ char tmp[128], *tmp_unit;
+{
+  int errval;
+  char tmp[128], *tmp_unit;
   double val, unit_val, tmp_unit_val;
 
   if ((unit) && (strlen(unit)>0)) {
     // get unit
-    unit_val = num_str2double( unit, NULL, perrval );
-    if (*perrval) return( (char *) NULL);
+    unit_val = num_str2double( unit, NULL, &errval );
+    if (errval) goto num_double2str_error;
     
-    *perrval = NumDivByZero; 
-    if ( unit_val == 0.0 ) return( (char *) NULL);
+    errval = NumDivByZero; 
+    if ( unit_val == 0.0 ) goto num_double2str_error; 
     val = value/unit_val;
 
     // test unit (0 multiplied with unit)
-    *perrval = NumMemoryAllocationError;
+    errval = NumMemoryAllocationError;
     tmp_unit = (char *) malloc( sizeof(char)*(strlen(unit)+3) );
-    if (!tmp_unit) return( (char *) NULL);
+    if (!tmp_unit) goto num_double2str_error;
 
     sprintf(tmp_unit,"0_%s",unit);
-    tmp_unit_val = num_str2double( tmp_unit, NULL, perrval );
+    tmp_unit_val = num_str2double( tmp_unit, NULL, &errval );
     free(tmp_unit);
-    if (*perrval) return( (char *) NULL);
+    if (errval) goto num_double2str_error;
 
     // write val to tmp
-    *perrval = NumWriteError;
-    if ( !double2s( tmp, val, ndigits ) ) return( (char *) NULL);
+    errval = NumWriteError;
+    if ( !double2s( tmp, val, ndigits ) ) goto num_double2str_error;
 
     // copy tmp and unit to buffer
-    *perrval = NumWriteError;
+    errval = NumWriteError;
     if (tmp_unit_val == 0.0 ) {
-      if ( buflen < ( strlen(tmp)+strlen(unit)+2 ) ) return( (char *) NULL);
-      if ( sprintf(buffer,"%s_%s", tmp, unit ) < 2 ) return( (char *) NULL);
+      if ( buflen < ( strlen(tmp)+strlen(unit)+2 ) ) goto num_double2str_error;
+      if ( sprintf(buffer,"%s_%s", tmp, unit ) < 2 ) goto num_double2str_error;
     } else {
-      if ( buflen < ( strlen(tmp)+strlen(unit)+4 ) ) return( (char *) NULL);
-      if ( sprintf(buffer,"%s_(%s)", tmp, unit ) < 2 ) return( (char *) NULL);
+      if ( buflen < ( strlen(tmp)+strlen(unit)+4 ) ) goto num_double2str_error;
+      if ( sprintf(buffer,"%s_(%s)", tmp,unit ) < 2 ) goto num_double2str_error;
     }
   } else {
     // write value to tmp with ndigits
-    *perrval = NumWriteError;
-    if ( !double2s( tmp, value, ndigits ) ) return( (char *) NULL);
+    errval = NumWriteError;
+    if ( !double2s( tmp, value, ndigits ) ) goto num_double2str_error;
 
     // copy tmp to buffer
     strncpy( buffer, tmp, buflen-1 );
     buffer[buflen-1] = '\0';
   }
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
+
+  if (perrval) *perrval=errval;
   return( buffer );
+
+num_double2str_error:
+
+  if (perrval) *perrval=errval;
+  return( (char *) NULL );
 
 } /* num_double2str */
 
@@ -5343,42 +5530,45 @@ PUBLIC char *num_double2str( char buffer[], unsigned long buflen,
   --------------------------------------------------------------------------*/
 PUBLIC char *num_double2hex( char buffer[], unsigned long buflen,
                              double value, int ndigits, int * perrval )
-{ char *ps;
+{
+  int errval;
+
+  char *ps;
   double nhex, hex, rest, m;
-  double base=16;
+  double base=16.0;
   int sign;
 
-  *perrval = NumWriteError;
+  errval = NumWriteError;
 
-  if (buflen<4) return( (char *) NULL ); // too short for "0x0\n"
+  if (buflen<4) goto num_double2hex_error; // too short for "0x0\n"
 
   ps = &(buffer[0]);
 
   *ps='0';ps++;
   *ps='x';ps++;
 
-  if (value<0) {
+  if (value<0.0) {
     // use complement
     rest = -(value+1.0); sign=-1;
   } else {
-    rest = value; sign=+1;
+    rest = value; sign=+1.0;
   }
 
-  if (rest>0) 
+  if (rest>0.0) 
     hex = pow(base,floor(log(rest)/log(base)));
-  else hex = 1;
+  else hex = 1.0;
 
-  if ((value<0)||(ndigits>0)) {
-    if (fabs(ndigits)>1) nhex = pow(base,fabs(ndigits)-1);
-    else nhex = 1;
+  if ((value<0.0)||(ndigits>0)) {
+    if (fabs(ndigits)>1) nhex = pow(base,fabs(ndigits)-1.0);
+    else nhex = 1.0;
     if (hex<nhex) hex=nhex;
   }
 
-  while ((hex>=1)&&(ps<buffer+buflen-1)) {
+  while ((hex>=1.0)&&(ps<buffer+buflen-1)) {
     m = floor(rest/hex);
     rest -= m*hex ;
     if (sign<0) m = base-m-1.0; // use complement
-    if ((0<=m)&&(m<=base)) {
+    if ((0.0<=m)&&(m<=base)) {
       switch ( (int) m ) {
         case 0: *ps = '0'; break;
         case 1: *ps = '1'; break;
@@ -5404,8 +5594,15 @@ PUBLIC char *num_double2hex( char buffer[], unsigned long buflen,
 
   *ps = '\0'; 
 
-  *perrval = NumSuccess;
+  errval = NumSuccess;
+
+  if (perrval) *perrval = errval;
   return( buffer );
+
+num_double2hex_error:
+
+  if (perrval) *perrval = errval;
+  return( (char *) NULL );
 
 } /* num_double2hex */
 
@@ -5423,78 +5620,87 @@ PUBLIC char *num_double2hex( char buffer[], unsigned long buflen,
         NumScanError
   --------------------------------------------------------------------------*/
 PUBLIC char *num_errval2str( char buffer[], unsigned long buflen, int errval )
-{ switch (errval) {
-    case NumSuccess : 
-           strncpy(buffer,"success",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumMemoryAllocationError : 
-           strncpy(buffer,"memory allocation failed",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumScanError : 
-           strncpy(buffer,"error scanning expression",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumCommaExpected : 
-           strncpy(buffer,"missing comma in expression",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumBadParenthesis : 
-           strncpy(buffer,"bad parenthesis in expression",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoFloatNumber : 
-           strncpy(buffer,"expression is not a float number",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoFloatFunction : 
-           strncpy(buffer,"unknown float function in expression",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumDomainError : 
-           strncpy(buffer,"domain error",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoIntegerNumber : 
-           strncpy(buffer,"expression is not an integer number",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumIntegerOverflow : 
-           strncpy(buffer,"integer overflow",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumDivByZero : 
-           strncpy(buffer,"division by zero",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumWriteError :
-           strncpy(buffer,"error writing value",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumProgramError :
-           strncpy(buffer,"error creating program",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoVariable :
-           strncpy(buffer,"undefined variable",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoInstruction :
-           strncpy(buffer,"unknown program instruction",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
-    case NumNoAccumulator :
-           strncpy(buffer,"not enough program registers",buflen-1);
-           buffer[buflen-1]='\0';
-           break;
+{
+  char * value;
 
-    default:
-           strncpy(buffer,"unknown error value",buflen-1);
-           buffer[buflen-1]='\0';
+  value=buffer;
 
-  } 
-  return( buffer );
+  if ( (buffer)&&(buflen>0) ) {
+    switch (errval) {
+      case NumSuccess : 
+             strncpy(buffer,"success",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumMemoryAllocationError : 
+             strncpy(buffer,"memory allocation failed",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumScanError : 
+             strncpy(buffer,"error scanning expression",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumCommaExpected : 
+             strncpy(buffer,"missing comma in expression",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumBadParenthesis : 
+             strncpy(buffer,"bad parenthesis in expression",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoFloatNumber : 
+             strncpy(buffer,"expression is not a float number",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoFloatFunction : 
+             strncpy(buffer,"unknown float function in expression",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumDomainError : 
+             strncpy(buffer,"domain error",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoIntegerNumber : 
+             strncpy(buffer,"expression is not an integer number",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumIntegerOverflow : 
+             strncpy(buffer,"integer overflow",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumDivByZero : 
+             strncpy(buffer,"division by zero",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumWriteError :
+             strncpy(buffer,"error writing value",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumProgramError :
+             strncpy(buffer,"error creating program",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoVariable :
+             strncpy(buffer,"undefined variable",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoInstruction :
+             strncpy(buffer,"unknown program instruction",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+      case NumNoAccumulator :
+             strncpy(buffer,"not enough program registers",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+  
+      default:
+             strncpy(buffer,"unknown error value",buflen-1);
+             buffer[buflen-1]='\0';
+
+    } // switch
+  } else value=NULL;
+
+  return( value );
+
 } /* num_errval2str */
 
 /*---------------------------------------------------------------------------

@@ -26,15 +26,29 @@
 /*+++***********************************************************************
 NAME
 
-    project.h
+    tilt3d.h
 
 SYNOPSIS
 
-    #include "project.h"
+    #include "tilt3d.h"
 
 DESCRIPTION
-    Header of the module "project.c"
+    Header of the module "tilt3d.c"
+    Calculate a 3d rotation matrix for tilt1, tilt2, tilt3 or its inverse.
+    Calculate tilt1, tilt2 and tilt3 from a 3d rotation matrix.
+
 ***********************************************************************---*/
+#ifndef _tilt3d_
+# define _tilt3d_
+
+/***************************************************************************
+* General Definitions                                                      *
+***************************************************************************/
+
+#ifndef PRIVATE
+# define PRIVATE       static /* used to declare variables of private type */
+# define PUBLIC                /* used to declare variables of public type */
+#endif
 
 /****************************************************************************
 *  Include                                                                  *
@@ -42,33 +56,33 @@ DESCRIPTION
 
 # include <stdio.h>
 # include <stdlib.h>
-# include "ipol.h"
-# include "reference.h"
-
-/***************************************************************************
-* Functions                                                                *
-***************************************************************************/
-
-#ifndef _PROJECT_
-# define PROJECT_VERSION "project : V1.01 Peter Boesecke 2009-11-10"
-
-  extern void           
-   project_1               ( float *line, float *varline, int dim,
-                             int imin, int imax, float initvalue, float factor,
-                             float *data, float *vardat, int dim_1, int dim_2,
-                             float f1_1, float f3_1, float Df_1,
-                             float f1_2, float f3_2,
-                             float dummy, float ddummy, int ave ),
-   project_2               ( float *line, float *varline, int dim,
-                             int imin, int imax, float initvalue, float factor,
-                             float *data, float *vardat, int dim_1, int dim_2,
-                             float f1_1, float f3_1,
-                             float f1_2, float f3_2, float Df_2,
-                             float dummy, float ddummy, int ave );
-
-# define _PROJECT_
-#endif /* _PROJECT_ */
+# include <string.h>
+# include <ctype.h>
+# include <limits.h>
+# include <errno.h>
+# include <stdio.h>
+# include <fcntl.h>
+# include <math.h>
+# include <float.h>
 
 /****************************************************************************
-*                                                                           *
+* Enums and Structures                                                      *
 ****************************************************************************/
+
+/****************************************************************************
+* Functions                                                                 *
+****************************************************************************/
+
+PUBLIC extern const char *tilt3d_version ( void );
+
+PUBLIC extern double tilt3d_determinante ( double A[3][3] );
+
+PUBLIC extern int tilt3d_angles(double TILT[3], double R[3][3]);
+
+PUBLIC extern int tilt3d_matrix(double TILT[3], double R[3][3]);
+
+PUBLIC extern int tilt3d_inverse_matrix(double TILT[3], double R[3][3]);
+
+/***************************************************************************/
+
+#endif

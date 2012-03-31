@@ -1,8 +1,8 @@
 /*
  *   Project: The SPD Image correction and azimuthal regrouping
- *			http://forge.epn-campus.eu/projects/show/azimuthal
+ *                      http://forge.epn-campus.eu/projects/show/azimuthal
  *
- *   Copyright (C) 1996-2010 European Synchrotron Radiation Facility
+ *   Copyright (C) 2005-2010 European Synchrotron Radiation Facility
  *                           Grenoble, France
  *
  *   Principal authors: P. Boesecke (boesecke@esrf.fr)
@@ -34,6 +34,64 @@ SYNOPSIS
 
 DESCRIPTION
     Header of the module "edfio.c"
+
+HISTORY 
+    17-Mar-1998 Peter Boesecke
+    16-May-1998 PB INTERNAL_BYTE_ORDER, data_sizeof
+    01-Jun-1998 PB set_bsl_input_byteorder
+    18-Apr-1999 PB all public routines start with edf_ or edfio_
+    30-Apr-1999 PB new routine edf_read_data_2d_raw
+    23-Jun-1999 PB Restrictions (PUBLIC)
+    24-Jun-1999 PB module HISTORY added, restriction again only private
+    26-Jun-1999 PB History_Line changed to Header_Symbol_List (HSymb)
+    23-Jul-1999 PB call to edf_read_data_2d_raw and edf_write_data_2d_raw
+                   changed (DataValueOffset)
+    08-Nov-1999 PB edf_raster_normalization added
+    08-Nov-1999 PB in HSymb: shortlen and required added, 
+                   new functions: edf_history_skip(), edf_history_take()
+                   INTERNAL_BYTE_ORDER redefined according to bytesex.h
+    18-Nov-1999 PB default of INTERNAL_BYTE_ORDER: HighByteFirst
+    25-Nov-1999 PB dec alpha (__alpha)
+    16-Mar-2000 PB comments revised
+    18-Mar-2000 PB DBClass and DBInstance
+    07-Apr-2000 PB V1.19 set_max_line_width
+    30-Apr-2000 PB V1.20 MType
+    01-Mai-2000 PB V1.21
+    30-Jul-2000 PB V1.24 edf_raster_multiplication, edf_raster_inversion
+    10-Nov-2000 PB V1.30 edf_write_data_2d_raw -> edf_write_data_raw
+                         edf_write_data_2d_float -> edf_write_data_float
+    11-Nov-2000 PB V1.31
+    12-Nov-2000 PB V1.32 edf_write_data_float -> edf_write_data(...,MFloat,...)
+                   V1.33 long * pDataArraySize -> size_t * pDataArraySize
+                   V1.34 edf_read_data_...(... , long Dim[], ...)
+                         ---> edf_read_data_...(... , long **pDim, ...)
+                         edf_read_data_2d_... -> edf_read_data_...
+                         edf_read_data_float --> edf_read_data(...,MFloat,...)
+    30-Dec-2000 PB V1.36 
+    01-Jan-2001 PB V1.37
+    19-May-2001 PB V1.47 edf_dump
+    01-Jun-2001 PB V1.49 edf_dump, new parameter list
+    07-Jun-2001 PB V1.50 internal parameter functions,
+                         the parameter list of edf_dump is not finished,
+                         do not use generally 
+    06-Jul-2001 PB V1.53 edf_search_stream
+    08-Jul-2001 PB V1.55 EdfMaxKeyLen etc., edf_byteorder
+    02-Sep-2001 PB V1.59 edf_set_datatype 
+    13-Sep-2001 PB V1.62 history routines with history_key
+    25-Nov-2001 PB V1.70 keyorder routines
+    08-Dec-2001 PB V1.75 edf_add/delete_header_element 
+    08-Jan-2002 PB V1.76 edf_search_header_element
+    09-Jan-2002 PB V1.77 argument list of edf_print_header 
+    12-Feb-2002 PB V1.79 edf_datatype2machinetype, edf_machine_sizeof
+    25-Apr-2002 PB V1.80 edf_history_read_header, edf_history_write_header,
+                         edf_history_copy , edf_history_print
+    24-Mar-2004 PB V1.88 new parameter: EdfNDigitsFloat
+    12-Apr-2004 PB V1.93 edf_headersize
+    17-Jul-2004 PB V1.95 edf_set_minimumheadersize
+    24-Feb-2005 PB V2.01 INTERNAL_BYTE_ORDER replaced by edf_byteorder()
+    27-Feb-2005 PB V2.02 edf_write_header_string, edf_read_header_string
+    19-Dec-2010 PB V2.32 DCompression is now defined in cmpr.h
+    13-Dec-2011 PB V2.39 edf_byteorder2string, edf_string2byteorder
 ***************************************************************************/
 
 #ifndef EDFIO
@@ -54,6 +112,8 @@ DESCRIPTION
 # include <stdio.h>
 # include <stdlib.h>
 # include <math.h>
+
+# include "cmpr.h"
 
 /***************************************************************************
 * Functions                                                                *
@@ -120,6 +180,9 @@ edf_write_header_string     ( int stream, long DataNumber,
 	           	      int DataChain, const char * keyword,
            		      const char * Value,
 		              int * pErrorValue, int * pstatus ),
+edf_delete_key              ( int stream, long int DataNumber, int DataChain,
+                              const char * keyword,
+                              int * pErrorValue, int * pstatus ),
 edf_write_header_unit       ( int stream, long DataNumber,
                               int DataChain, const char * keyword,
                               float Value, const char * unit,
@@ -132,6 +195,7 @@ edf_headersize              ( int writetodisk ),
 edf_set_minimumheadersize   ( unsigned long minimumheadersize_out ),
 edf_set_datatype            ( int datatype_out ),
 edf_set_datavalueoffset     ( long int datavalueoffset_out ),
+edf_set_datacompression     ( int datacompression_out ),
 edf_set_bsl_input_byteorder ( int byteorder ),
 edf_set_max_line_width      ( unsigned long width ),
 edf_free_data_file          ( void ),
@@ -155,6 +219,8 @@ PUBLIC extern int
 edf_datatype2machinetype    ( int dtype ),
 edf_machinetype2datatype    ( int mtype ),
 edf_string2datatype         ( const char * string ),
+edf_string2byteorder        ( const char * string ),
+edf_string2compression      ( const char * string ),
 edf_raster_normalization    ( void * dest, const void * src,
                               const long data_dim[],
                               long raster_configuration, size_t item ),
@@ -165,10 +231,12 @@ edf_machine2machine         ( void * dest, int mtype_dest,
 PUBLIC extern long
 edf_raster_multiplication   ( long a, long x ),
 edf_raster_inversion        ( long x ),
-edf_order2raster            ( const long order[] );
+edf_raster_order2number     ( const long order[] );
 
 PUBLIC extern const char
-* edf_datatype2string       ( int data_type );
+* edf_datatype2string       ( int data_type ),
+* edf_byteorder2string      ( int byte_order ),
+* edf_compression2string    ( int data_compression );
 
 PUBLIC extern void
 edf_bswap                   ( void * dest, const void * src, size_t item,
@@ -320,6 +388,7 @@ FileIsNotWritable,
 FileIsNotOpened,
 IncompatibleOpeningModes,
 CouldNotCloseFile,
+CouldNotCloseBlock,
 CouldNotInsertChain,
 CouldNotInsertBlock,
 CouldNotInsertSymbol,
@@ -341,7 +410,11 @@ CouldNotWriteBinary,
 CannotReOpenGeneralBlock,
 CannotOpenAsBslFile,
 CouldNotInsertElement,
-CouldNotFindHeaderKey
+CouldNotDeleteString,
+CouldNotFindHeaderKey,
+CouldNotCreateHeader,
+CouldNotReadGeneralHeader,
+CouldNotReadHeader
 };
 
 /* The following enums start with 1. 0 is used to specify an invalid value.
@@ -371,15 +444,6 @@ enum MType { InValidMType,
 enum BOrder { InValidBOrder, 
               LowByteFirst=1, HighByteFirst, 
               EndBOrder };
-
-/***************************************************************************
-* Data Compression Translation Tables                                      *
-***************************************************************************/
-
-enum DCompression { InValidDCompression, 
-                    UnCompressed=1, 
-                    EndDCompression };
-
 
 /***************************************************************************
 * Data block classes and instances                                         *
