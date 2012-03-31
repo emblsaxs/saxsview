@@ -74,46 +74,59 @@ void SaxsviewProperty::setValue(QObject *obj) {
     int indexOfProperty = obj->metaObject()->indexOfProperty(qPrintable(mPropertyName));
     QMetaProperty metaProperty = obj->metaObject()->property(indexOfProperty);
 
-    //
-    // Create an editor factory if and only if the property is writeable.
-    //
-    if (metaProperty.isWritable()) {
-      mBrowser->setFactoryForManager(mManager, new QtVariantEditorFactory(this));
-      connect(mManager, SIGNAL(valueChanged(QtProperty*, const QVariant&)),
-              this, SLOT(valueChanged(QtProperty*, const QVariant&)));
-    }
+    if (metaProperty.isValid()) {
+      //
+      // Create an editor factory if and only if the property is writeable.
+      //
+      if (metaProperty.isWritable()) {
+        mBrowser->setFactoryForManager(mManager, new QtVariantEditorFactory(this));
+        connect(mManager, SIGNAL(valueChanged(QtProperty*, const QVariant&)),
+                this, SLOT(valueChanged(QtProperty*, const QVariant&)));
+      }
 
-    if (!mManager->isPropertyTypeSupported(metaProperty.type()))
-      qFatal("internal error: property '%s', property type not supported: '%s'",
-             metaProperty.name(), metaProperty.typeName());
-
-    //
-    // Check if this is an enum and handle it specially if yes.
-    //
-    if (metaProperty.isEnumType()) {
-      QStringList enumNames;
-      QMetaEnum metaEnum = metaProperty.enumerator();
+      if (!mManager->isPropertyTypeSupported(metaProperty.type()))
+        qFatal("internal error: property '%s', property type not supported: '%s'",
+               metaProperty.name(), metaProperty.typeName());
 
       //
-      // WARNING: This only builds a  list of names in the order
-      //          as defined. The combobox to display these names
-      //          provides the selected index, not the actual enum
-      //          value.
+      // Check if this is an enum and handle it specially if yes.
       //
-      for (int i = 0; i < metaEnum.keyCount(); ++i)
-        enumNames << metaEnum.key(i);
+      if (metaProperty.isEnumType()) {
+        QStringList enumNames;
+        QMetaEnum metaEnum = metaProperty.enumerator();
+
+        //
+        // WARNING: This only builds a  list of names in the order
+        //          as defined. The combobox to display these names
+        //          provides the selected index, not the actual enum
+        //          value.
+        //
+        for (int i = 0; i < metaEnum.keyCount(); ++i)
+          enumNames << metaEnum.key(i);
+
+        //
+        // Avoid updates triggered during setup by blocking the changed
+        // signal emitted when setting the attribute.
+        //
+        mManager->blockSignals(true);
+        mProperty = mManager->addProperty(mManager->enumTypeId(), mPropertyLabel);
+        mProperty->setAttribute("enumNames", enumNames);
+        mManager->blockSignals(false);
+
+      } else
+        mProperty = mManager->addProperty(metaProperty.type(), mPropertyLabel);
+
+    } else if (obj->dynamicPropertyNames().contains(qPrintable(mPropertyName))) {
 
       //
-      // Avoid updates triggered during setup by blocking the changed
-      // signal emitted when setting the attribute.
+      // A dynamic property created on the fly. Make this read only.
       //
-      mManager->blockSignals(true);
-      mProperty = mManager->addProperty(mManager->enumTypeId(), mPropertyLabel);
-      mProperty->setAttribute("enumNames", enumNames);
-      mManager->blockSignals(false);
+      QVariant value = obj->property(qPrintable(mPropertyName));
+      mProperty = mManager->addProperty(value.type(), mPropertyLabel);
 
     } else
-      mProperty = mManager->addProperty(metaProperty.type(), mPropertyLabel);
+        qFatal("internal error: property '%s', does not exist",
+               qPrintable(mPropertyName));
 
     mManager->blockSignals(true);
     QMapIterator<QString, QVariant> attr(mAttributes);
