@@ -20,6 +20,7 @@
 // libsaxsview
 #include "saxsview_image.h"
 #include "saxsview_config.h"
+#include "saxsview_scaledraw.h"
 
 // libsaxsimage
 #include "saxsimage.h"
@@ -37,6 +38,7 @@
 #include "qwt_plot_zoomer.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
+#include "qwt_text_label.h"
 
 #include <QtGui>
 
@@ -96,20 +98,30 @@ public:
 
 class SaxsviewImage::Private {
 public:
-  Private() : frame(0L) {}
+  Private();
 
   void setupCanvas(SaxsviewImage *image);
   void setupScales(SaxsviewImage *image);
   void setupPanner(SaxsviewImage *image);
   void setupZoomer(SaxsviewImage *image);
 
+  void updateScaleAndColor(SaxsviewImage *, Saxsview::Scale,
+                           const QColor&, const QColor&);
+
   SaxsviewFrame *frame;
   Saxsview::Scale scale;
+  QColor colorFrom;
+  QColor colorTo;
 
+  QwtPlotScaleItem *scales[QwtPlot::axisCnt];
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
   QwtPlotRescaler *rescaler;
 };
+
+SaxsviewImage::Private::Private()
+ : frame(0L), colorFrom(Qt::white), colorTo(Qt::black) {
+}
 
 void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
   // initial background color
@@ -127,29 +139,36 @@ void SaxsviewImage::Private::setupScales(SaxsviewImage *image) {
   yRight->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   yRight->attach(image);
   yRight->setBorderDistance(1);
+  scales[QwtPlot::yRight] = yRight;
 
   QwtPlotScaleItem *yLeft = new QwtPlotScaleItem(QwtScaleDraw::RightScale);
   yLeft->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   yLeft->attach(image);
   yLeft->setBorderDistance(0);
+  scales[QwtPlot::yLeft] = yLeft;
 
   QwtPlotScaleItem *xTop = new QwtPlotScaleItem(QwtScaleDraw::BottomScale);
   xTop->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   xTop->attach(image);
   xTop->setBorderDistance(0);
+  scales[QwtPlot::xTop] = xTop;
 
   QwtPlotScaleItem *xBottom = new QwtPlotScaleItem(QwtScaleDraw::TopScale);
   xBottom->scaleDraw()->enableComponent(QwtAbstractScaleDraw::Labels, false);
   xBottom->attach(image);
   xBottom->setBorderDistance(1);
+  scales[QwtPlot::xBottom] = xBottom;
 
-  QwtScaleDraw *scaleDraw = image->axisScaleDraw(QwtPlot::yLeft);
+  SaxsviewScaleDraw *scaleDraw;
+  scaleDraw = new SaxsviewScaleDraw;
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
   scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+  image->setAxisScaleDraw(QwtPlot::yLeft, scaleDraw);
 
-  scaleDraw = image->axisScaleDraw(QwtPlot::xBottom);
-  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Backbone, false);
-  scaleDraw->enableComponent(QwtAbstractScaleDraw:: Ticks, false);
+  scaleDraw = new SaxsviewScaleDraw;
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Backbone, false);
+  scaleDraw->enableComponent(QwtAbstractScaleDraw::Ticks, false);
+  image->setAxisScaleDraw(QwtPlot::xBottom, scaleDraw);
 
   image->axisScaleEngine(QwtPlot::xBottom)->setAttribute(QwtScaleEngine::Floating, false);
 
@@ -204,6 +223,39 @@ void SaxsviewImage::Private::setupZoomer(SaxsviewImage *image) {
                           Qt::RightButton, Qt::ControlModifier);
 }
 
+void SaxsviewImage::Private::updateScaleAndColor(SaxsviewImage *image,
+                                                 Saxsview::Scale s,
+                                                 const QColor& from,
+                                                 const QColor& to) {
+  scale = s;
+  colorFrom = from;
+  colorTo = to;
+
+  if (!frame)
+    return;
+
+  QwtInterval interval;
+  if (frame->data())
+    interval = frame->data()->interval(Qt::ZAxis);
+
+  switch (s) {
+    case Saxsview::AbsoluteScale:
+      frame->setColorMap(new QwtLinearColorMap(from, to));
+      image->setAxisScaleEngine(QwtPlot::yRight, new QwtLinearScaleEngine);
+      image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                                      new QwtLinearColorMap(from, to));
+      break;
+
+    case Saxsview::Log10Scale:
+      frame->setColorMap(new Log10ColorMap(from, to));
+      image->setAxisScaleEngine(QwtPlot::yRight, new Log10ScaleEngine);
+      image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                                      new Log10ColorMap(from, to));
+      break;
+  }
+}
+
+
 
 SaxsviewImage::SaxsviewImage(QWidget *parent)
  : QwtPlot(parent), p(new Private) {
@@ -254,14 +306,6 @@ bool SaxsviewImage::isZoomEnabled() const {
 
 bool SaxsviewImage::isMoveEnabled() const {
   return p->panner->isEnabled();
-}
-
-bool SaxsviewImage::isAspectRatioFixed() const {
-  return p->rescaler->isEnabled();
-}
-
-Saxsview::Scale SaxsviewImage::scale() const {
-  return p->scale;
 }
 
 void SaxsviewImage::exportAs() {
@@ -334,6 +378,19 @@ void SaxsviewImage::setMoveEnabled(bool on) {
   p->panner->setEnabled(on);
 }
 
+Saxsview::Scale SaxsviewImage::scale() const {
+  return p->scale;
+}
+
+void SaxsviewImage::setScale(Saxsview::Scale s) {
+  p->updateScaleAndColor(this, s, p->colorFrom, p->colorTo);
+  replot();
+}
+
+bool SaxsviewImage::isAspectRatioFixed() const {
+  return p->rescaler->isEnabled();
+}
+
 void SaxsviewImage::setAspectRatioFixed(bool yes) {
   p->rescaler->setEnabled(yes);
   if (yes)
@@ -342,34 +399,247 @@ void SaxsviewImage::setAspectRatioFixed(bool yes) {
     setZoomBase(p->frame->boundingRect());
 }
 
-void SaxsviewImage::setScale(Saxsview::Scale s) {
-  p->scale = s;
+void SaxsviewImage::setBackgroundColor(const QColor& c) {
+  QPalette pal = palette();
+  pal.setColor(QPalette::Window, c);
 
-  if (!p->frame)
-    return;
+  // The plot.
+  setPalette(pal);
 
-  QwtInterval interval;
-  if (p->frame->data())
-    interval = p->frame->data()->interval(Qt::ZAxis);
+  // The scales.
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    p->scales[i]->setPalette(pal);
 
-  switch (s) {
-    case Saxsview::AbsoluteScale:
-      p->frame->setColorMap(new QwtLinearColorMap(Qt::white, Qt::black));
-      setAxisScaleEngine(QwtPlot::yRight, new QwtLinearScaleEngine);
-      axisWidget(QwtPlot::yRight)->setColorMap(interval,
-                                               new QwtLinearColorMap(Qt::white, Qt::black));
-      break;
+  replot();
+}
 
-    case Saxsview::Log10Scale:
-      p->frame->setColorMap(new Log10ColorMap(Qt::white, Qt::black));
-      setAxisScaleEngine(QwtPlot::yRight, new Log10ScaleEngine);
-      axisWidget(QwtPlot::yRight)->setColorMap(interval,
-                                               new Log10ColorMap(Qt::white, Qt::black));
-      break;
+QColor SaxsviewImage::backgroundColor() const {
+  return palette().color(QPalette::Window);
+}
+
+void SaxsviewImage::setForegroundColor(const QColor& c) {
+  QPalette pal = palette();
+  pal.setColor(QPalette::WindowText, c);
+
+  // The plot.
+  setPalette(pal);
+
+  // The scales.
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    p->scales[i]->setPalette(pal);
+
+  replot();
+}
+
+
+QColor SaxsviewImage::foregroundColor() const {
+  return palette().color(QPalette::WindowText);
+}
+
+void SaxsviewImage::setImageTitle(const QString& text) {
+  QwtText t = title();
+  t.setText(text);
+  setTitle(t);
+}
+
+QString SaxsviewImage::imageTitle() const {
+  return title().text();
+}
+
+void SaxsviewImage::setImageTitleFont(const QFont& font) {
+  QwtText t = title();
+  t.setFont(font);
+  setTitle(t);
+}
+
+QFont SaxsviewImage::imageTitleFont() const {
+  return title().font();
+}
+
+void SaxsviewImage::setImageTitleFontColor(const QColor& c) {
+  QPalette pal = titleLabel()->palette();
+  pal.setColor(QPalette::Text, c);
+  titleLabel()->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewImage::imageTitleFontColor() const {
+  return titleLabel()->palette().color(QPalette::Text);
+}
+
+void SaxsviewImage::setAxisTitleX(const QString& text) {
+  QwtText t = axisTitle(QwtPlot::xBottom);
+  t.setText(text);
+  setAxisTitle(QwtPlot::xBottom, t);
+}
+
+QString SaxsviewImage::axisTitleX() const {
+  return axisTitle(QwtPlot::xBottom).text();
+}
+
+void SaxsviewImage::setAxisTitleY(const QString& text) {
+  QwtText t = axisTitle(QwtPlot::yLeft);
+  t.setText(text);
+  setAxisTitle(QwtPlot::yLeft, t);
+}
+
+QString SaxsviewImage::axisTitleY() const {
+  return axisTitle(QwtPlot::yLeft).text();
+}
+
+void SaxsviewImage::setAxisTitleZ(const QString& text) {
+  QwtText t = axisTitle(QwtPlot::yRight);
+  t.setText(text);
+  setAxisTitle(QwtPlot::yRight, t);
+}
+
+QString SaxsviewImage::axisTitleZ() const {
+  return axisTitle(QwtPlot::yRight).text();
+}
+
+void SaxsviewImage::setAxisTitleFont(const QFont& font) {
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
+    QwtText t = axisTitle(i);
+    t.setFont(font);
+    setAxisTitle(i, t);
+  }
+}
+
+QFont SaxsviewImage::axisTitleFont() const {
+  return axisTitle(QwtPlot::xBottom).font();
+}
+
+void SaxsviewImage::setAxisTitleFontColor(const QColor& c) {
+  QPalette pal = axisWidget(QwtPlot::xBottom)->palette();
+  pal.setColor(QPalette::Text, c);
+
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i)
+    axisWidget(i)->setPalette(pal);
+
+  replot();
+}
+
+QColor SaxsviewImage::axisTitleFontColor() const {
+  return axisWidget(QwtPlot::xBottom)->palette().color(QPalette::Text);
+}
+
+void SaxsviewImage::setXTickLabelsVisible(bool on) {
+  QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
+  scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
+  updateLayout();
+}
+
+bool SaxsviewImage::xTickLabelsVisible() const {
+  const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::xBottom);
+  return scale->hasComponent(QwtAbstractScaleDraw::Labels);
+}
+
+void SaxsviewImage::setYTickLabelsVisible(bool on) {
+  QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
+  scale->enableComponent(QwtAbstractScaleDraw::Labels, on);
+  updateLayout();
+}
+
+bool SaxsviewImage::yTickLabelsVisible() const {
+  const QwtScaleDraw *scale = axisScaleDraw(QwtPlot::yLeft);
+  return scale->hasComponent(QwtAbstractScaleDraw::Labels);
+}
+
+void SaxsviewImage::setMinorTicksVisible(bool on) {
+  //
+  // There is a ScaleDraw component "Ticks", like the "Labels" used
+  // for the visibility of the labels, but "Ticks" shows/hides
+  // all ticks, not selected ones. Here we "disable" tick marks by
+  // setting their size to 0 if disabled, and their default value
+  // when enabled.
+  //
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
+    QwtScaleDraw *draw = p->scales[i]->scaleDraw();
+    draw->setTickLength(QwtScaleDiv::MinorTick, on ? 4 : 0);
+    draw->setTickLength(QwtScaleDiv::MediumTick, on ? 6 : 0);
   }
 
   replot();
 }
+
+bool SaxsviewImage::minorTicksVisible() const {
+  //
+  // All axis are in sync, just pick one.
+  //
+  QwtScaleDraw *draw = p->scales[QwtPlot::xBottom]->scaleDraw();
+  return draw->tickLength(QwtScaleDiv::MinorTick) > 0;
+}
+
+void SaxsviewImage::setMajorTicksVisible(bool on) {
+  for (int i = QwtPlot::yLeft; i < QwtPlot::axisCnt; ++i) {
+    QwtScaleDraw *draw = p->scales[i]->scaleDraw();
+    draw->setTickLength(QwtScaleDiv::MajorTick, on ? 8 : 0);
+  }
+
+  replot();
+}
+
+bool SaxsviewImage::majorTicksVisible() const {
+  QwtScaleDraw *draw = p->scales[QwtPlot::xBottom]->scaleDraw();
+  return draw->tickLength(QwtScaleDiv::MajorTick) > 0;
+}
+
+void SaxsviewImage::setTickLabelFont(const QFont& font) {
+  setAxisFont(QwtPlot::xBottom, font);
+  setAxisFont(QwtPlot::yLeft, font);
+}
+
+QFont SaxsviewImage::tickLabelFont() const {
+  return axisFont(QwtPlot::xBottom);
+}
+
+void SaxsviewImage::setTickLabelFontColor(const QColor& c) {
+  SaxsviewScaleDraw *draw;
+  draw = dynamic_cast<SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::xBottom));
+  if (draw)
+    draw->setLabelColor(c);
+
+  draw = dynamic_cast<SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::yLeft));
+  if (draw)
+    draw->setLabelColor(c);
+
+  replot();
+}
+
+QColor SaxsviewImage::tickLabelFontColor() const {
+  const SaxsviewScaleDraw *draw;
+  draw = dynamic_cast<const SaxsviewScaleDraw*>(axisScaleDraw(QwtPlot::xBottom));
+  return draw ? draw->labelColor() : QColor();
+}
+
+void SaxsviewImage::setColorBarVisible(bool on) {
+  enableAxis(QwtPlot::yRight, on);
+}
+
+bool SaxsviewImage::colorBarVisible() const {
+  return axisEnabled(QwtPlot::yRight);
+}
+
+void SaxsviewImage::setColorBarFromColor(const QColor& from) {
+  p->updateScaleAndColor(this, p->scale, from, p->colorTo);
+  replot();
+}
+
+QColor SaxsviewImage::colorBarFromColor() const {
+  return p->colorFrom;
+}
+
+void SaxsviewImage::setColorBarToColor(const QColor& to) {
+  p->updateScaleAndColor(this, p->scale, p->colorFrom, to);
+  replot();
+}
+
+QColor SaxsviewImage::colorBarToColor() const {
+  return p->colorTo;
+}
+
+
 
 
 

@@ -34,12 +34,31 @@ class SaxsviewFrameData;
 
 class SaxsviewImage : public QwtPlot {
   Q_OBJECT
-  Q_PROPERTY(bool aspectRatioFixed READ isAspectRatioFixed WRITE setAspectRatioFixed)
   Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
+  Q_PROPERTY(bool aspectRatioFixed READ isAspectRatioFixed WRITE setAspectRatioFixed)
 
-  // Defined in QwtPlot
-  // TODO: QwtTextPropertyManager + extension of QtVariantPropertyManager
-//   Q_PROPERTY(QwtText title READ title WRITE setTitle)
+  Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
+  Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor)
+  Q_PROPERTY(QString imageTitle READ imageTitle WRITE setImageTitle)
+  Q_PROPERTY(QFont imageTitleFont READ imageTitleFont WRITE setImageTitleFont)
+  Q_PROPERTY(QColor imageTitleFontColor READ imageTitleFontColor WRITE setImageTitleFontColor)
+
+  Q_PROPERTY(QString axisTitleX READ axisTitleX WRITE setAxisTitleX)
+  Q_PROPERTY(QString axisTitleY READ axisTitleY WRITE setAxisTitleY)
+  Q_PROPERTY(QString axisTitleZ READ axisTitleZ WRITE setAxisTitleZ)
+  Q_PROPERTY(QFont axisTitleFont READ axisTitleFont WRITE setAxisTitleFont)
+  Q_PROPERTY(QColor axisTitleFontColor READ axisTitleFontColor WRITE setAxisTitleFontColor)
+  Q_PROPERTY(QColor colorBarFromColor READ colorBarFromColor WRITE setColorBarFromColor)
+  Q_PROPERTY(QColor colorBarToColor READ colorBarToColor WRITE setColorBarToColor)
+
+  Q_PROPERTY(bool minorTicksVisible READ minorTicksVisible WRITE setMinorTicksVisible)
+  Q_PROPERTY(bool majorTicksVisible READ majorTicksVisible WRITE setMajorTicksVisible)
+  Q_PROPERTY(bool xTickLabelsVisible READ xTickLabelsVisible WRITE setXTickLabelsVisible)
+  Q_PROPERTY(bool yTickLabelsVisible READ yTickLabelsVisible WRITE setYTickLabelsVisible)
+  Q_PROPERTY(bool colorBarVisible READ colorBarVisible WRITE setColorBarVisible)
+  Q_PROPERTY(QFont tickLabelFont READ tickLabelFont WRITE setTickLabelFont)
+  Q_PROPERTY(QColor tickLabelFontColor READ tickLabelFontColor WRITE setTickLabelFontColor)
+
 
 public:
   SaxsviewImage(QWidget *parent = 0L);
@@ -52,9 +71,29 @@ public:
 
   bool isZoomEnabled() const;
   bool isMoveEnabled() const;
-  bool isAspectRatioFixed() const;
 
   Saxsview::Scale scale() const;
+  bool isAspectRatioFixed() const;
+
+  QColor backgroundColor() const;
+  QColor foregroundColor() const;
+  QString imageTitle() const;
+  QFont imageTitleFont() const;
+  QColor imageTitleFontColor() const;
+  QString axisTitleX() const;
+  QString axisTitleY() const;
+  QString axisTitleZ() const;
+  QFont axisTitleFont() const;
+  QColor axisTitleFontColor() const;
+  bool xTickLabelsVisible() const;
+  bool yTickLabelsVisible() const;
+  bool majorTicksVisible() const;
+  bool minorTicksVisible() const;
+  QFont tickLabelFont() const;
+  QColor tickLabelFontColor() const;
+  bool colorBarVisible() const;
+  QColor colorBarFromColor() const;
+  QColor colorBarToColor() const;
 
 public slots:
   void exportAs();
@@ -65,8 +104,29 @@ public slots:
   void setZoomBase(const QRectF& rect = QRectF());
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
-  void setAspectRatioFixed(bool);
+
   void setScale(Saxsview::Scale);
+  void setAspectRatioFixed(bool);
+
+  void setBackgroundColor(const QColor&);
+  void setForegroundColor(const QColor&);
+  void setImageTitle(const QString&);
+  void setImageTitleFont(const QFont&);
+  void setImageTitleFontColor(const QColor&);
+  void setAxisTitleX(const QString&);
+  void setAxisTitleY(const QString&);
+  void setAxisTitleZ(const QString&);
+  void setAxisTitleFont(const QFont&);
+  void setAxisTitleFontColor(const QColor&);
+  void setXTickLabelsVisible(bool);
+  void setYTickLabelsVisible(bool);
+  void setMinorTicksVisible(bool);
+  void setMajorTicksVisible(bool);
+  void setTickLabelFont(const QFont&);
+  void setTickLabelFontColor(const QColor&);
+  void setColorBarVisible(bool);
+  void setColorBarFromColor(const QColor&);
+  void setColorBarToColor(const QColor&);
 
 private:
   class Private;

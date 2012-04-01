@@ -21,6 +21,7 @@
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 #include "saxsview_config.h"
+#include "saxsview_scaledraw.h"
 
 #include <QtGui>
 
@@ -35,49 +36,9 @@
 #include "qwt_plot_renderer.h"
 #include "qwt_plot_scaleitem.h"
 #include "qwt_plot_zoomer.h"
-#include "qwt_scale_draw.h"
 #include "qwt_scale_engine.h"
 #include "qwt_scale_widget.h"
 #include "qwt_text_label.h"
-
-
-//
-// By default, QwtScaleDraw uses the same color for axis titles and labels.
-// This class is here to allow separate them.
-//
-// See also:
-//   http://sourceforge.net/mailarchive/message.php?msg_id=28994567
-//
-class SaxsviewScaleDraw : public QwtScaleDraw {
-public:
-  SaxsviewScaleDraw() : mLabelColor(Qt::black) {
-  }
-
-  QwtText label(double value) const {
-    QwtText text = QwtScaleDraw::label(value);
-    text.setColor(mLabelColor);
-    return text;
-  }
-
-  QColor labelColor() const {
-    return mLabelColor;
-  }
-
-  void setLabelColor(const QColor& c) {
-    mLabelColor = c;
-
-    //
-    // The labels texts (including their color) are cached.
-    // Invalidate this cache to rebuild them ...
-    //
-    invalidateCache();
-  }
-
-private:
-  QColor mLabelColor;
-};
-
-
 
 
 

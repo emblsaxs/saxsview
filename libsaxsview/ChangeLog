@@ -1,3 +1,86 @@
+2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.cpp: Moved class SaxsviewScaleDraw from here ...
+	* saxsview_scaledraw.h: ... to here ...
+	* saxsview_scaledraw.cpp: ... and here.
+	* saxsview_image.h (backgroundColor): New.
+	(setBackgroundColor): New
+	(foregroundColor): New.
+	(setForegroundColor): New
+	(imageTitle): New.
+	(setImageTitle): New
+	(imageTitleFont): New.
+	(setImageTitleFont): New
+	(imageTitleFontColor): New.
+	(setImageTitleFontColor): New
+	(axisTitleX): New.
+	(setAxisTitleX): New
+	(axisTitleY): New.
+	(setAxisTitleY): New
+	(axisTitleZ): New.
+	(setAxisTitleZ): New
+	(axisTitleFont): New.
+	(setAxisTitleFont): New
+	(axisTitleFontColor): New.
+	(setAxisTitleFontColor): New
+	(xTickLabelsVisible): New.
+	(setXTickLabelsVisible): New
+	(yTickLabelsVisible): New.
+	(setYTickLabelsVisible): New
+	(majorTicksVisible): New.
+	(setMajorTicksVisible): New
+	(minorTicksVisible): New.
+	(setMinorTicksVisible): New
+	(tickLabelFont): New.
+	(setTickLabelFont): New
+	(tickLabelFontColor): New.
+	(setTickLabelFontColor): New
+	(colorBarVisible): New.
+	(setColorBarVisible): New
+	(colorBarFromColor): New.
+	(setColorBarFromColor): New
+	(colorBarToColor): New.
+	(setColorBarToColor): New
+	* saxsview_image.cpp (backgroundColor): New.
+	(setBackgroundColor): New
+	(foregroundColor): New.
+	(setForegroundColor): New
+	(imageTitle): New.
+	(setImageTitle): New
+	(imageTitleFont): New.
+	(setImageTitleFont): New
+	(imageTitleFontColor): New.
+	(setImageTitleFontColor): New
+	(axisTitleX): New.
+	(setAxisTitleX): New
+	(axisTitleY): New.
+	(setAxisTitleY): New
+	(axisTitleZ): New.
+	(setAxisTitleZ): New
+	(axisTitleFont): New.
+	(setAxisTitleFont): New
+	(axisTitleFontColor): New.
+	(setAxisTitleFontColor): New
+	(xTickLabelsVisible): New.
+	(setXTickLabelsVisible): New
+	(yTickLabelsVisible): New.
+	(setYTickLabelsVisible): New
+	(majorTicksVisible): New.
+	(setMajorTicksVisible): New
+	(minorTicksVisible): New.
+	(setMinorTicksVisible): New
+	(tickLabelFont): New.
+	(setTickLabelFont): New
+	(tickLabelFontColor): New.
+	(setTickLabelFontColor): New
+	(colorBarVisible): New.
+	(setColorBarVisible): New
+	(colorBarFromColor): New.
+	(setColorBarFromColor): New
+	(colorBarToColor): New.
+	(setColorBarToColor): New
+	* CMakeLists.txt: Added new files.
+
 2012-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_property.cpp (setValue): Allow for dynamic properties.
