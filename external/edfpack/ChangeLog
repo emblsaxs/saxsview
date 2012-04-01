@@ -1,5 +1,10 @@
 2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Try to find libz, disable edfpack
+	if not found.
+
+2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Bumped version to 2.216.
 	Explicitly link libz.
 
