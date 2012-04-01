@@ -13,77 +13,77 @@
 </p>
 
 <h1>saxsview Project</h1>
-<p><i>libsaxsdocument</i>, <i>libsaxsimage</i> and <i>saxsview</i>; read, convert and view 1D
-and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
+<p><i>libsaxsdocument</i>, <i>libsaxsimage</i> and the <i>saxsview</i> applications;
+read, convert and view 1D and 2D-files related to Small Angle X-ray Scattering (SAXS).</p>
 
 <p><b>Contents</b></p>
 <ul>
-  <li><a href="#saxsview">saxsview Application</a></li>
+  <li><a href="#applications">saxsview Applications</a></li>
   <li><a href="#libraries">saxsview Libraries</a></li>
   <li><a href="#building">Building saxsview</a></li>
   <li><a href="#licenses">Licenses</a></li>
   <li><a href="#releases">Releases and Milestones</a></li>
 </ul>
 
-<h2><a name="saxsview">saxsview Application</a></h2>
+<h2><a name="applications">saxsview Applications</a></h2>
+<p><i>saxsview</i> is intended as an day-to-day plotting facility for
+SAXS-data, as well as a convenient tool to quickly generate plots ready
+for publication.</p>
+
+<h3>svplot</h3>
 <table>
-  <tr>
-    <td colspan="3">
-      <p><i>saxsview</i> is intended as an day-to-day plotting facility for
-      SAXS-data, as well as a convenient tool to quickly generate plots ready
-      for publication.</p>
-    </td>
-  </tr>
   <tr>
     <td style="width:25%" align="center">
       <a href="screenshot-saxsview-plot.png">
       <img width="100%" src="screenshot-saxsview-plot.png"
-           alt="screenshot of saxsview showing a plot"><br>
+           alt="screenshot of svplot"><br>
       <small>Click to enlarge</small></a>
     </td>
-    <td colspan="2" align="justify">
-      <p><i>saxsview</i> shows 1D-data in .dat, .int, .fit and .fir formats
+    <td align="justify">
+      <p><i>svplot</i> shows 1D-data in .dat, .int, .fit and .fir formats
       of the <a href="http://www.embl-hamburg.de/biosaxs/software.html">
       ATSAS package</a>, the
       <a href="http://www.smallangles.net/wgwiki/index.php/cansas1d_documentation">cansas
-      .xml format (v1.0)</a>, as well as .csv files.</p>
-      <p>The screenshot to the left shows three .fit files. Of the experimental data
-      only every fifth point is shown in black, with error bars in light gray. The respective
-      fits are overlaid as a solid lines. For improved visibility, the fits where stacked
-      or <i>exploded</i>.</p>
-      <p>Most aspects of the plot are configurable.</p>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="2" align="justify">
-      <p>Also, <i>saxsview</i> can display 2D scattering images in Crystallographic
-      Binary Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">
-      CBFlib</a>), the ESRF data format (EDF, using <a href="https://forge.ill.eu/svn/azimuthal/spd/edfpack">edfpack</a>) and images
-      stored in 32-bit TIFFs as written by PILATUS detectors.</p>
-      <p>The screenshot to the right shows an image taken by a PILATUS-6M, which is
-      <a href="http://arcib.dowling.edu/software/CBFlib/downloads/version_0.7.9/CBFlib_0.7.9_Data_Files_Input.tar.gz">available for download</a>.</p>
-      <p>In this screenshot, the application shows all pixels with count rate of less
-      than 10 in white, all those with a count rate of 1000 or above in black. Intermediate
-      counts are shown on a logarithmic gray scale. The current x/y position and pixel
-      value (count) are shown in the status bar.</p>
-    </td>
-    <td style="width:25%" align="center">
-      <a href="screenshot-saxsview-image.png">
-      <img width="100%" src="screenshot-saxsview-image.png"
-           alt="screenshot of saxsview showing an image"><br>
-      <small>Click to enlarge</small></a>
-    </td>
-  </tr>
-  <tr>
-    <td colspan="3">
-      <p>The program is based on <a href="http://qt.nokia.com/">Qt -
-      A cross-platform application and UI framework</a> and
-      <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting Widgets
-      for Technical Applications</a> and is thus available for Linux, MacOSX and
-      Microsoft Windows alike.</p>
+      .xml format (v1.0)</a>, as well as .rad and .csv files.</p>
+      <p>The screenshot to the left shows a .fit (light blue line) to experimental data
+      (dark blue filled circles).</p>
+      <p>Any aspect of the plot or the curves are configurable in the respective Property
+      Editor (here shown in the dock to the right).</p>
+      <p>The file system browser on the left allows quick access to all supported files,
+      either by drag-n-drop one or multiple files or by doubl-clicking individual entries.</p>
+      <p>Plots can be printed and exported in .pdf, .ps, .svg, .png, .jpeg, .tiff
+      or .bmp formats.</p>
     </td>
   </tr>
 </table>
+
+<h3>svimage</h3>
+<table>
+  <tr>
+    <td style="width:25%" align="center">
+      <a href="screenshot-saxsview-image.png">
+      <img width="100%" src="screenshot-saxsview-image.png"
+           alt="screenshot of svimage"><br>
+      <small>Click to enlarge</small></a>
+    </td>
+    <td align="justify">
+      <p><i>svimage</i> displays 2D scattering images in Crystallographic Binary
+      Format (CBF, using <a href="http://www.bernstein-plus-sons.com/software/CBF/">
+      CBFlib</a>), the ESRF data format (EDF, using <a href="https://forge.ill.eu/svn/azimuthal/spd/edfpack">edfpack</a>), the Fit2D
+      mask-file format (MSK) and images stored in 32-bit TIFFs as created by PILATUS
+      detectors.</p>
+      <p>The screenshot to the right shows an image collected by a PILATUS-6M, which is <a href="http://arcib.dowling.edu/software/CBFlib/downloads/version_0.7.9/CBFlib_0.7.9_Data_Files_Input.tar.gz">available for download</a>.</p>
+      <p>Any aspect of the image display is configurable in the Property Editor
+      (here shown in the dock to the right).</p>
+      <p>Images can be printed and exported in .pdf, .ps, .svg, .png, .jpeg, .tiff
+      or .bmp formats.</p>
+    </td>
+  </tr>
+</table>
+<p>The programs are based on <a href="http://qt.nokia.com/">Qt -A cross-platform application
+and UI framework</a> and <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting Widgets
+for Technical Applications</a> and is thus available for Linux, MacOSX and Microsoft Windows
+alike.</p>
 <p>Suggestions, bug reports and code contributions are highly welcome!</p>
 
 
@@ -93,8 +93,6 @@ of <i>saxsview</i>. They are meant to allow for easy integration of new 1D and
 2D-file formats respectively. Further, if formats that hold similar information
 implement reading and writing hooks, it becomes very easy to convert between these
 respective formats, eventually simplifying data-transfer between programs.</p>
-
-<p>For later releases, support for the MAR345 file format is planned.</p>
 
 
 <h2><a name="building">Building saxsview</a></h2>
@@ -107,16 +105,17 @@ generally assumed to work:</p>
   <li>Qt-4.4 (UI framework)</li>
   <li>gcc-4.3 (C, C++ and Fortran compilers)</li>
 </ul>
-<p>Optional dependencies which are used if found on the build system:</p>
+<p>Optional dependencies which are used if found on the build system (only if the required development packages are installed):</p>
 <ul>
-  <li><a href="http://www.libtiff.org">LibTIFF</a> (support for 32-bit TIFF images)</li>
   <li><a href="http://www.xmlsoft.org">LibXml2</a> (support for cansas XML file format)</li>
+  <li><a href="http://www.libtiff.org">LibTIFF</a> (support for 32-bit TIFF images)</li>
+  <li><a href="http://zlib.net">zlib</a> (support for EDF images)</li>
 </ul>
 
 <p>Dependecies less commonly found (Qwt, CBFlib, edfpack) on average systems come
 together with the <i>saxsview</i> sources.</p>
-<p>As is, it was successfully compiled and used on Linux (i686-pc-linux-gnu), MacOSX
-10.5 (Intel-based) and Windows (i686-unknown-mingw).</p>
+<p>As is, it was successfully compiled and used on Linux (32/64 bit), MacOSX
+10.[567] and Windows (i686-unknown-mingw).</p>
 
 <p>Please note, depending on your installation location, e.g. <tt>/usr/local</tt> in
 Linux, you may need to adjust <tt>LD_LIBRARY_PATH</tt> as well.</p>
@@ -165,12 +164,19 @@ LGPLv3 directly.</p>
 
 <h2><a name="releases">Releases and Milestones</a></h2>
 <ul>
-  <li>2011/04/30 - initial support comma separated value (.csv) files was added</li>
+  <li>2012/03/19 - <i>libsaxsdocument</i> now has basic support for .rad files from MAXLAB</li>
+  <li>2012/03/09 - Drag'n'drop support for <i>svplot</i></li>
+  <li>2012/03/09 - MIME-type support and .destop files for freedesktop.org platforms.</li>
+  <li>2011/09/11 - the monolithic saxsview application gets split into
+                   <i>svplot</i> and <i>svimage</i></li>
+  <li>2011/08/03 - support for stacked MONSA fit files</li>
+  <li>2011/07/26 - support for multiple GNOM job type files was added</li>
 
-  <li>2011/04/20 - initial support for mask files (.msk) as written by <a href="http://www.esrf.eu/computing/scientific/FIT2D/" target="new">Fit2D</a> was added</li>
-  <li>2011/04/14 - Fortran bindings for libsaxsdocument and libsaxsimage where added</li>
+  <li>2011/04/30 - initial support comma separated value (.csv)</li>
+  <li>2011/04/20 - initial support for mask files (.msk) as written by <a href="http://www.esrf.eu/computing/scientific/FIT2D/">Fit2D</a></li>
+  <li>2011/04/14 - Fortran bindings for libsaxsdocument and libsaxsimage</li>
   <li>2011/04/10 - Read out custom header fields from PILATUS TIFF files</li>
-  <li>2010/08/02 - initial support for the ESRF data format (.edf, via edfpack) was added</li>
+  <li>2010/08/02 - initial support for the ESRF data format (.edf, via edfpack)</li>
   <li>2010/07/25 - distance distributions from .out files are now properly handled</li>
   <li>2010/07/16 - in image view, counts of current position are shown status bar</li>
   <li>2010/07/16 - configurable templates per file type are now available</li>
@@ -181,7 +187,7 @@ LGPLv3 directly.</p>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
 </ul>
 
-<p style="text-align:center">Last updated 2011-04-30</p>
+<p style="text-align:center">Last updated 2012-04-01</p>
 
 <p>
   <a href="http://validator.w3.org/check?uri=referer">
