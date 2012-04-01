@@ -1,5 +1,9 @@
 2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* edf.c (saxs_image_edf_read): Reverted r248 - it was already correct.
+
+2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Conditionally include/link target edf.
 	* saxsimage_format.c (saxs_image_format_find): Conditionally
 	include edf if HAVE_EDF.

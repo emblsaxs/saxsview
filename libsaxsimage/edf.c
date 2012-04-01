@@ -58,7 +58,7 @@ int saxs_image_edf_read(saxs_image *image, const char *filename) {
     saxs_image_set_size(image, dim[1], dim[2]);
     for (x = 0; x < dim[1]; ++x)
       for (y = 0; y < dim[2]; ++y)
-        saxs_image_set_value(image, x, dim[2] - y - 1, *(data + y * dim[1] + x));
+        saxs_image_set_value(image, x, y, *(data + y * dim[1] + x));
 
   } else
     fprintf(stderr, "edf: error on read: %s", edf_report_data_error(edf_errno));
