@@ -31,42 +31,97 @@
 
 class SVImagePropertyDockWidget::Private {
 public:
-  Private(SVImagePropertyDockWidget *dock) {
-    browser = new QtTreePropertyBrowser(dock);
-    browser->setRootIsDecorated(false);
-    browser->setEnabled(false);
-
-    SaxsviewProperty *imageGroup = new SaxsviewProperty("Image", browser);
-    imageProperties.append(new SaxsviewProperty("Z Scale", "scale",
-                                                browser, imageGroup));
-    imageProperties.append(new SaxsviewProperty("Fix Aspect Ratio",
-                                                "aspectRatioFixed",
-                                                browser, imageGroup));
-//     imageProperties.append(new SaxsviewProperty("Title", "imageTitle",
-//                                                 browser, imageGroup));
-//     imageProperties.append(new SaxsviewProperty("Font", "imageTitleFont",
-//                                                 browser, imageGroup));
-
-    SaxsviewProperty *frameGroup = new SaxsviewProperty("Frame", browser);
-    frameProperties.append(new SaxsviewProperty("Size", "size",
-                                                browser, frameGroup));
-    frameProperties.append(new SaxsviewProperty("Lower Threshold", "minValue",
-                                                browser, frameGroup));
-    frameProperties.append(new SaxsviewProperty("Upper Threshold", "maxValue",
-                                                browser, frameGroup));
-  }
+  void setupUi(SVImagePropertyDockWidget *dock);
+  void setupImageProperties(QtTreePropertyBrowser*);
 
   QtTreePropertyBrowser *browser;
   QList<SaxsviewProperty*> imageProperties, frameProperties;
 };
 
+void SVImagePropertyDockWidget::Private::setupUi(SVImagePropertyDockWidget *dock) {
+  browser = new QtTreePropertyBrowser(dock);
+  browser->setRootIsDecorated(false);
+  browser->setEnabled(false);
+
+  setupImageProperties(browser);
+  dock->setWidget(browser);
+}
+
+void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrowser *browser) {
+
+  SaxsviewProperty *imageGroup = new SaxsviewProperty("Image", browser);
+  imageProperties.append(new SaxsviewProperty("Z Scale", "scale",
+                                              browser, imageGroup));
+  imageProperties.append(new SaxsviewProperty("Fix Aspect Ratio",
+                                              "aspectRatioFixed",
+                                              browser, imageGroup));
+  imageProperties.append(new SaxsviewProperty("Background", "backgroundColor",
+                                              browser, imageGroup));
+  imageProperties.append(new SaxsviewProperty("Foreground", "foregroundColor",
+                                              browser, imageGroup));
+
+  SaxsviewProperty *titleGroup = new SaxsviewProperty("Title", browser);
+  imageProperties.append(new SaxsviewProperty("Text", "imageTitle",
+                                              browser, titleGroup));
+  imageProperties.append(new SaxsviewProperty("Font", "imageTitleFont",
+                                              browser, titleGroup));
+  imageProperties.append(new SaxsviewProperty("Color", "imageTitleFontColor",
+                                              browser, titleGroup));
+
+  SaxsviewProperty *axisGroup = new SaxsviewProperty("Axis", browser);
+  imageProperties.append(new SaxsviewProperty("X Text", "axisTitleX",
+                                              browser, axisGroup));
+  imageProperties.append(new SaxsviewProperty("Y Text", "axisTitleY",
+                                              browser, axisGroup));
+  imageProperties.append(new SaxsviewProperty("Z Text", "axisTitleZ",
+                                              browser, axisGroup));
+  imageProperties.append(new SaxsviewProperty("Font", "axisTitleFont",
+                                              browser, axisGroup));
+  imageProperties.append(new SaxsviewProperty("Color", "axisTitleFontColor",
+                                              browser, axisGroup));
+
+  SaxsviewProperty *colorBarGroup = new SaxsviewProperty("Color Bar", browser);
+  imageProperties.append(new SaxsviewProperty("Visible", "colorBarVisible",
+                                              browser, colorBarGroup));
+  imageProperties.append(new SaxsviewProperty("From Color", "colorBarFromColor",
+                                              browser, colorBarGroup));
+  imageProperties.append(new SaxsviewProperty("To Color", "colorBarToColor",
+                                              browser, colorBarGroup));
+
+  SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);
+  imageProperties.append(new SaxsviewProperty("Minor Tick Marks", "minorTicksVisible",
+                                              browser, ticksGroup));
+  imageProperties.append(new SaxsviewProperty("Major Tick Marks", "majorTicksVisible",
+                                              browser, ticksGroup));
+  imageProperties.append(new SaxsviewProperty("X Tick Labels", "xTickLabelsVisible",
+                                              browser, ticksGroup));
+  imageProperties.append(new SaxsviewProperty("Y Tick Labels", "yTickLabelsVisible",
+                                              browser, ticksGroup));
+  imageProperties.append(new SaxsviewProperty("Tick Label Font", "tickLabelFont",
+                                              browser, ticksGroup));
+  imageProperties.append(new SaxsviewProperty("Color", "tickLabelFontColor",
+                                              browser, ticksGroup));
+
+
+
+  SaxsviewProperty *frameGroup = new SaxsviewProperty("Frame", browser);
+  frameProperties.append(new SaxsviewProperty("Size", "size",
+                                              browser, frameGroup));
+  frameProperties.append(new SaxsviewProperty("Lower Threshold", "minValue",
+                                              browser, frameGroup));
+  frameProperties.append(new SaxsviewProperty("Upper Threshold", "maxValue",
+                                              browser, frameGroup));
+}
+
+
+
+
 
 SVImagePropertyDockWidget::SVImagePropertyDockWidget(QWidget *parent)
- : QDockWidget("Property Editor", parent),
-   p(new Private(this)) {
+ : QDockWidget("Property Editor", parent), p(new Private) {
 
   setFeatures(QDockWidget::AllDockWidgetFeatures);
-  setWidget(p->browser);
+  p->setupUi(this);
 }
 
 SVImagePropertyDockWidget::~SVImagePropertyDockWidget() {
