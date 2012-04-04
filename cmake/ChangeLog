@@ -1,3 +1,9 @@
+2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* GNUInstallDirs.cmake: Copied from cmake-2.8.7 distribution
+	to be available for older versions. Updated License as required.
+	* macros.cmake: New.
+
 2012-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Darwin/: New subdirectory.

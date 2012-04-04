@@ -1,3 +1,4 @@
+
 project (LIBSAXSVIEW CXX)
 
 set (SOURCES saxsview_plot.cpp
@@ -27,17 +28,8 @@ include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
                      ${QWT_SOURCE_DIR}
                      ${QTPROPERTYBROWSER_SOURCE_DIR})
 
-add_library (saxsview SHARED
-             ${SOURCES}
-             ${HEADERS}
-             ${MOC}
-             ${UIC}
-             ${RES})
+saxsview_add_library(saxsview SOURCES ${SOURCES} ${HEADERS} ${MOC} ${RES}
+                              LIBRARIES saxsdocument saxsimage
+                                        qwt qtpropertybrowser ${QT_LIBRARIES}
+                              VERSION 1)
 
-target_link_libraries (saxsview
-                       saxsdocument saxsimage
-                       qwt qtpropertybrowser ${QT_LIBRARIES})
-
-install (TARGETS saxsview
-         LIBRARY DESTINATION lib
-         RUNTIME DESTINATION bin)

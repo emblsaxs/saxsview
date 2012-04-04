@@ -5,33 +5,16 @@ include_directories (${QWT_SOURCE_DIR}
                      ${LIBSAXSIMAGE_SOURCE_DIR}
                      ${LIBSAXSVIEW_SOURCE_DIR})
 
-set (svimage_header svimagemainwindow.h
-                    svimagesubwindow.h
-                    svimagepropertydockwidget.h)
+set (svimage_headers svimagemainwindow.h
+                     svimagesubwindow.h
+                     svimagepropertydockwidget.h)
 
 set (svimage_sources main.cpp
                      svimagemainwindow.cpp
                      svimagesubwindow.cpp
                      svimagepropertydockwidget.cpp)
 
-qt4_wrap_cpp (svimage_moc ${svimage_header})
+qt4_wrap_cpp (svimage_moc ${svimage_headers})
 
-
-add_executable (svimage
-                ${svimage_moc}
-                ${svimage_uic}
-                ${svimage_header}
-                ${svimage_sources})
-
-if (WIN32)
-  set_target_properties (svimage PROPERTIES
-                         WIN32_EXECUTABLE TRUE)
-endif (WIN32)
-
-target_link_libraries (svimage
-                       saxsview
-                       saxsimage)
-
-install (TARGETS svimage
-         RUNTIME DESTINATION bin)
-
+saxsview_add_executable (svimage SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
+                                 LIBRARIES saxsview ${QT_LIBRARIES})

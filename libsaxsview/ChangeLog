@@ -1,3 +1,7 @@
+2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Use saxsview_add_library macro.
+
 2012-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.cpp: Moved class SaxsviewScaleDraw from here ...
