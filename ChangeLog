@@ -1,5 +1,9 @@
 2012-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Removed stray include directive.
+
+2012-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* README: Renamed to ...
 	* README.txt: ... this as Darwin packaging requires .txt files and
 	the other platforms don't mind.
