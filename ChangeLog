@@ -1,3 +1,8 @@
+2012-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Moved Windows specific flags to
+	cmake/Windows/flags.cmake.
+
 2012-03-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview/CMakeLists.txt: Disabled monolithic saxsview.
