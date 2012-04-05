@@ -9,6 +9,7 @@ set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include (flags)
 include (packaging)
+include (macros)
 
 find_package (Qt4 4.4.0)
 set (QT_USE_QTSVG TRUE)

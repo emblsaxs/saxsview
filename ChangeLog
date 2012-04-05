@@ -1,3 +1,7 @@
+2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Added include.
+
 2012-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Removed stray include directive.
