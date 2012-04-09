@@ -49,6 +49,7 @@ public:
   void setMinimum(const QVariant&);
   void setMaximum(const QVariant&);
   void setRange(const QVariant&, const QVariant&);
+  void setEnumNames(const QVariant&);
 
 public slots:
   void valueChanged(QtProperty*, const QVariant& value);

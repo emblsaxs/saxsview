@@ -30,11 +30,13 @@ class QRect;
 #include "saxsview.h"
 class SaxsviewPlotCurve;
 class SaxsviewPlotSymbol;
+class SaxsviewTransformation;
+
 
 class SaxsviewPlot : public QwtPlot {
   Q_OBJECT
 
-  Q_PROPERTY(Saxsview::Scale scale READ scale WRITE setScale)
+  Q_PROPERTY(int transformation READ transformation WRITE setTransformation)
   Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
   Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor)
 
@@ -77,7 +79,7 @@ public:
 
   void zoom(const QRectF&);
 
-  Saxsview::Scale scale() const;
+  int transformation() const;
   QColor backgroundColor() const;
   QColor foregroundColor() const;
   QString plotTitle() const;
@@ -114,7 +116,7 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
 
-  void setScale(Saxsview::Scale);
+  void setTransformation(int);
   void setBackgroundColor(const QColor&);
   void setForegroundColor(const QColor&);
   void setPlotTitle(const QString&);

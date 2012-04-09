@@ -56,7 +56,7 @@ public:
 
 void SVPlotSubWindow::Private::setupUi(SVPlotSubWindow *w) {
   plot = new SaxsviewPlot(w);
-  plot->setScale(Saxsview::Log10Scale);
+  plot->setTransformation(0);
   plot->setAcceptDrops(true);
   plot->installEventFilter(w);
 

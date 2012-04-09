@@ -22,6 +22,7 @@
 #include "saxsview_plotcurve.h"
 #include "saxsview_config.h"
 #include "saxsview_scaledraw.h"
+#include "saxsview_transformation.h"
 
 #include <QtGui>
 
@@ -45,7 +46,7 @@
 class SaxsviewPlot::Private {
 public:
   Private(SaxsviewPlot *p)
-   : plot(p), scale(Saxsview::Log10Scale), blockReplot(false),
+   : plot(p), blockReplot(false), transformation(0),
      legend(0L), marker(0L), panner(0L), zoomer(0L) {
   }
 
@@ -57,9 +58,10 @@ public:
 
   void setupDefaultColors();
   void setStyle(SaxsviewPlotCurve *curve);
+  void setTransformation(SaxsviewPlotCurve *curve);
 
   SaxsviewPlot *plot;
-  Saxsview::Scale scale;
+  int transformation;
 
   bool blockReplot;
 
@@ -178,7 +180,19 @@ void SaxsviewPlot::Private::setStyle(SaxsviewPlotCurve *curve) {
   curve->setErrorLineColor(errorBarColor);
 }
 
+void SaxsviewPlot::Private::setTransformation(SaxsviewPlotCurve *curve) {
+  QStandardItemModel model;
+  config().plotScaleTransformations(&model);
 
+  if (model.rowCount() >= transformation)
+    transformation = 0;
+
+  SaxsviewTransformation *t = new SaxsviewTransformation;
+  t->setTransformationX(model.item(transformation, 2)->text());
+  t->setTransformationY(model.item(transformation, 4)->text());
+
+  curve->setTransformation(t);
+}
 
 
 SaxsviewPlot::SaxsviewPlot(QWidget *parent)
@@ -285,6 +299,7 @@ void SaxsviewPlot::configure() {
 void SaxsviewPlot::addCurve(SaxsviewPlotCurve *curve) {
   p->curves.push_back(curve);
   p->setStyle(curve);
+  p->setTransformation(curve);
 
   curve->attach(this);
 
@@ -361,22 +376,32 @@ bool SaxsviewPlot::isMoveEnabled() const {
   return p->panner->isEnabled();
 }
 
-void SaxsviewPlot::setScale(Saxsview::Scale scale) {
-  switch(scale) {
-    case Saxsview::AbsoluteScale:
-      setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
-      break;
+void SaxsviewPlot::setTransformation(int i) {
+  QStandardItemModel model;
+  config().plotScaleTransformations(&model);
 
-    case Saxsview::Log10Scale:
-      setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
+  if (model.rowCount() < i)
+    i = 0;
+
+  p->transformation = i;
+  setTitle(model.item(i, 1)->text());
+  setAxisTitleX(model.item(i, 3)->text());
+  setAxisTitleY(model.item(i, 5)->text());
+
+  foreach (SaxsviewPlotCurve *curve, curves()) {
+    SaxsviewTransformation *t = new SaxsviewTransformation;
+    t->setTransformationX(model.item(i, 2)->text());
+    t->setTransformationY(model.item(i, 4)->text());
+
+    curve->setTransformation(t);
   }
 
-  p->scale = scale;
   replot();
+  setZoomBase();
 }
 
-Saxsview::Scale SaxsviewPlot::scale() const {
-  return p->scale;
+int SaxsviewPlot::transformation() const {
+  return p->transformation;
 }
 
 void SaxsviewPlot::setBackgroundColor(const QColor& c) {

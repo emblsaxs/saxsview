@@ -20,8 +20,12 @@
 #ifndef SAXSVIEW_H
 #define SAXSVIEW_H
 
-#include <QObject>
-#include <QMetaType>
+#include <QtCore>
+#include <qwt_series_data.h>
+
+typedef QVector<QPointF> SaxsviewPlotPointData;
+typedef QVector<QwtIntervalSample> SaxsviewPlotIntervalData;
+
 
 class Saxsview : public QObject {
   Q_OBJECT

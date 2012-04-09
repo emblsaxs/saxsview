@@ -20,6 +20,7 @@
 #include "saxsview_plotcurve.h"
 #include "saxsview_plot.h"
 #include "saxsview_config.h"
+#include "saxsview_transformation.h"
 
 #include <qwt_interval_symbol.h>
 #include <qwt_plot.h>
@@ -33,7 +34,7 @@ public:
   Private(int type);
   ~Private();
 
-  void scale();
+  void transform();
   void replot();
 
   int type;
@@ -44,8 +45,7 @@ public:
 
   SaxsviewPlotPointData *pointData;
   SaxsviewPlotIntervalData *intervalData;
-  double scaleX, scaleY;
-  int merge;
+  SaxsviewTransformation *transformation;
 
   bool errorBarsEnabled;
   QString fileName;
@@ -54,8 +54,8 @@ public:
 SaxsviewPlotCurve::Private::Private(int t)
  : type(t), curve(0L), errorCurve(0L),
    symbol(new QwtSymbol()), intervalSymbol(0L),
-   pointData(0L), intervalData(0L),
-   scaleX(1.0), scaleY(1.0), merge(1), errorBarsEnabled(true) {
+   pointData(0L), intervalData(0L), transformation(0L),
+   errorBarsEnabled(true) {
 
   // Template is applied by plot when attaching this curve.
 
@@ -84,46 +84,15 @@ SaxsviewPlotCurve::Private::~Private() {
   delete intervalData;
 }
 
-void SaxsviewPlotCurve::Private::scale() {
-  SaxsviewPlotPointData scaledPoints;
-  SaxsviewPlotIntervalData scaledIntervals;
+void SaxsviewPlotCurve::Private::transform() {
+  if (transformation) {
+    curve->setSamples(transformation->transform(*pointData));
+    errorCurve->setSamples(transformation->transform(*intervalData));
 
-  //
-  // When merging N points, average them.
-  // Error propagation:
-  //
-  //   \sigma* = \sqrt{\sum_{i=1}^{n} \sigma_i^2} / n
-  //
-  for (int i = 0 ; i < pointData->size(); i += merge) {
-    double x = 0.0;
-    double y = 0.0, y_lower_err = 0.0, y_upper_err = 0.0;
-    double n = 0;
-
-    for (int j = i; j < i + merge && j < pointData->size(); ++j) {
-      const double& curx = pointData->at(j).x();
-      const double& cury = pointData->at(j).y();
-      const QwtIntervalSample& is = intervalData->at(i);
-
-      x           += curx;
-      y           += cury;
-      y_upper_err += pow(is.interval.maxValue() - cury, 2);
-      y_lower_err += pow(cury - is.interval.minValue(), 2);
-      n           += 1.0;
-    }
-    x /= n;
-    y /= n;
-
-    if ((y - sqrt(y_lower_err)/n) * scaleY < 1e-6)
-      continue;
-
-    scaledPoints.push_back(QPointF(x * scaleX, y * scaleY));
-    scaledIntervals.push_back(QwtIntervalSample(x * scaleX,
-                                                (y - sqrt(y_lower_err)/n) * scaleY,
-                                                (y + sqrt(y_upper_err)/n) * scaleY));
+  } else {
+    curve->setSamples(*pointData);
+    errorCurve->setSamples(*intervalData);
   }
-
-  curve->setSamples(scaledPoints);
-  errorCurve->setSamples(scaledIntervals);
 
   replot();
 }
@@ -164,15 +133,19 @@ void SaxsviewPlotCurve::setData(const SaxsviewPlotPointData& points,
   delete p->intervalData;
   p->intervalData = new SaxsviewPlotIntervalData(intervals);
 
-  p->scaleX = 1.0;
-  p->scaleY = 1.0;
-  p->merge  = 1;
+  if (p->transformation) {
+    p->transformation->setMerge(1);
+    p->transformation->setScaleX(1.0);
+    p->transformation->setScaleY(1.0);
+  }
 
-  //
-  // Although we are not really scaling this curve, scale() also
-  // filters the crappy data points ...
-  //
-  p->scale();
+  p->transform();
+}
+
+void SaxsviewPlotCurve::setTransformation(SaxsviewTransformation *t) {
+  delete p->transformation;
+  p->transformation = t;
+  p->transform();
 }
 
 bool SaxsviewPlotCurve::errorBarsEnabled() const {
@@ -197,9 +170,7 @@ void SaxsviewPlotCurve::setVisible(bool on) {
                              on && !p->curve->title().isEmpty());
 
   p->errorCurve->setVisible(on && p->errorBarsEnabled);
-
-  if (p->curve->plot())
-    p->curve->plot()->replot();
+  p->replot();
 }
 
 QRectF SaxsviewPlotCurve::boundingRect() const {
@@ -225,36 +196,34 @@ void SaxsviewPlotCurve::setTitle(const QString& title) {
   p->curve->setTitle(title);
   p->curve->setItemAttribute(QwtPlotItem::Legend,
                              p->curve->isVisible() &&  !title.isEmpty());
-
-  if (p->curve->plot())
-    p->curve->plot()->replot();
+  p->replot();
 }
 
 double SaxsviewPlotCurve::scalingFactorX() const {
-  return p->scaleX;
+  return p->transformation->scaleX();
 }
 
-void SaxsviewPlotCurve::setScalingFactorX(double scale) {
-  p->scaleX = scale;
-  p->scale();
+void SaxsviewPlotCurve::setScalingFactorX(double factor) {
+  p->transformation->setScaleX(factor);
+  p->transform();
 }
 
 double SaxsviewPlotCurve::scalingFactorY() const {
-  return p->scaleY;
+  return p->transformation->scaleY();
 }
 
-void SaxsviewPlotCurve::setScalingFactorY(double scale) {
-  p->scaleY = scale;
-  p->scale();
+void SaxsviewPlotCurve::setScalingFactorY(double factor) {
+  p->transformation->setScaleY(factor);
+  p->transform();
 }
 
 int SaxsviewPlotCurve::merge() const {
-  return p->merge;
+  return p->transformation->merge();
 }
 
-void SaxsviewPlotCurve::setMerge(int merge) {
-  p->merge = merge;
-  p->scale();
+void SaxsviewPlotCurve::setMerge(int n) {
+  p->transformation->setMerge(n);
+  p->transform();
 }
 
 int SaxsviewPlotCurve::closestPoint(const QPoint &pos, double *dist) const {

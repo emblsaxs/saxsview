@@ -104,16 +104,12 @@ void SaxsviewProperty::setValue(QObject *obj) {
         for (int i = 0; i < metaEnum.keyCount(); ++i)
           enumNames << metaEnum.key(i);
 
-        //
-        // Avoid updates triggered during setup by blocking the changed
-        // signal emitted when setting the attribute.
-        //
-        mManager->blockSignals(true);
-        mProperty = mManager->addProperty(mManager->enumTypeId(), mPropertyLabel);
-        mProperty->setAttribute("enumNames", enumNames);
-        mManager->blockSignals(false);
+        setEnumNames(enumNames);
+      }
 
-      } else
+      if (mAttributes.contains("enumNames"))
+        mProperty = mManager->addProperty(mManager->enumTypeId(), mPropertyLabel);
+      else
         mProperty = mManager->addProperty(metaProperty.type(), mPropertyLabel);
 
     } else if (obj->dynamicPropertyNames().contains(qPrintable(mPropertyName))) {
@@ -128,6 +124,10 @@ void SaxsviewProperty::setValue(QObject *obj) {
         qFatal("internal error: property '%s', does not exist",
                qPrintable(mPropertyName));
 
+    //
+    // Avoid updates triggered during setup by blocking the changed
+    // signal emitted when setting the attribute.
+    //
     mManager->blockSignals(true);
     QMapIterator<QString, QVariant> attr(mAttributes);
     while (attr.hasNext()) {
@@ -176,4 +176,8 @@ void SaxsviewProperty::setMaximum(const QVariant& value) {
 void SaxsviewProperty::setRange(const QVariant& min, const QVariant& max) {
   setMinimum(min);
   setMaximum(max);
+}
+
+void SaxsviewProperty::setEnumNames(const QVariant& value) {
+  mAttributes.insert("enumNames", value);
 }

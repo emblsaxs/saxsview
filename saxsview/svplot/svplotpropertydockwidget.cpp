@@ -22,6 +22,7 @@
 #include "svplotproject.h"
 
 #include "saxsview.h"
+#include "saxsview_config.h"
 #include "saxsview_plot.h"
 #include "saxsview_plotcurve.h"
 #include "saxsview_property.h"
@@ -84,7 +85,7 @@ void SVPlotPropertyDockWidget::Private::setupUi(SVPlotPropertyDockWidget *dock) 
 
 void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowser *browser) {
   SaxsviewProperty *plotGroup = new SaxsviewProperty("Plot", browser);
-  plotProperties.append(new SaxsviewProperty("Scale", "scale",
+  plotProperties.append(new SaxsviewProperty("Transformation", "transformation",
                                              browser, plotGroup));
   plotProperties.append(new SaxsviewProperty("Background", "backgroundColor",
                                              browser, plotGroup));
@@ -145,6 +146,7 @@ void SVPlotPropertyDockWidget::Private::setupPlotProperties(QtTreePropertyBrowse
   groups.append(legendGroup);
 
   // FIXME: not ideal, but breaking up above's layout is messy ...
+  plotProperties[ 0]->setEnumNames(config().plotScaleTransformations());
   plotProperties[18]->setMinimum(1);   // legend columns
   plotProperties[19]->setMinimum(0);   // legend spacing
   plotProperties[20]->setMinimum(0);   // legend margin

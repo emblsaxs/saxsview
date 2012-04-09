@@ -1,3 +1,11 @@
+2012-04-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotpropertydockwidget.cpp (setupPlotProperties): Changed
+	'scale' to 'transformation', set transformation names.
+	* svplotsubwindow.cpp (setupUi): Set transformation index.
+	* svplotmainwindow.cpp (about): Include reference to muParser in
+	about message.
+
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * CMakeLists.txt: Use saxsview_add_executable macro.

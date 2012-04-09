@@ -1,3 +1,36 @@
+2012-04-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_transformation.h: New.
+	* saxsview_transformation.cpp: New.
+	* saxsview_config.h (plotScaleTransformations): New.
+	(setDefaultPlotScaleTransformations): New.
+	(setPlotScaleTransformations): New.
+	* saxsview_config.cpp (ctor): Fixed check whether to set
+	default values.
+	(plotScaleTransformations): New.
+	(setDefaultPlotScaleTransformations): New.
+	(setPlotScaleTransformations): New.
+	* saxsview.h (SaxsviewPlotPointData): New.
+	(SaxsviewPlotIntervalData): New.
+	* saxsview_plot.h (scale): Renamed to ...
+	(transformation): ... this.
+	(setScale): Renamed to ...
+	(setTransformation): ... this.
+	* saxsview_plot.cpp (scale): Renamed to ...
+	(transformation): ... this.
+	(setScale): Renamed to ...
+	(setTransformation): ... this.
+	* saxsview_plotcurve.h (SaxsviewPlotPointData): Removed.
+	(SaxsviewPlotIntervalData): Removed.
+	(setTransformation): New.
+	* saxsview_plotcurve.cpp (setTransformation): New.
+	(scale): Removed, updated all users to use ...
+	(transform): ... this.
+	* saxsview_property.h (setEnumNames): New.
+	* saxsview_property.cpp (setEnumNames): New.
+	(setValue): Improved handling of enums.
+	* CMakeLists.txt: Added new files.
+
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Use saxsview_add_library macro.

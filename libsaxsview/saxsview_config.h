@@ -55,6 +55,11 @@ public:
   void setDefaultColors();
   void setColors(const QList<QColor>&, const QList<QColor>&);
 
+  void plotScaleTransformations(QStandardItemModel*) const;
+  QStringList plotScaleTransformations() const;
+  void setDefaultPlotScaleTransformations();
+  void setPlotScaleTransformations(QStandardItemModel*);
+
   QByteArray geometry() const;
   void setGeometry(const QByteArray&);
 

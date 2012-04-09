@@ -428,9 +428,14 @@ void SVPlotMainWindow::about() {
                           "change and redistribute it. There is NO, "
                           "WARRANTY to the extent permitted by law.\n"
                           "\n"
-                          // And complying to COPYING of qwt:
-                          "%1 is based in part on the work of the "
-                          "Qwt project (http://qwt.sourceforge.net).");
+                          "%1 is based on:\n"
+                          "  - muParser, a fast math parser library\n"
+                          "    MIT License, Copyright 2011 by Ingo Berg\n"
+                          "    (http://muparser.sourceforge.net)\n"
+                          "\n"
+                          "  - Qwt, Qt Widgets for Technical Applications\n"
+                          "    LGPL, Copyright 2011 by Uwe Rathman\n"
+                          "    (http://qwt.sourceforge.net)\n");
 
   QMessageBox::about(this, title,
                      about.arg(PROJECT_NAME)

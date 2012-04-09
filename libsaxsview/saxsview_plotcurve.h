@@ -22,14 +22,9 @@
 
 #include <QtGui>
 
-#include <qwt_series_data.h>
-#include <qwt_symbol.h>
-
 #include "saxsview.h"
 class SaxsviewPlot;
-
-typedef QVector<QPointF> SaxsviewPlotPointData;
-typedef QVector<QwtIntervalSample> SaxsviewPlotIntervalData;
+class SaxsviewTransformation;
 
 
 /**
@@ -72,6 +67,8 @@ public:
 
   void setData(const SaxsviewPlotPointData& points,
                const SaxsviewPlotIntervalData& intervals);
+
+  void setTransformation(SaxsviewTransformation*);
 
   QString fileName() const;
   QString title() const;

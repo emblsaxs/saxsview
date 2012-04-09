@@ -44,15 +44,18 @@ SaxsviewConfig::SaxsviewConfig() {
   //
   // TODO: set a version flag and check it?
   //
-  if (!settings().contains("Templates/template"))
+  if (!settings().contains("Templates/template/size"))
     setDefaultCurveTemplates();
 
-  if (!settings().contains("Templates/file-type"))
+  if (!settings().contains("Templates/file-type/size"))
     setDefaultFileTypeTemplates();
 
-  if (!settings().contains("Default Colors/lineColors")
-      && !settings().contains("Default Colors/errorBarColors"))
+  if (!settings().contains("Default Colors/lineColors/size")
+      && !settings().contains("Default Colors/errorBarColors/size"))
     setDefaultColors();
+
+  if (!settings().contains("Scale Transformations/plot/size"))
+    setDefaultPlotScaleTransformations();
 }
 
 SaxsviewConfig::~SaxsviewConfig() {
@@ -330,6 +333,99 @@ void SaxsviewConfig::setColors(const QList<QColor>& lineColor,
     settings().setArrayIndex(i);
     settings().setValue("color", errorBarColor[i]);
   }
+  settings().endArray();
+  settings().endGroup();
+}
+
+void SaxsviewConfig::plotScaleTransformations(QStandardItemModel *model) const {
+  QStringList column;
+  column << "name" << "title" << "x-func" << "x-label" << "y-func" << "y-label";
+
+  settings().beginGroup("Scale Transformations");
+  int n = settings().beginReadArray("plot");
+
+  for (int i = 0; i < n; ++i) {
+    settings().setArrayIndex(i);
+    for (int j = 0; j < column.size(); ++j) {
+      QString value = settings().value(column[j]).toString();
+      model->setItem(i, j, new QStandardItem(value));
+    }
+  }
+
+  settings().endArray();
+  settings().endGroup();
+}
+
+QStringList SaxsviewConfig::plotScaleTransformations() const {
+  QStandardItemModel model;
+  plotScaleTransformations(&model);
+
+  QStringList names;
+  for (int row = 0; row < model.rowCount(); ++row)
+    names << model.item(row, 0)->text();
+
+  return names;
+}
+
+void SaxsviewConfig::setDefaultPlotScaleTransformations() {
+  QStandardItemModel model;
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Absolute Scale")   // name
+                   << new QStandardItem("")                 // plot title
+                   << new QStandardItem("s")                // x transformation
+                   << new QStandardItem("")                 // x axis label
+                   << new QStandardItem("I")                // y transformation
+                   << new QStandardItem(""));               // y axis label
+
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Log10 Scale")
+                   << new QStandardItem("")
+                   << new QStandardItem("s")
+                   << new QStandardItem("")
+                   << new QStandardItem("log10(I)")
+                   << new QStandardItem(""));
+
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Guinier Plot")
+                   << new QStandardItem("Guinier Plot")
+                   << new QStandardItem("s^2")
+                   << new QStandardItem("s<sup>2</sup>")
+                   << new QStandardItem("log10(I * s)")
+                   << new QStandardItem("log (I*s)"));
+
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Kratky Plot")
+                   << new QStandardItem("Kratky Plot")
+                   << new QStandardItem("s")
+                   << new QStandardItem("s")
+                   << new QStandardItem("I * s^2")
+                   << new QStandardItem("I s<sup>2</sup>"));
+
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Porod Plot")
+                   << new QStandardItem("Porod Plot")
+                   << new QStandardItem("s")
+                   << new QStandardItem("s")
+                   << new QStandardItem("I * s^4")
+                   << new QStandardItem("I s<sup>4</sup>"));
+
+  setPlotScaleTransformations(&model);
+}
+
+void SaxsviewConfig::setPlotScaleTransformations(QStandardItemModel *model) {
+  QStringList column;
+  column << "name" << "title" << "x-func" << "x-label" << "y-func" << "y-label";
+
+  settings().beginGroup("Scale Transformations");
+  settings().remove("plot");
+  settings().beginWriteArray("plot");
+
+  for (int i = 0; i < model->rowCount(); ++i) {
+    settings().setArrayIndex(i);
+    for (int j = 0; j < column.size(); ++j)
+      settings().setValue(column[j], model->item(i, j)->text());
+  }
+
   settings().endArray();
   settings().endGroup();
 }
