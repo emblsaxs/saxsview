@@ -46,7 +46,7 @@
 class SaxsviewPlot::Private {
 public:
   Private(SaxsviewPlot *p)
-   : plot(p), blockReplot(false), transformation(0),
+   : plot(p), antiAliasing(false), blockReplot(false), transformation(0),
      legend(0L), marker(0L), panner(0L), zoomer(0L) {
   }
 
@@ -63,6 +63,7 @@ public:
   SaxsviewPlot *plot;
   int transformation;
 
+  bool antiAliasing;
   bool blockReplot;
 
   QwtPlotLegendItem *legend;
@@ -303,6 +304,15 @@ void SaxsviewPlot::addCurve(SaxsviewPlotCurve *curve) {
 
   curve->attach(this);
 
+  //
+  // Not nice, but the quickest way for now to set the
+  // anti-aliasing render hint for the added curve to be
+  // the same as the already existing curves. Otherwise
+  // we have some curve with and some without anti-aliasing.
+  // Ouch.
+  //
+  setAntiAliasing(p->antiAliasing);
+
   updateLayout();
   setZoomBase();
 }
@@ -438,6 +448,18 @@ void SaxsviewPlot::setForegroundColor(const QColor& c) {
 
 QColor SaxsviewPlot::foregroundColor() const {
   return palette().color(QPalette::WindowText);
+}
+
+void SaxsviewPlot::setAntiAliasing(bool on) {
+  p->antiAliasing = on;
+  foreach (QwtPlotItem *item, itemList())
+    item->setRenderHint(QwtPlotItem::RenderAntialiased, on);
+
+  replot();
+}
+
+bool SaxsviewPlot::antiAliasing() const {
+  return p->antiAliasing;
 }
 
 void SaxsviewPlot::setPlotTitle(const QString& text) {

@@ -39,6 +39,7 @@ class SaxsviewPlot : public QwtPlot {
   Q_PROPERTY(int transformation READ transformation WRITE setTransformation)
   Q_PROPERTY(QColor backgroundColor READ backgroundColor WRITE setBackgroundColor)
   Q_PROPERTY(QColor foregroundColor READ foregroundColor WRITE setForegroundColor)
+  Q_PROPERTY(bool antiAliasing READ antiAliasing WRITE setAntiAliasing)
 
   Q_PROPERTY(QString plotTitle READ plotTitle WRITE setPlotTitle)
   Q_PROPERTY(QFont plotTitleFont READ plotTitleFont WRITE setPlotTitleFont)
@@ -82,6 +83,7 @@ public:
   int transformation() const;
   QColor backgroundColor() const;
   QColor foregroundColor() const;
+  bool antiAliasing() const;
   QString plotTitle() const;
   QFont plotTitleFont() const;
   QColor plotTitleFontColor() const;
@@ -119,6 +121,7 @@ public slots:
   void setTransformation(int);
   void setBackgroundColor(const QColor&);
   void setForegroundColor(const QColor&);
+  void setAntiAliasing(bool);
   void setPlotTitle(const QString&);
   void setPlotTitleFont(const QFont&);
   void setPlotTitleFontColor(const QColor&);

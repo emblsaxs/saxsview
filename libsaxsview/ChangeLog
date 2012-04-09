@@ -1,3 +1,12 @@
+2012-04-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.h (antiAliasing): New.
+	(setAntiAliasing): New.
+	* saxsview_plot.h (antiAliasing): New.
+	(setAntiAliasing): New.
+	(addCurve): Set aliasing render hint of new curve to th
+	render hint of the whole plot.
+
 2012-04-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_transformation.h: New.
