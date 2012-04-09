@@ -1,5 +1,11 @@
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* external/muparser/: New subdirectory.
+	* CMakeLists.txt: Added new subdirectory.
+	* COPYING.muparser: New.
+
+2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Removed include of nonexistent subdirectory.
 
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
