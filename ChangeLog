@@ -1,3 +1,12 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* freedesktop.org/: Removed subdirectory, moved contents ...
+	* admin/Linux/: ... to here.
+	* admin/Darwin/: New.
+	* admin/Windows/: New.
+	* admin/: New subdirectory.
+	* CMakeLists.txt: Added new subdirectory, removed old.
+
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* external/muparser/: New subdirectory.

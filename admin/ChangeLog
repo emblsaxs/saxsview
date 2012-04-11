@@ -1,0 +1,10 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Linux/saxsview.xml: New.
+	* Linux/svimage.desktop: New.
+	* Linux/svplot.desktop: New.
+	* Linux/CMakeLists.txt: New.
+	* Linux/README: New.
+	* Darwin/CMakeLists.txt: New.
+	* Windows/CMakeLists.txt: New.
+
