@@ -26,10 +26,9 @@ set (MUPARSER_SOURCES muParserBase.cpp
 
 add_definitions (-DMUPARSERLIB_EXPORTS -DMUPARSER_DLL)
 
-add_library (muparser SHARED ${MUPARSER_SOURCES} ${MUPARSER_HEADERS})
+saxsview_add_library(muparser SOURCES ${MUPARSER_SOURCES} ${MUPARSER_HEADERS}
+                              VERSION 2.2.2
+                              SHARED)
 
-set_target_properties (muparser PROPERTIES VERSION 2.2.2)
+saxsview_install(TARGETS muparser)
 
-install (TARGETS muparser
-         LIBRARY DESTINATION lib
-         RUNTIME DESTINATION bin)

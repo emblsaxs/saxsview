@@ -1,3 +1,7 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * qtpropertybrowser/CMakeLists.txt: Use saxsview-convenience macros.
+
 2012-03-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* qpropertybrowser/CMakeLists.txt: Do not install static link

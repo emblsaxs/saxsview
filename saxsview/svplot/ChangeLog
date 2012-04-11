@@ -1,3 +1,7 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * CMakeLists.txt: Use saxsview-convenience macros.
+
 2012-04-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotpropertydockwidget.cpp (setupPlotProperties): Added

@@ -1,3 +1,10 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* macros.cmake (saxsview_add_executable): Check if arguments are
+	available before using them. Removed INSTALL commands.
+	(saxsview_add_library): Likewise.
+	* install.cmake: New.
+
 2012-04-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* GNUInstallDirs.cmake: Copied from cmake-2.8.7 distribution

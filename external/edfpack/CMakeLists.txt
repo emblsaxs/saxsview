@@ -17,16 +17,14 @@ if (ZLIB_FOUND)
 
   include_directories(${ZLIB_INCLUDE_DIRS})
 
-  add_library (edf SHARED ${EDFPACK_SOURCES} ${EDFPACK_HEADERS})
-  target_link_libraries(edf m ${ZLIB_LIBRARIES})
-
-  set_target_properties (edf PROPERTIES VERSION 2.216)
-
-  install (TARGETS edf
-           LIBRARY DESTINATION lib
-           RUNTIME DESTINATION bin)
+  saxsview_add_library(edf SOURCES ${EDFPACK_HEADERS} ${EDFPACK_SOURCES}
+                       LIBRARIES m ${ZLIB_LIBRARIES}
+                       VERSION 2.216
+                       SHARED)
+  saxsview_install(edf)
 
 else (ZLIB_FOUND)
   message (STATUS "Optional package zlib not found, EDF image format disabled.")
 
 endif (ZLIB_FOUND)
+

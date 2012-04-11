@@ -40,28 +40,33 @@ MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
 ENDMACRO(PARSE_ARGUMENTS)
 
 
-include (GNUInstallDirs)
-
 macro (saxsview_add_executable)
-  PARSE_ARGUMENTS (APP "SOURCES;LIBRARIES;VERSION" "" ${ARGN})
+  PARSE_ARGUMENTS (APP "SOURCES;LIBRARIES" "" ${ARGN})
 
   add_executable (${APP_DEFAULT_ARGS} WIN32 MACOSX_BUNDLE ${APP_SOURCES})
-  target_link_libraries (${APP_DEFAULT_ARGS} ${APP_LIBRARIES})
-
-  install (TARGETS ${APP_DEFAULT_ARGS}
-           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-           BUNDLE DESTINATION .)
+  if (APP_LIBRARIES)
+    target_link_libraries (${APP_DEFAULT_ARGS} ${APP_LIBRARIES})
+  endif (APP_LIBRARIES)
 endmacro (saxsview_add_executable)
 
 macro (saxsview_add_library)
-  PARSE_ARGUMENTS (LIB "SOURCES;LIBRARIES;VERSION" "" ${ARGN})
+  PARSE_ARGUMENTS (LIB "SOURCES;LIBRARIES;VERSION" "STATIC;SHARED" ${ARGN})
 
-  add_library (${LIB_DEFAULT_ARGS} SHARED ${LIB_SOURCES})
-  target_link_libraries(${LIB_DEFAULT_ARGS} ${LIB_LIBRARIES})
-  set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
-                                             VERSION ${LIB_VERSION})
+  if (LIB_STATIC)
+    add_library (${LIB_DEFAULT_ARGS} STATIC ${LIB_SOURCES})
+  elseif (LIB_SHARED)
+    add_library (${LIB_DEFAULT_ARGS} SHARED ${LIB_SOURCES})
+  else ()
+    message (WARNING "saxsview_add_library: either SHARED or STATIC must be defined.")
+  endif ()
 
-  install (TARGETS ${LIB_DEFAULT_ARGS}
-           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+  if (LIB_LIBRARIES)
+    target_link_libraries(${LIB_DEFAULT_ARGS} ${LIB_LIBRARIES})
+  endif (LIB_LIBRARIES)
+
+  if (LIB_VERSION)
+    set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
+                                               VERSION ${LIB_VERSION})
+  endif (LIB_VERSION)
 endmacro (saxsview_add_library)
+

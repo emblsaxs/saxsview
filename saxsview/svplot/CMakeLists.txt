@@ -24,3 +24,6 @@ qt4_wrap_cpp (svplot_moc ${svplot_headers})
 
 saxsview_add_executable (svplot SOURCES ${svplot_headers} ${svplot_moc} ${svplot_sources}
                                 LIBRARIES saxsview saxsdocument)
+
+saxsview_install (svplot)
+

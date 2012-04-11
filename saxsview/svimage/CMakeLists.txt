@@ -18,3 +18,6 @@ qt4_wrap_cpp (svimage_moc ${svimage_headers})
 
 saxsview_add_executable (svimage SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
                                  LIBRARIES saxsview ${QT_LIBRARIES})
+
+saxsview_install (svimage)
+

@@ -16,12 +16,10 @@ set (CBFLIB_SOURCES cbf.c cbf_alloc.c cbf_ascii.c cbf_binary.c
                     cbf_stx.c cbf_tree.c cbf_uncompressed.c cbf_write.c
                     cbf_write_binary.c md5c.c)
 
-add_library (cbf SHARED ${CBFLIB_SOURCES} ${CBFLIB_HEADERS})
-target_link_libraries(cbf m)
+saxsview_add_library(cbf SOURCES ${CBFLIB_HEADERS} ${CBFLIB_SOURCES}
+                         LIBRARIES m
+                         VERSION 0.7.9.1
+                         SHARED)
 
-set_target_properties (cbf PROPERTIES VERSION 0.7.9.1)
-
-install (TARGETS cbf
-         LIBRARY DESTINATION lib
-         RUNTIME DESTINATION bin)
+saxsview_install (TARGETS cbf)
 

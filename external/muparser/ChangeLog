@@ -1,3 +1,7 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * CMakeLists.txt: Use saxsview-convenience macros.
+
 2012-04-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Imported v2.2.2 of muParser (muparser.sourceforge.net).

@@ -1,3 +1,7 @@
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * CMakeLists.txt: Use saxsview-convenience macros.
+
 2012-03-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_header_txt_read): Do not attempt to free lines

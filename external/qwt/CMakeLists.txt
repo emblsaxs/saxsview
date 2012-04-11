@@ -76,12 +76,10 @@ set (SOURCES qwt_abstract_scale.cpp qwt_double_range.cpp
              qwt_plot_tradingcurve.cpp qwt_point_3d.cpp qwt_point_data.cpp
              qwt_point_mapper.cpp qwt_point_polar.cpp)
 
-add_library (qwt SHARED ${HEADERS} ${SOURCES} ${MOC})
+saxsview_add_library(qwt SOURCES ${HEADERS} ${SOURCES} ${MOC}
+                         LIBRARIES ${QT_LIBRARIES}
+                         VERSION 6.1.0
+                         SHARED)
 
-set_target_properties (qwt PROPERTIES VERSION 6.1.0)
+saxsview_install(TARGETS qwt)
 
-target_link_libraries (qwt ${QT_LIBRARIES})
-
-install (TARGETS qwt
-         LIBRARY DESTINATION lib
-         RUNTIME DESTINATION bin)

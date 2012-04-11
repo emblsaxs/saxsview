@@ -24,27 +24,19 @@ set (HEADERS saxsproperty.h
 # conditional sources
 if (LIBXML2_FOUND)
   add_definitions (-DHAVE_LIBXML2 ${LIBXML2_DEFINITIONS})
+  include_directories(${LIBXML2_INCLUDE_DIR})
   set (SOURCES ${SOURCES} cansas_xml.c)
 endif (LIBXML2_FOUND)
 
-add_library (saxsdocument SHARED ${SOURCES} ${HEADERS})
-set_target_properties (saxsdocument PROPERTIES
-                       VERSION 1)
-
-# conditional include directories and libraries
-if (LIBXML2_FOUND)
-  include_directories(${LIBXML2_INCLUDE_DIR})
-  target_link_libraries (saxsdocument ${LIBXML2_LIBRARIES})
-endif (LIBXML2_FOUND)
-
+saxsview_add_library(saxsdocument SOURCES ${HEADERS} ${SOURCES}
+                                  LIBRARIES ${LIBXML2_LIBRARIES}
+                                  VERSION 1
+                                  SHARED)
 
 # Fortran bindings for libsaxsdocument
-add_library (fsaxsdocument STATIC saxsdocument.f90)
-target_link_libraries (fsaxsdocument saxsdocument)
+saxsview_add_library(fsaxsdocument SOURCES saxsdocument.f90
+                                   LIBRARIES saxsdocument
+                                   STATIC)
 
-install (TARGETS saxsdocument
-         LIBRARY DESTINATION lib
-         RUNTIME DESTINATION bin)
+saxsview_install(TARGETS saxsdocument)
 
-install (TARGETS fsaxsdocument
-         ARCHIVE DESTINATION lib)
