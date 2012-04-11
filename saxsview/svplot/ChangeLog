@@ -1,5 +1,11 @@
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotmainwindow.cpp (subWindowDestroyed): Removed unused
+	argument name.
+	(closeEvent): Likewise.
+
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Install and package system dependencies.
 
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>

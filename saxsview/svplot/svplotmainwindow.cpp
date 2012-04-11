@@ -514,10 +514,10 @@ void SVPlotMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->menuExportAs->setEnabled(on);
 }
 
-void SVPlotMainWindow::subWindowDestroyed(QObject *obj) {
+void SVPlotMainWindow::subWindowDestroyed(QObject*) {
 }
 
-void SVPlotMainWindow::closeEvent(QCloseEvent *e) {
+void SVPlotMainWindow::closeEvent(QCloseEvent*) {
   config().setGeometry(saveGeometry());
   config().setWindowState(saveState());
 }

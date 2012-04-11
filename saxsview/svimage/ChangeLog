@@ -1,5 +1,12 @@
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svimagesubwindow.cpp (setupTracker): Removed unused
+	argument name.
+	(lowerThreshold): Added missing 'return' statement.
+	(upperThreshold): Likewise.
+
+2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
         * CMakeLists.txt: Install and package system dependencies.
 
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>

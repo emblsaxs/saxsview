@@ -649,7 +649,7 @@ public:
 };
 
 SaxsviewFrame::SaxsviewFrame(QObject *parent)
- : QwtPlotSpectrogram(), p(new Private) {
+ : QObject(parent), QwtPlotSpectrogram(), p(new Private) {
 
   setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
 }
@@ -722,7 +722,7 @@ SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
 }
 
 SaxsviewFrameData::SaxsviewFrameData(const SaxsviewFrameData& other)
-  : p(new Private) {
+  : QwtRasterData(), p(new Private) {
   p->data = other.p->data;
 }
 

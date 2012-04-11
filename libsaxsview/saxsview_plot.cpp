@@ -46,7 +46,7 @@
 class SaxsviewPlot::Private {
 public:
   Private(SaxsviewPlot *p)
-   : plot(p), antiAliasing(false), blockReplot(false), transformation(0),
+   : plot(p), transformation(0), antiAliasing(false), blockReplot(false),
      legend(0L), marker(0L), panner(0L), zoomer(0L) {
   }
 

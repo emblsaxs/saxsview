@@ -495,5 +495,5 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->menuExportAs->setEnabled(on);
 }
 
-void SVImageMainWindow::subWindowDestroyed(QObject *obj) {
+void SVImageMainWindow::subWindowDestroyed(QObject*) {
 }

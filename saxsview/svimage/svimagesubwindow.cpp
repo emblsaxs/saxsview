@@ -87,7 +87,7 @@ void SVImageSubWindow::Private::setupUi(SVImageSubWindow *w) {
   w->setWidget(image);
 }
 
-void SVImageSubWindow::Private::setupTracker(SVImageSubWindow *w) {
+void SVImageSubWindow::Private::setupTracker(SVImageSubWindow*) {
   tracker = new ImagePicker(frame, image->canvas());
   tracker->setStateMachine(new QwtPickerTrackerMachine);
   tracker->setTrackerMode(QwtPicker::AlwaysOn);
@@ -123,11 +123,11 @@ bool SVImageSubWindow::moveEnabled() const {
 }
 
 double SVImageSubWindow::lowerThreshold() const {
-  p->frame->minValue();
+  return p->frame->minValue();
 }
 
 double SVImageSubWindow::upperThreshold() const {
-  p->frame->maxValue();
+  return p->frame->maxValue();
 }
 
 

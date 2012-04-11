@@ -82,7 +82,7 @@ static const TIFFFieldInfo dectris_custom_fields[13] = {
     FIELD_CUSTOM, FALSE, FALSE, "DectrisBeamMonitorTag" },
   { DECTRIS_USER_VARIABLES_TAG, 20, 20, TIFF_LONG,
     FIELD_CUSTOM, FALSE, FALSE, "DectrisUserVariablesTag" },
-  { 0 }
+  { 0, 0, 0, 0, 0, FALSE, FALSE, "" }
 };
 
 static TIFFExtendProc tiff_parent_extender = NULL;
@@ -147,6 +147,10 @@ static void saxs_image_tiff_read_header(saxs_image *image, TIFF *tiff,
           sprintf(buffer, "%ld", l);
           saxs_image_add_property(image, info->field_name, buffer);
         }
+        break;
+
+      default:
+        /* do nothing but silence compiler */
         break;
     }
 
