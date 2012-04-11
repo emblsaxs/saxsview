@@ -20,4 +20,5 @@ saxsview_add_executable (svimage SOURCES ${svimage_headers} ${svimage_sources} $
                                  LIBRARIES saxsview ${QT_LIBRARIES})
 
 saxsview_install (svimage)
+saxsview_install_dependencies (svimage)
 

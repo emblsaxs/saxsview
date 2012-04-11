@@ -26,4 +26,5 @@ saxsview_add_executable (svplot SOURCES ${svplot_headers} ${svplot_moc} ${svplot
                                 LIBRARIES saxsview saxsdocument)
 
 saxsview_install (svplot)
+saxsview_install_dependencies (svplot)
 

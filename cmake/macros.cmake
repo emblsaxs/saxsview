@@ -68,5 +68,8 @@ macro (saxsview_add_library)
     set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
                                                VERSION ${LIB_VERSION})
   endif (LIB_VERSION)
+
+  set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
+                                             FRAMEWORK TRUE)
 endmacro (saxsview_add_library)
 
