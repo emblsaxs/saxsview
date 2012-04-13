@@ -35,3 +35,7 @@ macro (saxsview_install_dependencies)
                                        \"\${PREFIX}\"
                                        \"plugins\")")
 endmacro (saxsview_install_dependencies)
+
+# Install the license ...
+install (FILES COPYING.txt
+         DESTINATION .)

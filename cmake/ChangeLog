@@ -1,5 +1,11 @@
 2012-04-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* Windows/install.cmake: Install COPYING.txt as license.
+	* Windows/packaging.cmake: Create start menu shortcuts for applications
+	and license.
+
+2012-04-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* DeployQt4.cmake: Fix cmake bug #13129.
 	* Windows/install.cmake (saxsview_install_dependencies): Implemented.
 	* Windows/packaging.cmake: Defined NSIS specific variables.
