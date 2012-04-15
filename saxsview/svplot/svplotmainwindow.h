@@ -57,6 +57,7 @@ private slots:
 
 protected:
   void closeEvent(QCloseEvent*);
+  bool eventFilter(QObject*, QEvent*);
 
 private:
   class SVPlotMainWindowPrivate;
