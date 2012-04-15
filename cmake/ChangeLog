@@ -1,3 +1,9 @@
+2012-04-15  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Darwin/packaging.cmake: Define CPACK_PACKAGING_INSTALL_PREFIX.
+	* Darwin/install.cmake (saxsview_install_dependencies): Fixed packaging
+	and plugin install location.
+
 2012-04-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Windows/FileAssociation.nsh: New.
