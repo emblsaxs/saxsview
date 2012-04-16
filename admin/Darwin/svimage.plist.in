@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>svimage</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>org.saxsview.svimage</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>saxsview</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@CPACK_PACKAGE_VERSION@</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string></string>                  <!-- FIXME: configure this: revision number -->
+	<key>CSResourcesFileMapped</key>
+	<true/>
+	<key>LSRequiresCarbon</key>
+	<true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>(C) 2009-2012 Daniel Franke</string>
+
+    <key>CFBundleDocumentTypes</key>
+    <array>
+      <dict>
+<!--
+        <key>CFBundleTypeIconFiles</key>
+        <array>
+            <string></string>
+            <string></string>
+        </array>
+-->
+        <key>CFBundleTypeName</key>
+        <string>SAXS Image File</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+            <string>public.tiff</string>
+            <string>org.saxsview.cbf</string>
+            <string>org.saxsview.edf</string>
+            <string>org.saxsview.msk</string>
+        </array>
+      </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeConformsTo</key>
+        <string>public.image</string>
+        <key>UTTypeIdentifier</key>
+        <string>public.tiff</string>
+        <key>UTTypeDescription</key>
+        <string>TIFF image</string>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>com.apple.ostype</key>
+          <string>TIFF</string>
+          <key>public.mime-type</key>
+          <string>image/tiff</string>
+          <key>public.filename-extension</key>
+          <array>
+            <string>tiff</string>
+            <string>tif</string>
+          </array>
+          <key>com.apple.nspboard-type</key>
+          <array>
+            <string>NeXT TIFF v4.0 pasteboard type</string>
+            <string>NSTIFFPboardType</string>
+          </array>
+        </dict>
+      </dict>
+    </array>
+    <key>UTExportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeIdentifier</key>
+        <string>org.saxsview.cbf</string>
+        <key>UTTypeDescription</key>
+        <string>Crystallogrphic Binary Image</string>
+        <key>UTTypeIconFile</key>
+        <string>public.image.icns</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.image</string>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>cbf</string>
+          </array>
+          <key>public.mime-type</key>
+          <string>image/x-cbf</string>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeIdentifier</key>
+        <string>org.saxsview.edf</string>
+        <key>UTTypeDescription</key>
+        <string>ESRF Data Image</string>
+        <key>UTTypeIconFile</key>
+        <string>public.image.icns</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.image</string>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>edf</string>
+          </array>
+          <key>public.mime-type</key>
+          <string>image/x-edf</string>
+        </dict>
+      </dict>
+      <dict>
+        <key>UTTypeIdentifier</key>
+        <string>org.saxsview.msk</string>
+        <key>UTTypeDescription</key>
+        <string>Mask Image</string>
+        <key>UTTypeIconFile</key>
+        <string>public.image.icns</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.image</string>
+          <string>public.data</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>msk</string>
+          </array>
+          <key>public.mime-type</key>
+          <string>image/x-msk</string>
+        </dict>
+      </dict>
+    </array>
+  </dict>
+</plist>

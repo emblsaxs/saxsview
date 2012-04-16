@@ -1,3 +1,7 @@
+2012-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* macros.cmake (saxsview_add_executable): Set bundle plist.
+
 2012-04-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* DeployQt4.cmake: Fix cmake bug #13134.

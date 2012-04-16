@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>English</string>
+	<key>CFBundleExecutable</key>
+	<string>svplot</string>
+	<key>CFBundleIconFile</key>
+	<string></string>
+	<key>CFBundleIdentifier</key>
+	<string>org.saxsview.svplot</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>saxsview</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>@CPACK_PACKAGE_VERSION@</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string></string>                  <!-- FIXME: configure this: revision number -->
+	<key>CSResourcesFileMapped</key>
+	<true/>
+	<key>LSRequiresCarbon</key>
+	<true/>
+    <key>NSHumanReadableCopyright</key>
+    <string>(C) 2009-2012 Daniel Franke</string>
+
+    <key>CFBundleDocumentTypes</key>
+    <array>
+      <dict>
+<!--
+        <key>CFBundleTypeIconFiles</key>
+        <array>
+            <string></string>
+            <string></string>
+        </array>
+-->
+        <key>CFBundleTypeName</key>
+        <string>SAXS Data File</string>
+        <key>CFBundleTypeRole</key>
+        <string>Viewer</string>
+        <key>LSHandlerRank</key>
+        <string>Alternate</string>
+        <key>LSItemContentTypes</key>
+        <array>
+            <string>vnd.embl-hh.atsas</string>
+        </array>
+      </dict>
+    </array>
+    <key>UTImportedTypeDeclarations</key>
+    <array>
+      <dict>
+        <key>UTTypeIdentifier</key>
+        <string>vnd.embl-hh.atsas</string>
+        <key>UTTypeDescription</key>
+        <string>SAXS Data File</string>
+        <key>UTTypeIconFile</key>
+        <string>public.plain-text.icns</string>
+        <key>UTTypeConformsTo</key>
+        <array>
+          <string>public.plain-text</string>
+          <string>public.text</string>
+        </array>
+        <key>UTTypeTagSpecification</key>
+        <dict>
+          <key>public.filename-extension</key>
+          <array>
+            <string>dat</string>
+            <string>fir</string>
+            <string>fit</string>
+            <string>out</string>
+          </array>
+          <key>public.mime-type</key>
+          <string>application/vnd.embl-hh.atsas</string>
+        </dict>
+      </dict>
+    </array>
+  </dict>
+</plist>

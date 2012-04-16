@@ -47,6 +47,13 @@ macro (saxsview_add_executable)
   if (APP_LIBRARIES)
     target_link_libraries (${APP_DEFAULT_ARGS} ${APP_LIBRARIES})
   endif (APP_LIBRARIES)
+
+  # FIXME: No platform specific code in here - but where else?
+  if (APPLE)
+    set_target_properties(${APP_DEFAULT_ARGS} PROPERTIES
+                                              MACOSX_BUNDLE_INFO_PLIST ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_DEFAULT_ARGS}.plist)
+  endif (APPLE)
+
 endmacro (saxsview_add_executable)
 
 macro (saxsview_add_library)

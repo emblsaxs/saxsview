@@ -1,3 +1,9 @@
+2012-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Darwin/svplot.plist.in: New.
+	* Darwin/svimage.plist.in: New.
+	* Darwin/CMakeLists.txt: Configure *.plist.in.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* Linux/saxsview.xml: New.
