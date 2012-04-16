@@ -297,6 +297,9 @@ SVImageMainWindow::SVImageMainWindow(QWidget *parent)
   p->setupMenus();
 
   statusBar();
+
+  // We want to be able to handle FileOpen events ...
+  qApp->installEventFilter(this);
 }
 
 SVImageMainWindow::~SVImageMainWindow() {
@@ -496,4 +499,23 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
 }
 
 void SVImageMainWindow::subWindowDestroyed(QObject*) {
+}
+
+bool SVImageMainWindow::eventFilter(QObject *o, QEvent *e) {
+  //
+  // The Mac Finder does not pass the filename as an argument on double-click
+  // but opens the application without any argument and sends a FileOpen event
+  // instead.
+  //
+  // This explains it in more detail and gives a code example for Qt3: 
+  //    http://doc.qt.nokia.com/qq/qq12-mac-events.html
+  //
+  // Luckily the event is available in Qt4 already ...
+  //
+  if (QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e)) {
+    load(open->file());
+    return true;
+
+  } else
+    return QMainWindow::eventFilter(o, e);
 }

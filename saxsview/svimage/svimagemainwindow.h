@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -54,6 +54,9 @@ private slots:
   void setActiveSubWindow(QWidget*);
   void subWindowActivated(QMdiSubWindow*);
   void subWindowDestroyed(QObject*);
+
+protected:
+  bool eventFilter(QObject*, QEvent*);
 
 private:
   class SVImageMainWindowPrivate;
