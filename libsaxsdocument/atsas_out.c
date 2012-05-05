@@ -74,6 +74,13 @@ static int parse_header(struct saxs_document *doc,
     }
 
     /*
+     * Example line:
+     * "Run title:   sphere"
+     */
+    else if (strstr(firstline->line_buffer, "Run title"))
+      saxs_document_add_property(doc, "title", extract(firstline, ":"));
+
+    /*
      * Example lines:
      * "  Number of points omitted at the beginning:           9"
      *                                                         ^
@@ -127,7 +134,18 @@ static int parse_header(struct saxs_document *doc,
      * " Warning: Dmax*Smin =  4.090   is greater than Pi"
      */
     else if (strstr(firstline->line_buffer, "greater than Pi"))
-      saxs_document_add_property(doc, "warning-dmax*smin-greater-than-pi", "true");
+      saxs_document_add_property(doc, "warning-dmax*smin-greater-than-pi",
+                                 "true");
+
+    /*
+     * Example line:
+     * "  Real space range   :     from      0.00   to     10.00"
+     *
+     * Assumption: 'from' is always 0.0, then 'to' denotes Dmax.
+     */
+    else if (strstr(firstline->line_buffer, "Real space range"))
+      saxs_document_add_property(doc, "real-space-range",
+                                 extract(firstline, "to"));
 
     /*
      * Example line:
