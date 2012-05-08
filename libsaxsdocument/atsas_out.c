@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-
+#include <errno.h>
 
 
 /**************************************************************************/
@@ -220,7 +220,8 @@ static int parse_probability_data(struct saxs_document *doc,
   /*
    * Skip empty and header lines until data is found ...
    */
-  while (saxs_reader_columns_count(firstline) != 3)
+  while (firstline != lastline
+          && saxs_reader_columns_count(firstline) != 3)
     firstline = firstline->next;
 
   /* distance distribution (r vs. p(r), r vs GammaC(r)) */
@@ -270,6 +271,13 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
   int res;
   struct line *lines, *current;
   struct line *header, *scattering_begin, *probability_begin, *footer;
+
+  /*
+   * Increase the likelihood that this is really an ATSAS .out file by
+   * checking the extension first.
+   */
+  if (compare_format(suffix(filename), "out") != 0)
+    return EINVAL;
 
   /*
    * .out-files were meant to be human readable and are thus
