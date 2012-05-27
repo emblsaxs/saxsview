@@ -1,3 +1,9 @@
+2012-05-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_transformation.cpp (transform): On NaN, either skip the
+	point or drop the bad part of the error bar to improve plotting
+	quality.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.cpp (ctor): Fixed order of initialization.

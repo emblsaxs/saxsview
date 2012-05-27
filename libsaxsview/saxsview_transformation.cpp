@@ -65,7 +65,11 @@ SaxsviewTransformation::Private::transform(const SaxsviewPlotPointData& in) cons
     x = x * scaleX / n;
     y = y * scaleY / n;
 
-    out.push_back(QPointF(mupEval(transformX), mupEval(transformY)));
+    double fx = mupEval(transformX);
+    double fy = mupEval(transformY);
+    if (isnan(fx) || isnan(fy)) continue;           // e.g. log() of a negative
+
+    out.push_back(QPointF(fx, fy));
   }
 
   mupRelease(transformX);
@@ -83,6 +87,11 @@ SaxsviewTransformation::Private::transform(const SaxsviewPlotIntervalData& in) c
   mupDefineVar(transformX, "s", &x);
   mupDefineVar(transformX, "I", &y);
   mupSetExpr(transformX, qPrintable(exprX));
+
+  muParserHandle_t transformY = mupCreate(muBASETYPE_FLOAT);
+  mupDefineVar(transformY, "s", &x);
+  mupDefineVar(transformY, "I", &y);
+  mupSetExpr(transformY, qPrintable(exprY));
 
   muParserHandle_t transformYmin = mupCreate(muBASETYPE_FLOAT);
   mupDefineVar(transformYmin, "s", &x);
@@ -114,8 +123,18 @@ SaxsviewTransformation::Private::transform(const SaxsviewPlotIntervalData& in) c
     ymin = (y - sqrt(var)) * scaleY / n;
     ymax = (y + sqrt(var)) * scaleY / n;
 
-    out.push_back(QwtIntervalSample(mupEval(transformX),
-                                    mupEval(transformYmin), mupEval(transformYmax)));
+    double fx = mupEval(transformX);
+    double fy = mupEval(transformY);
+    if (isnan(fx) || isnan(fy)) continue;        // e.g. log() of a negative
+
+    // If the upper/lower bound is bad, just drop it.
+    double fymin = mupEval(transformYmin);
+    if (isnan(fymin)) fymin = fy;
+
+    double fymax = mupEval(transformYmax);
+    if (isnan(fymax)) fymax = fy;
+
+    out.push_back(QwtIntervalSample(fx, fymin, fymax));
   }
 
   mupRelease(transformX);
