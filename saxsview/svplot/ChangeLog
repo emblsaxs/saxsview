@@ -1,3 +1,8 @@
+2012-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotsubwindow.cpp (load): Improved feedback on failed loads,
+	free the document on error.
+
 2012-04-15  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotmainwindow.h (eventFilter): New.

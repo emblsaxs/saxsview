@@ -105,8 +105,13 @@ bool SVPlotSubWindow::load(const QString& fileName) {
   setCursor(Qt::WaitCursor);
 
   saxs_document *doc = saxs_document_create();
-  if (saxs_document_read(doc, fileName.toAscii(), 0L) != 0) {
-    qDebug() << "load failed";
+  int res = saxs_document_read(doc, fileName.toAscii(), 0L);
+  if (res != 0) {
+    saxs_document_free(doc);
+    QMessageBox::warning(this, "Load failed",
+                         QString("Failed to load: %1\n"
+                                 "Possible reason: %2.").arg(fileName)
+                                                        .arg(strerror(res)));
     return false;
   }
 
