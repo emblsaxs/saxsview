@@ -57,6 +57,37 @@ static const char* extract(struct line *l, const char *delim) {
   return substr;
 }
 
+/**************************************************************************/
+/*
+ * Find TEXT in "DELIM__TEXT__" where '__' is one or more whitespace
+ * or newline characters, but TEXT may contain whitespaces itself.
+ *
+ * Note: not reentrant, uses static buffer for convenience.
+ */
+static const char* extract_line(struct line *l, const char *delim) {
+  static char substr[1024];
+  char *p = substr, *q;
+
+  memset(p, 0, 1024);
+  q = strstr(l->line_buffer, delim);
+  if (q) {
+    q += strlen(delim);
+
+    /* Trim leading whitespace ... */
+    while (q && isspace(*q))
+      ++q;
+
+    while (q && *q)
+      *p++ = *q++;
+
+    /* ... and trailing whitespace. */
+    q = p + l->line_length + 1;
+    while (q && (isspace(*q) || *q == '\0'))
+      *q-- = '\0';
+  }
+
+  return substr;
+}
 
 static int parse_header(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
@@ -76,9 +107,14 @@ static int parse_header(struct saxs_document *doc,
     /*
      * Example line:
      * "Run title:   sphere"
+     * "Run title:  Lysozyme, high angles (>.22) 46 mg/ml, small angles (<.22) 15 mg/"
      */
     else if (strstr(firstline->line_buffer, "Run title"))
-      saxs_document_add_property(doc, "title", extract(firstline, ":"));
+      /*
+       * Contrary to any other place, here we want everything after the delimiter,
+       * not just the token up to the next whitespace.
+       */
+      saxs_document_add_property(doc, "title", extract_line(firstline, ":"));
 
     /*
      * Example lines:

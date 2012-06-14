@@ -1,3 +1,10 @@
+2012-06-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_out.c (extract_line): New.
+	(parse_header): Extract full line for run title.
+	* columns.c (saxs_reader_columns_count): Lines with trailing
+	text are not considered data lines.
+
 2012-05-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_out.c (parse_probability_data): Added safe-guard to
