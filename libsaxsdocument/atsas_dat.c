@@ -194,8 +194,12 @@ atsas_dat_parse_header(struct saxs_document *doc,
   }
 
   /*
-   * All other lines/information (if any) are ignored for now.
+   * Following, here may be key-value pairs of some kind. 
    */
+  while (firstline != lastline) {
+    parse_key_value_pair(doc, firstline);
+    firstline = firstline->next;
+  }
 
   return 0;
 }

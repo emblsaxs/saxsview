@@ -1,3 +1,8 @@
+2012-06-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (atsas_dat_parse_header): Also parse available key-value 
+	pairs in the header.
+
 2012-06-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_out.c (extract_line): New.
