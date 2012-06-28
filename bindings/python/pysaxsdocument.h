@@ -37,12 +37,12 @@ typedef struct {
 
 } PySaxsDocumentObject;
 
-PyAPI_DATA(PyTypeObject) PySaxsDocument_Type;
+PyTypeObject PySaxsDocument_Type;
 
 #define PySaxsDocument_Check(ob) ((ob) && (Py_TYPE(ob) == &PySaxsDocument_Type))
 
 
-PyAPI_FUNC(PyObject*)
+PyObject*
 PySaxsDocument_Read(const char *filename, PyObject *curves, PyObject *properties);
 
 #ifdef __cplusplus

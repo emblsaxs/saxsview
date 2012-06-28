@@ -1,5 +1,10 @@
 2012-06-29  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* pysaxsdocument.h: Removed PyAPI macros (not required).
+	* CMakeLists.txt: Removed Windows-specific defines.
+
+2012-06-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Explicitly link Python libraries,
 	fixed pplatform-specific SUFFIX.
 
