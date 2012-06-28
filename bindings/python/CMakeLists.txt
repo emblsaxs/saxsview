@@ -31,7 +31,7 @@ if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
                       ${LIBSAXSDOCUMENT_SOURCE_DIR})
 
   add_library (pysaxsdocument SHARED pysaxsdocument.c pysaxsdocument.h)
-  target_link_libraries (pysaxsdocument saxsdocument)
+  target_link_libraries (pysaxsdocument saxsdocument ${PYTHON_LIBRARIES})
   set_target_properties (pysaxsdocument PROPERTIES
                          PREFIX ""
                          RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
@@ -44,9 +44,9 @@ if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
   # Default suffix on Mac is ".dylib", but Python expects ".so".
   #
   if (WIN32 AND NOT CYGWIN)
-    set_target_properties(${TARGET_DEFAULT_ARGS} PROPERTIES SUFFIX ".pyd")
+    set_target_properties(pysaxsdocument PROPERTIES SUFFIX ".pyd")
   elseif (APPLE)
-    set_target_properties (${TARGET_DEFAULT_ARGS} PROPERTIES SUFFIX ".so")
+    set_target_properties (pysaxsdocument PROPERTIES SUFFIX ".so")
   endif (WIN32 AND NOT CYGWIN)
 
   install (TARGETS pysaxsdocument
