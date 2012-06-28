@@ -1,0 +1,5 @@
+2012-06-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* pysaxsdocument.h: New.
+	* pysaxsdocument.c: New.
+	* CMakeLists.txt: New.

@@ -1,3 +1,9 @@
+2012-06-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* bindings/: New subdirectory.
+	* bindings/python/: New subdirectory.
+	* CMakeLists.txt: Added bindings subdirectory.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* freedesktop.org/: Removed subdirectory, moved contents ...
