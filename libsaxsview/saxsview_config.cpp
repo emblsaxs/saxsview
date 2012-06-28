@@ -390,8 +390,8 @@ void SaxsviewConfig::setDefaultPlotScaleTransformations() {
                    << new QStandardItem("Guinier Plot")
                    << new QStandardItem("s^2")
                    << new QStandardItem("s<sup>2</sup>")
-                   << new QStandardItem("log10(I * s)")
-                   << new QStandardItem("log (I*s)"));
+                   << new QStandardItem("log10(I)")
+                   << new QStandardItem("log (I)"));
 
   model.appendRow(QList<QStandardItem*>()
                    << new QStandardItem("Kratky Plot")
