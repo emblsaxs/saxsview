@@ -1,3 +1,9 @@
+2012-07-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* bindings/python/: Moved to libsaxsdocument/python.
+	* bindings/: Removed subdirectory.
+	* CMakeLists.txt: Removed subdirectory.
+
 2012-06-29  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* bindings/: New subdirectory.

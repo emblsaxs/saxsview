@@ -1,3 +1,15 @@
+2012-07-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * src/: New subdirectory.
+        * *.c, *.h: Moved to subdirectory 'src'.
+        * src/CMakeLists.txt: New, removed Fortran bindings.
+        * fortran/: New subdirectory.
+        * saxsdocument.f90: Moved to ...
+        * fortran/fsaxsdocument.f90: ... here.
+        * fortran/CMakeLists.txt: New.
+	* python/: New subdirectory.
+        * CMakeLists.txt: Cleaned out, added new subdirectories.
+
 2012-06-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_dat.c (atsas_dat_parse_header): Also parse available key-value 
