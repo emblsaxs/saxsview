@@ -31,11 +31,11 @@ include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
                      ${QTPROPERTYBROWSER_SOURCE_DIR}
                      ${MUPARSER_SOURCE_DIR})
 
-saxsview_add_library(saxsview SOURCES ${SOURCES} ${HEADERS} ${MOC} ${RES}
-                              LIBRARIES saxsdocument saxsimage muparser
-                                        qwt qtpropertybrowser ${QT_LIBRARIES}
-                              VERSION 1
-                              SHARED)
+add_shared_library (saxsview
+                    SOURCES ${SOURCES} ${HEADERS} ${MOC} ${RES}
+                    LIBRARIES saxsdocument saxsimage muparser
+                              qwt qtpropertybrowser ${QT_LIBRARIES}
+                    VERSION 1)
 
-saxsview_install (saxsview)
+install_library (TARGETS saxsview)
 

@@ -1,7 +1,7 @@
 
 include (GNUInstallDirs)
 
-macro (saxsview_install_dependencies)
+function (install_dependencies application)
   file (GLOB PLUGINS "${QT_PLUGINS_DIR}/imageformats/*.dll")
   install (CODE "set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -24,17 +24,17 @@ macro (saxsview_install_dependencies)
                  #
                  include(DeployQt4)
 
-				 #
-				 # There is a difference between ´make install` and
-				 # `make package` - the latter installs into a different
-				 # location ...
-				 #
-                 FIXUP_QT4_EXECUTABLE (\"\${PREFIX}/${ARGV0}.exe\"
+                 #
+                 # There is a difference between `make install` and
+                 # `make package` - the latter installs into a different
+                 # location ...
+                 #
+                 FIXUP_QT4_EXECUTABLE (\"\${PREFIX}/${application}.exe\"
                                        \"${PLUGINS}\"
                                        \"\"
                                        \"\${PREFIX}\"
                                        \"plugins\")")
-endmacro (saxsview_install_dependencies)
+endfunction (install_dependencies)
 
 # Install the license ...
 install (FILES COPYING.txt

@@ -61,10 +61,10 @@ special_moc (qttreepropertybrowser.cpp   qttreepropertybrowser.moc         qttre
 qt4_add_resources (RES qtpropertybrowser.qrc)
 
 
-saxsview_add_library(qtpropertybrowser SOURCES ${HEADERS} ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp
-                                       LIBRARIES ${QT_LIBRARIES}
-                                       VERSION 2.5.1
-                                       SHARED)
+add_shared_library (qtpropertybrowser
+                    SOURCES ${HEADERS} ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp
+                    LIBRARIES ${QT_LIBRARIES}
+                    VERSION 2.5.1)
 
-saxsview_install(TARGETS qtpropertybrowser)
+install_library (TARGETS qtpropertybrowser)
 

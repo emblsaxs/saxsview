@@ -1,6 +1,6 @@
 
 
-macro (saxsview_install_dependencies)
+function (install_dependencies)
   file (GLOB PLUGINS "${QT_PLUGINS_DIR}/imageformats/*.dylib")
   install (CODE "set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 
@@ -43,4 +43,4 @@ macro (saxsview_install_dependencies)
                                        \"\${PREFIX}/Frameworks\"
                                        \"../../Frameworks/Plugins\")")
 
-endmacro (saxsview_install_dependencies)
+endfunction (install_dependencies)

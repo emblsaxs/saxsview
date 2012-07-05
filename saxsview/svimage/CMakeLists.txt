@@ -16,9 +16,9 @@ set (svimage_sources main.cpp
 
 qt4_wrap_cpp (svimage_moc ${svimage_headers})
 
-saxsview_add_executable (svimage SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
-                                 LIBRARIES saxsview ${QT_LIBRARIES})
+add_application (svimage
+                 SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
+                 LIBRARIES saxsview ${QT_LIBRARIES})
 
-saxsview_install (svimage)
-saxsview_install_dependencies (svimage)
-
+install_application (svimage)
+install_dependencies (svimage)

@@ -16,10 +16,10 @@ set (CBFLIB_SOURCES cbf.c cbf_alloc.c cbf_ascii.c cbf_binary.c
                     cbf_stx.c cbf_tree.c cbf_uncompressed.c cbf_write.c
                     cbf_write_binary.c md5c.c)
 
-saxsview_add_library(cbf SOURCES ${CBFLIB_HEADERS} ${CBFLIB_SOURCES}
-                         LIBRARIES m
-                         VERSION 0.7.9.1
-                         SHARED)
+add_shared_library (cbf
+                    SOURCES ${CBFLIB_HEADERS} ${CBFLIB_SOURCES}
+                    LIBRARIES m
+                    VERSION 0.7.9.1)
 
-saxsview_install (TARGETS cbf)
+install_library (TARGETS cbf)
 

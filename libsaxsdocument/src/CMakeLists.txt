@@ -28,10 +28,9 @@ if (LIBXML2_FOUND)
   set (SOURCES ${SOURCES} cansas_xml.c)
 endif (LIBXML2_FOUND)
 
-saxsview_add_library(saxsdocument SOURCES ${HEADERS} ${SOURCES}
-                                  LIBRARIES ${LIBXML2_LIBRARIES}
-                                  VERSION 1
-                                  SHARED)
+add_shared_library (saxsdocument
+                    SOURCES ${HEADERS} ${SOURCES}
+                    LIBRARIES ${LIBXML2_LIBRARIES}
+                    VERSION 1)
 
-saxsview_install(TARGETS saxsdocument)
-
+install_library (TARGETS saxsdocument)

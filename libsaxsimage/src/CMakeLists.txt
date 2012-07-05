@@ -34,11 +34,9 @@ endif (TIFF_FOUND)
 
 include_directories(${CBFLIB_SOURCE_DIR})
 
-saxsview_add_library(saxsimage SOURCES ${HEADERS} ${SOURCES}
-                               LIBRARIES saxsdocument cbf
-                                         ${EDF_LIBRARIES} ${TIFF_LIBRARIES} 
-                               VERSION 1
-                               SHARED)
+add_shared_library (saxsimage
+                    SOURCES ${HEADERS} ${SOURCES}
+                    LIBRARIES saxsdocument cbf ${EDF_LIBRARIES} ${TIFF_LIBRARIES} 
+                    VERSION 1)
 
-saxsview_install(TARGETS saxsimage)
-
+install_library (TARGETS saxsimage)

@@ -26,9 +26,8 @@ set (MUPARSER_SOURCES muParserBase.cpp
 
 add_definitions (-DMUPARSERLIB_EXPORTS -DMUPARSER_DLL)
 
-saxsview_add_library(muparser SOURCES ${MUPARSER_SOURCES} ${MUPARSER_HEADERS}
-                              VERSION 2.2.2
-                              SHARED)
+add_shared_library (muparser
+                    SOURCES ${MUPARSER_SOURCES} ${MUPARSER_HEADERS}
+                    VERSION 2.2.2)
 
-saxsview_install(TARGETS muparser)
-
+install_library (TARGETS muparser)

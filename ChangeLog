@@ -1,5 +1,9 @@
 2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Require cmake-2.8.3 or later.
+
+2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Fortran is now an optional project language.
 
 2012-07-03  Daniel Franke  <dfranke@users.sourceforge.net>

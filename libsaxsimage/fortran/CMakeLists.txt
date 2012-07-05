@@ -2,9 +2,9 @@
 enable_language (Fortran OPTIONAL)
 
 if (CMAKE_Fortran_COMPILER_WORKS)
-  saxsview_add_library(fsaxsimage SOURCES fsaxsimage.f90
-                                  LIBRARIES saxsimage
-                                  STATIC)
+  add_static_library (fsaxsimage
+                      SOURCES fsaxsimage.f90
+                      LIBRARIES saxsimage)
 
+  install_library (TARGETS fsaxsimage)
 endif (CMAKE_Fortran_COMPILER_WORKS)
-

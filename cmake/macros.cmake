@@ -1,82 +1,77 @@
-#
-# There is a general convention for CMake commands that take optional flags and/or
-# variable arguments. Optional flags are all caps and are added to the arguments to
-# turn on. Variable arguments have an all caps identifier to determine where each
-# variable argument list starts. The PARSE_ARGUMENTS macro, defined below, can be
-# used by other macros to parse arguments defined in this way.
-#
-# Taken from:
-#     http://www.cmake.org/Wiki/CMakeMacroParseArguments
-#
-MACRO(PARSE_ARGUMENTS prefix arg_names option_names)
-  SET(DEFAULT_ARGS)
-  FOREACH(arg_name ${arg_names})    
-    SET(${prefix}_${arg_name})
-  ENDFOREACH(arg_name)
-  FOREACH(option ${option_names})
-    SET(${prefix}_${option} FALSE)
-  ENDFOREACH(option)
 
-  SET(current_arg_name DEFAULT_ARGS)
-  SET(current_arg_list)
-  FOREACH(arg ${ARGN})
-    SET(larg_names ${arg_names})
-    LIST(FIND larg_names "${arg}" is_arg_name)
-    IF (is_arg_name GREATER -1)
-      SET(${prefix}_${current_arg_name} ${current_arg_list})
-      SET(current_arg_name ${arg})
-      SET(current_arg_list)
-    ELSE (is_arg_name GREATER -1)
-      SET(loption_names ${option_names})
-      LIST(FIND loption_names "${arg}" is_option)
-      IF (is_option GREATER -1)
-             SET(${prefix}_${arg} TRUE)
-      ELSE (is_option GREATER -1)
-             SET(current_arg_list ${current_arg_list} ${arg})
-      ENDIF (is_option GREATER -1)
-    ENDIF (is_arg_name GREATER -1)
-  ENDFOREACH(arg)
-  SET(${prefix}_${current_arg_name} ${current_arg_list})
-ENDMACRO(PARSE_ARGUMENTS)
+find_package (PythonLibs)
+find_package (PythonInterp)
+
+include (CMakeParseArguments)
 
 
-macro (saxsview_add_executable)
-  PARSE_ARGUMENTS (APP "SOURCES;LIBRARIES" "" ${ARGN})
+function (add_application)
+  cmake_parse_arguments (APP "" "" "SOURCES;LIBRARIES" ${ARGN})
 
-  add_executable (${APP_DEFAULT_ARGS} WIN32 MACOSX_BUNDLE ${APP_SOURCES})
+  add_executable (${APP_UNPARSED_ARGUMENTS} WIN32 MACOSX_BUNDLE ${APP_SOURCES})
   if (APP_LIBRARIES)
-    target_link_libraries (${APP_DEFAULT_ARGS} ${APP_LIBRARIES})
+    target_link_libraries (${APP_UNPARSED_ARGUMENTS} ${APP_LIBRARIES})
   endif (APP_LIBRARIES)
 
-  # FIXME: No platform specific code in here - but where else?
-  if (APPLE)
-    set_target_properties(${APP_DEFAULT_ARGS} PROPERTIES
-                                              MACOSX_BUNDLE_INFO_PLIST ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_DEFAULT_ARGS}.plist)
-  endif (APPLE)
+  set_target_properties(${APP_UNPARSED_ARGUMENTS} PROPERTIES
+                                                  MACOSX_BUNDLE_INFO_PLIST
+                                                  ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_UNPARSED_ARGUMENTS}.plist)
+endfunction (add_application)
 
-endmacro (saxsview_add_executable)
 
-macro (saxsview_add_library)
-  PARSE_ARGUMENTS (LIB "SOURCES;LIBRARIES;VERSION" "STATIC;SHARED" ${ARGN})
+function (add_shared_library)
+  cmake_parse_arguments (LIB "STATIC;SHARED" "VERSION" "SOURCES;LIBRARIES" ${ARGN})
 
-  if (LIB_STATIC)
-    add_library (${LIB_DEFAULT_ARGS} STATIC ${LIB_SOURCES})
-  elseif (LIB_SHARED)
-    add_library (${LIB_DEFAULT_ARGS} SHARED ${LIB_SOURCES})
-  else ()
-    message (WARNING "saxsview_add_library: either SHARED or STATIC must be defined.")
-  endif ()
+  add_library (${LIB_UNPARSED_ARGUMENTS} SHARED ${LIB_SOURCES})
 
   if (LIB_LIBRARIES)
-    target_link_libraries(${LIB_DEFAULT_ARGS} ${LIB_LIBRARIES})
+    target_link_libraries(${LIB_UNPARSED_ARGUMENTS} ${LIB_LIBRARIES})
   endif (LIB_LIBRARIES)
 
   if (LIB_VERSION)
-    set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
-                                               VERSION ${LIB_VERSION})
+    set_target_properties (${LIB_UNPARSED_ARGUMENTS} PROPERTIES
+                                                     VERSION ${LIB_VERSION})
   endif (LIB_VERSION)
 
-  set_target_properties (${LIB_DEFAULT_ARGS} PROPERTIES
-                                             FRAMEWORK TRUE)
-endmacro (saxsview_add_library)
+  set_target_properties (${LIB_UNPARSED_ARGUMENTS} PROPERTIES
+                                                   FRAMEWORK TRUE)
+endfunction (add_shared_library)
 
+
+function (add_static_library)
+  cmake_parse_arguments (LIB "" "" "SOURCES;LIBRARIES" ${ARGN})
+
+  add_library (${LIB_UNPARSED_ARGUMENTS} STATIC ${LIB_SOURCES})
+
+  if (LIB_LIBRARIES)
+    target_link_libraries(${LIB_UNPARSED_ARGUMENTS} ${LIB_LIBRARIES})
+  endif (LIB_LIBRARIES)
+endfunction (add_static_library)
+
+
+# FindPythonInterpreter.cmake (python_add_module), is still incomplete as of cmake-2.8.7.
+function (add_python_module)
+  if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+    cmake_parse_arguments (MOD "" "" "SOURCES;LIBRARIES" ${ARGN})
+
+    set (PYTHON_MODULE_PREFIX "")
+    if (WIN32 AND NOT CYGWIN)
+      set (PYTHON_MODULE_SUFFIX ".pyd")    # default is .dll
+    elseif (APPLE)
+      set (PYTHON_MODULE_SUFFIX ".so")     # default is .dylib
+    else ()
+      set (PYTHON_MODULE_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
+    endif (WIN32 AND NOT CYGWIN)
+
+    include_directories (${PYTHON_INCLUDE_DIR})
+
+    add_library (${MOD_UNPARSED_ARGUMENTS} MODULE ${MOD_SOURCES})
+    if (MOD_LIBRARIES)
+      target_link_libraries (${MOD_UNPARSED_ARGUMENTS} ${MOD_LIBRARIES} ${PYTHON_LIBRARIES})
+    endif (MOD_LIBRARIES)
+
+    set_target_properties(${MOD_UNPARSED_ARGUMENTS} PROPERTIES
+                                                    PREFIX "${PYTHON_MODULE_PREFIX}"
+                                                    SUFFIX "${PYTHON_MODULE_SUFFIX}")
+  endif (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+endfunction (add_python_module)
