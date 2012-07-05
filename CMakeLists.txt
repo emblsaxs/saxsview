@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-project (SAXSVIEW C CXX Fortran)
+project (SAXSVIEW C CXX)
 
 set (CMAKE_VERBOSE_MAKEFILE         OFF)
 set (CMAKE_BUILD_TYPE               DEBUG)

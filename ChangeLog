@@ -1,3 +1,7 @@
+2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Fortran is now an optional project language.
+
 2012-07-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* bindings/python/: Moved to libsaxsdocument/python.
