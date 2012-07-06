@@ -21,13 +21,23 @@
 #include <structmember.h>
 #include <errno.h>
 
-#include "pysaxsdocument.h"
 #include "saxsdocument.h"
 #include "saxsproperty.h"
 
 /*
  * class saxsdocument.saxsdocument(object):
  */
+typedef struct {
+  PyObject_HEAD
+
+  /* A list of curves; a curve is a list of tuples (s, I, err). */
+  PyObject *curves;
+
+  /* Dictionary of name-value property pairs. */
+  PyObject *properties;
+
+} PySaxsDocumentObject;
+
 PyTypeObject PySaxsDocument_Type  = {
     PyObject_HEAD_INIT(NULL)
 };
@@ -49,7 +59,7 @@ saxsdocument_init(PySaxsDocumentObject *self, PyObject *args, PyObject *kwargs) 
 
 static PyObject *
 saxsdocument_repr(PySaxsDocumentObject *self) {
-  return PyString_FromFormat("saxsdocument: %d properties, %d curve(s)",
+  return PyString_FromFormat("saxsdocument: %ld properties, %ld curve(s)",
                              PyDict_Size(self->properties), PyList_Size(self->curves));
 }
 
