@@ -181,6 +181,10 @@ saxs_image_set_size(saxs_image *image, size_t width, size_t height) {
 
 double
 saxs_image_value(saxs_image *image, int x, int y) {
+  //
+  // FIXME: This check is useful, but has an impact on performance.
+  //        Maybe a second version of this function without checks?
+  //
   if (image && image->image_data
       && x >= 0 && x < (signed)image->image_width
       && y >= 0 && y < (signed)image->image_height) {
@@ -192,6 +196,10 @@ saxs_image_value(saxs_image *image, int x, int y) {
 
 void
 saxs_image_set_value(saxs_image *image, int x, int y, double value) {
+  //
+  // FIXME: This check is useful, but has an impact on performance.
+  //        Maybe a second version of this function without checks?
+  //
   if (image && image->image_data
       && x >= 0 && x < (signed)image->image_width
       && y >= 0 && y < (signed)image->image_height) {

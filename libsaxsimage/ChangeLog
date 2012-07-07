@@ -1,3 +1,9 @@
+2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* fortran/fsaxsimage.f90 (saxs_image_data): Switching the loop indices
+	seems to improve runtime performance.
+	* src/saxsimage.c (saxs_image_value): Added comment on performance.
+
 2012-07-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/: New subdirectory.

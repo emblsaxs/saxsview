@@ -202,8 +202,8 @@ CONTAINS
     height = saxs_image_height(img)
     ALLOCATE(data(width, height))
 
-    DO i = 1, width
-      DO j = 1, height
+    DO j = 1, height
+      DO i = 1, width
         data(i,j) = saxs_image_value(img, i-1, j-1)
       END DO
     END DO
