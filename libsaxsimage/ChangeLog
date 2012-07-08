@@ -1,3 +1,7 @@
+2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/CMakeLists.txt: Use LIBTIFF variables.
+
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* fortran/fsaxsimage.f90 (saxs_image_data): Switching the loop indices

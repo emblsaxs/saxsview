@@ -3,17 +3,13 @@ project (LIBSAXSIMAGE C)
 # This is used for saxsproperty - is this absolutely necessary?
 include_directories(${LIBSAXSDOCUMENT_SOURCE_DIR})
 
-
-find_package (TIFF QUIET)
-if (NOT TIFF_FOUND)
-  message (STATUS "Optional package libtiff not found, TIFF image format disabled.")
-endif (NOT TIFF_FOUND)
-
+add_definitions (-DHAVE_TIFF)
 
 set (SOURCES saxsimage.c
              saxsimage_format.c
              cbf.c
-             msk.c)
+             msk.c
+             tiff.c)
 
 set (HEADERS saxsimage.h
              saxsimage_format.h)
@@ -26,17 +22,12 @@ if (TARGET edf)
   set (SOURCES ${SOURCES} edf.c)
 endif (TARGET edf)
 
-if (TIFF_FOUND)
-  add_definitions (-DHAVE_TIFF)
-  include_directories (${TIFF_INCLUDE_DIR})
-  set (SOURCES ${SOURCES} tiff.c)
-endif (TIFF_FOUND)
-
-include_directories(${CBFLIB_SOURCE_DIR})
+include_directories (${LIBTIFF_INCLUDE_DIR}
+                     ${CBFLIB_SOURCE_DIR})
 
 add_shared_library (saxsimage
                     SOURCES ${HEADERS} ${SOURCES}
-                    LIBRARIES saxsdocument cbf ${EDF_LIBRARIES} ${TIFF_LIBRARIES} 
+                    LIBRARIES saxsdocument cbf ${EDF_LIBRARIES} ${LIBTIFF_LIBRARIES} 
                     VERSION 1)
 
 install_library (TARGETS saxsimage)
