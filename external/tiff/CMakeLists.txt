@@ -56,12 +56,21 @@ else (TIFF_FOUND)
 
   include_directories (${LIBTIFF_BINARY_DIR})
 
-  add_shared_library (tiff
+  #
+  # This target should be called 'tiff', but on MacOS, while there is no system
+  # libtiff cmake could find, there is libTIFF in the ApplicationServices framework
+  # ImageIO. Trying to use that libTIFF and this libtiff together results in all
+  # kinds of linker errors. Instead of resolving those, it's much easier to name
+  # this libtiff libtiff3 instead and all works.
+  #
+  add_shared_library (tiff3
                       SOURCES ${LIBTIFF_HEADERS} ${LIBTIFF_SOURCES}
                       LIBRARIES ${LIBTIFF_EXTRA_LIBS}
                       VERSION 3.9.6)
 
-  set (LIBTIFF_LIBRARIES     tiff                                      CACHE STRING "")
+  install_library (TARGETS tiff3)
+
+  set (LIBTIFF_LIBRARIES   tiff3                                       CACHE STRING "")
   set (LIBTIFF_INCLUDE_DIR ${LIBTIFF_SOURCE_DIR} ${LIBTIFF_BINARY_DIR} CACHE PATH   "")
 
 endif (TIFF_FOUND)
