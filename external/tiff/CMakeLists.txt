@@ -37,15 +37,21 @@ else (TIFF_FOUND)
   endif (ZLIB_FOUND)
 
   if (WIN32)
+    if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+
+    elseif (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
+      configure_file (tif_config.win64.h tif_config.h COPYONLY)
+      configure_file (tiffconf.win64.h tiffconf.h COPYONLY)
+    endif (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+
     set(LIBTIFF_SOURCES ${LIBTIFF_SOURCES} tif_win32.c)
 
   elseif (APPLE)
-    # Carbon header files.
-    include_directories (/Developer/Headers/FlatCarbon)
-
     configure_file (tif_config.apple.h tif_config.h COPYONLY)
     configure_file (tiffconf.apple.h tiffconf.h COPYONLY)
 
+	# Use tif_unix.c, not tif_apple.c, the latter results in
+	# some strange compile errors?! Works anyway.
     set(LIBTIFF_SOURCES ${LIBTIFF_SOURCES} tif_unix.c)
     set (LIBTIFF_HEADERS ${LIBTIFF_HEADERS} tif_config.h)
 

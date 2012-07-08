@@ -1,5 +1,11 @@
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* tif_config.win64.h: New.
+	* tiffconf.win64.h: New.
+	* CMakeLists.txt: Added configuration for Win64.
+
+2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Fixed typo in tiff-found section..
 
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
