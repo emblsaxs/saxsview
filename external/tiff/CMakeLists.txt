@@ -1,9 +1,9 @@
 
-find_package (TIFF QUIET)
+find_package (TIFF)
 
 if (TIFF_FOUND)
-  set (LIBTIFF_LIBRARIES   ${LIBTIFF_LIBRARIES}  CACHE STRING "")
-  set (LIBTIFF_INCLUDE_DIR ${TIFF_INCLUDE_DIR}   CACHE PATH   "")
+  set (LIBTIFF_LIBRARIES   ${TIFF_LIBRARY}     CACHE FILEPATH "")
+  set (LIBTIFF_INCLUDE_DIR ${TIFF_INCLUDE_DIR} CACHE PATH     "")
 
 else (TIFF_FOUND)
 
@@ -70,7 +70,10 @@ else (TIFF_FOUND)
 
   install_library (TARGETS tiff3)
 
-  set (LIBTIFF_LIBRARIES   tiff3                                       CACHE STRING "")
-  set (LIBTIFF_INCLUDE_DIR ${LIBTIFF_SOURCE_DIR} ${LIBTIFF_BINARY_DIR} CACHE PATH   "")
+  set (LIBTIFF_LIBRARIES   tiff3                                       CACHE FILEPATH "")
+  set (LIBTIFF_INCLUDE_DIR ${LIBTIFF_SOURCE_DIR} ${LIBTIFF_BINARY_DIR} CACHE PATH     "")
 
 endif (TIFF_FOUND)
+
+mark_as_advanced (LIBTIFF_LIBRARIES LIBTIFF_INCLUDE_DIR)
+

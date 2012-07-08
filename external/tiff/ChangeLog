@@ -1,5 +1,9 @@
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* CMakeLists.txt: Fixed typo in tiff-found section..
+
+2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* CMakeLists.txt: Changed target name to tiff3.
 
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
