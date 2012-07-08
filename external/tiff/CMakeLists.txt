@@ -38,6 +38,8 @@ else (TIFF_FOUND)
 
   if (WIN32)
     if (${CMAKE_SIZEOF_VOID_P} EQUAL 4)
+      configure_file (tif_config.win32.h tif_config.h COPYONLY)
+      configure_file (tiffconf.win32.h tiffconf.h COPYONLY)
 
     elseif (${CMAKE_SIZEOF_VOID_P} EQUAL 8)
       configure_file (tif_config.win64.h tif_config.h COPYONLY)

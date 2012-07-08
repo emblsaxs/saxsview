@@ -1,3 +1,9 @@
+2012-07-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* tif_config.win32.h: New.
+	* tiffconf.win32.h: New.
+	* CMakeLists.txt: Added configuration for Win32.
+
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* tif_config.win64.h: New.
