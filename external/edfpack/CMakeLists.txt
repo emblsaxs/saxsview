@@ -21,7 +21,7 @@ if (ZLIB_FOUND)
                       SOURCES ${EDFPACK_HEADERS} ${EDFPACK_SOURCES}
                       LIBRARIES m ${ZLIB_LIBRARIES}
                       VERSION 2.216)
-  install_library (edf)
+  install_library (TARGETS edf)
 
 else (ZLIB_FOUND)
   message (STATUS "Optional package zlib not found, EDF image format disabled.")
