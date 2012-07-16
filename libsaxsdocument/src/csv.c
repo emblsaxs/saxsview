@@ -1,6 +1,6 @@
 /*
  * Read files in .csv-format.
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -50,12 +50,72 @@ csv_read(struct saxs_document *doc, const char *filename) {
 }
 
 
+static int
+csv_write_header(struct saxs_document *doc, struct line **lines) {
+  struct line *line;
+
+  /* TODO: Add column headers?! */
+  line = lines_create();
+  lines_append(lines, line);
+
+  return 0;
+}
+
+/*
+ * TODO: besides the ',' in the output, this is identical
+ *       to atsas_dat_n_column_write_data() - consolidate?
+ */
+static int
+csv_write_data(struct saxs_document *doc, struct line **lines) {
+  struct line *firstline = NULL;
+
+  /* Write the first column with 's' values, create lines in the process. */
+  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  saxs_data *data = saxs_curve_data(curve);
+  while (data) {
+    struct line *l = lines_create();
+    lines_printf(l, "%14e", saxs_data_x(data));
+    lines_append(&firstline, l);
+
+    data = saxs_data_next(data);
+  }
+
+  /*
+   * For each curve, append a new column of 'I' values
+   * to the previous line contents.
+   */
+  while (curve) {
+    struct line *l = firstline;
+
+    saxs_data *data = saxs_curve_data(curve);
+    while (data) {
+      lines_printf(l, "%s, %14e", l->line_buffer, saxs_data_y(data));
+
+      data = saxs_data_next(data);
+      l = l->next;
+    }
+
+    curve = saxs_curve_next(curve);
+  }
+
+  lines_append(lines, firstline);
+  return 0;
+}
+
+int
+csv_write(struct saxs_document *doc, const char *filename) {
+  return saxs_writer_columns_write_file(doc, filename,
+                                        csv_write_header,
+                                        csv_write_data,
+                                        0L);
+}
+
+
 void
 saxs_document_format_register_csv() {
   saxs_document_format csv = {
-     "csv", "comma separated values",
-     "Columns of data, separated by a common separator",
-     csv_read, NULL, NULL
+     "csv", "csv", "Columns of data, separated by a common separator",
+     csv_read, csv_write, NULL
   };
 
   saxs_document_format_register(&csv);
