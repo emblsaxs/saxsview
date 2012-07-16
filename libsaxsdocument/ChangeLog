@@ -1,5 +1,12 @@
 2012-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/malvern_txt.c: New.
+	* src/saxsdocument_format.c (saxs_document_format_init): Register
+	new format.
+	* src/CMakeLists.txt: Added new file.
+
+2012-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* python/pysaxsdocument.c (saxsdocument_read): Handle an optional
 	'format' argument.
 	(PySaxsDocument_Read): Take a 'format' argument, use it to read

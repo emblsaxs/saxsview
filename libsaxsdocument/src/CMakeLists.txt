@@ -14,7 +14,8 @@ set (SOURCES saxsproperty.c
              atsas_fir_fit.c
              atsas_int.c
              atsas_out.c
-             maxlab_rad.c)
+             maxlab_rad.c
+             malvern_txt.c)
 
 set (HEADERS saxsproperty.h
              saxsdocument.h
