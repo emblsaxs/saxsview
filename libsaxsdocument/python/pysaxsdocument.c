@@ -89,14 +89,15 @@ PySaxsDocument_New() {
  * Module function(s).
  */
 PyObject*
-PySaxsDocument_Read(const char *filename, PyObject *curves, PyObject *properties) {
+PySaxsDocument_Read(const char *filename, const char *format,
+                    PyObject *curves, PyObject *properties) {
   saxs_document *doc;
   saxs_curve *curve;
   saxs_data *data;
   saxs_property *property;
 
   doc = saxs_document_create();
-  int res = saxs_document_read(doc, filename, NULL);
+  int res = saxs_document_read(doc, filename, format);
   if (res != 0)
     return PyErr_Format(PyExc_IOError, "%s: %s", filename, strerror(res));
 
@@ -131,17 +132,17 @@ PySaxsDocument_Read(const char *filename, PyObject *curves, PyObject *properties
 
 PyObject*
 saxsdocument_read(PyObject *self, PyObject *args) {
-  char *filename;
+  char *filename, *format = NULL;
 
   PySaxsDocumentObject *doc;
   PyObject *res;
 
-  if (!PyArg_ParseTuple(args, "s", &filename))
+  if (!PyArg_ParseTuple(args, "s|s", &filename, &format))
     return NULL;
 
   doc = (PySaxsDocumentObject*)PySaxsDocument_New();
 
-  res = PySaxsDocument_Read(filename, doc->curves, doc->properties);
+  res = PySaxsDocument_Read(filename, format, doc->curves, doc->properties);
   if (!res) {
     Py_XDECREF(doc);
     doc = NULL;

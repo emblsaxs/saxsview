@@ -1,5 +1,12 @@
 2012-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* python/pysaxsdocument.c (saxsdocument_read): Handle an optional
+	'format' argument.
+	(PySaxsDocument_Read): Take a 'format' argument, use it to read
+	the file.
+
+2012-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* atsas_dat.c (atsas_dat_n_column_write_data): New.
 	(saxs_document_format_register_atsas_dat): Register new writer.
 	* src/columns.c (lines_printf): Use a temporary buffer to build line
