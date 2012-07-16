@@ -459,6 +459,50 @@ atsas_dat_n_column_read(struct saxs_document *doc, const char *filename) {
                                         atsas_dat_parse_footer);
 }
 
+static int
+atsas_dat_n_column_write_data(struct saxs_document *doc, struct line **lines) {
+  struct line *firstline = NULL;
+
+  /* Write the first column with 's' values, create lines in the process. */
+  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  saxs_data *data = saxs_curve_data(curve);
+  while (data) {
+    struct line *l = lines_create();
+    lines_printf(l, "%14e", saxs_data_x(data));
+    lines_append(&firstline, l);
+
+    data = saxs_data_next(data);
+  }
+
+  /*
+   * For each curve, append a new column of 'I' values
+   * to the previous line contents.
+   */
+  while (curve) {
+    struct line *l = firstline;
+
+    saxs_data *data = saxs_curve_data(curve);
+    while (data) {
+      lines_printf(l, "%s %14e", l->line_buffer, saxs_data_y(data));
+
+      data = saxs_data_next(data);
+      l = l->next;
+    }
+
+    curve = saxs_curve_next(curve);
+  }
+
+  lines_append(lines, firstline);
+  return 0;
+}
+
+int
+atsas_dat_n_column_write(struct saxs_document *doc, const char *filename) {
+  return saxs_writer_columns_write_file(doc, filename,
+                                        atsas_dat_write_header,
+                                        atsas_dat_n_column_write_data,
+                                        atsas_dat_write_footer);
+}
 
 /**************************************************************************/
 int
@@ -507,7 +551,7 @@ saxs_document_format_register_atsas_dat() {
   saxs_document_format atsas_dat_n_column = {
      "dat", "atsas-dat-n-column",
      "ATSAS experimental data, multiple data sets, no errors",
-     atsas_dat_n_column_read, NULL, NULL
+     atsas_dat_n_column_read, atsas_dat_n_column_write, NULL
   };
 
   /*

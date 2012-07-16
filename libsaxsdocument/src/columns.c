@@ -81,19 +81,30 @@ lines_append(struct line **lines, struct line *l) {
 int lines_printf(struct line *l, const char *fmt, ...) {
   int n;
 
+  /*
+   * In case the line buffer is also used in the argument list,
+   * write to a temporary location to avoid messing up the
+   * original line buffer.
+   */
+  char *buffer = malloc(l->line_length);
+
   va_list va;
   va_start(va, fmt);
-  n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+
+  n = vsnprintf(buffer, l->line_length, fmt, va);
   if (n >= (signed)l->line_length) {
     va_end(va);
 
     l->line_length = n + 1;
-    l->line_buffer = realloc(l->line_buffer, l->line_length);
+    buffer = realloc(buffer, l->line_length);
 
     va_start(va, fmt);
-    n = vsnprintf(l->line_buffer, l->line_length, fmt, va);
+    n = vsnprintf(buffer, l->line_length, fmt, va);
   }
   va_end(va);
+
+  free(l->line_buffer);
+  l->line_buffer = buffer;
 
   return n;
 }
