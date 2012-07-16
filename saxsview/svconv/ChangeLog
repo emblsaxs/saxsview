@@ -1,0 +1,5 @@
+2012-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svconv.cpp: New.
+	* CMakeLists.txt: New.
+
