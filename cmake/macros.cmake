@@ -6,16 +6,22 @@ include (CMakeParseArguments)
 
 
 function (add_application)
-  cmake_parse_arguments (APP "" "" "SOURCES;LIBRARIES" ${ARGN})
+  cmake_parse_arguments (APP "GUI" "" "SOURCES;LIBRARIES" ${ARGN})
 
-  add_executable (${APP_UNPARSED_ARGUMENTS} WIN32 MACOSX_BUNDLE ${APP_SOURCES})
+  set (APP_NAME ${APP_UNPARSED_ARGUMENTS})
+
+  add_executable (${APP_NAME} ${APP_SOURCES})
+
   if (APP_LIBRARIES)
-    target_link_libraries (${APP_UNPARSED_ARGUMENTS} ${APP_LIBRARIES})
+    target_link_libraries (${APP_NAME} ${APP_LIBRARIES})
   endif (APP_LIBRARIES)
 
-  set_target_properties(${APP_UNPARSED_ARGUMENTS} PROPERTIES
-                                                  MACOSX_BUNDLE_INFO_PLIST
-                                                  ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_UNPARSED_ARGUMENTS}.plist)
+  if (APP_GUI)
+    set_target_properties(${APP_NAME} PROPERTIES
+                          WIN32                    TRUE
+                          MACOSX_BUNDLE            TRUE
+                          MACOSX_BUNDLE_INFO_PLIST ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_NAME}.plist)
+  endif (APP_GUI)
 endfunction (add_application)
 
 

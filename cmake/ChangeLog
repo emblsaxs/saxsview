@@ -1,3 +1,8 @@
+2012-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* macros.cmake (add_application): Handle GUI flag, i.e. do not
+	compile console apps into bundles.
+
 2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* macros.cmake (PARSE_ARGUMENTS): Removed, use the new
