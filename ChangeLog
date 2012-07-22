@@ -1,3 +1,7 @@
+2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* COPYING.libtiff: New, libtiff license.
+
 2012-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview/svdataconvert/: Removed.
