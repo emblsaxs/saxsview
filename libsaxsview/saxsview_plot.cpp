@@ -185,7 +185,7 @@ void SaxsviewPlot::Private::setTransformation(SaxsviewPlotCurve *curve) {
   QStandardItemModel model;
   config().plotScaleTransformations(&model);
 
-  if (model.rowCount() >= transformation)
+  if (transformation > model.rowCount())
     transformation = 0;
 
   SaxsviewTransformation *t = new SaxsviewTransformation;

@@ -1,3 +1,9 @@
+2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_plot.cpp (setTransformation): Fixed comparison.
+	* saxsview_config.cpp (setDefaultPlotScaleTransformations): Changed
+	logarithmic plot to use natural logarithm, added log-log plot.
+
 2012-06-28  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_config.cpp (setDefaultPlotScaleTransformations): Fixed

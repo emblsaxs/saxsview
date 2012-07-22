@@ -378,11 +378,19 @@ void SaxsviewConfig::setDefaultPlotScaleTransformations() {
                    << new QStandardItem(""));               // y axis label
 
   model.appendRow(QList<QStandardItem*>()
-                   << new QStandardItem("Log10 Scale")
+                   << new QStandardItem("Log Scale")
                    << new QStandardItem("")
                    << new QStandardItem("s")
                    << new QStandardItem("")
-                   << new QStandardItem("log10(I)")
+                   << new QStandardItem("log(I)")
+                   << new QStandardItem(""));
+
+  model.appendRow(QList<QStandardItem*>()
+                   << new QStandardItem("Log-Log Scale")
+                   << new QStandardItem("")
+                   << new QStandardItem("log(s)")
+                   << new QStandardItem("")
+                   << new QStandardItem("log(I)")
                    << new QStandardItem(""));
 
   model.appendRow(QList<QStandardItem*>()
@@ -390,8 +398,8 @@ void SaxsviewConfig::setDefaultPlotScaleTransformations() {
                    << new QStandardItem("Guinier Plot")
                    << new QStandardItem("s^2")
                    << new QStandardItem("s<sup>2</sup>")
-                   << new QStandardItem("log10(I)")
-                   << new QStandardItem("log (I)"));
+                   << new QStandardItem("log(I)")
+                   << new QStandardItem("log(I)"));
 
   model.appendRow(QList<QStandardItem*>()
                    << new QStandardItem("Kratky Plot")
