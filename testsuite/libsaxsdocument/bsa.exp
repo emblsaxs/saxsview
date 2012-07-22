@@ -1,8 +1,17 @@
-document; bsa.dat; 1; 51;
+document; bsa.dat; 1; 60;
 curve; data; 1; 2096;
 property; sample-description; BSA buffer;
 property; sample-concentration; 0.000;
 property; sample-code; BSA;
+property; Averaged from raw files; raj_002.cbf;
+property; Processed by; cbf-primus Fri Jul 17 13:07:25 2009;
+property; Angular axis file; /home/mar345/bin/saxis.dat;
+property; BeamCenter_X;   995.500  BeamCenter_Y:  2140.400;
+property; Mask file (beamstop); /home/mar345/bin/active.msk;
+property; Exposure time (sec); 120.000;
+property; Pin diode (mean); 1.754;
+property; Reference frame; 1;
+property; Chi-value threshold; 1.450;
 property; Image; ../images/raj_002.cbf;
 property; Image format; CBF;
 property; Image width; 2300;
