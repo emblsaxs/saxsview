@@ -14,15 +14,15 @@
 
 static void
 usage() {
-  char infmt[1024] = { '\0' }, outfmt[1024] = { '\0' };
+  char infmt[4096] = { '\0' }, outfmt[4096] = { '\0' };
 
   saxs_document_format *fmt = saxs_document_format_first();
   while (fmt) {
     if (fmt->read)
-      sprintf(infmt, "%s\n  %-20s %s (.%s)", infmt, fmt->name, fmt->description, fmt->extension);
+      sprintf(infmt, "%s\n  %-25s %s (.%s)", infmt, fmt->name, fmt->description, fmt->extension);
 
     if (fmt->write)
-      sprintf(outfmt, "%s\n  %-20s %s (.%s)", outfmt, fmt->name, fmt->description, fmt->extension);
+      sprintf(outfmt, "%s\n  %-25s %s (.%s)", outfmt, fmt->name, fmt->description, fmt->extension);
 
     fmt = saxs_document_format_next(fmt);
   }

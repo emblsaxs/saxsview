@@ -1,3 +1,7 @@
+2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svconv.cpp (usage): Increased buffer and output column sizes.
+
 2012-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svconv.cpp: New.
