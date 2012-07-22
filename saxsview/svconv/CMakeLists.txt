@@ -6,5 +6,5 @@ add_application (svconv
                  SOURCES svconv.cpp
                  LIBRARIES saxsdocument saxsimage)
 
-install_application (svconc)
+install_application (TARGETS svconv)
 install_dependencies (svconv)

@@ -21,5 +21,5 @@ add_application (svimage
                  LIBRARIES saxsview ${QT_LIBRARIES}
                  GUI)
 
-install_application (svimage)
+install_application (TARGETS svimage)
 install_dependencies (svimage)

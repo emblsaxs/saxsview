@@ -27,6 +27,6 @@ add_application (svplot
                  LIBRARIES saxsview saxsdocument
                  GUI)
 
-install_application (svplot)
+install_application (TARGETS svplot)
 install_dependencies (svplot)
 

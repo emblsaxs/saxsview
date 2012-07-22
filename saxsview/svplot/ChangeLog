@@ -1,3 +1,7 @@
+2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* CMakeLists.txt: Fixed install command.
+
 2012-06-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotsubwindow.cpp (load): Improved feedback on failed loads,
