@@ -24,6 +24,11 @@
 #include "saxsdocument.h"
 #include "saxsproperty.h"
 
+#ifndef Py_TYPE
+#define Py_TYPE(ob)             (((PyObject*)(ob))->ob_type)
+#endif
+
+
 /*
  * class saxsdocument.saxsdocument(object):
  */

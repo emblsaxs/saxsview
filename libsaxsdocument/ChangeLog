@@ -1,3 +1,7 @@
+2012-07-25  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* python/pysaxsdocument.c: Define Py_TYPE if undefined.
+
 2012-07-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/csv.c (csv_write_header): New.
