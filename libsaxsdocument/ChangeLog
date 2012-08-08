@@ -1,3 +1,24 @@
+2012-08-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/saxsdocument_format.h (saxs_document_format): Changed read
+	pointer to accept a range of lines instead of a file name.
+	* src/saxsdocument.c (saxs_document): Keep a pointer to the lines
+	of the document.
+	(saxs_document_read): Read and cache the lines, then pass them to
+	the format read procedures.
+	* src/columns.h (saxs_reader_columns_parse_file): Renamed to ...
+	(saxs_reader_columns_parse_lines): ... this. Removed filename
+	argument, added a line range instead.
+	(saxs_reader_columns_count_file): Removed.
+	* src/columns.c (saxs_reader_columns_parse_file): Renamed to ...
+	(saxs_reader_columns_parse_lines): ... this. Updated all users.
+	(saxs_reader_columns_count_file): Removed.
+	* src/cansas_xml.c (cansas_read_callback): New.
+	(int cansas_xml_1_0_read): Read lines from line buffers.
+	* src/atsas_out.c (atsas_out_read): Error out if document sections
+	could not be identified.
+	* python/pysaxsdocument.c (saxsdocument_repr): Fixed compiler warnings.
+
 2012-07-25  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* python/pysaxsdocument.c: Define Py_TYPE if undefined.

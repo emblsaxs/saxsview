@@ -26,12 +26,30 @@
 
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
+#include "columns.h"
 
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 
 #include <libxml/xmlreader.h>
 
+static int
+cansas_read_callback(struct line **line, char *buffer, int len) {
+  /*
+   * The line reader strips off the '\n', here we need to add them
+   * again as otherwise the XML parser will see run together lines
+   * and possibly error out.
+   */
+  if (*line) {
+    snprintf(buffer, len, "%s\n", (*line)->line_buffer);
+
+    *line = (*line)->next;
+    return strlen(buffer);
+
+  } else
+    return 0;
+}
 
 /**************************************************************************/
 /*
@@ -89,7 +107,8 @@ static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr rea
   }
 }
 
-int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
+int cansas_xml_1_0_read(saxs_document *doc, struct line *firstline, struct line *lastline) {
+
   /*
    * Work around an problem in cansas-1.0 and libxml2:
    * The cansas-standard v1.0 uses a deprecated (relative) format of the
@@ -98,26 +117,22 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
    * definitions [2].
    *
    * Work-around: The DOM-api is not affected, thus read the full document
-   * first, then walk it. As soon as the problem is fixed, avoid to initially
-   * parse the whole document to memory.
+   * from lines first, then walk it.
    *
    * [1] http://svn.smallangles.net/trac/canSAS/ticket/20
    * [2] http://mail.gnome.org/archives/xml/2009-September/msg00072.html
    */
   xmlTextReaderPtr reader;
 
-#if LIBXML_VERSION <= 20703
-  xmlDocPtr xmldoc = xmlReadFile(filename, NULL, XML_PARSE_NOWARNING);
+  xmlDocPtr xmldoc = xmlReadIO((xmlInputReadCallback)cansas_read_callback,
+                               NULL, &firstline, NULL, NULL,
+                               XML_PARSE_NOWARNING);
   if (!xmldoc)
-    return -1;
+    return EINVAL;
 
   reader = xmlReaderWalker(xmldoc);
-#else
-  reader = xmlNewTextReaderFilename(filename);
-#endif
-
   if (!reader)
-    return -1;
+    return EINVAL;
 
   /* Check the first node that this is the right document version. */
   while (xmlTextReaderRead(reader) == 1) {
@@ -135,12 +150,11 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
       xmlFree(name);
 
       attr = xmlTextReaderGetAttribute(reader, BAD_CAST("version"));
-      if (xmlStrEqual(attr, BAD_CAST("1.0"))) {
+      if (!xmlStrEqual(attr, BAD_CAST("1.0"))) {
         xmlFree(attr);
         xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20703
         xmlFreeDoc(xmldoc);
-#endif
+
         return ENOTSUP;
       }
       xmlFree(attr);
@@ -154,9 +168,7 @@ int cansas_xml_1_0_read(saxs_document *doc, const char *filename) {
     cansas_xml_1_0_process_node(doc, reader);
 
   xmlFreeTextReader(reader);
-#if LIBXML_VERSION <= 20703
   xmlFreeDoc(xmldoc);
-#endif
 
   return 0;
 }

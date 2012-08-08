@@ -48,11 +48,12 @@ malvern_txt_parse_data(struct saxs_document *doc,
 }
 
 int
-malvern_txt_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        NULL,
-                                        malvern_txt_parse_data,
-                                        NULL);
+malvern_txt_read(struct saxs_document *doc,
+                 struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         NULL,
+                                         malvern_txt_parse_data,
+                                         NULL);
 }
 
 

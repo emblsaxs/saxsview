@@ -362,46 +362,29 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 }
 
 
-int saxs_reader_columns_count_file(const char *filename) {
-  struct line *lines, *header, *data, *footer;
-  int count, res;
-
-  if ((res = lines_read(&lines, filename)) != 0)
-    goto error;
-
-  if ((res = saxs_reader_columns_scan(lines, &header, &data, &footer)) != 0)
-    goto error;
-
-  count = saxs_reader_columns_count(data);
-
-  lines_free(lines);
-  return count;
-
-error:
-  lines_free(lines);
-  return -res;
-}
-
-
-int saxs_reader_columns_parse_file(struct saxs_document *doc,
-                                   const char *filename,
-                                   int (*parse_header)(struct saxs_document*,
-                                                       struct line *,
-                                                       struct line *),
-                                   int (*parse_data)(struct saxs_document*,
-                                                     struct line *,
-                                                     struct line *),
-                                   int (*parse_footer)(struct saxs_document*,
-                                                       struct line *,
-                                                       struct line *)) {
+int saxs_reader_columns_parse_lines(struct saxs_document *doc,
+                                    struct line *firstline, struct line *lastline,
+                                    int (*parse_header)(struct saxs_document*,
+                                                        struct line *,
+                                                        struct line *),
+                                    int (*parse_data)(struct saxs_document*,
+                                                      struct line *,
+                                                      struct line *),
+                                    int (*parse_footer)(struct saxs_document*,
+                                                        struct line *,
+                                                        struct line *)) {
   int res;
-  struct line *lines = NULL, *header = NULL, *data = NULL, *footer = NULL;
+  struct line *header = NULL, *data = NULL, *footer = NULL;
 
-  if ((res = lines_read(&lines, filename)) != 0)
+  if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     goto error;
 
-  if ((res = saxs_reader_columns_scan(lines, &header, &data, &footer)) != 0)
-    goto error;
+  /*
+   * If we can't identify anything, then this is probably not
+   * columnized data.
+   */
+  if (!header && !data && !footer)
+    return ENOTSUP;
 
   if ((res = parse_header && parse_header(doc, header, data)) != 0)
     goto error;
@@ -409,14 +392,12 @@ int saxs_reader_columns_parse_file(struct saxs_document *doc,
   if ((res = parse_data && parse_data(doc, data, footer)) != 0)
     goto error;
 
-  if ((res = parse_footer && parse_footer(doc, footer, NULL)) != 0)
+  if ((res = parse_footer && parse_footer(doc, footer, lastline)) != 0)
     goto error;
 
-  lines_free(lines);
   return 0;
 
 error:
-  lines_free(lines);
   return res;
 }
 

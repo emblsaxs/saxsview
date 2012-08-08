@@ -303,17 +303,10 @@ static int parse_footer(struct saxs_document *doc,
 
 }
 
-int atsas_out_read(struct saxs_document *doc, const char *filename) {
-  int res;
-  struct line *lines, *current;
-  struct line *header, *scattering_begin, *probability_begin, *footer;
-
-  /*
-   * Increase the likelihood that this is really an ATSAS .out file by
-   * checking the extension first.
-   */
-  if (compare_format(suffix(filename), "out") != 0)
-    return EINVAL;
+int atsas_out_read(struct saxs_document *doc,
+                   struct line *firstline, struct line *lastline) {
+  struct line *current;
+  struct line *scattering_begin, *probability_begin, *footer;
 
   /*
    * .out-files were meant to be human readable and are thus
@@ -323,14 +316,11 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
    * probability data, footer) to be parsed later.
    */
 
-  if ((res = lines_read(&lines, filename)) != 0)
-    return res;
-
   /*
    * The header starts at the first line and ends with:
    *     "S          J EXP       ERROR       J REG       I REG"
    */
-  header = current = lines;
+  current = firstline;
   while(current
         && !strstr(current->line_buffer,
                    "S          J EXP       ERROR       J REG       I REG"))
@@ -363,14 +353,19 @@ int atsas_out_read(struct saxs_document *doc, const char *filename) {
   footer = current;
 
   /*
+   * If none of the sections was found, the lines do not
+   * come from a GNOM .out file.
+   */
+  if (!scattering_begin && !probability_begin && !footer)
+    return ENOTSUP;
+
+  /*
    * Now parse the individual sections and extract the data.
    */
-  parse_header(doc, header, scattering_begin);
+  parse_header(doc, firstline, scattering_begin);
   parse_scattering_data(doc, scattering_begin, probability_begin);
   parse_probability_data(doc, probability_begin, footer);
-  parse_footer(doc, footer, NULL);
-
-  lines_free(lines);
+  parse_footer(doc, footer, lastline);
   return 0;
 }
 

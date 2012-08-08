@@ -80,11 +80,12 @@ atsas_int_parse_footer(struct saxs_document *doc,
 }
 
 int
-atsas_int_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_int_parse_header,
-                                        atsas_int_parse_data,
-                                        atsas_int_parse_footer);
+atsas_int_read(struct saxs_document *doc,
+               struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_int_parse_header,
+                                         atsas_int_parse_data,
+                                         atsas_int_parse_footer);
 }
 
 

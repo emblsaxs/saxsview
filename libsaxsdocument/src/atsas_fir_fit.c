@@ -74,11 +74,12 @@ atsas_fir_4_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_fir_4_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_fir_fit_parse_header,
-                                        atsas_fir_4_column_parse_data,
-                                        atsas_fir_fit_parse_footer);
+atsas_fir_4_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_fir_fit_parse_header,
+                                         atsas_fir_4_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
 }
 
 
@@ -102,11 +103,12 @@ atsas_fit_3_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_fit_3_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_fir_fit_parse_header,
-                                        atsas_fit_3_column_parse_data,
-                                        atsas_fir_fit_parse_footer);
+atsas_fit_3_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_fir_fit_parse_header,
+                                         atsas_fit_3_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
 }
 
 
@@ -187,15 +189,13 @@ atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
 }
 
 int
-atsas_fit_4_column_read(struct saxs_document *doc, const char *filename) {
+atsas_fit_4_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
 
   int res;
-  struct line *lines = NULL, *header = NULL, *data = NULL, *footer = NULL;
+  struct line *header = NULL, *data = NULL, *footer = NULL;
 
-  if ((res = lines_read(&lines, filename)) != 0)
-    goto error;
-
-  if ((res = saxs_reader_columns_scan(lines, &header, &data, &footer)) != 0)
+  if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     goto error;
 
   if (saxs_reader_columns_count(data) != 4) {
@@ -207,13 +207,12 @@ atsas_fit_4_column_read(struct saxs_document *doc, const char *filename) {
    * Check the first line if it has "MONSA" - if yes, this is a .fit file
    * with (possibly) multiple fits stacked over each other.
    */
-  if (strstr(lines->line_buffer, "MONSA"))
+  if (strstr(firstline->line_buffer, "MONSA"))
     res = atsas_fit_4_column_parse_monsa_data(doc, header, data, footer);
   else
     res = atsas_fit_4_column_parse_data(doc, data, footer);
 
 error:
-  lines_free(lines);
   return res;
 }
 
@@ -238,11 +237,12 @@ atsas_fit_5_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_fit_5_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_fir_fit_parse_header,
-                                        atsas_fit_5_column_parse_data,
-                                        atsas_fir_fit_parse_footer);
+atsas_fit_5_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_fir_fit_parse_header,
+                                         atsas_fit_5_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
 }
 
 

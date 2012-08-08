@@ -23,6 +23,7 @@
 
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
+#include "columns.h"
 
 #include <sys/types.h>
 #include <stdlib.h>
@@ -31,6 +32,8 @@
 
 struct saxs_document {
   char *doc_filename;
+
+  struct line *doc_lines;
 
   saxs_property_list *doc_properties;
 
@@ -63,7 +66,8 @@ saxs_document* saxs_document_create() {
   saxs_document *doc = malloc(sizeof(saxs_document));
 
   if (doc) {
-    doc->doc_filename = NULL;
+    doc->doc_filename    = NULL;
+    doc->doc_lines       = NULL;
     doc->doc_properties  = saxs_property_list_create();
     doc->doc_curve_count = 0;
     doc->doc_curves_head = NULL;
@@ -75,21 +79,61 @@ saxs_document* saxs_document_create() {
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
+  struct line *l;
   int res = ENOTSUP;
 
+  /*
+   * Read in the file contents and cache that in the document buffer.
+   * Determining the file type if stdin is read may be tricky, also
+   * if a known file type comes with an unknown extension. To be
+   * prepared, we already cache the lines here so each format's
+   * reader can access them in turn, if necessary.
+   */
+  res = lines_read(&l, filename);
+  if (res != 0)
+    return res;
+
+  /*
+   * First we shall try to determine the file type according to the
+   * specified format or the file extension. If that doesn't work,
+   * iterate through all known formats to see if any can read the data.
+   * We can't immediately iterate through all as, e.g. atsas-dat-n-column
+   * would also read .fit files. And that is not what we want.
+   */
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->read) {
-      res = handler->read(doc, filename);
-      if (res == 0) {
-        if (doc->doc_filename) free(doc->doc_filename);
-        doc->doc_filename = strdup(filename);
+      res = handler->read(doc, l, NULL);
+      if (res == 0)
         break;
-      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
 
+  /* If nothing found, start again, trying each data handler in turn. */
+  if (!handler) {
+    handler = saxs_document_format_first();
+    while (handler) {
+      if (handler->read) {
+        res = handler->read(doc, l, NULL);
+        if (res == 0)
+          break;
+      }
+      handler = saxs_document_format_next(handler);
+    }
+  }
+
+  /* Here everything was read in successfully, keep the info around. */
+  if (res == 0) {
+    if (doc->doc_lines) lines_free(doc->doc_lines);
+    doc->doc_lines = l;
+    l = NULL;
+
+    if (doc->doc_filename) free(doc->doc_filename);
+    doc->doc_filename = strdup(filename);
+  }
+
+  lines_free(l);
   return res;
 }
 
@@ -116,6 +160,8 @@ int saxs_document_write(saxs_document *doc, const char *filename,
 void saxs_document_free(saxs_document *doc) {
   if (doc->doc_filename)
     free(doc->doc_filename);
+
+  lines_free(doc->doc_lines);
 
   saxs_property_list_free(doc->doc_properties);
 

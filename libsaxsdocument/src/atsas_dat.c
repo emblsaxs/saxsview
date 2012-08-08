@@ -331,11 +331,12 @@ atsas_dat_3_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_dat_3_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_dat_parse_header,
-                                        atsas_dat_3_column_parse_data,
-                                        atsas_dat_parse_footer);
+atsas_dat_3_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_dat_parse_header,
+                                         atsas_dat_3_column_parse_data,
+                                         atsas_dat_parse_footer);
 }
 
 static int
@@ -390,11 +391,12 @@ atsas_dat_4_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_dat_4_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_dat_parse_header,
-                                        atsas_dat_4_column_parse_data,
-                                        atsas_dat_parse_footer);
+atsas_dat_4_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_dat_parse_header,
+                                         atsas_dat_4_column_parse_data,
+                                         atsas_dat_parse_footer);
 }
 
 static int
@@ -452,11 +454,12 @@ atsas_dat_n_column_parse_data(struct saxs_document *doc,
 }
 
 int
-atsas_dat_n_column_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        atsas_dat_parse_header,
-                                        atsas_dat_n_column_parse_data,
-                                        atsas_dat_parse_footer);
+atsas_dat_n_column_read(struct saxs_document *doc,
+                        struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_dat_parse_header,
+                                         atsas_dat_n_column_parse_data,
+                                         atsas_dat_parse_footer);
 }
 
 static int
@@ -506,21 +509,19 @@ atsas_dat_n_column_write(struct saxs_document *doc, const char *filename) {
 
 /**************************************************************************/
 int
-atsas_header_txt_read(struct saxs_document *doc, const char *filename) {
-  struct line *lines = NULL;
-  int res;
+atsas_header_txt_read(struct saxs_document *doc,
+                      struct line *firstline, struct line *lastline) {
 
-  if ((res = lines_read(&lines, filename)) == 0) {
-    struct line *l = lines;
-    while (l) {
-      parse_key_value_pair(doc, l);
-      l = l->next;
-    }
 
-    lines_free(lines);
+  /* TODO: this always "succeeds", even if there is no header
+           text to read, but anything else?! */
+
+  while (firstline && firstline != lastline) {
+    parse_key_value_pair(doc, firstline);
+    firstline = firstline->next;
   }
 
-  return res;
+  return 0;
 }
 
 

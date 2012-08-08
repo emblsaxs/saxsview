@@ -44,9 +44,9 @@ csv_parse_data(struct saxs_document *doc,
 }
 
 int
-csv_read(struct saxs_document *doc, const char *filename) {
-  return saxs_reader_columns_parse_file(doc, filename,
-                                        NULL, csv_parse_data, NULL);
+csv_read(struct saxs_document *doc, struct line *firstline, struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         NULL, csv_parse_data, NULL);
 }
 
 

@@ -44,7 +44,7 @@ typedef struct {
 } PySaxsDocumentObject;
 
 PyTypeObject PySaxsDocument_Type  = {
-    PyObject_HEAD_INIT(NULL)
+  PyObject_HEAD_INIT(NULL)
 };
 
 static void
@@ -64,7 +64,7 @@ saxsdocument_init(PySaxsDocumentObject *self, PyObject *args, PyObject *kwargs) 
 
 static PyObject *
 saxsdocument_repr(PySaxsDocumentObject *self) {
-  return PyString_FromFormat("saxsdocument: %ld properties, %ld curve(s)",
+  return PyString_FromFormat("saxsdocument: %u properties, %u curve(s)",
                              PyDict_Size(self->properties), PyList_Size(self->curves));
 }
 
