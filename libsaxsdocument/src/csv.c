@@ -27,12 +27,15 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <errno.h>
 
 static int
 csv_parse_data(struct saxs_document *doc,
                struct line *firstline, struct line *lastline) {
 
   int i, n = saxs_reader_columns_count(firstline);
+  if (n < 2)
+    return ENOTSUP;
 
   for (i = 1; i < n; ++i)
     saxs_reader_columns_parse(doc, firstline, lastline,

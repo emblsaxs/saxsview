@@ -36,6 +36,8 @@ malvern_txt_parse_data(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
 
   int i, n = saxs_reader_columns_count(firstline);
+  if (n != 10)
+    return ENOTSUP;
 
   for (i = 1; i < n; ++i)
     saxs_reader_columns_parse(doc,

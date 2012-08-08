@@ -1,5 +1,16 @@
 2012-08-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/csv.c (csv_parse_data): Verify that at least two columns of
+	data are available before accepting the input stream.
+	* src/atsas_dat.c (atsas_dat_n_column_parse_data): Likewise.
+	(atsas_header_txt_read): Verify that all lines contain key-value
+	pairs before accepting the input stream.
+	* src/malvern_txt.c (malvern_txt_parse_data): Verify that there
+	are exactly 10 columns of data are available before accepting
+	the input stream.
+
+2012-08-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/saxsdocument_format.h (saxs_document_format): Changed read
 	pointer to accept a range of lines instead of a file name.
 	* src/saxsdocument.c (saxs_document): Keep a pointer to the lines
