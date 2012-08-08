@@ -236,11 +236,11 @@ void SaxsviewConfig::applyTemplate(SaxsviewPlotCurve *curve) const {
   int n, template_id;
   saxs_document_format *fmt;
 
-  settings().beginGroup("Templates");
-
   fmt = saxs_document_format_find_first(qPrintable(curve->fileName()), 0L);
   if (!fmt)
     return;
+
+  settings().beginGroup("Templates");
 
   n = settings().beginReadArray("file-type");
   for (int i = 0; i < n; ++i) {

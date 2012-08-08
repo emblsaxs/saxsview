@@ -1,3 +1,8 @@
+2012-08-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_config.cpp (applyTemplate): Change sections of settings
+	only after the format was recognized.
+
 2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_plot.cpp (setTransformation): Fixed comparison.
