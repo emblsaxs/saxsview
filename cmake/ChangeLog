@@ -1,3 +1,14 @@
+2012-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* cmake/Linux/install.cmake: Define install locations and
+	set RPATH.
+	* cmake/install.cmake (install_application): Use new
+	install locations.
+	(install_library): Likewise.
+	(install_python_module): Likewise.
+	* cmake/Linux/packaging.cmake: Added Debian-specific
+	CPACK variables.
+
 2012-07-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* macros.cmake (add_application): Handle GUI flag, i.e. do not
