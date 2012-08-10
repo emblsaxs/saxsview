@@ -1,3 +1,8 @@
+2012-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotsubwindow.cpp (load): Do not force the filename to ascii
+	character set.
+
 2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Fixed install command.

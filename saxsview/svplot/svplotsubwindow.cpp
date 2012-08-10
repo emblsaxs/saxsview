@@ -105,7 +105,7 @@ bool SVPlotSubWindow::load(const QString& fileName) {
   setCursor(Qt::WaitCursor);
 
   saxs_document *doc = saxs_document_create();
-  int res = saxs_document_read(doc, fileName.toAscii(), 0L);
+  int res = saxs_document_read(doc, qPrintable(fileName), 0L);
   if (res != 0) {
     saxs_document_free(doc);
     QMessageBox::warning(this, "Load failed",
