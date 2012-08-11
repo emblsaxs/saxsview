@@ -1,6 +1,11 @@
 
 include (GNUInstallDirs)
 
+set (SAXSVIEW_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR})
+set (SAXSVIEW_INSTALL_LIBDIR ${CMAKE_INSTALL_LIBDIR})
+
+set (SAXSVIEW_INSTALL_PYPKGDIR ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/site-packages)
+
 function (install_dependencies application)
   file (GLOB PLUGINS "${QT_PLUGINS_DIR}/imageformats/*.dll")
   install (CODE "set (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})

@@ -20,7 +20,8 @@ function (install_library)
 
   install (TARGETS               ${INSTALL_TARGETS}
            ARCHIVE DESTINATION   ${SAXSVIEW_INSTALL_LIBDIR}
-           LIBRARY DESTINATION   ${SAXSVIEW_INSTALL_LIBDIR})
+           LIBRARY DESTINATION   ${SAXSVIEW_INSTALL_LIBDIR}
+		   RUNTIME DESTINATION   ${SAXSVIEW_INSTALL_BINDIR})
 endfunction (install_library)
 
 

@@ -18,7 +18,7 @@ function (add_application)
 
   if (APP_GUI)
     set_target_properties(${APP_NAME} PROPERTIES
-                          WIN32                    TRUE
+                          WIN32_EXECUTABLE         TRUE
                           MACOSX_BUNDLE            TRUE
                           MACOSX_BUNDLE_INFO_PLIST ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_NAME}.plist)
   endif (APP_GUI)

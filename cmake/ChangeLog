@@ -1,3 +1,10 @@
+2012-08-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* macros.cmake (add_application): Fixed setting of WIN32_EXECUTABLE
+	target property.
+	* install.cmake (install_library): Added runtime destination.
+	* Windows/install.cmake: Define install locations.
+
 2012-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* cmake/Linux/install.cmake: Define install locations and
