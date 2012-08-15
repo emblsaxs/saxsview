@@ -71,25 +71,25 @@ malvern_txt_parse_data(struct saxs_document *doc,
 
   while (firstline != lastline) {
     if (sscanf(firstline->line_buffer,
-               "%lf %lf %lf %lf",
-               &ml, &ri, &uv, &rals) == 4) {
-
-      saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
-      saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
-      saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
-      saxs_curve_add_data(cmw,   ml, 0.0, mw,   0.0);
-      saxs_curve_add_data(cpeak, ml, 0.0, 0.0,  0.0);
-
-    } else if (sscanf(firstline->line_buffer,
                       "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
                       &ml, &ri, &uv, &rals, &ign, &ign, &mw, &ign, &ign,
-                      &ign, &ign, &ign, &ign, &ign) == 13) {
+                      &ign, &ign, &ign, &ign) == 13) {
 
       saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
       saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
       saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
       saxs_curve_add_data(cmw,   ml, 0.0, pow(10, mw) / 1000.0, 0.0);
       saxs_curve_add_data(cpeak, ml, 0.0, 1.0,  0.0);
+
+    } else if (sscanf(firstline->line_buffer,
+               "%lf %lf %lf %lf",
+               &ml, &ri, &uv, &rals) == 4) {
+
+      saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
+      saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
+      saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
+      saxs_curve_add_data(cmw,   ml, 0.0, NAN,   0.0);
+      saxs_curve_add_data(cpeak, ml, 0.0, 0.0,  0.0);
     }
 
     firstline = firstline->next;
