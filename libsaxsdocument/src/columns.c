@@ -220,6 +220,9 @@ int saxs_reader_columns_count(struct line *l) {
     while (*p && !isspace(*p)) ++p;
   }
 
+  /* Skip any trailing whitespace up to either a character or end of line. */
+  while (*p && isspace(*p)) ++p;
+
   /*
    * If a line starts with one or more numbers which is followed by text,
    * then this is not a data line. A data line contains only numbers and
