@@ -88,7 +88,7 @@ malvern_txt_parse_data(struct saxs_document *doc,
       saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
       saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
       saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
-      saxs_curve_add_data(cmw,   ml, 0.0, NAN,   0.0);
+      saxs_curve_add_data(cmw,   ml, 0.0, 0.0,  0.0);
       saxs_curve_add_data(cpeak, ml, 0.0, 0.0,  0.0);
     }
 
