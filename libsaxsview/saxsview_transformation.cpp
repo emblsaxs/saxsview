@@ -67,7 +67,7 @@ SaxsviewTransformation::Private::transform(const SaxsviewPlotPointData& in) cons
 
     double fx = mupEval(transformX);
     double fy = mupEval(transformY);
-    if (isnan(fx) || isnan(fy)) continue;           // e.g. log() of a negative
+    if (!isfinite(fx) || !isfinite(fy)) continue;   // e.g. log() of a negative or zero
 
     out.push_back(QPointF(fx, fy));
   }
@@ -125,14 +125,14 @@ SaxsviewTransformation::Private::transform(const SaxsviewPlotIntervalData& in) c
 
     double fx = mupEval(transformX);
     double fy = mupEval(transformY);
-    if (isnan(fx) || isnan(fy)) continue;        // e.g. log() of a negative
+    if (!isfinite(fx) || !isfinite(fy)) continue;        // e.g. log() of a negative
 
     // If the upper/lower bound is bad, just drop it.
     double fymin = mupEval(transformYmin);
-    if (isnan(fymin)) fymin = fy;
+    if (!isfinite(fymin)) fymin = fy;
 
     double fymax = mupEval(transformYmax);
-    if (isnan(fymax)) fymax = fy;
+    if (!isfinite(fymax)) fymax = fy;
 
     out.push_back(QwtIntervalSample(fx, fymin, fymax));
   }
