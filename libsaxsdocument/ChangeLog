@@ -1,3 +1,11 @@
+2012-08-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c: Bumped copyright years.
+	(issep): Also check for whitespace.
+	(saxs_reader_columns_count): Improved column detection.
+	(columns_parse): Likewise.
+	* src/csv.c (csv_parse_data): Create more useful curve titles.
+
 2012-08-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/malvern_txt.c (malvern_txt_parse_data): Replaced NAN by 0.0 as the former

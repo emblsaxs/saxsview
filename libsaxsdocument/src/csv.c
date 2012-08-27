@@ -37,11 +37,15 @@ csv_parse_data(struct saxs_document *doc,
   if (n < 2)
     return ENOTSUP;
 
-  for (i = 1; i < n; ++i)
+  for (i = 1; i < n; ++i) {
+    char title[128] = { '\0' };
+    sprintf(title, "column %d", i);
+
     saxs_reader_columns_parse(doc, firstline, lastline,
                               0, 1.0, i, 1.0, -1,
-                              "data",
+                              title,
                               SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+  }
 
   return 0;
 }

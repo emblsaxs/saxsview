@@ -32,10 +32,13 @@
 #include <errno.h>
 
 
-/* Similar to the POSIX "character classification routines";
-   check if the argument 'c' is a column separator. */
+/*
+ * Similar to the POSIX "character classification routines";
+ * check if the argument 'c' is a column separator.
+ * As whitespaces usually are column separators as well, include them here.
+ */
 static int issep(int c) {
-  return c == ',' || c == ';';
+  return isspace(c) || c == ',' || c == ';';
 }
 
 
@@ -212,12 +215,14 @@ int saxs_reader_columns_count(struct line *l) {
 
     cnt += 1;
 
-    /*
-     * Skip leading whitespace before skipping
-     * the value up to the next whitespace.
-     */
-    while (*p && (isspace(*p) || issep(*p))) ++p;
-    while (*p && !isspace(*p)) ++p;
+    /* Skip leading whitespace, if any. */
+    while (*p && isspace(*p)) ++p;
+
+    /* Skip the floating point value until the next separator is found. */
+    while (*p && !issep(*p)) ++p;
+    
+    /* Skip all consecutive separators up to the next value (think " , "). */
+    while (*p && issep(*p)) ++p;
   }
 
   /* Skip any trailing whitespace up to either a character or end of line. */
@@ -314,8 +319,15 @@ static int columns_parse(struct line *l, double *values) {
     cnt += 1;
 
     ++value;
-    while (*p && (isspace(*p) || issep(*p))) ++p;
-    while (*p && !isspace(*p)) ++p;
+
+    /* Skip leading whitespace, if any. */
+    while (*p && isspace(*p)) ++p;
+
+    /* Skip the floating point value until the next separator is found. */
+    while (*p && !issep(*p)) ++p;
+    
+    /* Skip all consecutive separators up to the next value (think " , "). */
+    while (*p && issep(*p)) ++p;
   }
 
   return cnt;
