@@ -6,5 +6,5 @@ if (CMAKE_Fortran_COMPILER_WORKS)
                       SOURCES fsaxsimage.f90
                       LIBRARIES saxsimage)
 
-  install_library (TARGETS fsaxsimage)
 endif (CMAKE_Fortran_COMPILER_WORKS)
+

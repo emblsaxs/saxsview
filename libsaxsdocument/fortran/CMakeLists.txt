@@ -6,5 +6,5 @@ if (CMAKE_Fortran_COMPILER_WORKS)
                       SOURCES fsaxsdocument.f90
                       LIBRARIES saxsdocument)
 
-  install_library (TARGETS fsaxsdocument)
 endif (CMAKE_Fortran_COMPILER_WORKS)
+
