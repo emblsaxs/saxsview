@@ -250,10 +250,13 @@ CONTAINS
     END DO
   END SUBROUTINE
 
-  SUBROUTINE saxs_document_data(doc, x, y, y_err, type)
+  SUBROUTINE saxs_document_data(doc, x, y, y_err, type, k)
     TYPE(saxs_document), INTENT(inout)                :: doc
     REAL(DBL), DIMENSION(:), ALLOCATABLE, INTENT(out) :: x, y, y_err
     INTEGER, INTENT(in), OPTIONAL                     :: type
+    INTEGER, INTENT(in), OPTIONAL                     :: k
+
+    INTEGER :: i
 
     INTERFACE
       FUNCTION c_saxs_document_curve(doc) &
@@ -271,6 +274,15 @@ CONTAINS
         TYPE(C_PTR) :: c_saxs_document_curve_find
         TYPE(C_PTR), VALUE :: doc
         INTEGER(C_INT), VALUE :: type
+      END FUNCTION
+    END INTERFACE
+
+    INTERFACE
+      FUNCTION c_saxs_curve_next(curve) &
+               BIND(C, NAME="saxs_curve_next")
+        IMPORT C_INT, C_PTR
+        TYPE(C_PTR) :: c_saxs_curve_next
+        TYPE(C_PTR), VALUE :: curve
       END FUNCTION
     END INTERFACE
 
@@ -336,6 +348,14 @@ CONTAINS
       curve = c_saxs_document_curve_find(doc%c_ptr, type)
     ELSE
       curve = c_saxs_document_curve(doc%c_ptr)
+    END IF
+
+    IF (PRESENT(k)) THEN
+      i = 1
+      DO WHILE(i < k .AND. C_ASSOCIATED(curve))
+        curve = c_saxs_curve_next(curve)
+        i     = i + 1
+      END DO
     END IF
 
     n = c_saxs_curve_data_count(curve)

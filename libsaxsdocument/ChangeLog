@@ -1,3 +1,8 @@
+2012-09-14  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* fortran/fsaxsdocument.f90 (saxs_document_data): Added optional parameter to
+	select the k-th data curve.
+
 2012-09-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* fortran/CMakeLists.txt: Do not install static bindings library.
