@@ -32,10 +32,13 @@ public:
 signals:
   void selected(const QString&);
 
+public slots:
+  void setDirectory(const QString&);
+
 private slots:
   void setNameFilter(const QString&);
-  void parentDir();
-  void homeDir();
+  void parentDirectory();
+  void homeDirectory();
   void indexSelected(const QModelIndex&);
 
 private:

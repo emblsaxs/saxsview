@@ -312,6 +312,8 @@ SVPlotMainWindow::SVPlotMainWindow(QWidget *parent)
   p->setupToolbars();
   p->setupMenus();
 
+  p->mdiArea->setAcceptDrops(true);
+
   // We want to be able to handle FileOpen events ...
   qApp->installEventFilter(this);
 
@@ -371,8 +373,15 @@ void SVPlotMainWindow::load(const QString& fileName) {
   if (!w->load(fileName))
     return;
 
-  config().addRecentFile(fileName);
-  config().setRecentDirectory(fileName);
+  QFileInfo info(fileName);
+  // Store the full path to the file, otherwise it may be possible
+  // to get relative paths to some working directory - which may
+  // be different next time.
+  config().addRecentFile(info.filePath());
+  config().setRecentDirectory(info.filePath());
+
+  // Synchronize the browser dock as well.
+  p->browserDock->setDirectory(info.filePath());
 
   // In case there were no recent files yet, the menu may be disabled
   if (!p->menuRecentFiles->isEnabled())
@@ -528,20 +537,41 @@ void SVPlotMainWindow::closeEvent(QCloseEvent*) {
 }
 
 bool SVPlotMainWindow::eventFilter(QObject *o, QEvent *e) {
-  //
-  // The Mac Finder does not pass the filename as an argument on double-click
-  // but opens the application without any argument and sends a FileOpen event
-  // instead.
-  //
-  // This explains it in more detail and gives a code example for Qt3: 
-  //    http://doc.qt.nokia.com/qq/qq12-mac-events.html
-  //
-  // Luckily the event is available in Qt4 already ...
-  //
-  if (QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e)) {
-    load(open->file());
-    return true;
+  switch (e->type()) {
+    case QEvent::FileOpen:
+    {
+      //
+      // The Mac Finder does not pass the filename as an argument on double-click
+      // but opens the application without any argument and sends a FileOpen event
+      // instead.
+      //
+      // This explains it in more detail and gives a code example for Qt3: 
+      //    http://doc.qt.nokia.com/qq/qq12-mac-events.html
+      //
+      // Luckily the event is available in Qt4 already ...
+      //
+      QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e);
+      load(open->file());
+      return true;
+    }
 
-  } else
-    return QMainWindow::eventFilter(o, e);
+    case QEvent::Drop:
+    {
+      QDropEvent *dropEvent = dynamic_cast<QDropEvent*>(e);
+      if (dropEvent->mimeData()->hasUrls())
+        foreach (QUrl url, dropEvent->mimeData()->urls())
+          load(url.toLocalFile());
+
+      dropEvent->acceptProposedAction();
+      // fall through
+    }
+
+    case QEvent::DragEnter:
+    case QEvent::DragMove:
+      e->accept();
+      return true;
+
+    default:
+      return QMainWindow::eventFilter(o, e);
+  }
 }

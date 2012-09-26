@@ -1,5 +1,23 @@
 2012-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotsubwindow.h (eventFilter): Removed.
+	* svplotsubwindow.cpp (eventFilter): Merged with ...
+	* svplotmainwindow.cpp (eventFilter): ... this.
+	(load): Also synchronize the browser dock.
+	(ctor): Accept drops on the MDI area.
+	* svplotfilebrowserdockwidget.h (setDirectory): New.
+	(parentDir): Renamed to ...
+	(parentDirectory): ... this.
+	(homeDir): Renamed to ...
+	(homeDirectory): ... this.
+	* svplotfilebrowserdockwidget.cpp (setDirectory): New.
+	(parentDir): Renamed to ...
+	(parentDirectory): ... this.
+	(homeDir): Renamed to ...
+	(homeDirectory): ... this.
+
+2012-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotfilebrowserdockwidget.cpp (setNameFilter): Prepend and
 	append '*' to also get partial matches for the filter.
 

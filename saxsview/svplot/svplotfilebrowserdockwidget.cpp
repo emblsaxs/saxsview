@@ -82,13 +82,13 @@ void SVPlotFileBrowserDockWidget::Private::setupUi(SVPlotFileBrowserDockWidget *
   btnParentDir->setIcon(style->standardIcon(QStyle::SP_FileDialogToParent));
   btnParentDir->setToolTip("Parent Directory");
   connect(btnParentDir, SIGNAL(clicked()),
-          dock, SLOT(parentDir()));
+          dock, SLOT(parentDirectory()));
 
   btnHomeDir = new QToolButton(dock);
   btnHomeDir->setIcon(style->standardIcon(QStyle::SP_DirHomeIcon));
   btnHomeDir->setToolTip("Home Directory");
   connect(btnHomeDir, SIGNAL(clicked()),
-          dock, SLOT(homeDir()));
+          dock, SLOT(homeDirectory()));
 
   model = new QFileSystemModel(dock);
   model->setReadOnly(true);
@@ -137,11 +137,15 @@ void SVPlotFileBrowserDockWidget::setNameFilter(const QString& filter) {
   p->model->setNameFilters(QStringList() << QString("*%1*").arg(filter));
 }
 
-void SVPlotFileBrowserDockWidget::parentDir() {
+void SVPlotFileBrowserDockWidget::setDirectory(const QString& fileName) {
+  indexSelected(p->model->index(QFileInfo(fileName).path()));
+}
+
+void SVPlotFileBrowserDockWidget::parentDirectory() {
   indexSelected(p->view->rootIndex().parent());
 }
 
-void SVPlotFileBrowserDockWidget::homeDir() {
+void SVPlotFileBrowserDockWidget::homeDirectory() {
   indexSelected(p->model->index(QDir::homePath()));
 }
 

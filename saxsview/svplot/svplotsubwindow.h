@@ -48,9 +48,6 @@ public slots:
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
 
-protected:
-  bool eventFilter(QObject*, QEvent*);
-
 private:
   class Private;
   Private *p;
