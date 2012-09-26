@@ -45,6 +45,7 @@ public:
   void showCurveProperties();
 
   QStandardItemModel *model;
+  QItemSelectionModel *selectionModel;
 
   QStackedWidget *browserStack;
 
@@ -259,8 +260,21 @@ void SVPlotPropertyDockWidget::currentIndexChanged(const QModelIndex& index) {
 
 void SVPlotPropertyDockWidget::subWindowActivated(QMdiSubWindow *w) {
   if (SVPlotSubWindow *sv = qobject_cast<SVPlotSubWindow*>(w)) {
-    p->model = sv->project()->model();
+    p->model          = sv->project()->model();
+    p->selectionModel = sv->project()->selectionModel();
 
-    currentIndexChanged(sv->project()->selectionModel()->currentIndex());
+    currentIndexChanged(p->selectionModel->currentIndex());
+  }
+}
+
+void SVPlotPropertyDockWidget::itemChanged(QStandardItem *item) {
+  if (SaxsviewPlotCurveItem *curveItem = dynamic_cast<SaxsviewPlotCurveItem*>(item)) {
+    curveItem->curve()->setVisible(curveItem->checkState() == Qt::Checked);
+
+    // If the changed item is the current one, do not forget to 
+    // update the property dock.
+    if (item == p->model->itemFromIndex(p->selectionModel->currentIndex()))
+      foreach (SaxsviewProperty *property, p->curveProperties)
+        property->setValue(curveItem->curve());
   }
 }

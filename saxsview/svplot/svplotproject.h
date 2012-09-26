@@ -58,6 +58,7 @@ public:
   QItemSelectionModel* selectionModel();
 
 signals:
+  void itemChanged(QStandardItem*);
   void currentIndexChanged(const QModelIndex&);
 
 private:

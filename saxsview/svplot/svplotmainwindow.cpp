@@ -335,6 +335,8 @@ void SVPlotMainWindow::newSubWindow() {
   SVPlotSubWindow *w = new SVPlotSubWindow(this);
   connect(w, SIGNAL(destroyed(QObject*)),
           this, SLOT(subWindowDestroyed(QObject*)));
+  connect(w->project(), SIGNAL(itemChanged(QStandardItem*)),
+          p->propertyDock, SLOT(itemChanged(QStandardItem*)));
   connect(w->project(), SIGNAL(currentIndexChanged(const QModelIndex&)),
           p->propertyDock, SLOT(currentIndexChanged(const QModelIndex&)));
 

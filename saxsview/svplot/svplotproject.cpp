@@ -42,9 +42,8 @@ SaxsviewPlotCurveItem::SaxsviewPlotCurveItem(SaxsviewPlotCurve *curve)
  : QStandardItem(curve->title()) {
   setToolTip(curve->fileName());
   setEditable(false);
-  // TODO: I'd like to have the "enabled" checkbox in the curve list ...
-//   setCheckable(true);
-//   setCheckState(Qt::Checked);
+  setCheckable(true);
+  setCheckState(Qt::Checked);
   setData(qVariantFromValue((void*)curve));
 }
 
@@ -69,10 +68,11 @@ SVPlotProject::Private::Private(SVPlotProject *parent) {
   model = new QStandardItemModel(parent);
   selectionModel = new QItemSelectionModel(model, parent);
 
-  connect(selectionModel,
-          SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
-          parent,
-          SIGNAL(currentIndexChanged(const QModelIndex&)));
+  connect(model, SIGNAL(itemChanged(QStandardItem*)),
+          parent, SIGNAL(itemChanged(QStandardItem*)));
+
+  connect(selectionModel, SIGNAL(currentChanged(const QModelIndex&, const QModelIndex&)),
+          parent, SIGNAL(currentIndexChanged(const QModelIndex&)));
 }
 
 

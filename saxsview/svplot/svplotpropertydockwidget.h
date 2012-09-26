@@ -22,6 +22,7 @@
 #include <QDockWidget>
 
 class QModelIndex;
+class QStandardItem;
 class QMdiSubWindow;
 class QtProperty;
 
@@ -34,6 +35,7 @@ public:
 
 public slots:
   void currentIndexChanged(const QModelIndex&);
+  void itemChanged(QStandardItem*);
   void subWindowActivated(QMdiSubWindow*);
 
 private:

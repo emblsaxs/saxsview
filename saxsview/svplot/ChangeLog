@@ -1,3 +1,14 @@
+2012-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotproject.h (itemChanged): New signal.
+	* svplotproject.cpp (ctor): Forward 'itemChanged' signal.
+	(SaxsviewPlotCurveItem): Made checkable to toggle visibility.
+	* svplotpropertydockwidget.h (itemChanged): New slot.
+	* svplotpropertydockwidget.cpp (itemChanged): New.
+	(subWindowActivated): Keep a pointer to the selection model.
+	* svplotmainwindow.cpp (newSubWindow): Connect the new itemChanged
+	signal/slots.
+
 2012-08-10  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svplotsubwindow.cpp (load): Do not force the filename to ascii
