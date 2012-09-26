@@ -1,5 +1,10 @@
 2012-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svplotfilebrowserdockwidget.cpp (setNameFilter): Prepend and
+	append '*' to also get partial matches for the filter.
+
+2012-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svplotproject.h (itemChanged): New signal.
 	* svplotproject.cpp (ctor): Forward 'itemChanged' signal.
 	(SaxsviewPlotCurveItem): Made checkable to toggle visibility.

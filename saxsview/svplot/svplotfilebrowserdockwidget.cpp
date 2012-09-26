@@ -132,7 +132,9 @@ SVPlotFileBrowserDockWidget::~SVPlotFileBrowserDockWidget() {
 }
 
 void SVPlotFileBrowserDockWidget::setNameFilter(const QString& filter) {
-  p->model->setNameFilters(QStringList() << (filter.isEmpty() ? "*" : filter));
+  // Instead of "filter", set "*filter*" to also get partial matches.
+  // This also handles the "no filter" case, setting just the '*'.
+  p->model->setNameFilters(QStringList() << QString("*%1*").arg(filter));
 }
 
 void SVPlotFileBrowserDockWidget::parentDir() {
