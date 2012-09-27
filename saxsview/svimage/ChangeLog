@@ -1,3 +1,7 @@
+2012-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+        * CMakeLists.txt: Explicitely link libm for those who need it.
+
 2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Fixed install command.
