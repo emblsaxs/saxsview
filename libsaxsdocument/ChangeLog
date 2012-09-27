@@ -1,3 +1,7 @@
+2012-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/CMakeLists.txt: Explicitely link libm.
+
 2012-09-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* fortran/fsaxsdocument.f90 (saxs_document_data): Added optional parameter to

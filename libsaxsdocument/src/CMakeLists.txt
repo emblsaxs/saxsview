@@ -31,7 +31,7 @@ endif (LIBXML2_FOUND)
 
 add_shared_library (saxsdocument
                     SOURCES ${HEADERS} ${SOURCES}
-                    LIBRARIES ${LIBXML2_LIBRARIES}
+                    LIBRARIES m ${LIBXML2_LIBRARIES}
                     VERSION 1)
 
 install_library (TARGETS saxsdocument)
