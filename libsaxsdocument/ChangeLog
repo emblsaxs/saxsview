@@ -1,3 +1,8 @@
+2012-11-02  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c (lines_read): Avoid realloc when increasing the line size,
+	explicitly initialize trailing bytes.
+
 2012-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/CMakeLists.txt: Explicitely link libm.

@@ -153,9 +153,18 @@ int lines_read(struct line **lines, const char *filename) {
 
     /* If necessary, increase line length. */
     if (line_ptr - tail->line_buffer == (signed)tail->line_length) {
+      char *old_line = tail->line_buffer;
       int old_line_length = tail->line_length;
+     
+      /*
+       * One could use realloc() here, but that leaves the trailing bytes uninitialized
+       * (which may throw off string searches later).
+       */
       tail->line_length *= 2;
-      tail->line_buffer = realloc(tail->line_buffer, tail->line_length);
+      tail->line_buffer = calloc(sizeof(char), tail->line_length);
+      strncpy(tail->line_buffer, old_line, old_line_length);
+      free(old_line);
+
       line_ptr = tail->line_buffer + old_line_length;
     }
   }
