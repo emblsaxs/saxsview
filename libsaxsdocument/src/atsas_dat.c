@@ -58,7 +58,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
   if (conc_pos) {
     char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
 
-  if (colon_pos)
+    if (colon_pos)
       strncpy(desc, colon_pos + 1,
               MIN(conc_pos - colon_pos - 1, 64));
 
@@ -121,6 +121,13 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
 
     saxs_document_add_property(doc, key, value);
 
+    /*
+     * There may be files, e.g. from BM29, that specify the code only
+     * in a key-value pair.
+     */
+    if (strcmp(key, "Code") == 0)
+      saxs_document_add_property(doc, "sample-code", value);
+
     free(value);
     free(key);
   }
@@ -159,6 +166,11 @@ atsas_dat_parse_header(struct saxs_document *doc,
    * Examples:
    *    "Description:                            Bovine Serum Al"
    *    "Sample description:                     Bovine Serum Albumin"
+   *
+   * Other files may provide a description without a "Description" key.
+   * If there is nothing, use the line as is and hope for the best.
+   * Example:
+   *    "BSA calibration sample"
    */
   while (firstline != lastline && strlen(firstline->line_buffer) == 0)
     firstline = firstline->next;
@@ -176,6 +188,9 @@ atsas_dat_parse_header(struct saxs_document *doc,
       char *p = strchr(firstline->line_buffer, ':') + 1;
       while (isspace(*p)) ++p;
       saxs_document_add_property(doc, "sample-description", p);
+
+    } else if (strchr(firstline->line_buffer, ':') == NULL) {
+      saxs_document_add_property(doc, "sample-description", firstline->line_buffer);
     }
 
     firstline = firstline->next;

@@ -139,6 +139,12 @@ int lines_read(struct line **lines, const char *filename) {
           *line_ptr++ = ' ';
         break;
 
+      /* Trim leading hash symbols (often used as 'comment' indicators). */
+      case '#':
+        if (strlen(tail->line_buffer) > 0)
+          *line_ptr++ = '#';
+        break;
+
       case '\n':
         *line_ptr++ = '\0';
 

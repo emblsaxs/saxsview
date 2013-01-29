@@ -1,3 +1,10 @@
+2013-01-29  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c (lines_read): Trim leading '#' comment indicators.
+	* src/atsas_dat.c (parse_basic_information): Fixed indentation.
+	(parse_key_value_pair): Special cased a "code" key.
+	(atsas_dat_parse_header): Special cased the description line.
+
 2012-11-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (lines_read): Avoid realloc when increasing the line size,
