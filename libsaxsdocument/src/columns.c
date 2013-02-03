@@ -132,17 +132,15 @@ int lines_read(struct line **lines, const char *filename) {
       case EOF:
         break;
 
-      /* Replace TAB, trim leading whitespace. */
+      /*
+       * Trim leading whitespace and hash symbols
+       * (often used as 'comment' indicators).
+       */
       case ' ':
       case '\t':
-        if (strlen(tail->line_buffer) > 0)
-          *line_ptr++ = ' ';
-        break;
-
-      /* Trim leading hash symbols (often used as 'comment' indicators). */
       case '#':
         if (strlen(tail->line_buffer) > 0)
-          *line_ptr++ = '#';
+          *line_ptr++ = (char)c;
         break;
 
       case '\n':
