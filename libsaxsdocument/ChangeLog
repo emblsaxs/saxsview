@@ -1,3 +1,11 @@
+2013-02-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src_malvern.txt (malvern_txt_parse_column_headers): New.
+	(malvern_txt_parse_column_values): New.
+	(malvern_txt_parse_data): Removed hardcoded columns, add as many
+	curves as there are columns using the column label as curve title.
+	(malvern_txt_read): Simplified data detection.
+
 2013-01-29  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (lines_read): Trim leading '#' comment indicators.

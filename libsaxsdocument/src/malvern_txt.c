@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2012, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -31,6 +31,83 @@
 #include <errno.h>
 #include <math.h>
 
+/*
+ * Build a list of column names. The labels may contain spaces,
+ * but the columns are TAB separated.
+ */
+static void
+malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
+  int i = 0;
+  char *c, *buffer, *p;
+
+  /*
+   * Count the TABs to allocate the number of entries in
+   * the 'columns' vector.
+   */
+  *n = 1;
+  c = l->line_buffer;
+  while (*c)
+    *n += (*c++ == '\t');
+
+  *columns = (char**)malloc(*n * sizeof(char*));
+
+  /* No column label is larger than the whole header string. */
+  buffer = (char*)malloc((l->line_length + 1) * sizeof(char));
+
+  c = l->line_buffer;
+  for (i = 0; i < *n; ++i, ++c) {
+    memset(buffer, 0, l->line_length + 1);
+    p = buffer;
+
+    while (*c != '\t' && *c != '\0')
+      *p++ = *c++;
+
+    (*columns)[i] = strdup(buffer);
+  }
+
+  free(buffer);
+}
+
+static int
+malvern_txt_parse_column_values(struct line *l, double *values, int n) {
+  int cnt = 0;
+  char *p;
+  double *value = values;
+
+  if (!l || !l->line_buffer)
+    return 0;
+
+  p = l->line_buffer;
+  while (*p) {
+    if (sscanf(p, "%lf", value) != 1)
+      break;
+
+    cnt += 1;
+
+    /*
+     * For some reason it appears that there may be less column
+     * header labels than actual data values per line. Make sure
+     * that we do not overrun the allocated space.
+     */
+    if (cnt == n)
+      break;
+
+    ++value;
+
+    /* Skip leading whitespace, if any. */
+    while (*p && isspace(*p)) ++p;
+
+    /* Skip the floating point value until the next separator is found. */
+    while (*p && !isspace(*p)) ++p;
+
+    /* Skip all consecutive separators up to the next value (think " , "). */
+    while (*p && isspace(*p)) ++p;
+  }
+
+  return cnt;
+}
+
+
 /**************************************************************************/
 static int
 malvern_txt_parse_header(struct saxs_document *doc,
@@ -44,56 +121,44 @@ malvern_txt_parse_header(struct saxs_document *doc,
 static int
 malvern_txt_parse_data(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
+  int i, n, m;
+  char **headers = NULL;
+  struct saxs_curve **curves;
+  double *values;
 
-  struct saxs_curve *cri, *cuv, *crals, *cmw, *cpeak;
-  double ml, ri, uv, rals, mw, ign;
+  /* The list of column names. */
+  malvern_txt_parse_column_headers(firstline, &headers, &n);
+  firstline = firstline->next;
 
-  /* Skip the column names. */
-  if (firstline)
-    firstline = firstline->next;
+  /* The list of curves. */
+  curves = (struct saxs_curve **) malloc(n * sizeof(struct saxs_curve*));
+  for (i = 0; i < n; ++i)
+    curves[i] = saxs_document_add_curve(doc, headers[i],
+                                        SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
   /*
-   * We are interested in: RI (2), UV (3), RALS (4) and Molecular Weight (7);
-   * NOTE: the column numbers in parantheses are '1'-based.
+   * There may be missing values in the columns, but only on the right
+   * hand side, i.e. not "VALUE N/A VALUE", but "VALUE VALUE N/A" only.
    *
-   * Further we need a peak indicator, '0' if no peak (only 4 output columns
-   * in the data file) and '1' on peak (13 output columns).
-   *
-   * Unfortunately, saxs_reader_columns_parse() can not deal with missing
-   * values, a feature we'd need here. However, since we want to generate
-   * an artificial peak indicator anyway, we deal with it here.
+   * Read as many values as there are, then fill them into the curves.
+   * It is assumed that the first column represents the x-axis; here
+   * it should be the retention volume.
    */
-  cri   = saxs_document_add_curve(doc, "RI", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-  cuv   = saxs_document_add_curve(doc, "UV", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-  crals = saxs_document_add_curve(doc, "RALS", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-  cmw   = saxs_document_add_curve(doc, "Molecular Weight (kDa)", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-  cpeak = saxs_document_add_curve(doc, "Peak Indicator", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-
+  values = (double*) malloc(n * sizeof(double));
   while (firstline != lastline) {
-    if (sscanf(firstline->line_buffer,
-                      "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
-                      &ml, &ri, &uv, &rals, &ign, &ign, &mw, &ign, &ign,
-                      &ign, &ign, &ign, &ign) == 13) {
-
-      saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
-      saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
-      saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
-      saxs_curve_add_data(cmw,   ml, 0.0, pow(10, mw) / 1000.0, 0.0);
-      saxs_curve_add_data(cpeak, ml, 0.0, 1.0,  0.0);
-
-    } else if (sscanf(firstline->line_buffer,
-               "%lf %lf %lf %lf",
-               &ml, &ri, &uv, &rals) == 4) {
-
-      saxs_curve_add_data(cri,   ml, 0.0, ri,   0.0);
-      saxs_curve_add_data(cuv,   ml, 0.0, uv,   0.0);
-      saxs_curve_add_data(crals, ml, 0.0, rals, 0.0);
-      saxs_curve_add_data(cmw,   ml, 0.0, 0.0,  0.0);
-      saxs_curve_add_data(cpeak, ml, 0.0, 0.0,  0.0);
-    }
+    m = malvern_txt_parse_column_values(firstline, values, n);
+    for (i = 1; i < m; ++i)
+      saxs_curve_add_data(curves[i], values[0], 0.0, values[i], 0.0);
 
     firstline = firstline->next;
   }
+
+  for (i = 0; i < n; ++i)
+    free(headers[i]);
+
+  free(headers);
+  free(values);
+  free(curves);
 
   return 0;
 }
@@ -102,27 +167,34 @@ int
 malvern_txt_read(struct saxs_document *doc,
                  struct line *firstline, struct line *lastline) {
 
+  static const char* columns[] = {
+    "Ret. Vol.", "RI", "RALS", "UV",
+    "Adjusted RI", "Adjusted RALS", "Adjusted UV",
+    "Molecular Weight", "Conc.", NULL
+  };
+  const char **col;
+
   struct line *header, *data, *footer;
 
   /*
-   * The header starts at the first line and ends when the data begins with:
-   *     "Ret. Vol.\tRI\tUV\tRALS\tAdjusted RI [...]"
+   * The header starts at the first line and ends when the data begins with
+   * a number of column labels. The columns are not fixed an depend on the
+   * settings for the analysis. Try to find at least four of the known
+   * column labels in one line to decide that this is the start of the data.
    */
   header = firstline;
   data   = header;
-  while (data && !(strstr(data->line_buffer, "Ret. Vol.")
-                    && strstr(data->line_buffer, "RI")
-                    && strstr(data->line_buffer, "UV")
-                    && strstr(data->line_buffer, "RALS")
-                    && strstr(data->line_buffer, "Adjusted RI")
-                    && strstr(data->line_buffer, "Adjusted RALS")
-                    && strstr(data->line_buffer, "Molecular Weight")
-                    && strstr(data->line_buffer, "Cumulative Weight Fraction")
-                    && strstr(data->line_buffer, "Normalized Wt Fr")
-                    && strstr(data->line_buffer, "Normalized Mole Fraction")
-                    && strstr(data->line_buffer, "Conc.")
-                    && strstr(data->line_buffer, "WF/dLogM")))
+  while (data) {
+    int count = 0;
+    for (col = columns; *col; *col++)
+      if (strstr(data->line_buffer, *col) != NULL)
+        count += 1;
+
+    if (count >= 4)
+      break;
+
     data = data->next;
+  }
 
   /* There is no spoon, sorry, footer. */
   footer = lastline;
