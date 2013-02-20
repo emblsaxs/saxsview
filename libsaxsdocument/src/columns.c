@@ -134,7 +134,7 @@ int lines_read(struct line **lines, const char *filename) {
 
       /*
        * Trim leading whitespace and hash symbols
-       * (often used as 'comment' indicators).
+       * (the latter are often used as 'comment' indicators).
        */
       case ' ':
       case '\t':
@@ -144,7 +144,16 @@ int lines_read(struct line **lines, const char *filename) {
         break;
 
       case '\n':
-        *line_ptr++ = '\0';
+        /*
+         * Filling the current position with a 'space' instead of '\0'
+         * makes trimming any trailing whitespace simpler as '\0' does
+         * not need to be handled specifically.
+         */
+        *line_ptr = ' ';
+
+        /* Trim trailing whitespace. */
+        while (line_ptr > tail->line_buffer && isspace(*line_ptr))
+          *line_ptr-- = '\0';
 
         tail->next = lines_create();
         tail = tail->next;

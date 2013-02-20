@@ -1,3 +1,7 @@
+2013-02-20  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c (lines_read): Trim trailing whitespace.
+
 2013-02-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (lines_read): Simplified, do not replace TABs.
