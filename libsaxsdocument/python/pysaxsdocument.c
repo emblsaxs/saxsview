@@ -112,21 +112,29 @@ PySaxsDocument_Read(const char *filename, const char *format,
 
     data = saxs_curve_data(curve);
     while (data) {
-      PyList_Append(pycurve, Py_BuildValue("(ddd)", saxs_data_x(data),
-                                                    saxs_data_y(data),
-                                                    saxs_data_y_err(data)));
+      PyObject *pt = Py_BuildValue("(ddd)", saxs_data_x(data),
+                                            saxs_data_y(data),
+                                            saxs_data_y_err(data));
+      PyList_Append(pycurve, pt);
+      Py_DECREF(pt);
+
       data = saxs_data_next(data);
     }
     PyList_Append(curves, pycurve);
+    Py_DECREF(pycurve);
 
     curve = saxs_curve_next(curve);
   }
 
   property = saxs_document_property_first(doc);
   while (property) {
-    PyDict_SetItem(properties,
-                   PyString_FromString(saxs_property_name(property)),
-                   PyString_FromString(saxs_property_value(property)));
+    PyObject *name = PyString_FromString(saxs_property_name(property));
+    PyObject *value = PyString_FromString(saxs_property_value(property));
+
+    PyDict_SetItem(properties, name, value);
+
+    Py_DECREF(value);
+    Py_DECREF(name);
 
     property = saxs_property_next(property);
   }
