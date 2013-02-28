@@ -1,3 +1,8 @@
+2013-02-28  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (atsas_dat_parse_footer): Verify that we have all the
+	basic information, otherwise, try to get the rest.
+
 2013-02-20  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (lines_read): Trim trailing whitespace.

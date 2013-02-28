@@ -228,7 +228,10 @@ atsas_dat_parse_footer(struct saxs_document *doc,
    * Try to read the basic information from there, the sample usually
    * comes first.
    */
-  if (!saxs_document_property_find_first(doc, "sample-description")) {
+  if (!saxs_document_property_find_first(doc, "sample-description")
+       || !saxs_document_property_find_first(doc, "sample-code")
+       || !saxs_document_property_find_first(doc, "sample-concentration")) {
+
     while (firstline != lastline) {
       parse_basic_information(doc, firstline);
       firstline = firstline->next;
