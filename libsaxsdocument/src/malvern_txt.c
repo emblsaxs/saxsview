@@ -30,6 +30,13 @@
 #include <string.h>
 #include <errno.h>
 #include <math.h>
+#include <float.h>
+#include <assert.h>
+
+#ifndef DBL_EPSILON
+#define DBL_EPSILON 1e-16
+#endif
+
 
 /*
  * Build a list of column names. The labels may contain spaces,
@@ -72,27 +79,25 @@ static int
 malvern_txt_parse_column_values(struct line *l, double *values, int n) {
   int cnt = 0;
   char *p;
-  double *value = values;
 
   if (!l || !l->line_buffer)
     return 0;
 
   p = l->line_buffer;
   while (*p) {
-    if (sscanf(p, "%lf", value) != 1)
-      break;
+    assert(cnt < n);
 
-    cnt += 1;
+    if (sscanf(p, "%lf", &values[cnt]) != 1)
+      break;
 
     /*
-     * For some reason it appears that there may be less column
-     * header labels than actual data values per line. Make sure
-     * that we do not overrun the allocated space.
+     * It was found that some files may have more data columns than 
+     * header entries. However, this seems not to be extra data, but
+     * simply a duplicated column. Thus, if two or more consecutive
+     * values are exactly identical, we ignore every one but the first.
      */
-    if (cnt == n)
-      break;
-
-    ++value;
+    if (cnt == 0 || fabs(values[cnt-1] - values[cnt]) > DBL_EPSILON)
+      cnt += 1;
 
     /* Skip leading whitespace, if any. */
     while (*p && isspace(*p)) ++p;
