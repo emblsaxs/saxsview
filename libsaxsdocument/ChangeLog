@@ -1,3 +1,7 @@
+2013-03-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_out.c (atsas_out_read): Recognize job types 5 and 6.
+
 2013-03-14  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* malvern_txt.c (malvern_txt_parse_column_values): Merge two or more

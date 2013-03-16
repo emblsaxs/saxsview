@@ -330,14 +330,18 @@ int atsas_out_read(struct saxs_document *doc,
 
   /*
    * Scattering data ends with:
-   *     "Distance distribution  function of particle"      (gnom jobtype 0)
-   *     "Characteristic function of particle thickness"    (gnom jobtype 3)
-   *     "Distance distribution function of cross-section"  (gnom jobtype 4)
+   *     "Distance distribution  function of particle"       (gnom jobtype 0)
+   *     "Characteristic function of particle thickness"     (gnom jobtype 3)
+   *     "Distance distribution function of cross-section"   (gnom jobtype 4)
+   *     "Length distribution function of long cylinders"    (gnom jobtype 5)
+   *     "Surface distribution function of spherical shells" (gnom jobtype 6)
    */
   while (current
          && !strstr(current->line_buffer, "function of particle")
          && !strstr(current->line_buffer, "particle thickness")
-         && !strstr(current->line_buffer, "function of cross-section"))
+         && !strstr(current->line_buffer, "function of cross-section")
+         && !strstr(current->line_buffer, "function of long cylinders")
+         && !strstr(current->line_buffer, "function of spherical shells"))
     current = current->next;
 
   probability_begin = current;
