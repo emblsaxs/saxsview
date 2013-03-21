@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012, 2013
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -58,7 +59,6 @@ class SaxsviewImage : public QwtPlot {
   Q_PROPERTY(bool colorBarVisible READ colorBarVisible WRITE setColorBarVisible)
   Q_PROPERTY(QFont tickLabelFont READ tickLabelFont WRITE setTickLabelFont)
   Q_PROPERTY(QColor tickLabelFontColor READ tickLabelFontColor WRITE setTickLabelFontColor)
-
 
 public:
   SaxsviewImage(QWidget *parent = 0L);
@@ -141,6 +141,9 @@ class SaxsviewFrame : public QObject,
   Q_PROPERTY(double minValue READ minValue WRITE setMinValue)
   Q_PROPERTY(double maxValue READ maxValue WRITE setMaxValue)
 
+  Q_PROPERTY(QString maskFileName READ maskFileName WRITE setMaskFileName)
+  Q_PROPERTY(bool isMaskApplied READ isMaskApplied WRITE setMaskApplied)
+
 public:
   SaxsviewFrame(QObject *parent = 0L);
   ~SaxsviewFrame();
@@ -150,9 +153,14 @@ public:
   double minValue() const;
   double maxValue() const;
 
+  QString maskFileName() const;
+  bool isMaskApplied() const;
+
 public slots:
   void setMinValue(double);
   void setMaxValue(double);
+  void setMaskFileName(const QString&);
+  void setMaskApplied(bool);
 
 private:
   class Private;
@@ -170,6 +178,8 @@ public:
 
   void setMinValue(double x);
   void setMaxValue(double x);
+  bool setMaskFileName(const QString&);
+  void setMaskApplied(bool);
 
   double value(double x, double y) const;
 

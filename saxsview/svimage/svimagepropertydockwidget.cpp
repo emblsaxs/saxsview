@@ -102,8 +102,6 @@ void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrow
   imageProperties.append(new SaxsviewProperty("Color", "tickLabelFontColor",
                                               browser, ticksGroup));
 
-
-
   SaxsviewProperty *frameGroup = new SaxsviewProperty("Frame", browser);
   frameProperties.append(new SaxsviewProperty("Size", "size",
                                               browser, frameGroup));
@@ -111,6 +109,13 @@ void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrow
                                               browser, frameGroup));
   frameProperties.append(new SaxsviewProperty("Upper Threshold", "maxValue",
                                               browser, frameGroup));
+
+  // TODO: The mask file name should not be a line edit, but a button with file open dialog.
+  SaxsviewProperty *maskGroup = new SaxsviewProperty("Mask", browser);
+  frameProperties.append(new SaxsviewProperty("Mask File", "maskFileName",
+                                              browser, maskGroup));
+  frameProperties.append(new SaxsviewProperty("Apply Mask", "isMaskApplied",
+                                              browser, maskGroup));
 }
 
 

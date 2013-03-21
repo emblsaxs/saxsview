@@ -1,3 +1,17 @@
+2013-03-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsview/saxsview_image.h: Bumped copyright years.
+	(maskFileName): New.
+	(setMaskFileName): New.
+	(isMaskApplied): New.
+	(setMaskApplied): New.
+	* libsaxsview/saxsview_image.cpp: Bumped copyright years.
+	(maskFileName): New.
+	(setMaskFileName): New.
+	(isMaskApplied): New.
+	(setMaskApplied): New.
+	(value): If a mask is available, mask out selected pixels.
+
 2012-08-23  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_transformation.cpp (transform): Verify that the result

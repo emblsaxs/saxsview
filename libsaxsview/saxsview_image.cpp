@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012, 2013
+ * Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -646,11 +647,14 @@ QColor SaxsviewImage::colorBarToColor() const {
 
 class SaxsviewFrame::Private {
 public:
+  QString maskFileName;
+  bool isMaskApplied;
 };
 
 SaxsviewFrame::SaxsviewFrame(QObject *parent)
  : QObject(parent), QwtPlotSpectrogram(), p(new Private) {
 
+  p->isMaskApplied = false;
   setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
 }
 
@@ -674,6 +678,15 @@ double SaxsviewFrame::maxValue() const {
   return data() ? data()->interval(Qt::ZAxis).maxValue() : 0.0;
 }
 
+QString SaxsviewFrame::maskFileName() const {
+  return p->maskFileName;
+}
+
+bool SaxsviewFrame::isMaskApplied() const {
+  return p->isMaskApplied;
+}
+
+
 void SaxsviewFrame::setMinValue(double x) {
   if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
     d->setMinValue(x);
@@ -696,16 +709,40 @@ void SaxsviewFrame::setMaxValue(double x) {
   }
 }
 
+void SaxsviewFrame::setMaskFileName(const QString& fileName) {
+  if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
+    p->maskFileName = fileName;
+
+    if (d->setMaskFileName(fileName) == true)
+      plot()->replot();
+  }
+}
+
+void SaxsviewFrame::setMaskApplied(bool applied) {
+  if (p->isMaskApplied != applied) {
+qDebug() << "mask applied?" << applied;
+    p->isMaskApplied = applied;
+
+    if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data()))
+      d->setMaskApplied(applied);
+
+    plot()->replot();
+  }
+}
 
 
 class SaxsviewFrameData::Private {
 public:
-  saxs_image* data;
+  saxs_image *data, *mask;
   QwtInterval range, selectedRange;
+  bool isMaskApplied;
 };
 
 SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
  : QwtRasterData(), p(new Private) {
+
+  p->mask = 0L;
+  p->isMaskApplied = false;
 
   p->data = saxs_image_create();
   if (saxs_image_read(p->data, qPrintable(fileName), 0L) == 0) {
@@ -749,6 +786,29 @@ void SaxsviewFrameData::setMaxValue(double x) {
                                      qMin(x, saxs_image_value_max(p->data))));
 }
 
+bool SaxsviewFrameData::setMaskFileName(const QString& fileName) {
+  saxs_image *mask = saxs_image_create();
+  if (saxs_image_read(mask, qPrintable(fileName), 0L) == 0) {
+    if (p->mask)
+      saxs_image_free(p->mask);
+
+    p->mask = mask;
+    return true;
+
+  } else {
+    return false;
+  }
+}
+
+void SaxsviewFrameData::setMaskApplied(bool applied) {
+  p->isMaskApplied = applied;
+}
+
 double SaxsviewFrameData::value(double x, double y) const {
-  return saxs_image_value(p->data, (int)x, (int)y);
+  if (p->mask && p->isMaskApplied) {
+    double mask = saxs_image_value(p->mask, (int)x, (int)y);
+    return mask > 0.0 ? -1.0 : saxs_image_value(p->data, (int)x, (int)y);
+
+  } else 
+    return saxs_image_value(p->data, (int)x, (int)y);
 }
