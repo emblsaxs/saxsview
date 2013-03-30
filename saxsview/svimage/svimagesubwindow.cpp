@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -64,18 +64,34 @@ private:
 
 class SVImageSubWindow::Private {
 public:
-  Private() : image(0L), frame(0L), tracker(0L) {
-  }
+  Private();
+  ~Private();
 
   void setupUi(SVImageSubWindow *w);
   void setupTracker(SVImageSubWindow *w);
+  void setupFilesystemModel(SVImageSubWindow *w);
 
-  QString fileName;
+  void setFilePath(const QString&);
+
+  QString filePath;
 
   SaxsviewImage *image;
   SaxsviewFrame *frame;
   QwtPicker *tracker;
+
+  bool watchLatest;
+  QFileSystemModel *model;
+  QModelIndex rootIndex;
 };
+
+SVImageSubWindow::Private::Private()
+ : image(0L), frame(0L), tracker(0L),
+   watchLatest(false) {
+}
+
+SVImageSubWindow::Private::~Private() {
+  delete model;
+}
 
 void SVImageSubWindow::Private::setupUi(SVImageSubWindow *w) {
   frame = new SaxsviewFrame(w);
@@ -93,6 +109,25 @@ void SVImageSubWindow::Private::setupTracker(SVImageSubWindow*) {
   tracker->setTrackerMode(QwtPicker::AlwaysOn);
 }
 
+void SVImageSubWindow::Private::setupFilesystemModel(SVImageSubWindow *w) {
+
+  // FIXME: make name filters configurable
+  model = new QFileSystemModel;
+  model->setFilter(QDir::Files);
+  model->setNameFilters(QStringList() << "*.tiff" << "*.cbf" << "*.edf" << "*.msk");
+  model->setNameFilterDisables(false);
+  model->sort(3);                       // by modification date
+
+  connect(model, SIGNAL(rowsInserted(const QModelIndex&, int, int)),
+          w, SLOT(rowsInserted(const QModelIndex&, int, int)));
+}
+
+void SVImageSubWindow::Private::setFilePath(const QString& filePath) {
+  this->filePath = filePath;
+  rootIndex = model->setRootPath(QFileInfo(filePath).absolutePath());
+}
+
+
 SVImageSubWindow::SVImageSubWindow(QWidget *parent)
  : QMdiSubWindow(parent), p(new Private) {
 
@@ -100,6 +135,7 @@ SVImageSubWindow::SVImageSubWindow(QWidget *parent)
 
   p->setupUi(this);
   p->setupTracker(this);
+  p->setupFilesystemModel(this);
 }
 
 SVImageSubWindow::~SVImageSubWindow() {
@@ -111,7 +147,7 @@ SaxsviewImage *SVImageSubWindow::image() const {
 }
 
 QString& SVImageSubWindow::fileName() const {
-  return p->fileName;
+  return p->filePath;
 }
 
 bool SVImageSubWindow::zoomEnabled() const {
@@ -130,6 +166,10 @@ double SVImageSubWindow::upperThreshold() const {
   return p->frame->maxValue();
 }
 
+bool SVImageSubWindow::watchLatest() const {
+  return p->watchLatest;
+}
+
 
 bool SVImageSubWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
@@ -141,16 +181,17 @@ bool SVImageSubWindow::load(const QString& fileName) {
   p->frame->setData(new SaxsviewFrameData(fileName));
   p->image->setFrame(p->frame);
 
-  p->fileName = fileName;
   setWindowTitle(QString("%1 - %2").arg(fileName)
                                    .arg(qApp->applicationName()));
+
+  p->setFilePath(fileInfo.filePath());
 
   unsetCursor();
   return true;
 }
 
 void SVImageSubWindow::reload() {
-  load(p->fileName);
+  load(p->filePath);
 }
 
 void SVImageSubWindow::exportAs(const QString& fileName,
@@ -180,4 +221,59 @@ void SVImageSubWindow::setLowerThreshold(double threshold) {
 
 void SVImageSubWindow::setUpperThreshold(double threshold) {
   p->frame->setMaxValue(threshold);
+}
+
+void SVImageSubWindow::goFirst() {
+  if (p->rootIndex.isValid()) {
+    int firstRow = 0;
+    QModelIndex newIndex = p->model->index(firstRow, 0, p->rootIndex);
+
+    load(p->model->fileInfo(newIndex).filePath());
+  }
+}
+
+void SVImageSubWindow::goPrevious() {
+  if (p->rootIndex.isValid()) {
+    QModelIndex currentIndex = p->model->index(p->filePath);
+    int previousRow = currentIndex.row() - 1;
+
+    if (previousRow >= 0) {
+      QModelIndex newIndex = p->model->index(previousRow, 0, p->rootIndex);
+      load(p->model->fileInfo(newIndex).filePath());
+    }
+  }
+}
+
+void SVImageSubWindow::goNext() {
+  if (p->rootIndex.isValid()) {
+    QModelIndex currentIndex = p->model->index(p->filePath);
+    int nextRow = currentIndex.row() + 1;
+
+    if (nextRow < p->model->rowCount(p->rootIndex)) {
+      QModelIndex newIndex = p->model->index(nextRow, 0, p->rootIndex);
+      load(p->model->fileInfo(newIndex).filePath());
+    }
+  }
+}
+
+void SVImageSubWindow::goLast() {
+  if (p->rootIndex.isValid()) {
+    int lastRow = p->model->rowCount(p->rootIndex) - 1;
+    QModelIndex newIndex = p->model->index(lastRow, 0, p->rootIndex);
+
+    load(p->model->fileInfo(newIndex).filePath());
+  }
+}
+
+void SVImageSubWindow::setWatchLatest(bool on) {
+  if (p->watchLatest != on) {
+    p->watchLatest = on;
+    if (on)
+      goLast();
+  }
+}
+
+void SVImageSubWindow::rowsInserted(const QModelIndex&, int, int) {
+  if (watchLatest())
+    goLast();
 }

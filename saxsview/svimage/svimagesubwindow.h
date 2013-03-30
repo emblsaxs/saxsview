@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -24,6 +24,7 @@ class SaxsviewImage;
 
 #include <QMdiSubWindow>
 class QEvent;
+class QModelIndex;
 
 class SVImageSubWindow : public QMdiSubWindow {
   Q_OBJECT
@@ -42,6 +43,8 @@ public:
   double lowerThreshold() const;
   double upperThreshold() const;
 
+  bool watchLatest() const;
+
 public slots:
   bool load(const QString& fileName);
   void reload();
@@ -52,6 +55,15 @@ public slots:
   void setMoveEnabled(bool);
   void setLowerThreshold(double);
   void setUpperThreshold(double);
+
+  void goFirst();
+  void goPrevious();
+  void goNext();
+  void goLast();
+  void setWatchLatest(bool);
+
+private slots:
+  void rowsInserted(const QModelIndex&, int, int);
 
 private:
   class Private;

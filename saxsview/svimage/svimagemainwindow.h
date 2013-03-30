@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011, 2012 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -45,6 +45,12 @@ public slots:
   void zoomFit();
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
+
+  void goFirst();
+  void goPrevious();
+  void goNext();
+  void goLast();
+  void setWatchLatest(bool);
 
   void about();
 

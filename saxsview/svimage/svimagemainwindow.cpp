@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011, 2012, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of saxsview.
  *
@@ -46,6 +46,10 @@ public:
   QAction *actionZoomFit, *actionZoom, *actionMove;
   QActionGroup *actionGroupZoomMove;
 
+  // "Go"-menu
+  QAction *actionGoFirst, *actionGoPrevious, *actionGoNext, *actionGoLast;
+  QAction *actionWatchLatest;
+
   // "Window"-menu
   QAction *actionPreviousPlot, *actionNextPlot, *actionCascadePlots;
   QAction *actionTilePlots, *actionClosePlot, *actionCloseAllPlots;
@@ -54,7 +58,7 @@ public:
   QAction *actionAbout;
 
   QMenu *menuFile, *menuCreateSubWindow, *menuRecentFiles, *menuExportAs;
-  QMenu *menuPlot, *menuWindow, *menuView, *menuHelp;
+  QMenu *menuPlot, *menuGo, *menuWindow, *menuView, *menuHelp;
 
   // toolbars
   QToolBar *svimageToolBar;
@@ -149,6 +153,42 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
   actionGroupZoomMove->addAction(actionMove);
 
   //
+  // "Go"-menu
+  //
+  actionGoFirst = new QAction("&First", mw);
+  actionGoFirst->setShortcut(QKeySequence::MoveToStartOfLine);
+  actionGoFirst->setEnabled(false);
+  connect(actionGoFirst, SIGNAL(triggered()),
+          mw, SLOT(goFirst()));
+
+  actionGoPrevious = new QAction("&Previous", mw);
+  actionGoPrevious->setShortcut(QKeySequence::MoveToPreviousPage);
+  actionGoPrevious->setIcon(mw->style()->standardIcon(QStyle::SP_MediaSkipBackward));
+  actionGoPrevious->setEnabled(false);
+  connect(actionGoPrevious, SIGNAL(triggered()),
+          mw, SLOT(goPrevious()));
+
+  actionGoNext = new QAction("&Next", mw);
+  actionGoNext->setShortcut(QKeySequence::MoveToNextPage);
+  actionGoNext->setIcon(mw->style()->standardIcon(QStyle::SP_MediaSkipForward));
+  actionGoNext->setEnabled(false);
+  connect(actionGoNext, SIGNAL(triggered()),
+          mw, SLOT(goNext()));
+
+  actionGoLast = new QAction("&Last", mw);
+  actionGoLast->setShortcut(QKeySequence::MoveToEndOfLine);
+  actionGoLast->setEnabled(false);
+  connect(actionGoLast, SIGNAL(triggered()),
+          mw, SLOT(goLast()));
+
+  actionWatchLatest = new QAction("&Watch Latest", mw);
+  actionWatchLatest->setCheckable(true);
+  actionWatchLatest->setChecked(false);
+  actionWatchLatest->setEnabled(false);
+  connect(actionWatchLatest, SIGNAL(toggled(bool)),
+          mw, SLOT(setWatchLatest(bool)));
+
+  //
   // "Window"-menu
   //
   actionPreviousPlot = new QAction("&Previous Image", mw);
@@ -195,9 +235,7 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupUi() {
   connect(mdiArea, SIGNAL(subWindowActivated(QMdiSubWindow*)),
           propertyDock, SLOT(subWindowActivated(QMdiSubWindow*)));
 
-//   menu->addAction(dock->toggleViewAction());
   mw->addDockWidget(Qt::RightDockWidgetArea, propertyDock);
-
   mw->setCentralWidget(mdiArea);
 }
 
@@ -235,9 +273,19 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
   menuPlot->addActions(actionGroupZoomMove->actions());
   menuBar->addMenu(menuPlot);
 
-  menuView = new QMenu("&View", mw);
-  menuView->addAction(svimageToolBar->toggleViewAction());
+  menuGo = new QMenu("&Go", mw);
+  menuGo->addAction(actionGoFirst);
+  menuGo->addAction(actionGoPrevious);
+  menuGo->addAction(actionGoNext);
+  menuGo->addAction(actionGoLast);
+  menuGo->addSeparator();
+  menuGo->addAction(actionWatchLatest);
+  menuBar->addMenu(menuGo);
+
+  menuView = new QMenu("&Views", mw);
   menuView->addAction(propertyDock->toggleViewAction());
+  menuView->addSeparator();
+  menuView->addAction(svimageToolBar->toggleViewAction());
   menuBar->addMenu(menuView);
 
   menuWindow = new QMenu("&Window", mw);
@@ -407,6 +455,32 @@ void SVImageMainWindow::setMoveEnabled(bool on) {
     currentSubWindow()->setMoveEnabled(on);
 }
 
+void SVImageMainWindow::goFirst() {
+  if (currentSubWindow())
+    currentSubWindow()->goFirst();
+}
+
+void SVImageMainWindow::goPrevious() {
+  if (currentSubWindow())
+    currentSubWindow()->goPrevious();
+}
+
+void SVImageMainWindow::goNext() {
+  if (currentSubWindow())
+    currentSubWindow()->goNext();
+}
+
+void SVImageMainWindow::goLast() {
+  if (currentSubWindow())
+    currentSubWindow()->goLast();
+}
+
+void SVImageMainWindow::setWatchLatest(bool on) {
+  if (currentSubWindow())
+    currentSubWindow()->setWatchLatest(on);
+}
+
+
 void SVImageMainWindow::about() {
   QString title = QString("About %1").arg(PROJECT_NAME);
   QString about = QString("%1 %3\n"
@@ -479,11 +553,12 @@ void SVImageMainWindow::setActiveSubWindow(QWidget *w) {
 void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   if (SVImageSubWindow *subWindow = qobject_cast<SVImageSubWindow*>(w)) {
     //
-    // Synchronize zoom and move actions beween subwindow
-    // and local actions.
+    // Synchronize actions beween subwindow and local actions.
     //
     p->actionZoom->setChecked(subWindow->zoomEnabled());
     p->actionMove->setChecked(subWindow->moveEnabled());
+
+    p->actionWatchLatest->setChecked(subWindow->watchLatest());
   }
 
   //
@@ -496,6 +571,12 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionZoom->setEnabled(on);
   p->actionMove->setEnabled(on);
   p->menuExportAs->setEnabled(on);
+
+  p->actionGoFirst->setEnabled(on);
+  p->actionGoPrevious->setEnabled(on);
+  p->actionGoNext->setEnabled(on);
+  p->actionGoLast->setEnabled(on);
+  p->actionWatchLatest->setEnabled(on);
 }
 
 void SVImageMainWindow::subWindowDestroyed(QObject*) {

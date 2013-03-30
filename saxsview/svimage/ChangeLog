@@ -1,3 +1,36 @@
+2013-03-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimagemainwindow.h (goFirst): New.
+	(goPrevious): New.
+	(goNext): New.
+	(goLast): New.
+	(setWatchLatest): New.
+	* svimagemainwindow.cpp (setupActions): Create go-related actions.
+	(setupMenus): Added "Go" menu.
+	(subWindowActivated): Synchronize "watch latest", enable/disable
+	go-related actions.
+	(goFirst): New.
+	(goPrevious): New.
+	(goNext): New.
+	(goLast): New.
+	(setWatchLatest): New.
+	* svimagesubwindow.h (watchLatest): New.
+	(goFirst): New.
+	(goPrevious): New.
+	(goNext): New.
+	(goLast): New.
+	(setWatchLatest): New.
+	(rowsInserted): New.
+	* svimagesubwindow.cpp (setupFilesystemModel): New.
+	(setFilePath): New.
+	(watchLatest): New.
+	(goFirst): New.
+	(goPrevious): New.
+	(goNext): New.
+	(goLast): New.
+	(setWatchLatest): New.
+	(rowsInserted): New.
+
 2013-03-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagepropertydockwidget.cpp (setupImageProperties): Added
