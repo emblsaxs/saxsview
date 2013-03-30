@@ -80,7 +80,7 @@ for publication.</p>
     </td>
   </tr>
 </table>
-<p>The programs are based on <a href="http://qt.nokia.com/">Qt -A cross-platform application
+<p>The programs are based on <a href="http://qt-project.org/">Qt -A cross-platform application
 and UI framework</a> and <a href="http://qwt.sourceforge.net">Qwt - Qt Plotting Widgets
 for Technical Applications</a> and is thus available for Linux, MacOSX and Microsoft Windows
 alike.</p>
@@ -101,7 +101,7 @@ respective formats, eventually simplifying data-transfer between programs.</p>
 earlier versions may work, but are not guaranteed to work. Later version are
 generally assumed to work:</p>
 <ul>
-  <li>CMake-2.6 (build system)</li>
+  <li>CMake-2.8.3 (build system)</li>
   <li>Qt-4.4 (UI framework)</li>
   <li>gcc-4.3 (C, C++ and Fortran compilers)</li>
 </ul>
@@ -115,7 +115,7 @@ generally assumed to work:</p>
 <p>Dependecies less commonly found (Qwt, CBFlib, edfpack) on average systems come
 together with the <i>saxsview</i> sources.</p>
 <p>As is, it was successfully compiled and used on Linux (32/64 bit), MacOSX
-10.[567] and Windows (i686-unknown-mingw).</p>
+10.[5678] and Windows (i686-unknown-mingw).</p>
 
 <p>Please note, depending on your installation location, e.g. <tt>/usr/local</tt> in
 Linux, you may need to adjust <tt>LD_LIBRARY_PATH</tt> as well.</p>
@@ -139,7 +139,7 @@ apply for Windows or MacOSX builds:</p>
 <p>The commands listed here are for a bash-shell on Linux. Similar commands
 apply for Windows or MacOSX builds:</p>
 <pre>
-  $> svn co https://saxsview.svn.sourceforge.net/svnroot/saxsview/trunk saxsview
+  $> svn co svn://svn.code.sf.net/p/saxsview/code/trunk saxsview
   $> cd saxsview
   $> mkdir build && cd build
   $> cmake .. -DCMAKE_INSTALL_PREFIX=/where/to/install
@@ -150,8 +150,8 @@ apply for Windows or MacOSX builds:</p>
 
 
 <h2><a name="licenses">Licenses</a></h2>
-<p>The code of the <i>saxsview</i> application is licensed under
-<a href="http://www.fsf.org/licensing/licenses/gpl.html">GPLv3</a> while the
+<p>The code of the applications (<i>svimage</i>, <i>svplot</i>, ...) is licensed
+under <a href="http://www.fsf.org/licensing/licenses/gpl.html">GPLv3</a> while the
 libraries, <i>libsaxsview</i> and <i>libsaxsdocument</i> are licensed under the
 <a href="http://www.fsf.org/licensing/licenses/lgpl.html">Lesser GPLv3</a>.</p>
 
@@ -164,7 +164,15 @@ LGPLv3 directly.</p>
 
 <h2><a name="releases">Releases and Milestones</a></h2>
 <ul>
+  <li>2013/03/30 - Added previous/next/last file navigation and "watch the lastest file
+                   in a directory" functionality to <i>svimage</i>
+  <li>2012/07/16 - Added <i>svconv</i>, a tool to convert saxs files from one format to another
+                   (if the respective readers and writers are available)</li>
+  <li>2012/06/29 - Added initial Python bindings for <i>libsaxsdocument</i></li>
+  <li>2012/04/09 - Added <a href="http://muparser.sourceforge.net">muparser</a> to eventually
+                   allow for user-defined plot transformations</li>
   <li>2012/03/19 - <i>libsaxsdocument</i> now has basic support for .rad files from MAXLAB</li>
+  <li>2012/03/10 - Added file system browser dock to <i>svplot</i></li>
   <li>2012/03/09 - Drag'n'drop support for <i>svplot</i></li>
   <li>2012/03/09 - MIME-type support and .destop files for freedesktop.org platforms.</li>
   <li>2011/09/11 - the monolithic saxsview application gets split into
@@ -187,7 +195,7 @@ LGPLv3 directly.</p>
   <li>2009/08/24 - saxsview-0.1.0 released</li>
 </ul>
 
-<p style="text-align:center">Last updated 2012-04-01</p>
+<p style="text-align:center">Last updated 2013-03-30</p>
 
 <p>
   <a href="http://validator.w3.org/check?uri=referer">
