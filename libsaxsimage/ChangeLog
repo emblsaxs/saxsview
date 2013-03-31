@@ -1,3 +1,10 @@
+2013-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/msk.c (saxs_image_format_msk): Registered writer; moved magic
+	check to ...
+	(saxs_image_msk_read): ... here.
+	(saxs_image_msk_write): New.
+
 2012-09-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * fortran/CMakeLists.txt: Do not install static bindings library.
