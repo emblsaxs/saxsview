@@ -43,6 +43,33 @@
 
 #include <QtGui>
 
+//
+// A MaskColorMap is either fully transparent (mask == 0),
+// or partially transparant with a specified color (mask == 1).
+//
+class MaskColorMap : public QwtColorMap {
+  QColor unmasked, masked;
+
+public:
+  MaskColorMap(const QColor& c) {
+    unmasked = c;
+    unmasked.setAlpha(0);
+
+    masked = c;
+    masked.setAlpha(128);
+  }
+
+  QRgb rgb(const QwtInterval&, double value) const {
+    return value < 0.5 ? unmasked.rgba() : masked.rgba();
+  }
+
+  unsigned char colorIndex(const QwtInterval&, double) const {
+    return 0;
+  }
+};
+
+
+
 class Log10ColorMap : public QwtLinearColorMap {
 public:
   Log10ColorMap(const QColor &from, const QColor &to,
@@ -110,6 +137,7 @@ public:
                            const QColor&, const QColor&);
 
   SaxsviewFrame *frame;
+  SaxsviewMask *mask;
   Saxsview::Scale scale;
   QColor colorFrom;
   QColor colorTo;
@@ -121,7 +149,7 @@ public:
 };
 
 SaxsviewImage::Private::Private()
- : frame(0L), colorFrom(Qt::white), colorTo(Qt::black) {
+ : frame(0L), mask(0L), colorFrom(Qt::white), colorTo(Qt::black) {
 }
 
 void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
@@ -291,6 +319,20 @@ void SaxsviewImage::setFrame(SaxsviewFrame *frame) {
 
 SaxsviewFrame* SaxsviewImage::frame() const {
   return p->frame;
+}
+
+void SaxsviewImage::setMask(SaxsviewMask *mask) {
+  if (p->mask)
+    p->mask->detach();
+
+  p->mask = mask;
+  mask->attach(this);
+
+  replot();
+}
+
+SaxsviewMask* SaxsviewImage::mask() const {
+  return p->mask;
 }
 
 QRectF SaxsviewImage::zoomBase() const {
@@ -647,14 +689,11 @@ QColor SaxsviewImage::colorBarToColor() const {
 
 class SaxsviewFrame::Private {
 public:
-  QString maskFileName;
-  bool isMaskApplied;
 };
 
 SaxsviewFrame::SaxsviewFrame(QObject *parent)
  : QObject(parent), QwtPlotSpectrogram(), p(new Private) {
 
-  p->isMaskApplied = false;
   setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
 }
 
@@ -670,23 +709,6 @@ QSize SaxsviewFrame::size() const {
     return QSize();
 }
 
-double SaxsviewFrame::minValue() const {
-  return data() ? data()->interval(Qt::ZAxis).minValue() : 0.0;
-}
-
-double SaxsviewFrame::maxValue() const {
-  return data() ? data()->interval(Qt::ZAxis).maxValue() : 0.0;
-}
-
-QString SaxsviewFrame::maskFileName() const {
-  return p->maskFileName;
-}
-
-bool SaxsviewFrame::isMaskApplied() const {
-  return p->isMaskApplied;
-}
-
-
 void SaxsviewFrame::setMinValue(double x) {
   if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
     d->setMinValue(x);
@@ -696,6 +718,10 @@ void SaxsviewFrame::setMinValue(double x) {
 
     plot()->replot();
   }
+}
+
+double SaxsviewFrame::minValue() const {
+  return data() ? data()->interval(Qt::ZAxis).minValue() : 0.0;
 }
 
 void SaxsviewFrame::setMaxValue(double x) {
@@ -709,40 +735,132 @@ void SaxsviewFrame::setMaxValue(double x) {
   }
 }
 
-void SaxsviewFrame::setMaskFileName(const QString& fileName) {
-  if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
-    p->maskFileName = fileName;
+double SaxsviewFrame::maxValue() const {
+  return data() ? data()->interval(Qt::ZAxis).maxValue() : 0.0;
+}
 
-    if (d->setMaskFileName(fileName) == true)
-      plot()->replot();
+
+class SaxsviewMask::Private {
+public:
+  Private();
+
+  void setValue(SaxsviewMask *mask, const QPointF&, double value);
+  void setValue(SaxsviewMask *mask, const QPolygonF&, double value);
+
+  QColor color;
+  bool modified;
+};
+
+SaxsviewMask::Private::Private()
+ : modified(false) {
+}
+
+void SaxsviewMask::Private::setValue(SaxsviewMask *mask, const QPointF& p, double value) {
+  if (SaxsviewFrameData *d = (SaxsviewFrameData*)(mask->data())) {
+    // QPointF::toPoint() rounds to nearest integer, that's not what we want here.
+    const QPoint point((int)p.x(), (int)p.y());
+
+    d->setValue(point.x(), point.y(), value);
+
+    modified = true;
+    mask->plot()->replot();
   }
 }
 
-void SaxsviewFrame::setMaskApplied(bool applied) {
-  if (p->isMaskApplied != applied) {
-qDebug() << "mask applied?" << applied;
-    p->isMaskApplied = applied;
+void SaxsviewMask::Private::setValue(SaxsviewMask *mask, const QPolygonF& p, double value) {
+  if (SaxsviewFrameData *d = (SaxsviewFrameData*)(mask->data())) {
+    // QPolygonF::toPolygon() internally uses toPoint() rounding, see above.
+    QPolygon polygon;
+    foreach (QPointF pt, p)
+      polygon << QPoint((int)pt.x(), (int)pt.y());
 
-    if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data()))
-      d->setMaskApplied(applied);
+    const QRect r = polygon.boundingRect();
 
-    plot()->replot();
+    for (int x = r.x(); x <= r.x() + r.width(); ++x)
+      for (int y = r.y(); y <= r.y() + r.height(); ++y)
+        if (polygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+          d->setValue(x, y, value);
+
+    modified = true;
+    mask->plot()->replot();
   }
 }
+
+
+
+SaxsviewMask::SaxsviewMask(QObject *parent)
+ : QObject(parent), QwtPlotSpectrogram(), p(new Private) {
+
+  // The mask shall be "above" the image.
+  setZ(10);
+
+  // TODO: make initial mask color configurable (save the last mask color?)
+  setColor(QColor(255, 0, 255, 255));
+
+  setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
+}
+
+SaxsviewMask::~SaxsviewMask() {
+}
+
+bool SaxsviewMask::save(const QString& fileName) const {
+  if (SaxsviewFrameData *d = (SaxsviewFrameData*)data())
+    return d->save(fileName);
+  else
+    return false;
+}
+
+void SaxsviewMask::add(const QPointF& pt) {
+  p->setValue(this, pt, 1.0);
+}
+
+void SaxsviewMask::remove(const QPointF& pt) {
+  p->setValue(this, pt, 0.0);
+}
+
+void SaxsviewMask::add(const QPolygonF& pt) {
+  p->setValue(this, pt, 1.0);
+}
+
+void SaxsviewMask::remove(const QPolygonF& pt) {
+  p->setValue(this, pt, 0.0);
+}
+
+bool SaxsviewMask::isModified() const {
+  return p->modified;
+}
+
+QSize SaxsviewMask::size() const {
+  if (data())
+    return QSize(data()->interval(Qt::XAxis).width(),
+                 data()->interval(Qt::YAxis).width());
+  else
+    return QSize();
+}
+
+void SaxsviewMask::setColor(const QColor& c) {
+  if (c != p->color) {
+    p->color = c;
+
+    // Color map: fully transparent (mask == 0) to more opaque (mask == 1).
+    setColorMap(new MaskColorMap(c));
+  }
+}
+
+QColor SaxsviewMask::color() const {
+  return p->color;
+}
+
 
 
 class SaxsviewFrameData::Private {
 public:
-  saxs_image *data, *mask;
+  saxs_image *data;
   QwtInterval range, selectedRange;
-  bool isMaskApplied;
 };
 
 SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
  : QwtRasterData(), p(new Private) {
-
-  p->mask = 0L;
-  p->isMaskApplied = false;
 
   p->data = saxs_image_create();
   if (saxs_image_read(p->data, qPrintable(fileName), 0L) == 0) {
@@ -786,29 +904,17 @@ void SaxsviewFrameData::setMaxValue(double x) {
                                      qMin(x, saxs_image_value_max(p->data))));
 }
 
-bool SaxsviewFrameData::setMaskFileName(const QString& fileName) {
-  saxs_image *mask = saxs_image_create();
-  if (saxs_image_read(mask, qPrintable(fileName), 0L) == 0) {
-    if (p->mask)
-      saxs_image_free(p->mask);
-
-    p->mask = mask;
-    return true;
-
-  } else {
-    return false;
-  }
-}
-
-void SaxsviewFrameData::setMaskApplied(bool applied) {
-  p->isMaskApplied = applied;
-}
-
 double SaxsviewFrameData::value(double x, double y) const {
-  if (p->mask && p->isMaskApplied) {
-    double mask = saxs_image_value(p->mask, (int)x, (int)y);
-    return mask > 0.0 ? -1.0 : saxs_image_value(p->data, (int)x, (int)y);
+  return saxs_image_value(p->data, (int)x, (int)y);
+}
 
-  } else 
-    return saxs_image_value(p->data, (int)x, (int)y);
+void SaxsviewFrameData::setValue(double x, double y, double value) {
+  saxs_image_set_value(p->data, (int)x, (int)y, value);
+}
+
+bool SaxsviewFrameData::save(const QString& fileName) const {
+  if (p->data)
+    return saxs_image_write(p->data, qPrintable(fileName), 0L) == 0;
+  else
+    return false;
 }

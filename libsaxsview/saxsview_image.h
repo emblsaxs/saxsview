@@ -30,6 +30,7 @@ class QString;
 
 #include "saxsview.h"
 class SaxsviewFrame;
+class SaxsviewMask;
 class SaxsviewFrameData;
 
 
@@ -65,6 +66,7 @@ public:
   ~SaxsviewImage();
 
   SaxsviewFrame* frame() const;
+  SaxsviewMask* mask() const;
 
   QRectF zoomBase() const;
   void zoom(const QRectF&);
@@ -101,6 +103,7 @@ public slots:
   void print();
 
   void setFrame(SaxsviewFrame *frame);
+  void setMask(SaxsviewMask *mask);
   void setZoomBase(const QRectF& rect = QRectF());
   void setZoomEnabled(bool);
   void setMoveEnabled(bool);
@@ -137,12 +140,9 @@ private:
 class SaxsviewFrame : public QObject,
                       public QwtPlotSpectrogram {
   Q_OBJECT
-  Q_PROPERTY(QSize  size     READ size)
+  Q_PROPERTY(QSize size READ size)
   Q_PROPERTY(double minValue READ minValue WRITE setMinValue)
   Q_PROPERTY(double maxValue READ maxValue WRITE setMaxValue)
-
-  Q_PROPERTY(QString maskFileName READ maskFileName WRITE setMaskFileName)
-  Q_PROPERTY(bool isMaskApplied READ isMaskApplied WRITE setMaskApplied)
 
 public:
   SaxsviewFrame(QObject *parent = 0L);
@@ -153,14 +153,42 @@ public:
   double minValue() const;
   double maxValue() const;
 
-  QString maskFileName() const;
-  bool isMaskApplied() const;
-
 public slots:
   void setMinValue(double);
   void setMaxValue(double);
-  void setMaskFileName(const QString&);
-  void setMaskApplied(bool);
+
+private:
+  class Private;
+  Private *p;
+};
+
+
+class SaxsviewMask : public QObject,
+                     public QwtPlotSpectrogram {
+  Q_OBJECT
+  Q_PROPERTY(QSize size READ size)
+  Q_PROPERTY(bool visible READ isVisible WRITE setVisible)
+  Q_PROPERTY(QColor color READ color WRITE setColor)
+
+public:
+  SaxsviewMask(QObject *parent = 0L);
+  ~SaxsviewMask();
+
+  bool save(const QString& fileName) const;
+
+  void add(const QPointF&);
+  void remove(const QPointF&);
+
+  void add(const QPolygonF&);
+  void remove(const QPolygonF&);
+
+  bool isModified() const;
+
+  QSize size() const;
+  QColor color() const;
+
+public slots:
+  void setColor(const QColor&);
 
 private:
   class Private;
@@ -178,10 +206,11 @@ public:
 
   void setMinValue(double x);
   void setMaxValue(double x);
-  bool setMaskFileName(const QString&);
-  void setMaskApplied(bool);
 
   double value(double x, double y) const;
+  void setValue(double x, double y, double value);
+
+  bool save(const QString& fileName) const;
 
 private:
   class Private;
