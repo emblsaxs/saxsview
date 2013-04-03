@@ -52,6 +52,7 @@ public slots:
   void goLast();
   void setWatchLatest(bool);
 
+  void newMask();
   void loadMask();
   void saveMaskAs();
   void setMaskVisible(bool);

@@ -50,7 +50,7 @@ public:
   QAction *actionWatchLatest;
 
   // "Tools"-menu
-  QAction *actionMaskLoad, *actionMaskSaveAs, *actionMaskIsVisible;
+  QAction *actionMaskNew, *actionMaskLoad, *actionMaskSaveAs, *actionMaskIsVisible;
   QAction *actionMaskAddPoint, *actionMaskAddPolygon;
   QAction *actionMaskRemovePoint, *actionMaskRemovePolygon;
 
@@ -194,6 +194,11 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
   //
   // "Tools"-menu
   //
+  actionMaskNew = new QAction("&New", mw);
+  actionMaskNew->setEnabled(false);
+  connect(actionMaskNew, SIGNAL(triggered()),
+          mw, SLOT(newMask()));
+
   actionMaskLoad = new QAction("&Open", mw);
   actionMaskLoad->setEnabled(false);
   connect(actionMaskLoad, SIGNAL(triggered()),
@@ -348,6 +353,7 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
   QMenu *menuMaskTools = menuTools->addMenu("Mask");
   menuMaskTools->addAction(actionMaskIsVisible);
   menuMaskTools->addSeparator();
+  menuMaskTools->addAction(actionMaskNew);
   menuMaskTools->addAction(actionMaskLoad);
   menuMaskTools->addAction(actionMaskSaveAs);
   menuMaskTools->addSeparator();
@@ -388,6 +394,7 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupToolbars() {
   mainToolBar->addAction(actionMove);
 
   maskToolBar = mw->addToolBar("Mask Toolbar");
+  maskToolBar->addAction(actionMaskNew);
   maskToolBar->addAction(actionMaskSaveAs);
   maskToolBar->addAction(actionMaskAddPoint);
   maskToolBar->addAction(actionMaskAddPolygon);
@@ -564,6 +571,11 @@ void SVImageMainWindow::setWatchLatest(bool on) {
     currentSubWindow()->setWatchLatest(on);
 }
 
+void SVImageMainWindow::newMask() {
+  if (currentSubWindow())
+    currentSubWindow()->newMask();
+}
+
 void SVImageMainWindow::loadMask() {
   if (currentSubWindow()) {
     QString fileName = QFileDialog::getOpenFileName(this, "Select Mask ...",
@@ -726,6 +738,7 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionWatchLatest->setEnabled(on);
 
   p->actionMaskIsVisible->setEnabled(on);
+  p->actionMaskNew->setEnabled(on);
   p->actionMaskLoad->setEnabled(on);
   p->actionMaskSaveAs->setEnabled(on);
   p->actionMaskAddPoint->setEnabled(on);

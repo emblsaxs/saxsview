@@ -332,6 +332,15 @@ void SVImageSubWindow::setWatchLatest(bool on) {
   }
 }
 
+void SVImageSubWindow::newMask() {
+  //
+  // The current mask, if any, is owned by the plot.
+  // No need to delete it.
+  //
+  p->mask->setData(new SaxsviewFrameData(p->frame->size()));
+  p->image->replot();
+}
+
 bool SVImageSubWindow::loadMask(const QString& fileName) {
   QFileInfo fileInfo(fileName);
   if (!fileInfo.exists())

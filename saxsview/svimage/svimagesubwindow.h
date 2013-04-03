@@ -45,6 +45,12 @@ public:
 
   bool watchLatest() const;
 
+  bool maskIsVisible() const;
+  bool maskAddPointsEnabled() const;
+  bool maskAddPolygonEnabled() const;
+  bool maskRemovePointsEnabled() const;
+  bool maskRemovePolygonEnabled() const;
+
 public slots:
   bool load(const QString& fileName);
   void reload();
@@ -62,8 +68,22 @@ public slots:
   void goLast();
   void setWatchLatest(bool);
 
+  void newMask();
+  bool loadMask(const QString& fileName);
+  bool saveMaskAs(const QString& fileName);
+  void setMaskVisible(bool);
+  void setMaskAddPointsEnabled(bool);
+  void setMaskAddPolygonEnabled(bool);
+  void setMaskRemovePointsEnabled(bool);
+  void setMaskRemovePolygonEnabled(bool);
+
 private slots:
   void rowsInserted(const QModelIndex&, int, int);
+
+  void addSelectionToMask(const QPointF&);
+  void addSelectionToMask(const QVector<QPointF>&);
+  void removeSelectionFromMask(const QPointF&);
+  void removeSelectionFromMask(const QVector<QPointF>&);
 
 private:
   class Private;
