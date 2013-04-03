@@ -1,5 +1,17 @@
 2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svimagemainwindow.h (newMask): New.
+	* svimagemainwindow.cpp (setupActions): Added action
+	to create a new, empty, mask.
+	(setupMenus): Added new mask to mask tools.
+	(setupToolbars): Added new mask to mask toolbar.
+	(newMask): New.
+	(subWindowActivated): Enable/disable new action.
+	* svimagesubwindow.h(newMask): New.
+	* svimagesubwindow.cpp (newMask): New.
+
+2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svimagemainwindow.h (loadMask): New.
 	(saveMaskAs): New.
 	(setMaskVisible): New.
