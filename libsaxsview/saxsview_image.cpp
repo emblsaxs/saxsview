@@ -842,7 +842,7 @@ void SaxsviewMask::setColor(const QColor& c) {
   if (c != p->color) {
     p->color = c;
 
-    // Color map: fully transparent (mask == 0) to more opaque (mask == 1).
+    // Color map: fully transparent (mask == 0) to a more opaque (mask == 1).
     setColorMap(new MaskColorMap(c));
   }
 }
@@ -879,6 +879,17 @@ SaxsviewFrameData::SaxsviewFrameData(const QString& fileName)
 SaxsviewFrameData::SaxsviewFrameData(const SaxsviewFrameData& other)
   : QwtRasterData(), p(new Private) {
   p->data = other.p->data;
+}
+
+SaxsviewFrameData::SaxsviewFrameData(const QSize& size)
+  : QwtRasterData(), p(new Private) {
+
+  p->data = saxs_image_create();
+  saxs_image_set_size(p->data, size.width(), size.height());
+
+  setInterval(Qt::XAxis, QwtInterval(0.0, size.width()));
+  setInterval(Qt::YAxis, QwtInterval(0.0, size.height()));
+  setInterval(Qt::ZAxis, QwtInterval(0.0, 1.0));
 }
 
 SaxsviewFrameData::~SaxsviewFrameData() {

@@ -198,7 +198,12 @@ private:
 
 class SaxsviewFrameData : public QwtRasterData {
 public:
+  /** An empty frame of @a size. */
+  explicit SaxsviewFrameData(const QSize& size);
+
+  /** A frame fill with data from @a fileName. */
   explicit SaxsviewFrameData(const QString& fileName);
+
   SaxsviewFrameData(const SaxsviewFrameData& other);
   ~SaxsviewFrameData();
 

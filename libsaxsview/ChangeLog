@@ -1,5 +1,11 @@
 2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_image.h (SaxsviewFrameData::ctor): New constructor
+	crates an empty frame based on size.
+	* saxsview_image.cpp: Likewise.
+
+2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_image.h (SaxsviewMask): New.
 	(SaxsviewImage::mask): New.
 	(SaxsviewImage::setMask): New.
