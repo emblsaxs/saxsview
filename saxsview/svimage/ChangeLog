@@ -1,3 +1,61 @@
+2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimagemainwindow.h (loadMask): New.
+	(saveMaskAs): New.
+	(setMaskVisible): New.
+	(setMaskAddPointsEnabled): New.
+	(setMaskAddPolygonEnabled): New.
+	(setMaskRemovePointsEnabled): New.
+	(setMaskRemovePolygonEnabled): New.
+	* svimagemainwindow.cpp (setupActions): Added actions
+	for mask load, save and editing; group all picker-related
+	actions into one action group.
+	(setupMenus): Added "Tools"-menu, added "Mask"-submenu.
+	(setupToolbars): Added "Mask Toolbar".
+	(loadMask): New.
+	(saveMaskAs): New.
+	(setMaskVisible): New.
+	(setMaskAddPointsEnabled): New.
+	(setMaskAddPolygonEnabled): New.
+	(setMaskRemovePointsEnabled): New.
+	(setMaskRemovePolygonEnabled): New.
+	(subWindowActivated): Enable/disable new actions.
+	* svimagesubwindow.h (maskIsVisible): New.
+	(maskAddPointsEnabled): New.
+	(maskAddPolygonEnabled): New.
+	(maskRemovePointsEnabled): New.
+	(maskRemovePolygonEnabled): New.
+	(loadMask): New.
+	(saveMaskAs): New.
+	(setMaskVisible): New.
+	(setMaskAddPointsEnabled): New.
+	(setMaskAddPolygonEnabled): New.
+	(setMaskRemovePointsEnabled): New.
+	(setMaskRemovePolygonEnabled): New.
+	(addSelectionToMask): New.
+	(addSelectionToMask): New.
+	(removeSelectionFromMask): New.
+	(removeSelectionFromMask): New.
+	* svimagesubwindow.cpp (setupTracker): Renamed to ...
+	(setupPicker): ... this; set up mask related plot pickers.
+	(setupUi): Set a mask.
+	(maskIsVisible): New.
+	(maskAddPointsEnabled): New.
+	(maskAddPolygonEnabled): New.
+	(maskRemovePointsEnabled): New.
+	(maskRemovePolygonEnabled): New.
+	(loadMask): New.
+	(saveMaskAs): New.
+	(setMaskVisible): New.
+	(setMaskAddPointsEnabled): New.
+	(setMaskAddPolygonEnabled): New.
+	(setMaskRemovePointsEnabled): New.
+	(setMaskRemovePolygonEnabled): New.
+	(addSelectionToMask): New.
+	(addSelectionToMask): New.
+	(removeSelectionFromMask): New.
+	(removeSelectionFromMask): New.
+
 2013-03-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagemainwindow.h (goFirst): New.

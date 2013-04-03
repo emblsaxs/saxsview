@@ -44,11 +44,15 @@ public:
 
   // "Plot"-menu
   QAction *actionZoomFit, *actionZoom, *actionMove;
-  QActionGroup *actionGroupZoomMove;
 
   // "Go"-menu
   QAction *actionGoFirst, *actionGoPrevious, *actionGoNext, *actionGoLast;
   QAction *actionWatchLatest;
+
+  // "Tools"-menu
+  QAction *actionMaskLoad, *actionMaskSaveAs, *actionMaskIsVisible;
+  QAction *actionMaskAddPoint, *actionMaskAddPolygon;
+  QAction *actionMaskRemovePoint, *actionMaskRemovePolygon;
 
   // "Window"-menu
   QAction *actionPreviousPlot, *actionNextPlot, *actionCascadePlots;
@@ -57,11 +61,14 @@ public:
   // "Help"-menu
   QAction *actionAbout;
 
+  // A group for all picker-related tasks (zooming, panning, mask editing, ...).
+  QActionGroup *actionGroupPlotPicker;
+
   QMenu *menuFile, *menuCreateSubWindow, *menuRecentFiles, *menuExportAs;
-  QMenu *menuPlot, *menuGo, *menuWindow, *menuView, *menuHelp;
+  QMenu *menuPlot, *menuGo, *menuTools, *menuWindow, *menuView, *menuHelp;
 
   // toolbars
-  QToolBar *svimageToolBar;
+  QToolBar *mainToolBar, *maskToolBar;
 
   // dock widgets
   SVImagePropertyDockWidget *propertyDock;
@@ -148,10 +155,6 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
           mw, SLOT(setMoveEnabled(bool)));
   actionZoom->setChecked(true);
 
-  actionGroupZoomMove = new QActionGroup(mw);
-  actionGroupZoomMove->addAction(actionZoom);
-  actionGroupZoomMove->addAction(actionMove);
-
   //
   // "Go"-menu
   //
@@ -189,6 +192,54 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
           mw, SLOT(setWatchLatest(bool)));
 
   //
+  // "Tools"-menu
+  //
+  actionMaskLoad = new QAction("&Open", mw);
+  actionMaskLoad->setEnabled(false);
+  connect(actionMaskLoad, SIGNAL(triggered()),
+          mw, SLOT(loadMask()));
+
+  actionMaskSaveAs = new QAction("&Save As ...", mw);
+  actionMaskSaveAs->setEnabled(false);
+  connect(actionMaskSaveAs, SIGNAL(triggered()),
+          mw, SLOT(saveMaskAs()));
+
+  actionMaskIsVisible = new QAction("&Visible", mw);
+  actionMaskIsVisible->setCheckable(true);
+  actionMaskIsVisible->setChecked(false);
+  actionMaskIsVisible->setEnabled(true);
+  connect(actionMaskIsVisible, SIGNAL(toggled(bool)),
+          mw, SLOT(setMaskVisible(bool)));
+
+  actionMaskAddPoint = new QAction("Add pixel", mw);
+  actionMaskAddPoint->setCheckable(true);
+  actionMaskAddPoint->setChecked(false);
+  actionMaskAddPoint->setEnabled(false);
+  connect(actionMaskAddPoint, SIGNAL(toggled(bool)),
+          mw, SLOT(setMaskAddPointsEnabled(bool)));
+
+  actionMaskAddPolygon = new QAction("Add polygon", mw);
+  actionMaskAddPolygon->setCheckable(true);
+  actionMaskAddPolygon->setChecked(false);
+  actionMaskAddPolygon->setEnabled(false);
+  connect(actionMaskAddPolygon, SIGNAL(toggled(bool)),
+          mw, SLOT(setMaskAddPolygonEnabled(bool)));
+
+  actionMaskRemovePoint = new QAction("Remove pixel", mw);
+  actionMaskRemovePoint->setCheckable(true);
+  actionMaskRemovePoint->setChecked(false);
+  actionMaskRemovePoint->setEnabled(false);
+  connect(actionMaskRemovePoint, SIGNAL(toggled(bool)),
+          mw, SLOT(setMaskRemovePointsEnabled(bool)));
+
+  actionMaskRemovePolygon = new QAction("Remove polygon", mw);
+  actionMaskRemovePolygon->setCheckable(true);
+  actionMaskRemovePolygon->setChecked(false);
+  actionMaskRemovePolygon->setEnabled(false);
+  connect(actionMaskRemovePolygon, SIGNAL(toggled(bool)),
+          mw, SLOT(setMaskRemovePolygonEnabled(bool)));
+
+  //
   // "Window"-menu
   //
   actionPreviousPlot = new QAction("&Previous Image", mw);
@@ -224,6 +275,16 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
   actionAbout = new QAction("&About", mw);
   connect(actionAbout, SIGNAL(triggered()),
           mw, SLOT(about()));
+
+
+  actionGroupPlotPicker = new QActionGroup(mw);
+  actionGroupPlotPicker->addAction(actionZoom);
+  actionGroupPlotPicker->addAction(actionMove);
+
+  actionGroupPlotPicker->addAction(actionMaskAddPoint);
+  actionGroupPlotPicker->addAction(actionMaskAddPolygon);
+  actionGroupPlotPicker->addAction(actionMaskRemovePoint);
+  actionGroupPlotPicker->addAction(actionMaskRemovePolygon);
 }
 
 void SVImageMainWindow::SVImageMainWindowPrivate::setupUi() {
@@ -270,7 +331,8 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
   menuPlot = new QMenu("&Plot", mw);
   menuPlot->addAction(actionZoomFit);
   menuPlot->addSeparator();
-  menuPlot->addActions(actionGroupZoomMove->actions());
+  menuPlot->addAction(actionZoom);
+  menuPlot->addAction(actionMove);
   menuBar->addMenu(menuPlot);
 
   menuGo = new QMenu("&Go", mw);
@@ -282,10 +344,24 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
   menuGo->addAction(actionWatchLatest);
   menuBar->addMenu(menuGo);
 
+  menuTools = new QMenu("&Tools", mw);
+  QMenu *menuMaskTools = menuTools->addMenu("Mask");
+  menuMaskTools->addAction(actionMaskIsVisible);
+  menuMaskTools->addSeparator();
+  menuMaskTools->addAction(actionMaskLoad);
+  menuMaskTools->addAction(actionMaskSaveAs);
+  menuMaskTools->addSeparator();
+  menuMaskTools->addAction(actionMaskAddPoint);
+  menuMaskTools->addAction(actionMaskAddPolygon);
+  menuMaskTools->addAction(actionMaskRemovePoint);
+  menuMaskTools->addAction(actionMaskRemovePolygon);
+  menuBar->addMenu(menuTools);
+
   menuView = new QMenu("&Views", mw);
   menuView->addAction(propertyDock->toggleViewAction());
   menuView->addSeparator();
-  menuView->addAction(svimageToolBar->toggleViewAction());
+  menuView->addAction(mainToolBar->toggleViewAction());
+  menuView->addAction(maskToolBar->toggleViewAction());
   menuBar->addMenu(menuView);
 
   menuWindow = new QMenu("&Window", mw);
@@ -302,13 +378,21 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupToolbars() {
   mw->setIconSize(QSize(24, 24));
   mw->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
 
-  svimageToolBar = mw->addToolBar("svimage Toolbar");
-  svimageToolBar->addAction(actionLoad);
-  svimageToolBar->addAction(actionReload);
-  svimageToolBar->addAction(actionPrint);
-  svimageToolBar->addSeparator();
-  svimageToolBar->addAction(actionZoomFit);
-  svimageToolBar->addActions(actionGroupZoomMove->actions());
+  mainToolBar = mw->addToolBar("Main Toolbar");
+  mainToolBar->addAction(actionLoad);
+  mainToolBar->addAction(actionReload);
+  mainToolBar->addAction(actionPrint);
+  mainToolBar->addSeparator();
+  mainToolBar->addAction(actionZoomFit);
+  mainToolBar->addAction(actionZoom);
+  mainToolBar->addAction(actionMove);
+
+  maskToolBar = mw->addToolBar("Mask Toolbar");
+  maskToolBar->addAction(actionMaskSaveAs);
+  maskToolBar->addAction(actionMaskAddPoint);
+  maskToolBar->addAction(actionMaskAddPolygon);
+  maskToolBar->addAction(actionMaskRemovePoint);
+  maskToolBar->addAction(actionMaskRemovePolygon);
 }
 
 void SVImageMainWindow::SVImageMainWindowPrivate::setupSignalMappers() {
@@ -480,6 +564,63 @@ void SVImageMainWindow::setWatchLatest(bool on) {
     currentSubWindow()->setWatchLatest(on);
 }
 
+void SVImageMainWindow::loadMask() {
+  if (currentSubWindow()) {
+    QString fileName = QFileDialog::getOpenFileName(this, "Select Mask ...",
+                                                    config().recentDirectory(),
+                                                    "Mask files (*.msk)");
+
+    if (!fileName.isEmpty())
+      if (!currentSubWindow()->loadMask(fileName))
+        QMessageBox::warning(this, "Loading the mask failed",
+                             QString("Failed to load mask file: %1").arg(fileName));
+
+
+      config().setRecentDirectory(fileName);
+  }
+}
+
+void SVImageMainWindow::saveMaskAs() {
+  if (currentSubWindow()) {
+    QString fileName = QFileDialog::getSaveFileName(this, "Save Mask As...",
+                                                    config().recentDirectory(),
+                                                    "Mask files (*.msk)");
+
+    if (!fileName.isEmpty())
+      if (!currentSubWindow()->saveMaskAs(fileName))
+        QMessageBox::warning(this, "Saving the mask failed",
+                             QString("Failed to save the current mask to: %1").arg(fileName));
+
+      config().setRecentDirectory(fileName);
+  }
+}
+
+void SVImageMainWindow::setMaskVisible(bool visible) {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskVisible(visible);
+}
+
+void SVImageMainWindow::setMaskAddPointsEnabled(bool on) {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskAddPointsEnabled(on);
+}
+
+void SVImageMainWindow::setMaskAddPolygonEnabled(bool on) {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskAddPolygonEnabled(on);
+}
+
+void SVImageMainWindow::setMaskRemovePointsEnabled(bool on) {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskRemovePointsEnabled(on);
+}
+
+void SVImageMainWindow::setMaskRemovePolygonEnabled(bool on) {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskRemovePolygonEnabled(on);
+}
+
+
 
 void SVImageMainWindow::about() {
   QString title = QString("About %1").arg(PROJECT_NAME);
@@ -559,6 +700,12 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
     p->actionMove->setChecked(subWindow->moveEnabled());
 
     p->actionWatchLatest->setChecked(subWindow->watchLatest());
+
+    p->actionMaskIsVisible->setChecked(subWindow->maskIsVisible());
+    p->actionMaskAddPoint->setChecked(subWindow->maskAddPointsEnabled());
+    p->actionMaskAddPolygon->setChecked(subWindow->maskAddPolygonEnabled());
+    p->actionMaskRemovePoint->setChecked(subWindow->maskRemovePointsEnabled());
+    p->actionMaskRemovePolygon->setChecked(subWindow->maskRemovePolygonEnabled());
   }
 
   //
@@ -577,6 +724,14 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionGoNext->setEnabled(on);
   p->actionGoLast->setEnabled(on);
   p->actionWatchLatest->setEnabled(on);
+
+  p->actionMaskIsVisible->setEnabled(on);
+  p->actionMaskLoad->setEnabled(on);
+  p->actionMaskSaveAs->setEnabled(on);
+  p->actionMaskAddPoint->setEnabled(on);
+  p->actionMaskAddPolygon->setEnabled(on);
+  p->actionMaskRemovePoint->setEnabled(on);
+  p->actionMaskRemovePolygon->setEnabled(on);
 }
 
 void SVImageMainWindow::subWindowDestroyed(QObject*) {

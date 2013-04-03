@@ -23,6 +23,7 @@
 
 // libsaxsview
 #include "saxsview.h"
+#include "saxsview_config.h"
 #include "saxsview_image.h"
 
 // external/qwt
@@ -60,15 +61,13 @@ private:
 };
 
 
-
-
 class SVImageSubWindow::Private {
 public:
   Private();
   ~Private();
 
   void setupUi(SVImageSubWindow *w);
-  void setupTracker(SVImageSubWindow *w);
+  void setupPicker(SVImageSubWindow *w);
   void setupFilesystemModel(SVImageSubWindow *w);
 
   void setFilePath(const QString&);
@@ -77,7 +76,11 @@ public:
 
   SaxsviewImage *image;
   SaxsviewFrame *frame;
+  SaxsviewMask *mask;
   QwtPicker *tracker;
+
+  QwtPlotPicker *addPointPicker, *addPolygonPicker;
+  QwtPlotPicker *removePointPicker, *removePolygonPicker;
 
   bool watchLatest;
   QFileSystemModel *model;
@@ -86,6 +89,8 @@ public:
 
 SVImageSubWindow::Private::Private()
  : image(0L), frame(0L), tracker(0L),
+   addPointPicker(0L), addPolygonPicker(0L),
+   removePointPicker(0L), removePolygonPicker(0L),
    watchLatest(false) {
 }
 
@@ -95,18 +100,53 @@ SVImageSubWindow::Private::~Private() {
 
 void SVImageSubWindow::Private::setupUi(SVImageSubWindow *w) {
   frame = new SaxsviewFrame(w);
+  mask  = new SaxsviewMask(w);
+  mask->setVisible(false);
 
   image = new SaxsviewImage(w);
   image->setFrame(frame);
+  image->setMask(mask);
   image->setScale(Saxsview::AbsoluteScale);
 
   w->setWidget(image);
 }
 
-void SVImageSubWindow::Private::setupTracker(SVImageSubWindow*) {
+void SVImageSubWindow::Private::setupPicker(SVImageSubWindow *w) {
   tracker = new ImagePicker(frame, image->canvas());
   tracker->setStateMachine(new QwtPickerTrackerMachine);
   tracker->setTrackerMode(QwtPicker::AlwaysOn);
+
+  addPointPicker = new QwtPlotPicker(image->canvas());
+  addPointPicker->setStateMachine(new QwtPickerClickPointMachine);
+  addPointPicker->setTrackerMode(QwtPicker::ActiveOnly);
+  addPointPicker->setRubberBand(QwtPicker::CrossRubberBand);
+  addPointPicker->setEnabled(false);
+  connect(addPointPicker, SIGNAL(selected(const QPointF&)),
+          w, SLOT(addSelectionToMask(const QPointF&)));
+
+  addPolygonPicker = new QwtPlotPicker(image->canvas());
+  addPolygonPicker->setStateMachine(new QwtPickerPolygonMachine);
+  addPolygonPicker->setTrackerMode(QwtPicker::ActiveOnly);
+  addPolygonPicker->setRubberBand(QwtPicker::PolygonRubberBand);
+  addPolygonPicker->setEnabled(false);
+  connect(addPolygonPicker, SIGNAL(selected(const QVector<QPointF>&)),
+          w, SLOT(addSelectionToMask(const QVector<QPointF>&)));
+
+  removePointPicker = new QwtPlotPicker(image->canvas());
+  removePointPicker->setStateMachine(new QwtPickerClickPointMachine);
+  removePointPicker->setTrackerMode(QwtPicker::ActiveOnly);
+  removePointPicker->setRubberBand(QwtPicker::CrossRubberBand);
+  removePointPicker->setEnabled(false);
+  connect(removePointPicker, SIGNAL(selected(const QPointF&)),
+          w, SLOT(removeSelectionFromMask(const QPointF&)));
+
+  removePolygonPicker = new QwtPlotPicker(image->canvas());
+  removePolygonPicker->setStateMachine(new QwtPickerPolygonMachine);
+  removePolygonPicker->setTrackerMode(QwtPicker::ActiveOnly);
+  removePolygonPicker->setRubberBand(QwtPicker::PolygonRubberBand);
+  removePolygonPicker->setEnabled(false);
+  connect(removePolygonPicker, SIGNAL(selected(const QVector<QPointF>&)),
+          w, SLOT(removeSelectionFromMask(const QVector<QPointF>&)));
 }
 
 void SVImageSubWindow::Private::setupFilesystemModel(SVImageSubWindow *w) {
@@ -134,7 +174,7 @@ SVImageSubWindow::SVImageSubWindow(QWidget *parent)
   setAttribute(Qt::WA_DeleteOnClose);
 
   p->setupUi(this);
-  p->setupTracker(this);
+  p->setupPicker(this);
   p->setupFilesystemModel(this);
 }
 
@@ -170,6 +210,25 @@ bool SVImageSubWindow::watchLatest() const {
   return p->watchLatest;
 }
 
+bool SVImageSubWindow::maskIsVisible() const {
+  return p->mask->isVisible();
+}
+
+bool SVImageSubWindow::maskAddPointsEnabled() const {
+  return p->addPointPicker->isEnabled();
+}
+
+bool SVImageSubWindow::maskAddPolygonEnabled() const {
+  return p->addPolygonPicker->isEnabled();
+}
+
+bool SVImageSubWindow::maskRemovePointsEnabled() const {
+  return false;
+}
+
+bool SVImageSubWindow::maskRemovePolygonEnabled() const {
+  return false;
+}
 
 bool SVImageSubWindow::load(const QString& fileName) {
   QFileInfo fileInfo(fileName);
@@ -273,7 +332,62 @@ void SVImageSubWindow::setWatchLatest(bool on) {
   }
 }
 
+bool SVImageSubWindow::loadMask(const QString& fileName) {
+  QFileInfo fileInfo(fileName);
+  if (!fileInfo.exists())
+    return false;
+
+  p->mask->setData(new SaxsviewFrameData(fileName));
+  p->image->replot();
+
+  return true;
+}
+
+bool SVImageSubWindow::saveMaskAs(const QString& fileName) {
+  return p->mask->save(fileName);
+}
+
+void SVImageSubWindow::setMaskVisible(bool visible) {
+  if (visible != maskIsVisible()) {
+    p->mask->setVisible(visible);
+    p->image->replot();
+  }
+}
+
+void SVImageSubWindow::setMaskAddPointsEnabled(bool on) {
+  p->addPointPicker->setEnabled(on);
+}
+
+void SVImageSubWindow::setMaskAddPolygonEnabled(bool on) {
+  p->addPolygonPicker->setEnabled(on);
+}
+
+void SVImageSubWindow::setMaskRemovePointsEnabled(bool on) {
+  p->removePointPicker->setEnabled(on);
+}
+
+void SVImageSubWindow::setMaskRemovePolygonEnabled(bool on) {
+  p->removePolygonPicker->setEnabled(on);
+}
+
+
 void SVImageSubWindow::rowsInserted(const QModelIndex&, int, int) {
   if (watchLatest())
     goLast();
+}
+
+void SVImageSubWindow::addSelectionToMask(const QPointF& point) {
+  p->mask->add(point);
+}
+
+void SVImageSubWindow::addSelectionToMask(const QVector<QPointF>& points) {
+  p->mask->add(points);
+}
+
+void SVImageSubWindow::removeSelectionFromMask(const QPointF& point) {
+  p->mask->remove(point);
+}
+
+void SVImageSubWindow::removeSelectionFromMask(const QVector<QPointF>& points) {
+  p->mask->remove(points);
 }

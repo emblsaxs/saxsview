@@ -52,6 +52,14 @@ public slots:
   void goLast();
   void setWatchLatest(bool);
 
+  void loadMask();
+  void saveMaskAs();
+  void setMaskVisible(bool);
+  void setMaskAddPointsEnabled(bool);
+  void setMaskAddPolygonEnabled(bool);
+  void setMaskRemovePointsEnabled(bool);
+  void setMaskRemovePolygonEnabled(bool);
+
   void about();
 
 private slots:
