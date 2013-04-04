@@ -20,6 +20,7 @@
 // saxsview/svimage
 #include "svimagesubwindow.h"
 #include "svimagemainwindow.h"
+#include "svimagemaskthresholdsdialog.h"
 
 // libsaxsview
 #include "saxsview.h"
@@ -354,6 +355,32 @@ bool SVImageSubWindow::loadMask(const QString& fileName) {
 
 bool SVImageSubWindow::saveMaskAs(const QString& fileName) {
   return p->mask->save(fileName);
+}
+
+void SVImageSubWindow::setMaskByThreshold() {
+  double min = p->frame->minValue();
+  double max = p->frame->maxValue();
+
+  SVImageMaskThresholdsDialog dlg(this);
+  dlg.setRange(min, max);
+
+  if (dlg.exec() == QDialog::Accepted) {
+    dlg.selectedThreshold(&min, &max);
+
+    SaxsviewFrameData *frameData = (SaxsviewFrameData*)p->frame->data();
+    SaxsviewFrameData *maskData = (SaxsviewFrameData*)p->mask->data();
+
+    setCursor(Qt::WaitCursor);
+    for (int x = 0; x < p->frame->size().width(); ++x)
+      for (int y = 0; y < p->frame->size().height(); ++y)
+        if (frameData->value(x, y) < min || frameData->value(x, y) > max)
+          maskData->setValue(x, y, 1.0);
+        else
+          maskData->setValue(x, y, 0.0);
+    unsetCursor();
+
+    p->image->replot();
+  }
 }
 
 void SVImageSubWindow::setMaskVisible(bool visible) {

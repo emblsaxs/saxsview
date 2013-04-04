@@ -111,11 +111,11 @@ void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrow
                                               browser, frameGroup));
 
   // TODO: The mask file name should not be a line edit, but a button with file open dialog.
-  SaxsviewProperty *maskGroup = new SaxsviewProperty("Mask", browser);
-  frameProperties.append(new SaxsviewProperty("Mask File", "maskFileName",
-                                              browser, maskGroup));
-  frameProperties.append(new SaxsviewProperty("Apply Mask", "isMaskApplied",
-                                              browser, maskGroup));
+//   SaxsviewProperty *maskGroup = new SaxsviewProperty("Mask", browser);
+//   frameProperties.append(new SaxsviewProperty("Mask File", "maskFileName",
+//                                               browser, maskGroup));
+//   frameProperties.append(new SaxsviewProperty("Apply Mask", "isMaskApplied",
+//                                               browser, maskGroup));
 }
 
 

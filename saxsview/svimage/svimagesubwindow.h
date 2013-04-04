@@ -71,6 +71,7 @@ public slots:
   void newMask();
   bool loadMask(const QString& fileName);
   bool saveMaskAs(const QString& fileName);
+  void setMaskByThreshold();
   void setMaskVisible(bool);
   void setMaskAddPointsEnabled(bool);
   void setMaskAddPolygonEnabled(bool);

@@ -1,3 +1,16 @@
+2013-04-04  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svimagemaskthresholdsdialog.h: New.
+	* svimagemaskthresholdsdialog.cpp: New.
+	* svimagemainwindow.h (setMaskByThreshold): New.
+	* svimagemainwindow.cpp (setMaskByThreshold): New.
+	(setupActions): Added action to set up mask by threshold.
+	(setupMenus): Likewise.
+	(subWindowActivated): Enable/disable new action.
+	* svimagesubwindow.h (setMaskByThreshold): New.
+	* svimagesubwindow.cpp (setMaskByThreshold): New.
+	* CMakeLists.txt: Updated files list.
+
 2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagemainwindow.h (newMask): New.

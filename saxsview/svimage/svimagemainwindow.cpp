@@ -51,6 +51,7 @@ public:
 
   // "Tools"-menu
   QAction *actionMaskNew, *actionMaskLoad, *actionMaskSaveAs, *actionMaskIsVisible;
+  QAction *actionMaskByThreshold;
   QAction *actionMaskAddPoint, *actionMaskAddPolygon;
   QAction *actionMaskRemovePoint, *actionMaskRemovePolygon;
 
@@ -216,6 +217,11 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
   connect(actionMaskIsVisible, SIGNAL(toggled(bool)),
           mw, SLOT(setMaskVisible(bool)));
 
+  actionMaskByThreshold = new QAction("By Threshold ...", mw);
+  actionMaskByThreshold->setEnabled(false);
+  connect(actionMaskByThreshold, SIGNAL(triggered()),
+          mw, SLOT(setMaskByThreshold()));
+
   actionMaskAddPoint = new QAction("Add pixel", mw);
   actionMaskAddPoint->setCheckable(true);
   actionMaskAddPoint->setChecked(false);
@@ -357,6 +363,7 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
   menuMaskTools->addAction(actionMaskLoad);
   menuMaskTools->addAction(actionMaskSaveAs);
   menuMaskTools->addSeparator();
+  menuMaskTools->addAction(actionMaskByThreshold);
   menuMaskTools->addAction(actionMaskAddPoint);
   menuMaskTools->addAction(actionMaskAddPolygon);
   menuMaskTools->addAction(actionMaskRemovePoint);
@@ -607,6 +614,11 @@ void SVImageMainWindow::saveMaskAs() {
   }
 }
 
+void SVImageMainWindow::setMaskByThreshold() {
+  if (currentSubWindow())
+    currentSubWindow()->setMaskByThreshold();
+}
+
 void SVImageMainWindow::setMaskVisible(bool visible) {
   if (currentSubWindow())
     currentSubWindow()->setMaskVisible(visible);
@@ -741,6 +753,7 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionMaskNew->setEnabled(on);
   p->actionMaskLoad->setEnabled(on);
   p->actionMaskSaveAs->setEnabled(on);
+  p->actionMaskByThreshold->setEnabled(on);
   p->actionMaskAddPoint->setEnabled(on);
   p->actionMaskAddPolygon->setEnabled(on);
   p->actionMaskRemovePoint->setEnabled(on);

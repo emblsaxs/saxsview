@@ -7,12 +7,14 @@ include_directories (${QWT_SOURCE_DIR}
 
 set (svimage_headers svimagemainwindow.h
                      svimagesubwindow.h
-                     svimagepropertydockwidget.h)
+                     svimagepropertydockwidget.h
+                     svimagemaskthresholdsdialog.h)
 
 set (svimage_sources main.cpp
                      svimagemainwindow.cpp
                      svimagesubwindow.cpp
-                     svimagepropertydockwidget.cpp)
+                     svimagepropertydockwidget.cpp
+                     svimagemaskthresholdsdialog.cpp)
 
 qt4_wrap_cpp (svimage_moc ${svimage_headers})
 
