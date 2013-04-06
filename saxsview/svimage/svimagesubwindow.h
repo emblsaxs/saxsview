@@ -68,13 +68,18 @@ public slots:
   void setWatchLatest(bool);
 
   void newMask();
+  bool loadMask();
   bool loadMask(const QString& fileName);
+  bool saveMaskAs();
   bool saveMaskAs(const QString& fileName);
   void setMaskByThreshold();
   void setMaskAddPointsEnabled(bool);
   void setMaskAddPolygonEnabled(bool);
   void setMaskRemovePointsEnabled(bool);
   void setMaskRemovePolygonEnabled(bool);
+
+protected:
+  void closeEvent(QCloseEvent*);
 
 private slots:
   void rowsInserted(const QModelIndex&, int, int);
@@ -85,6 +90,8 @@ private slots:
   void removeSelectionFromMask(const QVector<QPointF>&);
 
 private:
+  bool maybeSaveMask();
+
   class Private;
   Private *p;
 };

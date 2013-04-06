@@ -747,10 +747,15 @@ SaxsviewMask::~SaxsviewMask() {
 }
 
 bool SaxsviewMask::save(const QString& fileName) const {
+  bool written;
+
   if (SaxsviewFrameData *d = (SaxsviewFrameData*)data())
-    return d->save(fileName);
-  else
-    return false;
+    written = d->save(fileName);
+
+  if (p->modified && written)
+    p->modified = false;
+
+  return written;
 }
 
 void SaxsviewMask::add(const QPointF& pt) {
@@ -767,6 +772,10 @@ void SaxsviewMask::add(const QPolygonF& pt) {
 
 void SaxsviewMask::remove(const QPolygonF& pt) {
   p->setValue(this, pt, 0.0);
+}
+
+void SaxsviewMask::setModified(bool modified) {
+  p->modified = modified;
 }
 
 bool SaxsviewMask::isModified() const {

@@ -335,23 +335,80 @@ void SVImageSubWindow::setWatchLatest(bool on) {
 }
 
 void SVImageSubWindow::newMask() {
-  //
-  // The current mask, if any, is owned by the plot.
-  // No need to delete it.
-  //
-  p->mask->setData(new SaxsviewFrameData(p->frame->size()));
-  p->image->replot();
+  if (maybeSaveMask()) {
+    //
+    // The current mask, if any, is owned by the plot.
+    // No need to delete it.
+    //
+    p->mask->setData(new SaxsviewFrameData(p->frame->size()));
+    p->image->replot();
+  }
+}
+
+bool SVImageSubWindow::loadMask() {
+  QString fileName = QFileDialog::getOpenFileName(this, "Select Mask ...",
+                                                  config().recentDirectory(),
+                                                  "Mask files (*.msk)");
+
+  bool result = false;
+  if (!fileName.isEmpty()) {
+    result = loadMask(fileName);
+    if (!result)
+      QMessageBox::warning(this, qApp->applicationName(),
+                           QString("Failed to load mask file: %1").arg(fileName));
+  }
+
+  config().setRecentDirectory(fileName);
+
+  return result;
 }
 
 bool SVImageSubWindow::loadMask(const QString& fileName) {
-  QFileInfo fileInfo(fileName);
-  if (!fileInfo.exists())
-    return false;
+  if (maybeSaveMask()) {
+    QFileInfo fileInfo(fileName);
+    if (!fileInfo.exists())
+      return false;
 
-  p->mask->setData(new SaxsviewFrameData(fileName));
-  p->image->replot();
+    p->mask->setData(new SaxsviewFrameData(fileName));
+    p->image->replot();
+    return true;
+
+  } else
+    return false;
+}
+
+bool SVImageSubWindow::maybeSaveMask() {
+  if (p->mask->isModified()) {
+    QMessageBox::StandardButton ret;
+    ret = QMessageBox::warning(this, qApp->applicationName(),
+                               "The mask has been modified.\n"
+                               "Do you want to save your changes?",
+                               QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    if (ret == QMessageBox::Save)
+      return saveMaskAs();
+    else if (ret == QMessageBox::Cancel)
+     return false;
+  }
 
   return true;
+}
+
+bool SVImageSubWindow::saveMaskAs() {
+  QString fileName = QFileDialog::getSaveFileName(this, "Save Mask As...",
+                                                  config().recentDirectory(),
+                                                  "Mask files (*.msk)");
+
+  bool result = false;
+  if (!fileName.isEmpty()) {
+    result = saveMaskAs(fileName);
+    if (!result)
+      QMessageBox::warning(this, qApp->applicationName(),
+                           QString("Failed to save the current mask to: %1").arg(fileName));
+  }
+
+  config().setRecentDirectory(fileName);
+
+  return result;
 }
 
 bool SVImageSubWindow::saveMaskAs(const QString& fileName) {
@@ -380,6 +437,7 @@ void SVImageSubWindow::setMaskByThreshold() {
           maskData->setValue(x, y, 0.0);
     unsetCursor();
 
+    p->mask->setModified(true);
     p->image->replot();
   }
 }
@@ -400,6 +458,12 @@ void SVImageSubWindow::setMaskRemovePolygonEnabled(bool on) {
   p->removePolygonPicker->setEnabled(on);
 }
 
+void SVImageSubWindow::closeEvent(QCloseEvent *e) {
+  if (maybeSaveMask())
+    e->accept();
+  else
+    e->ignore();
+}
 
 void SVImageSubWindow::rowsInserted(const QModelIndex&, int, int) {
   if (watchLatest())

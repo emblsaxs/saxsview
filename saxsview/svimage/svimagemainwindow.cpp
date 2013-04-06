@@ -576,34 +576,13 @@ void SVImageMainWindow::newMask() {
 }
 
 void SVImageMainWindow::loadMask() {
-  if (currentSubWindow()) {
-    QString fileName = QFileDialog::getOpenFileName(this, "Select Mask ...",
-                                                    config().recentDirectory(),
-                                                    "Mask files (*.msk)");
-
-    if (!fileName.isEmpty())
-      if (!currentSubWindow()->loadMask(fileName))
-        QMessageBox::warning(this, "Loading the mask failed",
-                             QString("Failed to load mask file: %1").arg(fileName));
-
-
-      config().setRecentDirectory(fileName);
-  }
+  if (currentSubWindow())
+    currentSubWindow()->loadMask();
 }
 
 void SVImageMainWindow::saveMaskAs() {
-  if (currentSubWindow()) {
-    QString fileName = QFileDialog::getSaveFileName(this, "Save Mask As...",
-                                                    config().recentDirectory(),
-                                                    "Mask files (*.msk)");
-
-    if (!fileName.isEmpty())
-      if (!currentSubWindow()->saveMaskAs(fileName))
-        QMessageBox::warning(this, "Saving the mask failed",
-                             QString("Failed to save the current mask to: %1").arg(fileName));
-
-      config().setRecentDirectory(fileName);
-  }
+  if (currentSubWindow())
+    currentSubWindow()->saveMaskAs();
 }
 
 void SVImageMainWindow::setMaskByThreshold() {

@@ -187,6 +187,7 @@ public:
 public slots:
   void setColor(const QColor&);
   void setVisible(bool);
+  void setModified(bool);
 
 private:
   class Private;
