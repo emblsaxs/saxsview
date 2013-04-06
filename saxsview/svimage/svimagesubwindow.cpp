@@ -221,11 +221,11 @@ bool SVImageSubWindow::maskAddPolygonEnabled() const {
 }
 
 bool SVImageSubWindow::maskRemovePointsEnabled() const {
-  return false;
+  return p->removePolygonPicker->isEnabled();
 }
 
 bool SVImageSubWindow::maskRemovePolygonEnabled() const {
-  return false;
+  return p->removePolygonPicker->isEnabled();
 }
 
 bool SVImageSubWindow::load(const QString& fileName) {
@@ -244,6 +244,10 @@ bool SVImageSubWindow::load(const QString& fileName) {
   p->setFilePath(fileInfo.filePath());
 
   unsetCursor();
+
+  // Add a new, empty, mask of the right size.
+  newMask();
+
   return true;
 }
 

@@ -1,5 +1,11 @@
 2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svimagesubwindow.cpp (maskRemovePointsEnabled): Implemented stub.
+	(maskRemovePolygonEnabled): Likewise.
+	(load): Add a new and empty mask for immediate editing.
+
+2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svimagemainwindow.h (setVisible): Removed.
 	* svimagemainwindow.cpp (setupActions): Removed action to toggle
 	mask visibility.
