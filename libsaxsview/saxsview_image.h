@@ -50,8 +50,7 @@ class SaxsviewImage : public QwtPlot {
   Q_PROPERTY(QString axisTitleZ READ axisTitleZ WRITE setAxisTitleZ)
   Q_PROPERTY(QFont axisTitleFont READ axisTitleFont WRITE setAxisTitleFont)
   Q_PROPERTY(QColor axisTitleFontColor READ axisTitleFontColor WRITE setAxisTitleFontColor)
-  Q_PROPERTY(QColor colorBarFromColor READ colorBarFromColor WRITE setColorBarFromColor)
-  Q_PROPERTY(QColor colorBarToColor READ colorBarToColor WRITE setColorBarToColor)
+  Q_PROPERTY(Saxsview::ColorMap colorMap READ colorMap WRITE setColorMap)
 
   Q_PROPERTY(bool minorTicksVisible READ minorTicksVisible WRITE setMinorTicksVisible)
   Q_PROPERTY(bool majorTicksVisible READ majorTicksVisible WRITE setMajorTicksVisible)
@@ -94,8 +93,7 @@ public:
   QFont tickLabelFont() const;
   QColor tickLabelFontColor() const;
   bool colorBarVisible() const;
-  QColor colorBarFromColor() const;
-  QColor colorBarToColor() const;
+  Saxsview::ColorMap colorMap() const;
 
 public slots:
   void exportAs();
@@ -128,8 +126,7 @@ public slots:
   void setTickLabelFont(const QFont&);
   void setTickLabelFontColor(const QColor&);
   void setColorBarVisible(bool);
-  void setColorBarFromColor(const QColor&);
-  void setColorBarToColor(const QColor&);
+  void setColorMap(Saxsview::ColorMap);
 
 private:
   class Private;

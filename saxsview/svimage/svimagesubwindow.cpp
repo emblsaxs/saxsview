@@ -107,7 +107,8 @@ void SVImageSubWindow::Private::setupUi(SVImageSubWindow *w) {
   image = new SaxsviewImage(w);
   image->setFrame(frame);
   image->setMask(mask);
-  image->setScale(Saxsview::AbsoluteScale);
+  image->setColorMap(Saxsview::GrayColorMap);
+  image->setScale(Saxsview::Log10Scale);
 
   w->setWidget(image);
 }

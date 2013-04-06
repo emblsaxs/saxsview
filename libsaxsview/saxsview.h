@@ -29,13 +29,18 @@ typedef QVector<QwtIntervalSample> SaxsviewPlotIntervalData;
 
 class Saxsview : public QObject {
   Q_OBJECT
-  Q_ENUMS(Scale)
+  Q_ENUMS(Scale ColorMap)
   Q_ENUMS(LineStyle SymbolStyle)
 
 public:
   enum Scale {
     AbsoluteScale,
     Log10Scale
+  };
+
+  enum ColorMap {
+    HSVColorMap,
+    GrayColorMap
   };
 
   enum LineStyle {

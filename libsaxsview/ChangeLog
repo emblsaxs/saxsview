@@ -1,3 +1,23 @@
+2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview.h (enum ColorMap): New.
+	* saxsview_image.h (colorBarFromColor): Removed.
+	(setColorBarFromColor): Removed.
+	(colorBarToColor): Removed.
+	(setColorBarToColor): Removed.
+	(colorMap): New.
+	(setColorMap): New.
+	* saxsview_image.cpp (colorBarFromColor): Removed.
+	(setColorBarFromColor): Removed.
+	(colorBarToColor): Removed.
+	(setColorBarToColor): Removed.
+	(colorMap): New.
+	(setColorMap): New.
+	(MaskColorMap, Log10ColorMap): Moved to ...
+	* saxsview_colormap.h: ... here.
+	* saxsview_colormap.cpp: New.
+	* CMakeLists.txt: Added new files.
+
 2013-04-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_image.h (SaxsviewFrameData::ctor): New constructor

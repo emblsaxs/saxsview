@@ -51,7 +51,7 @@ usage() {
 
 static void
 version() {
-  fprintf(stdout, "svconf 0.1 (r%s)\n"
+  fprintf(stdout, "svconv 0.1 (r%s)\n"
                   "Copyright (c) Daniel Franke 2012\n", "0");
 
   exit(EXIT_SUCCESS);
@@ -96,7 +96,7 @@ getopt(int argc, char **argv, char** informat, char **infile,
   }
 
   if (argc - optind != 2) {
-    fprintf(stderr, "svconv: exactly to arguments expected, "
+    fprintf(stderr, "svconv: exactly two arguments expected, "
                     "see `svconv --help` for details.\n");
     exit(EXIT_FAILURE);
   }

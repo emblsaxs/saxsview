@@ -21,6 +21,7 @@
 // libsaxsview
 #include "saxsview_image.h"
 #include "saxsview_config.h"
+#include "saxsview_colormap.h"
 #include "saxsview_scaledraw.h"
 
 // libsaxsimage
@@ -28,7 +29,6 @@
 #include "saxsimage_format.h"
 
 // external/qwt
-#include "qwt_color_map.h"
 #include "qwt_plot_canvas.h"
 #include "qwt_plot_layout.h"
 #include "qwt_plot_panner.h"
@@ -42,64 +42,6 @@
 #include "qwt_text_label.h"
 
 #include <QtGui>
-
-//
-// A MaskColorMap is either fully transparent (mask == 0),
-// or partially transparant with a specified color (mask == 1).
-//
-class MaskColorMap : public QwtColorMap {
-  QColor unmasked, masked;
-
-public:
-  MaskColorMap(const QColor& c) {
-    unmasked = c;
-    unmasked.setAlpha(0);
-
-    masked = c;
-    masked.setAlpha(128);
-  }
-
-  QRgb rgb(const QwtInterval&, double value) const {
-    return value < 0.5 ? unmasked.rgba() : masked.rgba();
-  }
-
-  unsigned char colorIndex(const QwtInterval&, double) const {
-    return 0;
-  }
-};
-
-
-
-class Log10ColorMap : public QwtLinearColorMap {
-public:
-  Log10ColorMap(const QColor &from, const QColor &to,
-        QwtColorMap::Format format = QwtColorMap::RGB)
-   : QwtLinearColorMap(from, to, format) {
-  }
-
-  QRgb rgb(const QwtInterval& interval, double x) const {
-    //
-    // Due to selectable thresholds it may happen that 'x' is outside the
-    // range. If this is the case, we automatically get color1() if 'x'
-    // is below minValue() and color2() if 'x' is above maxValue().
-    //
-    // I.e. if a lower threshold is defined, all pixels below that value
-    // will be from-color, all those above an upper threshold will be to-color.
-    //
-    double min = interval.minValue() > 1.0 ? log10(interval.minValue()) : 0.0;
-    double max = interval.maxValue() > 1.0 ? log10(interval.maxValue()) : 0.0;
-    double val = x > 1.0 ? log10(x) : 0.0;
-
-    return QwtLinearColorMap::rgb(QwtInterval(min, max), val);
-  }
-
-  unsigned char colorIndex(const QwtInterval& interval, double x) const {
-    double min = interval.minValue() > 1.0 ? log10(interval.minValue()) : 0.0;
-    double max = interval.maxValue() > 1.0 ? log10(interval.maxValue()) : 0.0;
-    double val = x > 1.0 ? log10(x) : 0.0;
-    return QwtLinearColorMap::colorIndex(QwtInterval(min, max), val);
-  }
-};
 
 
 class Log10ScaleEngine : public QwtLog10ScaleEngine {
@@ -133,14 +75,13 @@ public:
   void setupPanner(SaxsviewImage *image);
   void setupZoomer(SaxsviewImage *image);
 
-  void updateScaleAndColor(SaxsviewImage *, Saxsview::Scale,
-                           const QColor&, const QColor&);
+  void updateScaleAndColor(SaxsviewImage*,
+                           Saxsview::Scale, Saxsview::ColorMap);
 
   SaxsviewFrame *frame;
   SaxsviewMask *mask;
   Saxsview::Scale scale;
-  QColor colorFrom;
-  QColor colorTo;
+  Saxsview::ColorMap colorMap;
 
   QwtPlotScaleItem *scales[QwtPlot::axisCnt];
   QwtPlotPanner *panner;
@@ -149,7 +90,8 @@ public:
 };
 
 SaxsviewImage::Private::Private()
- : frame(0L), mask(0L), colorFrom(Qt::white), colorTo(Qt::black) {
+ : frame(0L), mask(0L),
+   scale(Saxsview::AbsoluteScale), colorMap(Saxsview::GrayColorMap) {
 }
 
 void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
@@ -254,11 +196,9 @@ void SaxsviewImage::Private::setupZoomer(SaxsviewImage *image) {
 
 void SaxsviewImage::Private::updateScaleAndColor(SaxsviewImage *image,
                                                  Saxsview::Scale s,
-                                                 const QColor& from,
-                                                 const QColor& to) {
+                                                 Saxsview::ColorMap m) {
   scale = s;
-  colorFrom = from;
-  colorTo = to;
+  colorMap = m;
 
   if (!frame)
     return;
@@ -267,21 +207,33 @@ void SaxsviewImage::Private::updateScaleAndColor(SaxsviewImage *image,
   if (frame->data())
     interval = frame->data()->interval(Qt::ZAxis);
 
-  switch (s) {
-    case Saxsview::AbsoluteScale:
-      frame->setColorMap(new QwtLinearColorMap(from, to));
+
+  if (s == Saxsview::AbsoluteScale && m == Saxsview::HSVColorMap) {
+      frame->setColorMap(new HSVColorMap());
       image->setAxisScaleEngine(QwtPlot::yRight, new QwtLinearScaleEngine);
       image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
-                                                      new QwtLinearColorMap(from, to));
-      break;
+                                                      new HSVColorMap());
 
-    case Saxsview::Log10Scale:
-      frame->setColorMap(new Log10ColorMap(from, to));
+  } else if (s == Saxsview::AbsoluteScale && m == Saxsview::GrayColorMap) {
+      frame->setColorMap(new GrayColorMap());
+      image->setAxisScaleEngine(QwtPlot::yRight, new QwtLinearScaleEngine);
+      image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                                      new GrayColorMap());
+
+  } else if (s == Saxsview::Log10Scale && m == Saxsview::HSVColorMap) {
+      frame->setColorMap(new Log10HSVColorMap());
       image->setAxisScaleEngine(QwtPlot::yRight, new Log10ScaleEngine);
       image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
-                                                      new Log10ColorMap(from, to));
-      break;
-  }
+                                                      new Log10HSVColorMap());
+
+  } else if (s == Saxsview::Log10Scale && m == Saxsview::GrayColorMap) {
+      frame->setColorMap(new Log10GrayColorMap());
+      image->setAxisScaleEngine(QwtPlot::yRight, new Log10ScaleEngine);
+      image->axisWidget(QwtPlot::yRight)->setColorMap(interval,
+                                                      new Log10GrayColorMap());
+
+  } else
+    qFatal("internal error: unhandled combination of scale and color map");
 }
 
 
@@ -426,7 +378,7 @@ Saxsview::Scale SaxsviewImage::scale() const {
 }
 
 void SaxsviewImage::setScale(Saxsview::Scale s) {
-  p->updateScaleAndColor(this, s, p->colorFrom, p->colorTo);
+  p->updateScaleAndColor(this, s, p->colorMap);
   replot();
 }
 
@@ -664,22 +616,13 @@ bool SaxsviewImage::colorBarVisible() const {
   return axisEnabled(QwtPlot::yRight);
 }
 
-void SaxsviewImage::setColorBarFromColor(const QColor& from) {
-  p->updateScaleAndColor(this, p->scale, from, p->colorTo);
+void SaxsviewImage::setColorMap(Saxsview::ColorMap colorMap) {
+  p->updateScaleAndColor(this, p->scale, colorMap);
   replot();
 }
 
-QColor SaxsviewImage::colorBarFromColor() const {
-  return p->colorFrom;
-}
-
-void SaxsviewImage::setColorBarToColor(const QColor& to) {
-  p->updateScaleAndColor(this, p->scale, p->colorFrom, to);
-  replot();
-}
-
-QColor SaxsviewImage::colorBarToColor() const {
-  return p->colorTo;
+Saxsview::ColorMap SaxsviewImage::colorMap() const {
+  return p->colorMap;
 }
 
 

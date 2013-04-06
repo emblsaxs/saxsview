@@ -83,9 +83,7 @@ void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrow
   SaxsviewProperty *colorBarGroup = new SaxsviewProperty("Color Bar", browser);
   imageProperties.append(new SaxsviewProperty("Visible", "colorBarVisible",
                                               browser, colorBarGroup));
-  imageProperties.append(new SaxsviewProperty("From Color", "colorBarFromColor",
-                                              browser, colorBarGroup));
-  imageProperties.append(new SaxsviewProperty("To Color", "colorBarToColor",
+  imageProperties.append(new SaxsviewProperty("Color Map", "colorMap",
                                               browser, colorBarGroup));
 
   SaxsviewProperty *ticksGroup = new SaxsviewProperty("Ticks", browser);

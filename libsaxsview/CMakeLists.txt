@@ -4,6 +4,7 @@ project (LIBSAXSVIEW CXX)
 set (SOURCES saxsview_plot.cpp
              saxsview_plotcurve.cpp
              saxsview_image.cpp
+             saxsview_colormap.cpp
              saxsview_config.cpp
              saxsview_property.cpp
              saxsview_scaledraw.cpp
@@ -13,6 +14,7 @@ set (HEADERS saxsview.h
              saxsview_plot.h
              saxsview_plotcurve.h
              saxsview_image.h
+             saxsview_colormap.h
              saxsview_config.h
              saxsview_property.h
              saxsview_scaledraw.h
