@@ -50,7 +50,7 @@ public:
   QAction *actionWatchLatest;
 
   // "Tools"-menu
-  QAction *actionMaskNew, *actionMaskLoad, *actionMaskSaveAs, *actionMaskIsVisible;
+  QAction *actionMaskNew, *actionMaskLoad, *actionMaskSaveAs;
   QAction *actionMaskByThreshold;
   QAction *actionMaskAddPoint, *actionMaskAddPolygon;
   QAction *actionMaskRemovePoint, *actionMaskRemovePolygon;
@@ -210,13 +210,6 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupActions() {
   connect(actionMaskSaveAs, SIGNAL(triggered()),
           mw, SLOT(saveMaskAs()));
 
-  actionMaskIsVisible = new QAction("&Visible", mw);
-  actionMaskIsVisible->setCheckable(true);
-  actionMaskIsVisible->setChecked(false);
-  actionMaskIsVisible->setEnabled(true);
-  connect(actionMaskIsVisible, SIGNAL(toggled(bool)),
-          mw, SLOT(setMaskVisible(bool)));
-
   actionMaskByThreshold = new QAction("By Threshold ...", mw);
   actionMaskByThreshold->setEnabled(false);
   connect(actionMaskByThreshold, SIGNAL(triggered()),
@@ -357,7 +350,6 @@ void SVImageMainWindow::SVImageMainWindowPrivate::setupMenus() {
 
   menuTools = new QMenu("&Tools", mw);
   QMenu *menuMaskTools = menuTools->addMenu("Mask");
-  menuMaskTools->addAction(actionMaskIsVisible);
   menuMaskTools->addSeparator();
   menuMaskTools->addAction(actionMaskNew);
   menuMaskTools->addAction(actionMaskLoad);
@@ -619,11 +611,6 @@ void SVImageMainWindow::setMaskByThreshold() {
     currentSubWindow()->setMaskByThreshold();
 }
 
-void SVImageMainWindow::setMaskVisible(bool visible) {
-  if (currentSubWindow())
-    currentSubWindow()->setMaskVisible(visible);
-}
-
 void SVImageMainWindow::setMaskAddPointsEnabled(bool on) {
   if (currentSubWindow())
     currentSubWindow()->setMaskAddPointsEnabled(on);
@@ -725,7 +712,6 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
 
     p->actionWatchLatest->setChecked(subWindow->watchLatest());
 
-    p->actionMaskIsVisible->setChecked(subWindow->maskIsVisible());
     p->actionMaskAddPoint->setChecked(subWindow->maskAddPointsEnabled());
     p->actionMaskAddPolygon->setChecked(subWindow->maskAddPolygonEnabled());
     p->actionMaskRemovePoint->setChecked(subWindow->maskRemovePointsEnabled());
@@ -749,7 +735,6 @@ void SVImageMainWindow::subWindowActivated(QMdiSubWindow *w) {
   p->actionGoLast->setEnabled(on);
   p->actionWatchLatest->setEnabled(on);
 
-  p->actionMaskIsVisible->setEnabled(on);
   p->actionMaskNew->setEnabled(on);
   p->actionMaskLoad->setEnabled(on);
   p->actionMaskSaveAs->setEnabled(on);

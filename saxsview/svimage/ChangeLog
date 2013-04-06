@@ -1,5 +1,22 @@
 2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svimagemainwindow.h (setVisible): Removed.
+	* svimagemainwindow.cpp (setupActions): Removed action to toggle
+	mask visibility.
+	(setupMenus): Likewise.
+	(subWindowActivated): Likewise.
+	(setMaskVisible): Removed.
+	* svimagesubwindow.h (setMaskVisible): Removed.
+	(maskIsVisible): Removed.
+	* svimagesubwindow.cpp (setMaskVisible): Removed.
+	(maskIsVisible): Removed.
+	(setupUi): Set mask visible by default.
+	* svimagepropertydockwidget.cpp (setupImageProperties): Setup
+	mask properties.
+	(subWindowActivated): Handle mask properties.
+
+2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svimagesubwindow.cpp (setupUi): Set initial color map and scale.
 	* svimagepropertydockwidget.cpp (setupImageProperties): Replaced
 	from/to colors by color map selection.

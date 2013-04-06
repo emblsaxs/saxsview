@@ -45,7 +45,6 @@ public:
 
   bool watchLatest() const;
 
-  bool maskIsVisible() const;
   bool maskAddPointsEnabled() const;
   bool maskAddPolygonEnabled() const;
   bool maskRemovePointsEnabled() const;
@@ -72,7 +71,6 @@ public slots:
   bool loadMask(const QString& fileName);
   bool saveMaskAs(const QString& fileName);
   void setMaskByThreshold();
-  void setMaskVisible(bool);
   void setMaskAddPointsEnabled(bool);
   void setMaskAddPolygonEnabled(bool);
   void setMaskRemovePointsEnabled(bool);

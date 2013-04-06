@@ -102,7 +102,7 @@ SVImageSubWindow::Private::~Private() {
 void SVImageSubWindow::Private::setupUi(SVImageSubWindow *w) {
   frame = new SaxsviewFrame(w);
   mask  = new SaxsviewMask(w);
-  mask->setVisible(false);
+  mask->setVisible(true);
 
   image = new SaxsviewImage(w);
   image->setFrame(frame);
@@ -210,10 +210,6 @@ double SVImageSubWindow::upperThreshold() const {
 
 bool SVImageSubWindow::watchLatest() const {
   return p->watchLatest;
-}
-
-bool SVImageSubWindow::maskIsVisible() const {
-  return p->mask->isVisible();
 }
 
 bool SVImageSubWindow::maskAddPointsEnabled() const {
@@ -380,13 +376,6 @@ void SVImageSubWindow::setMaskByThreshold() {
           maskData->setValue(x, y, 0.0);
     unsetCursor();
 
-    p->image->replot();
-  }
-}
-
-void SVImageSubWindow::setMaskVisible(bool visible) {
-  if (visible != maskIsVisible()) {
-    p->mask->setVisible(visible);
     p->image->replot();
   }
 }

@@ -56,7 +56,6 @@ public slots:
   void loadMask();
   void saveMaskAs();
   void setMaskByThreshold();
-  void setMaskVisible(bool);
   void setMaskAddPointsEnabled(bool);
   void setMaskAddPolygonEnabled(bool);
   void setMaskRemovePointsEnabled(bool);

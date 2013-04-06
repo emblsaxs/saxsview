@@ -35,7 +35,7 @@ public:
   void setupImageProperties(QtTreePropertyBrowser*);
 
   QtTreePropertyBrowser *browser;
-  QList<SaxsviewProperty*> imageProperties, frameProperties;
+  QList<SaxsviewProperty*> imageProperties, frameProperties, maskProperties;
 };
 
 void SVImagePropertyDockWidget::Private::setupUi(SVImagePropertyDockWidget *dock) {
@@ -108,12 +108,13 @@ void SVImagePropertyDockWidget::Private::setupImageProperties(QtTreePropertyBrow
   frameProperties.append(new SaxsviewProperty("Upper Threshold", "maxValue",
                                               browser, frameGroup));
 
-  // TODO: The mask file name should not be a line edit, but a button with file open dialog.
-//   SaxsviewProperty *maskGroup = new SaxsviewProperty("Mask", browser);
-//   frameProperties.append(new SaxsviewProperty("Mask File", "maskFileName",
-//                                               browser, maskGroup));
-//   frameProperties.append(new SaxsviewProperty("Apply Mask", "isMaskApplied",
-//                                               browser, maskGroup));
+  SaxsviewProperty *maskGroup = new SaxsviewProperty("Mask", browser);
+  maskProperties.append(new SaxsviewProperty("Size", "size",
+                                             browser, maskGroup));
+  maskProperties.append(new SaxsviewProperty("Visible", "visible",
+                                              browser, maskGroup));
+  maskProperties.append(new SaxsviewProperty("Color", "color",
+                                             browser, maskGroup));
 }
 
 
@@ -140,5 +141,8 @@ void SVImagePropertyDockWidget::subWindowActivated(QMdiSubWindow *w) {
 
     foreach (SaxsviewProperty *property, p->frameProperties)
       property->setValue(sv->image()->frame());
+
+    foreach (SaxsviewProperty *property, p->maskProperties)
+      property->setValue(sv->image()->mask());
   }
 }
