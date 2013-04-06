@@ -1,5 +1,10 @@
 2013-04-07  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* svimagesubwindow.cpp (loadMask): Verify that the mask could
+	be loaded successfully, report issues.
+
+2013-04-07  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* svimagemainwindow.cpp (loadMask): Moved this ...
 	(saveMaskAs): ... and this ...
 	* svimagesubwindow.h (loadMask): ... to new overload here ...

@@ -351,14 +351,11 @@ bool SVImageSubWindow::loadMask() {
                                                   "Mask files (*.msk)");
 
   bool result = false;
-  if (!fileName.isEmpty()) {
+  if (!fileName.isEmpty())
     result = loadMask(fileName);
-    if (!result)
-      QMessageBox::warning(this, qApp->applicationName(),
-                           QString("Failed to load mask file: %1").arg(fileName));
-  }
 
-  config().setRecentDirectory(fileName);
+  if (result)
+    config().setRecentDirectory(fileName);
 
   return result;
 }
@@ -370,6 +367,22 @@ bool SVImageSubWindow::loadMask(const QString& fileName) {
       return false;
 
     p->mask->setData(new SaxsviewFrameData(fileName));
+
+    if (!p->mask->data()) {
+      QMessageBox::warning(this, qApp->applicationName(),
+                           QString("Failed to load mask file: %1").arg(fileName));
+      newMask();
+      return false;
+    }
+
+    if (p->mask->size() != p->frame->size()) {
+      QMessageBox::warning(this, qApp->applicationName(),
+                           "Mask size does not match frame size. "
+                           "Mask discarded.");
+      newMask();
+      return false;
+    }
+
     p->image->replot();
     return true;
 
