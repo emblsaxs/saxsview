@@ -22,11 +22,9 @@
 #include <cmath>
 
 MaskColorMap::MaskColorMap(const QColor& c) {
+  masked   = c;
   unmasked = c;
-  unmasked.setAlpha(0);
-
-  masked = c;
-  masked.setAlpha(128);
+  unmasked.setAlpha(0);  // fully transparent
 }
 
 QRgb MaskColorMap::rgb(const QwtInterval&, double value) const {

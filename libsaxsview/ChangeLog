@@ -1,5 +1,12 @@
 2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_image.h (SaxsviewMask::setVisible): New.
+	* saxsview_image.cpp (SaxsviewMask::setColor): Replot on color change.
+	(SaxsviewMask::setVisible): New.
+	* saxsview_colormap.cpp (ctor): Do not override alpha of initial color.
+
+2013-04-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview.h (enum ColorMap): New.
 	* saxsview_image.h (colorBarFromColor): Removed.
 	(setColorBarFromColor): Removed.

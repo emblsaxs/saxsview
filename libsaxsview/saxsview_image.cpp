@@ -738,7 +738,7 @@ SaxsviewMask::SaxsviewMask(QObject *parent)
   setZ(10);
 
   // TODO: make initial mask color configurable (save the last mask color?)
-  setColor(QColor(255, 0, 255, 255));
+  setColor(QColor(255, 0, 255, 128));
 
   setDisplayMode(QwtPlotSpectrogram::ImageMode, true);
 }
@@ -787,11 +787,21 @@ void SaxsviewMask::setColor(const QColor& c) {
 
     // Color map: fully transparent (mask == 0) to a more opaque (mask == 1).
     setColorMap(new MaskColorMap(c));
+
+    if (plot())
+      plot()->replot();
   }
 }
 
 QColor SaxsviewMask::color() const {
   return p->color;
+}
+
+void SaxsviewMask::setVisible(bool visible) {
+  // Is there a better way to achieve this?
+  QwtPlotSpectrogram::setVisible(visible);
+  if (plot())
+    plot()->replot();
 }
 
 
