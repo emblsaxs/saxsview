@@ -43,7 +43,6 @@
 
 #include <QtGui>
 
-
 class Log10ScaleEngine : public QwtLog10ScaleEngine {
 public:
   //
@@ -683,6 +682,41 @@ double SaxsviewFrame::maxValue() const {
 }
 
 
+
+//
+// Implementation of Bresenham's algorithm to rasterize a line.
+//
+// Stolen from (2013-04-07):
+//   http://de.wikipedia.org/wiki/Bresenham-Algorithmus#Kompakte_Variante
+//
+static void bresenham(int x0, int y0, int x1, int y1,
+                      SaxsviewFrameData *d, double value) {
+
+  int dx =  abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+  int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+  int err = dx + dy, e2;
+
+  while (1) {
+    d->setValue(x0,y0, value);
+
+    if (x0 == x1 && y0 == y1)
+      break;
+
+    e2 = 2 * err;
+
+    if (e2 > dy) {
+      err += dy;
+      x0  += sx;
+    }
+
+    if (e2 < dx) {
+      err += dx;
+      y0  += sy;
+    }
+  }
+}
+
+
 class SaxsviewMask::Private {
 public:
   Private();
@@ -719,10 +753,16 @@ void SaxsviewMask::Private::setValue(SaxsviewMask *mask, const QPolygonF& p, dou
 
     const QRect r = polygon.boundingRect();
 
-    for (int x = r.x(); x <= r.x() + r.width(); ++x)
-      for (int y = r.y(); y <= r.y() + r.height(); ++y)
-        if (polygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
-          d->setValue(x, y, value);
+    if (polygon.size() > 2) {
+      for (int x = r.x(); x <= r.x() + r.width(); ++x)
+        for (int y = r.y(); y <= r.y() + r.height(); ++y)
+          if (polygon.containsPoint(QPoint(x, y), Qt::OddEvenFill))
+            d->setValue(x, y, value);
+
+    } else
+      bresenham(polygon[0].x(), polygon[0].y(),
+                polygon[1].x(), polygon[1].y(),
+                d, value);
 
     modified = true;
     mask->plot()->replot();
