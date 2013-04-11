@@ -30,6 +30,15 @@ extern "C" {
 
 #include <sys/types.h>
 
+/*
+ * Windows platforms do not define ENOTSUP (Operation not supported),
+ * use ENOSYS (Function not implemented) instead.
+ */
+#ifndef ENOTSUP
+#define ENOTSUP ENOSYS
+#endif
+
+
 struct saxs_property;
 
 struct saxs_image;

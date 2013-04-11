@@ -1,3 +1,7 @@
+2013-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsimage.h> Define ENOTSUP if not defined.
+
 2013-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/msk.c (saxs_image_format_msk): Registered writer; moved magic
@@ -7,7 +11,7 @@
 
 2012-09-03  Daniel Franke  <dfranke@users.sourceforge.net>
 
-        * fortran/CMakeLists.txt: Do not install static bindings library.
+	* fortran/CMakeLists.txt: Do not install static bindings library.
 
 2012-07-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
