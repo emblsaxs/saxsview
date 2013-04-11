@@ -1,3 +1,8 @@
+2013-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview/CMakeLists.txt: Reverted change accidentally
+	committed in r361.
+
 2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* COPYING.libtiff: New, libtiff license.
