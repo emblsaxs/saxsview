@@ -1,7 +1,6 @@
 /*
  * Read/write files in .dat-format (used by EMBL-Hamburg).
- * Copyright (C) 2009, 2010, 2011
- * Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -69,7 +68,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
     colon_pos = strstr(conc_pos, ":");
     if (colon_pos)
       strncpy(code, colon_pos + 1,
-              MIN(64, l->line_length -
+              MIN(63, l->line_length -
                   (colon_pos - l->line_buffer - 1)));
 
 

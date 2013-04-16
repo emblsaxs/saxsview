@@ -191,7 +191,7 @@ malvern_txt_read(struct saxs_document *doc,
   data   = header;
   while (data) {
     int count = 0;
-    for (col = columns; *col; *col++)
+    for (col = columns; *col; ++col)
       if (strstr(data->line_buffer, *col) != NULL)
         count += 1;
 
