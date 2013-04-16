@@ -1,5 +1,9 @@
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* saxsview_transformation.cpp (dtor): Added missing dtor implementation.
+
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* saxsview_image.cpp (ctor): Initialize variables (from coverity).
 	(save): Likewise.
 	* saxsview_plot.cpp (ctor): Likewise.

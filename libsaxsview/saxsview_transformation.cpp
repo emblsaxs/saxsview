@@ -38,7 +38,9 @@ SaxsviewTransformation::Private::Private()
  : merge(1), scaleX(1.0), scaleY(1.0) {
 }
 
-#include <QDebug>
+SaxsviewTransformation::Private::~Private() {
+}
+
 SaxsviewPlotPointData
 SaxsviewTransformation::Private::transform(const SaxsviewPlotPointData& in) const {
   SaxsviewPlotPointData out;
