@@ -1,6 +1,6 @@
 /*
  * Testing for libsaxsdocument
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -266,8 +266,10 @@ static int verify(saxs_document *doc, struct expect *exp) {
 
   /* Filename not checked due to path components */
   VERIFY(strstr(saxs_document_filename(doc), exp->exp_filename) != NULL);
+
+  printf("expected curve count: '%d', actual: '%d'\n",
+         exp->exp_curve_count, saxs_document_curve_count(doc));
   VERIFY(saxs_document_curve_count(doc) == exp->exp_curve_count);
-  VERIFY(saxs_document_property_count(doc) == exp->exp_property_count);
 
   cnt = 0;
   c = exp->exp_curves;
@@ -284,11 +286,21 @@ static int verify(saxs_document *doc, struct expect *exp) {
   /* sanity check for .exp-file */
   VERIFY(cnt == exp->exp_curve_count);
 
+
+  printf("expected property count: '%d', actual: '%d'\n",
+         exp->exp_property_count, saxs_document_property_count(doc));
+  VERIFY(saxs_document_property_count(doc) == exp->exp_property_count);
+
   cnt = 0;
   p = exp->exp_properties;
   sp = saxs_document_property_first(doc);
   while (p && sp) {
+    printf("expected property name: '%s', actual: '%s'\n",
+           p->exp_property_name, saxs_property_name(sp));
     VERIFY(strcmp(saxs_property_name(sp), p->exp_property_name) == 0);
+
+    printf("expected property value: '%s', actual: '%s'\n",
+           p->exp_property_value, saxs_property_value(sp));
     VERIFY(strstr(saxs_property_value(sp), p->exp_property_value) != NULL);
 
     p = p->next;

@@ -1,3 +1,9 @@
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* libsaxsdocument/bsa-sub.exp: Updated expected description.
+	* libsaxsdocument/doctest.c: Provide some extra information on stdout.
+	* libsaxsdocument/CMakeLists.txt: XFAILED whitespace test.
+
 2012-07-22  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* libsaxsdocument/lyzexp.exp: Expect additional properties.

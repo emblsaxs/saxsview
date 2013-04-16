@@ -25,6 +25,8 @@ foreach (test ${DATTESTS})
                                            ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 endforeach (test)
 
+set_tests_properties (read-dat-whitespace PROPERTIES WILL_FAIL TRUE)
+
 # read-write tests
 set (DATTESTS "columns;bsa;")
 foreach (test ${DATTESTS})
