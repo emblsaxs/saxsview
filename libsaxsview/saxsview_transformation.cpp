@@ -151,6 +151,7 @@ SaxsviewTransformation::SaxsviewTransformation()
 }
 
 SaxsviewTransformation::~SaxsviewTransformation() {
+  delete p;
 }
 
 int SaxsviewTransformation::merge() const {

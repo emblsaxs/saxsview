@@ -90,7 +90,8 @@ public:
 
 SaxsviewImage::Private::Private()
  : frame(0L), mask(0L),
-   scale(Saxsview::AbsoluteScale), colorMap(Saxsview::GrayColorMap) {
+   scale(Saxsview::AbsoluteScale), colorMap(Saxsview::GrayColorMap),
+   panner(0L), zoomer(0L), rescaler(0L) {
 }
 
 void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
@@ -787,7 +788,7 @@ SaxsviewMask::~SaxsviewMask() {
 }
 
 bool SaxsviewMask::save(const QString& fileName) const {
-  bool written;
+  bool written = false;
 
   if (SaxsviewFrameData *d = (SaxsviewFrameData*)data())
     written = d->save(fileName);
