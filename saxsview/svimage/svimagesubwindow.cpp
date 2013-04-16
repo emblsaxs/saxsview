@@ -89,10 +89,10 @@ public:
 };
 
 SVImageSubWindow::Private::Private()
- : image(0L), frame(0L), tracker(0L),
+ : image(0L), frame(0L), mask(0L), tracker(0L),
    addPointPicker(0L), addPolygonPicker(0L),
    removePointPicker(0L), removePolygonPicker(0L),
-   watchLatest(false) {
+   watchLatest(false), model(0L) {
 }
 
 SVImageSubWindow::Private::~Private() {
