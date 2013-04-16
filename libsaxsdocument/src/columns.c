@@ -1,6 +1,7 @@
 /*
  * Common code to read columnized data in text files.
- * Copyright (C) 2009, 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2011, 2012, 2013
+ *  Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -300,13 +301,20 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
     colcnt = saxs_reader_columns_count(currentline);
 
     if (colcnt == 0 || (datalines > 0 && datacolumns != colcnt)) {
-      if (datafound) {
+      if (!datafound) {
+        /* Reject the current preliminary data block and start a new one. */
+        *data        = currentline;
+        datalines   = 1;
+        datacolumns = colcnt;
+
+      } else {
+        /*
+         * A sufficiently large data block has been found.
+         * Any remaining lines are part of the footer by definition.
+         */
         *footer = currentline;
         break;
       }
-
-      datalines   = 0;
-      datacolumns = 0;
 
     } else if (datalines == 0) {
       *data        = currentline;

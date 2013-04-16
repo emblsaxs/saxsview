@@ -1,5 +1,11 @@
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/columns.c: Bumped copyright years.
+	(saxs_reader_columns_scan): Avoid to skip the first data line while
+	trying to find the relevant data block.
+
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/atsas_dat.c (atsas_dat_parse_header): Also trim the first
 	whitespace.
 
