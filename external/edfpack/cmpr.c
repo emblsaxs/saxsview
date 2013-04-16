@@ -270,9 +270,9 @@ int cmpr_deflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_deflate: output buffer too short (%lu of %lu bytes used)\n",
+      printf(" cmpr_deflate: output buffer too short (%zu of %zu bytes used)\n",
         rest_out,outlen);
-      printf("              %lu of %lu input bytes unprocessed.\n",
+      printf("              %zu of %zu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -286,7 +286,7 @@ int cmpr_deflate ( void * out, size_t outlen,
   } else errval=Z_OK;
 
   if (CMPR_debug) 
-    printf(" cmpr_deflate %lu bytes converted END\n",converted);
+    printf(" cmpr_deflate %zu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -467,9 +467,9 @@ int cmpr_inflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
         rest_out,outlen);
-      printf("              %lu of %lu input bytes unprocessed.\n",
+      printf("              %zu of %zu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -483,7 +483,7 @@ int cmpr_inflate ( void * out, size_t outlen,
   } else errval=Z_OK;
 
   if (CMPR_debug)
-    printf(" cmpr_inflate %lu bytes converted END\n",converted);
+    printf(" cmpr_inflate %zu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -669,9 +669,9 @@ int cmpr_frinflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
         rest_out,outlen);
-      printf("              %lu of %lu input bytes unprocessed.\n",
+      printf("              %zu of %zu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -685,7 +685,7 @@ int cmpr_frinflate ( void * out, size_t outlen,
   } else errval=Z_OK;
 
   if (CMPR_debug)
-    printf(" cmpr_frinflate %lu bytes converted END\n",converted);
+    printf(" cmpr_frinflate %zu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -848,7 +848,7 @@ int cmpr_inflatefile ( FILE * outp, FILE * inp,
   (void)inflateEnd(&strm);
 
   if (CMPR_debug)
-    printf(" cmpr_inflatefile %lu bytes converted END\n",converted);
+    printf(" cmpr_inflatefile %zu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -1007,7 +1007,7 @@ int cmpr_deflatefile ( FILE * outp, FILE * inp,
       if (strm.avail_in!=0) {
         /* all input must be used */
         if (CMPR_debug) {
-          printf(" cmpr_deflatefile: not all input deflated (%lu bytes unprocessed)\n",
+          printf(" cmpr_deflatefile: not all input deflated (%zu bytes unprocessed)\n",
             strm.avail_in);
         }
         errval=Z_ERRNO;
@@ -1027,7 +1027,7 @@ int cmpr_deflatefile ( FILE * outp, FILE * inp,
   } else errval=Z_OK;
 
   if (CMPR_debug)
-    printf(" cmpr_deflatefile %lu bytes converted END\n",converted);
+    printf(" cmpr_deflatefile %zu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;

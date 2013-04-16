@@ -1,48 +1,303 @@
-Index: cmpr.c
+Index: patches/001-format-descriptor.patch
 ===================================================================
---- cmpr.c	(revision 252)
-+++ cmpr.c	(working copy)
-@@ -268,9 +268,9 @@
- 
-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
-     if (CMPR_debug) {
--      printf(" cmpr_deflate: output buffer too short (%lu of %lu bytes used)\n",
-+      printf(" cmpr_deflate: output buffer too short (%zu of %zu bytes used)\n",
-         rest_out,outlen);
--      printf("              %lu of %lu input bytes unprocessed.\n",
-+      printf("              %zu of %zu input bytes unprocessed.\n",
-         rest_inp,inplen);
-     }
-     errval=Z_ERRNO;
-@@ -461,9 +461,9 @@
- 
-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
-     if (CMPR_debug) {
--      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
-+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
-         rest_out,outlen);
--      printf("              %lu of %lu input bytes unprocessed.\n",
-+      printf("              %zu of %zu input bytes unprocessed.\n",
-         rest_inp,inplen);
-     }
-     errval=Z_ERRNO;
-@@ -660,9 +660,9 @@
- 
-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
-     if (CMPR_debug) {
--      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
-+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
-         rest_out,outlen);
--      printf("              %lu of %lu input bytes unprocessed.\n",
-+      printf("              %zu of %zu input bytes unprocessed.\n",
-         rest_inp,inplen);
-     }
-     errval=Z_ERRNO;
+--- patches/001-format-descriptor.patch	(revision 374)
++++ patches/001-format-descriptor.patch	(working copy)
+@@ -1,277 +0,0 @@
+-Index: cmpr.c
+-===================================================================
+---- cmpr.c	(revision 252)
+-+++ cmpr.c	(working copy)
+-@@ -268,9 +268,9 @@
+- 
+-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+-     if (CMPR_debug) {
+--      printf(" cmpr_deflate: output buffer too short (%lu of %lu bytes used)\n",
+-+      printf(" cmpr_deflate: output buffer too short (%zu of %zu bytes used)\n",
+-         rest_out,outlen);
+--      printf("              %lu of %lu input bytes unprocessed.\n",
+-+      printf("              %zu of %zu input bytes unprocessed.\n",
+-         rest_inp,inplen);
+-     }
+-     errval=Z_ERRNO;
+-@@ -461,9 +461,9 @@
+- 
+-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+-     if (CMPR_debug) {
+--      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
+-+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+-         rest_out,outlen);
+--      printf("              %lu of %lu input bytes unprocessed.\n",
+-+      printf("              %zu of %zu input bytes unprocessed.\n",
+-         rest_inp,inplen);
+-     }
+-     errval=Z_ERRNO;
+-@@ -660,9 +660,9 @@
+- 
+-   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+-     if (CMPR_debug) {
+--      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
+-+      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+-         rest_out,outlen);
+--      printf("              %lu of %lu input bytes unprocessed.\n",
+-+      printf("              %zu of %zu input bytes unprocessed.\n",
+-         rest_inp,inplen);
+-     }
+-     errval=Z_ERRNO;
+-Index: edfio.c
+-===================================================================
+---- edfio.c	(revision 252)
+-+++ edfio.c	(working copy)
+-@@ -2799,7 +2799,7 @@
+-   /* warning, if Key too long */
+-   if ( strlen(Key)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
+- 
+-   previous = (SElement *) NULL;
+-@@ -2888,7 +2888,7 @@
+-   /* warning, if Key too long */
+-   if ( strlen(Key)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING (search_symbol): The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
+- 
+-   /* search symbol */
+-@@ -2993,7 +2993,7 @@
+-   /* warning, if Key too long */
+-   if ( strlen(Key)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
+- 
+-   /* search symbol */
+-@@ -3029,7 +3029,7 @@
+-   /* warning, if Key too long */
+-   if ( strlen(Key)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
+- 
+-   if ( block == (DBlock *) NULL) return(-1);
+-@@ -3244,7 +3244,7 @@
+-   /* warning, if BlockKey too long */
+-   if ( strlen(BlockKey)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
+- 
+-   if ( chain == (DChain *) NULL ) return(-1);
+-@@ -3325,7 +3325,7 @@
+-   /* warning, if BlockKey too long */
+-   if ( strlen(BlockKey)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
+- 
+-   /* search block */
+-@@ -3405,7 +3405,7 @@
+-       fprintf(out,"  BinaryFileLen           = %lu\n",block->BinaryFileLen);
+-       fprintf(out,"  Data                    = %p\n",block->Data);
+- //      fprintf(out,"  DataLen (DataBufferLen) = %zu (%zu)\n",
+--      fprintf(out,"  DataLen (DataBufferLen) = %zu | %lu (%lu)\n",
+-+      fprintf(out,"  DataLen (DataBufferLen) = %zu | %zu (%zu)\n",
+-                           block->DataLen,block->DataLen,block->DataBufferLen);
+-       fprintf(out,"  DataType                = %ld\n",block->DataType);
+-       fprintf(out,"  DataByteOrder           = %s\n",
+-@@ -3418,7 +3418,7 @@
+-       fprintf(out,"  DataDim                 = %p\n",block->DataDim);
+-       fprintf(out,"  Raw                     = %p\n",block->Raw);
+- //      fprintf(out,"  RawLen (RawBufferLen)   = %zu (%zu)\n",
+--      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %lu (%lu)\n",
+-+      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %zu (%zu)\n",
+-                           block->RawLen,block->RawLen,block->RawBufferLen);
+- 
+-       if (block->DataDim) for (i_dim=0;i_dim<=block->DataDim[0];i_dim++) 
+-@@ -3468,7 +3468,7 @@
+-   /* warning, if ChainKey too long */
+-   if ( strlen(ChainKey)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
+- 
+-   if ( file == (DFile *) NULL ) return(-1);
+-@@ -3523,7 +3523,7 @@
+-   /* warning, if ChainKey too long */
+-   if ( strlen(ChainKey)>MaxKeyLen ) {
+- //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
+--    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
+-+    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+-              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
+- 
+-   /* search chain */
+-@@ -5997,7 +5997,7 @@
+-     /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
+-     data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
+-     if (EDFIO_debug) {
+--      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%lu\n",\
+-+      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%zu\n",\
+-         data_dim[0],data_dim[1],data_dim[2],data_len);
+-     }
+-     binary_len = data_len;
+-@@ -7004,7 +7004,7 @@
+-     printf(" block                = %p\n", block);
+-     printf(" buffer               = %p\n", buffer);
+- //    printf(" buflen               = %zu\n", buflen);
+--    printf(" buflen               = %zu | %lu\n", buflen, buflen);
+-+    printf(" buflen               = %zu | %zu\n", buflen, buflen);
+-     printf(" data_dim[0]          = %ld\n", data_dim[0]);
+-     for (i=1;i<=data_dim[0];i++) 
+-       printf("  data_dim[%d]         = %ld\n", i, data_dim[i]);
+-@@ -7013,14 +7013,14 @@
+-     printf(" data_value_offset    = %ld\n", data_value_offset);
+-     printf(" raster_configuration = %ld\n", raster_configuration);
+- //    printf(" data_size            = %zu\n", data_size);
+--    printf(" data_size            = %zu | %lu\n", data_size, data_size);
+-+    printf(" data_size            = %zu | %zu\n", data_size, data_size);
+-     printf(" data_number          = %ld\n", data_number);
+- //    printf(" data_len             = %zu\n", data_len);
+--    printf(" data_len             = %zu | %lu\n", data_len, data_len);
+-+    printf(" data_len             = %zu | %zu\n", data_len, data_len);
+-     printf(" compression          = %s\n", edf_compression2string(compression));
+-     printf(" data_pos             = %ld\n", data_pos);
+- //    printf(" bytes_to_read        = %zu\n", bytes_to_read);
+--    printf(" bytes_to_read        = %zu | %lu\n", bytes_to_read, bytes_to_read);
+-+    printf(" bytes_to_read        = %zu | %zu\n", bytes_to_read, bytes_to_read);
+-   } /* EDFIO_debug */
+- 
+-   /* update DataDim array in block */
+-@@ -7082,7 +7082,7 @@
+-     if (EDFIO_debug) printf(" Use supplied buffer\n");
+-     if (buflen<data_len) {
+- //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",GBA_Error,data_len); 
+--      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
+-+      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+-         GBA_Error,data_len,data_len); 
+-       return(-1); }
+-     block->Flags.ExternalDataAlloc = True;
+-@@ -7112,7 +7112,7 @@
+-   /* check length */
+-   if (data_len-bytes_read>0) {
+- //    fprintf(stderr,"%s read bytes %zu less than array size %zu\n",
+--    fprintf(stderr,"%s read bytes %zu | %lu less than array size %zu | %lu\n",
+-+    fprintf(stderr,"%s read bytes %zu | %zu less than array size %zu | %zu\n",
+-       GBA_Error, bytes_read, bytes_read, data_len, data_len ); return(-1); }
+-     
+-   /* close external file */
+-@@ -8298,7 +8298,7 @@
+-     printf(" %15s               = %15s\n",  "DataType", "MachineType");
+-   for (i=1; i<EndDType; i++) {
+-     if ( (full) || (edf_datatype2machinetype(i)) ) { 
+--      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
+-+      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+-         edf_datatype2string(i), edf_data_sizeof(i),
+-         MachineType2String(edf_datatype2machinetype(i)),
+-         edf_machine_sizeof(edf_datatype2machinetype(i)) );
+-@@ -8324,7 +8324,7 @@
+-     printf(" %15s               = %15s\n", "MachineType", "DataType");
+-   for (i=1; i<EndMType; i++) {
+-     if ( (full) || (edf_machinetype2datatype(i)) ) {
+--      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
+-+      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+-         MachineType2String(i), edf_machine_sizeof(i),
+-         edf_datatype2string(edf_machinetype2datatype(i)),
+-         edf_data_sizeof(edf_machinetype2datatype(i)) );
+-@@ -10032,11 +10032,11 @@
+-       fprintf(out,"   key               = %s\n",hline->key);
+-       fprintf(out,"   line              = %s\n",hline->line);
+- //      fprintf(out,"   size              = %zu\n",hline->size);
+--      fprintf(out,"   size              = %zu | %lu\n",
+-+      fprintf(out,"   size              = %zu | %zu\n",
+-         hline->size,hline->size);
+-       fprintf(out,"   required          = %d\n",hline->required);
+- //      fprintf(out,"   shortlen          = %zu\n",hline->shortlen);
+--      fprintf(out,"   shortlen          = %zu | %lu\n",
+-+      fprintf(out,"   shortlen          = %zu | %zu\n",
+-         hline->shortlen, hline->shortlen);
+-       fprintf(out,"   Previous key      = ");
+-       if ((hline->Previous)!=(HSymb*) NULL)
+-@@ -11343,14 +11343,14 @@
+-     if (block->Flags.ExternalDataAlloc) { // use input data buffer for output
+-       if (data_buffer_len<data_out_len) {
+- //        fprintf(stderr,"%s allocated buffer < %zu bytes\n",
+--        fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
+-+        fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+-                RDA_Error,data_out_len,data_out_len);return(-1);
+-         }
+-       } 
+-     } else { // use supplied buffer for output
+-     if (buflen<data_out_len) {
+- //      fprintf(stderr,"%s allocated buffer < %zu bytes\n",
+--      fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
+-+      fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+-              RDA_Error,data_out_len,data_out_len);return(-1);
+-       }
+-     }
+-@@ -11371,7 +11371,7 @@
+-     if (!(dest = malloc( dest_len ))) {
+-       *pErrorValue = CouldNotMallocMemory;
+- //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1);
+--      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
+-+      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+-         RDA_Error,dest_len,dest_len);return(-1); 
+-     }
+-     als[alc++] = dest; // add allocated memory
+-@@ -11394,7 +11394,7 @@
+-     dest_len = buflen;
+-     if (dest_len<data_out_len) {
+- //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",RDA_Error,data_out_len);
+--      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
+-+      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+-         RDA_Error,data_out_len,data_out_len);
+-       return(-1); }
+-     }
+-@@ -11406,7 +11406,7 @@
+-       for ( i=alc; i>0; --i ) if (als[i]) free(als[i]);       
+-       *pErrorValue = CouldNotMallocMemory;
+- //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); 
+--      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
+-+      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+-         RDA_Error,dest_len,dest_len);
+-       return(-1); 
+-     }
+-Index: readascii.c
+-===================================================================
+---- readascii.c	(revision 252)
+-+++ readascii.c	(working copy)
+-@@ -324,7 +324,7 @@
+-   fprintf(out,"       dummy=%g\n",descr->dummy);
+-   fprintf(out,"  commentset=");_fprintset( out,descr->commentset );
+-   fprintf(out,"delimiterset=");_fprintset( out,descr->delimiterset );
+--  fprintf(out,"      bufsiz=%lu\n",descr->bufsiz);
+-+  fprintf(out,"      bufsiz=%zu\n",descr->bufsiz);
+-   fprintf(out,"      buffer=%p\n",descr->buffer);
+-   return(0);
+- } // RA_printdescr
+Index: readascii.c
+===================================================================
+--- readascii.c	(revision 375)
++++ readascii.c	(working copy)
+@@ -324,7 +324,7 @@
+   fprintf(out,"       dummy=%g\n",descr->dummy);
+   fprintf(out,"  commentset=");_fprintset( out,descr->commentset );
+   fprintf(out,"delimiterset=");_fprintset( out,descr->delimiterset );
+-  fprintf(out,"      bufsiz=%lu\n",descr->bufsiz);
++  fprintf(out,"      bufsiz=%zu\n",descr->bufsiz);
+   fprintf(out,"      buffer=%p\n",descr->buffer);
+   return(0);
+ } // RA_printdescr
 Index: edfio.c
 ===================================================================
---- edfio.c	(revision 252)
+--- edfio.c	(revision 375)
 +++ edfio.c	(working copy)
-@@ -2799,7 +2799,7 @@
+@@ -2810,7 +2810,7 @@
    /* warning, if Key too long */
    if ( strlen(Key)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -51,7 +306,7 @@ Index: edfio.c
               strlen(Key), strlen(Key), Key, MaxKeyLen ); }
  
    previous = (SElement *) NULL;
-@@ -2888,7 +2888,7 @@
+@@ -2899,7 +2899,7 @@
    /* warning, if Key too long */
    if ( strlen(Key)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING (search_symbol): The length %zu of %10s... exceeds %d\n",
@@ -60,7 +315,7 @@ Index: edfio.c
               strlen(Key), strlen(Key), Key, MaxKeyLen ); }
  
    /* search symbol */
-@@ -2993,7 +2993,7 @@
+@@ -3004,7 +3004,7 @@
    /* warning, if Key too long */
    if ( strlen(Key)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -69,7 +324,7 @@ Index: edfio.c
               strlen(Key), strlen(Key), Key, MaxKeyLen ); }
  
    /* search symbol */
-@@ -3029,7 +3029,7 @@
+@@ -3040,7 +3040,7 @@
    /* warning, if Key too long */
    if ( strlen(Key)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -78,7 +333,7 @@ Index: edfio.c
               strlen(Key), strlen(Key), Key, MaxKeyLen ); }
  
    if ( block == (DBlock *) NULL) return(-1);
-@@ -3244,7 +3244,7 @@
+@@ -3255,7 +3255,7 @@
    /* warning, if BlockKey too long */
    if ( strlen(BlockKey)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -87,7 +342,7 @@ Index: edfio.c
               strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
  
    if ( chain == (DChain *) NULL ) return(-1);
-@@ -3325,7 +3325,7 @@
+@@ -3336,7 +3336,7 @@
    /* warning, if BlockKey too long */
    if ( strlen(BlockKey)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -96,7 +351,7 @@ Index: edfio.c
               strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
  
    /* search block */
-@@ -3405,7 +3405,7 @@
+@@ -3416,7 +3416,7 @@
        fprintf(out,"  BinaryFileLen           = %lu\n",block->BinaryFileLen);
        fprintf(out,"  Data                    = %p\n",block->Data);
  //      fprintf(out,"  DataLen (DataBufferLen) = %zu (%zu)\n",
@@ -105,7 +360,7 @@ Index: edfio.c
                            block->DataLen,block->DataLen,block->DataBufferLen);
        fprintf(out,"  DataType                = %ld\n",block->DataType);
        fprintf(out,"  DataByteOrder           = %s\n",
-@@ -3418,7 +3418,7 @@
+@@ -3429,7 +3429,7 @@
        fprintf(out,"  DataDim                 = %p\n",block->DataDim);
        fprintf(out,"  Raw                     = %p\n",block->Raw);
  //      fprintf(out,"  RawLen (RawBufferLen)   = %zu (%zu)\n",
@@ -114,7 +369,7 @@ Index: edfio.c
                            block->RawLen,block->RawLen,block->RawBufferLen);
  
        if (block->DataDim) for (i_dim=0;i_dim<=block->DataDim[0];i_dim++) 
-@@ -3468,7 +3468,7 @@
+@@ -3479,7 +3479,7 @@
    /* warning, if ChainKey too long */
    if ( strlen(ChainKey)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -123,7 +378,7 @@ Index: edfio.c
               strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
  
    if ( file == (DFile *) NULL ) return(-1);
-@@ -3523,7 +3523,7 @@
+@@ -3534,7 +3534,7 @@
    /* warning, if ChainKey too long */
    if ( strlen(ChainKey)>MaxKeyLen ) {
  //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
@@ -132,7 +387,7 @@ Index: edfio.c
               strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
  
    /* search chain */
-@@ -5997,7 +5997,7 @@
+@@ -6010,7 +6010,7 @@
      /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
      data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
      if (EDFIO_debug) {
@@ -141,7 +396,7 @@ Index: edfio.c
          data_dim[0],data_dim[1],data_dim[2],data_len);
      }
      binary_len = data_len;
-@@ -7004,7 +7004,7 @@
+@@ -7014,7 +7014,7 @@
      printf(" block                = %p\n", block);
      printf(" buffer               = %p\n", buffer);
  //    printf(" buflen               = %zu\n", buflen);
@@ -150,7 +405,7 @@ Index: edfio.c
      printf(" data_dim[0]          = %ld\n", data_dim[0]);
      for (i=1;i<=data_dim[0];i++) 
        printf("  data_dim[%d]         = %ld\n", i, data_dim[i]);
-@@ -7013,14 +7013,14 @@
+@@ -7023,14 +7023,14 @@
      printf(" data_value_offset    = %ld\n", data_value_offset);
      printf(" raster_configuration = %ld\n", raster_configuration);
  //    printf(" data_size            = %zu\n", data_size);
@@ -168,7 +423,7 @@ Index: edfio.c
    } /* EDFIO_debug */
  
    /* update DataDim array in block */
-@@ -7082,7 +7082,7 @@
+@@ -7092,7 +7092,7 @@
      if (EDFIO_debug) printf(" Use supplied buffer\n");
      if (buflen<data_len) {
  //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",GBA_Error,data_len); 
@@ -177,7 +432,7 @@ Index: edfio.c
          GBA_Error,data_len,data_len); 
        return(-1); }
      block->Flags.ExternalDataAlloc = True;
-@@ -7112,7 +7112,7 @@
+@@ -7122,7 +7122,7 @@
    /* check length */
    if (data_len-bytes_read>0) {
  //    fprintf(stderr,"%s read bytes %zu less than array size %zu\n",
@@ -186,7 +441,7 @@ Index: edfio.c
        GBA_Error, bytes_read, bytes_read, data_len, data_len ); return(-1); }
      
    /* close external file */
-@@ -8298,7 +8298,7 @@
+@@ -8308,7 +8308,7 @@
      printf(" %15s               = %15s\n",  "DataType", "MachineType");
    for (i=1; i<EndDType; i++) {
      if ( (full) || (edf_datatype2machinetype(i)) ) { 
@@ -195,7 +450,7 @@ Index: edfio.c
          edf_datatype2string(i), edf_data_sizeof(i),
          MachineType2String(edf_datatype2machinetype(i)),
          edf_machine_sizeof(edf_datatype2machinetype(i)) );
-@@ -8324,7 +8324,7 @@
+@@ -8334,7 +8334,7 @@
      printf(" %15s               = %15s\n", "MachineType", "DataType");
    for (i=1; i<EndMType; i++) {
      if ( (full) || (edf_machinetype2datatype(i)) ) {
@@ -204,7 +459,7 @@ Index: edfio.c
          MachineType2String(i), edf_machine_sizeof(i),
          edf_datatype2string(edf_machinetype2datatype(i)),
          edf_data_sizeof(edf_machinetype2datatype(i)) );
-@@ -10032,11 +10032,11 @@
+@@ -10042,11 +10042,11 @@
        fprintf(out,"   key               = %s\n",hline->key);
        fprintf(out,"   line              = %s\n",hline->line);
  //      fprintf(out,"   size              = %zu\n",hline->size);
@@ -218,7 +473,7 @@ Index: edfio.c
          hline->shortlen, hline->shortlen);
        fprintf(out,"   Previous key      = ");
        if ((hline->Previous)!=(HSymb*) NULL)
-@@ -11343,14 +11343,14 @@
+@@ -11351,14 +11351,14 @@
      if (block->Flags.ExternalDataAlloc) { // use input data buffer for output
        if (data_buffer_len<data_out_len) {
  //        fprintf(stderr,"%s allocated buffer < %zu bytes\n",
@@ -235,7 +490,7 @@ Index: edfio.c
               RDA_Error,data_out_len,data_out_len);return(-1);
        }
      }
-@@ -11371,7 +11371,7 @@
+@@ -11379,7 +11379,7 @@
      if (!(dest = malloc( dest_len ))) {
        *pErrorValue = CouldNotMallocMemory;
  //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1);
@@ -244,7 +499,7 @@ Index: edfio.c
          RDA_Error,dest_len,dest_len);return(-1); 
      }
      als[alc++] = dest; // add allocated memory
-@@ -11394,7 +11394,7 @@
+@@ -11402,7 +11402,7 @@
      dest_len = buflen;
      if (dest_len<data_out_len) {
  //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",RDA_Error,data_out_len);
@@ -253,7 +508,7 @@ Index: edfio.c
          RDA_Error,data_out_len,data_out_len);
        return(-1); }
      }
-@@ -11406,7 +11406,7 @@
+@@ -11414,7 +11414,7 @@
        for ( i=alc; i>0; --i ) if (als[i]) free(als[i]);       
        *pErrorValue = CouldNotMallocMemory;
  //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); 
@@ -262,16 +517,97 @@ Index: edfio.c
          RDA_Error,dest_len,dest_len);
        return(-1); 
      }
-Index: readascii.c
+Index: cmpr.c
 ===================================================================
---- readascii.c	(revision 252)
-+++ readascii.c	(working copy)
-@@ -324,7 +324,7 @@
-   fprintf(out,"       dummy=%g\n",descr->dummy);
-   fprintf(out,"  commentset=");_fprintset( out,descr->commentset );
-   fprintf(out,"delimiterset=");_fprintset( out,descr->delimiterset );
--  fprintf(out,"      bufsiz=%lu\n",descr->bufsiz);
-+  fprintf(out,"      bufsiz=%zu\n",descr->bufsiz);
-   fprintf(out,"      buffer=%p\n",descr->buffer);
-   return(0);
- } // RA_printdescr
+--- cmpr.c	(revision 375)
++++ cmpr.c	(working copy)
+@@ -270,9 +270,9 @@
+ 
+   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+     if (CMPR_debug) {
+-      printf(" cmpr_deflate: output buffer too short (%lu of %lu bytes used)\n",
++      printf(" cmpr_deflate: output buffer too short (%zu of %zu bytes used)\n",
+         rest_out,outlen);
+-      printf("              %lu of %lu input bytes unprocessed.\n",
++      printf("              %zu of %zu input bytes unprocessed.\n",
+         rest_inp,inplen);
+     }
+     errval=Z_ERRNO;
+@@ -286,7 +286,7 @@
+   } else errval=Z_OK;
+ 
+   if (CMPR_debug) 
+-    printf(" cmpr_deflate %lu bytes converted END\n",converted);
++    printf(" cmpr_deflate %zu bytes converted END\n",converted);
+ 
+   if (pconverted) *pconverted=converted;
+   if (perrval) *perrval=errval;
+@@ -467,9 +467,9 @@
+ 
+   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+     if (CMPR_debug) {
+-      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
++      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+         rest_out,outlen);
+-      printf("              %lu of %lu input bytes unprocessed.\n",
++      printf("              %zu of %zu input bytes unprocessed.\n",
+         rest_inp,inplen);
+     }
+     errval=Z_ERRNO;
+@@ -483,7 +483,7 @@
+   } else errval=Z_OK;
+ 
+   if (CMPR_debug)
+-    printf(" cmpr_inflate %lu bytes converted END\n",converted);
++    printf(" cmpr_inflate %zu bytes converted END\n",converted);
+ 
+   if (pconverted) *pconverted=converted;
+   if (perrval) *perrval=errval;
+@@ -669,9 +669,9 @@
+ 
+   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
+     if (CMPR_debug) {
+-      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
++      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+         rest_out,outlen);
+-      printf("              %lu of %lu input bytes unprocessed.\n",
++      printf("              %zu of %zu input bytes unprocessed.\n",
+         rest_inp,inplen);
+     }
+     errval=Z_ERRNO;
+@@ -685,7 +685,7 @@
+   } else errval=Z_OK;
+ 
+   if (CMPR_debug)
+-    printf(" cmpr_frinflate %lu bytes converted END\n",converted);
++    printf(" cmpr_frinflate %zu bytes converted END\n",converted);
+ 
+   if (pconverted) *pconverted=converted;
+   if (perrval) *perrval=errval;
+@@ -848,7 +848,7 @@
+   (void)inflateEnd(&strm);
+ 
+   if (CMPR_debug)
+-    printf(" cmpr_inflatefile %lu bytes converted END\n",converted);
++    printf(" cmpr_inflatefile %zu bytes converted END\n",converted);
+ 
+   if (pconverted) *pconverted=converted;
+   if (perrval) *perrval=errval;
+@@ -1007,7 +1007,7 @@
+       if (strm.avail_in!=0) {
+         /* all input must be used */
+         if (CMPR_debug) {
+-          printf(" cmpr_deflatefile: not all input deflated (%lu bytes unprocessed)\n",
++          printf(" cmpr_deflatefile: not all input deflated (%zu bytes unprocessed)\n",
+             strm.avail_in);
+         }
+         errval=Z_ERRNO;
+@@ -1027,7 +1027,7 @@
+   } else errval=Z_OK;
+ 
+   if (CMPR_debug)
+-    printf(" cmpr_deflatefile %lu bytes converted END\n",converted);
++    printf(" cmpr_deflatefile %zu bytes converted END\n",converted);
+ 
+   if (pconverted) *pconverted=converted;
+   if (perrval) *perrval=errval;
