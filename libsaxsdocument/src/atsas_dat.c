@@ -457,7 +457,7 @@ static int
 atsas_dat_n_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
-  /* Catch all version. Accept anything, including empty files. */
+  /* Catch all version. Accept anything with at least two columns. */
 
   int i, n = saxs_reader_columns_count(firstline);
   if (n < 2)

@@ -414,7 +414,7 @@ int saxs_reader_columns_parse_lines(struct saxs_document *doc,
   struct line *header = NULL, *data = NULL, *footer = NULL;
 
   if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
-    goto error;
+    return res;
 
   /*
    * If we can't identify anything, then this is probably not
@@ -423,19 +423,16 @@ int saxs_reader_columns_parse_lines(struct saxs_document *doc,
   if (!header && !data && !footer)
     return ENOTSUP;
 
-  if ((res = parse_header && parse_header(doc, header, data)) != 0)
-    goto error;
+  if (parse_header && (res = parse_header(doc, header, data) != 0))
+    return res;
 
-  if ((res = parse_data && parse_data(doc, data, footer)) != 0)
-    goto error;
+  if (parse_data && (res = parse_data(doc, data, footer) != 0))
+    return res;
 
-  if ((res = parse_footer && parse_footer(doc, footer, lastline)) != 0)
-    goto error;
+  if (parse_footer && (res = parse_footer(doc, footer, lastline) != 0))
+    return res;
 
   return 0;
-
-error:
-  return res;
 }
 
 
