@@ -539,7 +539,6 @@ void SVPlotMainWindow::closeEvent(QCloseEvent*) {
 bool SVPlotMainWindow::eventFilter(QObject *o, QEvent *e) {
   switch (e->type()) {
     case QEvent::FileOpen:
-    {
       //
       // The Mac Finder does not pass the filename as an argument on double-click
       // but opens the application without any argument and sends a FileOpen event
@@ -550,21 +549,20 @@ bool SVPlotMainWindow::eventFilter(QObject *o, QEvent *e) {
       //
       // Luckily the event is available in Qt4 already ...
       //
-      QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e);
-      load(open->file());
+      if (QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e))
+        load(open->file());
+
       return true;
-    }
 
     case QEvent::Drop:
-    {
-      QDropEvent *dropEvent = dynamic_cast<QDropEvent*>(e);
-      if (dropEvent->mimeData()->hasUrls())
-        foreach (QUrl url, dropEvent->mimeData()->urls())
-          load(url.toLocalFile());
+      if (QDropEvent *dropEvent = dynamic_cast<QDropEvent*>(e)) {
+        if (dropEvent->mimeData()->hasUrls())
+          foreach (QUrl url, dropEvent->mimeData()->urls())
+            load(url.toLocalFile());
 
-      dropEvent->acceptProposedAction();
-      // fall through
-    }
+        dropEvent->acceptProposedAction();
+        // fall through
+      }
 
     case QEvent::DragEnter:
     case QEvent::DragMove:

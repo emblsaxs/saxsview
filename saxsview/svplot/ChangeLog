@@ -1,3 +1,8 @@
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* svplotmainwindow.cpp (eventFilter): Check return values of
+	dynamic casts.
+
 2012-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Explicitely link libm for those who need it.
