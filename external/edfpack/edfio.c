@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define EDFIO_VERSION      "edfio : V2.39 Peter Boesecke 2011-12-13"
+# define EDFIO_VERSION      "edfio : V2.41 Peter Boesecke 2012-07-03"
 /*+++------------------------------------------------------------------------
 NAME
    edfio --- EDF data format specific file access routines
@@ -491,7 +491,16 @@ HISTORY
 2011-06-16 PB V2.37   edf_dump_format: line feed corrected
 2011-09-01 PB V2.38   Convert2Long, Convert2Integer, Convert2Short
 2011-12-13 PB V2.39   edf_byteorder2string, edf_string2byteorder
-                      
+2012-06-26 PB V2.40   Input and output files can be compressed as a whole
+                      with gzip (suffix .gz) or Z (suffix .Z) when they 
+                      are opened with mode==Read or mode==New.
+                      data_file_type: cmpr_checkfiletype added
+                      DFFlags: When CompressBeforeClosing is set
+                      the written file is compressed before in 
+                      edf_close_data_file. Compression is currently only
+                      supported for edf-files.
+2012-07-03 PB 2.41    EdfMaxValLen increased from 512 to 2048 
+                      EdfMaxLinLen increased from 255 to 1023
 --------------------------------------------------------------------------*/
 
 /***************************************************************************
@@ -648,6 +657,7 @@ unsigned short ExistingFile,             /* The file exists and was not
                                                opened with ´new´ or ´temp´ */
                ReadOnlyFile,                     /* This file is read-only */
                TemporaryFile,            /* The file was opened with ´temp´*/
+               CompressBeforeClosing,  /* Compress and copy before closing */
                NoGeneralHeader;          /* The file has no general header */
 } DFFlags;
 
@@ -2647,6 +2657,7 @@ int init_data_file_flags( DFFlags * Flags )
   Flags->ExistingFile    = (unsigned short) False;
   Flags->ReadOnlyFile    = (unsigned short) False;
   Flags->TemporaryFile   = (unsigned short) False; 
+  Flags->CompressBeforeClosing   = (unsigned short) False; 
   if (write_general_block)
     Flags->NoGeneralHeader = (unsigned short) False; 
   else Flags->NoGeneralHeader = (unsigned short) True;
@@ -2799,7 +2810,7 @@ int insert_symbol( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   previous = (SElement *) NULL;
@@ -2888,7 +2899,7 @@ int search_symbol( DBlock * block, const char * Key, SElement ** symbol )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING (search_symbol): The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -2993,7 +3004,7 @@ int remove_symbol( DBlock * block, const char * Key, SElement ** Next )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -3029,7 +3040,7 @@ int insert_symbol_root( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   if ( block == (DBlock *) NULL) return(-1);
@@ -3244,7 +3255,7 @@ int insert_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   if ( chain == (DChain *) NULL ) return(-1);
@@ -3325,7 +3336,7 @@ int search_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   /* search block */
@@ -3405,7 +3416,7 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  BinaryFileLen           = %lu\n",block->BinaryFileLen);
       fprintf(out,"  Data                    = %p\n",block->Data);
 //      fprintf(out,"  DataLen (DataBufferLen) = %zu (%zu)\n",
-      fprintf(out,"  DataLen (DataBufferLen) = %zu | %zu (%zu)\n",
+      fprintf(out,"  DataLen (DataBufferLen) = %zu | %lu (%lu)\n",
                           block->DataLen,block->DataLen,block->DataBufferLen);
       fprintf(out,"  DataType                = %ld\n",block->DataType);
       fprintf(out,"  DataByteOrder           = %s\n",
@@ -3418,7 +3429,7 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  DataDim                 = %p\n",block->DataDim);
       fprintf(out,"  Raw                     = %p\n",block->Raw);
 //      fprintf(out,"  RawLen (RawBufferLen)   = %zu (%zu)\n",
-      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %zu (%zu)\n",
+      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %lu (%lu)\n",
                           block->RawLen,block->RawLen,block->RawBufferLen);
 
       if (block->DataDim) for (i_dim=0;i_dim<=block->DataDim[0];i_dim++) 
@@ -3468,7 +3479,7 @@ int insert_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   if ( file == (DFile *) NULL ) return(-1);
@@ -3523,7 +3534,7 @@ int search_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   /* search chain */
@@ -5590,8 +5601,9 @@ int get_symbol_list( DBlock * block, int level )
 
     /* read value */
     stop=get_val( vbuf, vblen, channel, &val_pos, &val_len );
-//    if (stop) if ( stop < 0 ) return(-1); else break;
-    if (stop) { if ( stop < 0 ) return(-1); else break; }
+    if (stop) { 
+      if ( stop < 0 ) return(-1); else break; 
+    }
 
     /* insert symbol */
     if ( insert_symbol( block, kbuf, vbuf, &symbol ) ) return(-1);
@@ -5601,11 +5613,12 @@ int get_symbol_list( DBlock * block, int level )
     symbol->ValLen = (unsigned short) val_len;
     /* read next key */
     stop=get_key( kbuf, kblen, channel, &key_pos, &key_len );
-//    if (stop) if ( stop < 0 ) return(-1); else break;
-    if (stop) { if ( stop < 0 ) return(-1); else break; }
+    if (stop) { 
+      if ( stop < 0 ) return(-1); else break; 
+    }
 /*  printf("Key = %s, KeyPos = %u, KeyLen = %u\n", kbuf, key_pos, key_len); */
 
-    } /* while is_prefix */
+  } /* while is_prefix */
 
   /* go back to previous key position */
   if (!stop) fseek( channel, (size_t) key_pos, SEEK_SET );
@@ -5997,7 +6010,7 @@ int locate_block( DFile * file , DBlock **pblock )
     /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
     data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
     if (EDFIO_debug) {
-      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%zu\n",\
+      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%lu\n",\
         data_dim[0],data_dim[1],data_dim[2],data_len);
     }
     binary_len = data_len;
@@ -6683,9 +6696,6 @@ PRIVATE long *get_data_dim ( DBlock * block )
     if ( !(data_dim = newdim( dim )) )
       return( (long *) NULL );
 
-    //++++++++ if ( !(data_dim = (long *) malloc( sizeof( long )*(dim+1) )) )
-    //++++++++   return( (long *) NULL );
-  
     product = 1l;
     data_dim[0] = maxdim = dim;
     for (dim = 1; dim<=maxdim; dim++) {
@@ -7004,7 +7014,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     printf(" block                = %p\n", block);
     printf(" buffer               = %p\n", buffer);
 //    printf(" buflen               = %zu\n", buflen);
-    printf(" buflen               = %zu | %zu\n", buflen, buflen);
+    printf(" buflen               = %zu | %lu\n", buflen, buflen);
     printf(" data_dim[0]          = %ld\n", data_dim[0]);
     for (i=1;i<=data_dim[0];i++) 
       printf("  data_dim[%d]         = %ld\n", i, data_dim[i]);
@@ -7013,14 +7023,14 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     printf(" data_value_offset    = %ld\n", data_value_offset);
     printf(" raster_configuration = %ld\n", raster_configuration);
 //    printf(" data_size            = %zu\n", data_size);
-    printf(" data_size            = %zu | %zu\n", data_size, data_size);
+    printf(" data_size            = %zu | %lu\n", data_size, data_size);
     printf(" data_number          = %ld\n", data_number);
 //    printf(" data_len             = %zu\n", data_len);
-    printf(" data_len             = %zu | %zu\n", data_len, data_len);
+    printf(" data_len             = %zu | %lu\n", data_len, data_len);
     printf(" compression          = %s\n", edf_compression2string(compression));
     printf(" data_pos             = %ld\n", data_pos);
 //    printf(" bytes_to_read        = %zu\n", bytes_to_read);
-    printf(" bytes_to_read        = %zu | %zu\n", bytes_to_read, bytes_to_read);
+    printf(" bytes_to_read        = %zu | %lu\n", bytes_to_read, bytes_to_read);
   } /* EDFIO_debug */
 
   /* update DataDim array in block */
@@ -7082,7 +7092,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     if (EDFIO_debug) printf(" Use supplied buffer\n");
     if (buflen<data_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",GBA_Error,data_len); 
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
         GBA_Error,data_len,data_len); 
       return(-1); }
     block->Flags.ExternalDataAlloc = True;
@@ -7112,7 +7122,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   /* check length */
   if (data_len-bytes_read>0) {
 //    fprintf(stderr,"%s read bytes %zu less than array size %zu\n",
-    fprintf(stderr,"%s read bytes %zu | %zu less than array size %zu | %zu\n",
+    fprintf(stderr,"%s read bytes %zu | %lu less than array size %zu | %lu\n",
       GBA_Error, bytes_read, bytes_read, data_len, data_len ); return(-1); }
     
   /* close external file */
@@ -8298,7 +8308,7 @@ void edf_showdatatypes ( int full )
     printf(" %15s               = %15s\n",  "DataType", "MachineType");
   for (i=1; i<EndDType; i++) {
     if ( (full) || (edf_datatype2machinetype(i)) ) { 
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         edf_datatype2string(i), edf_data_sizeof(i),
         MachineType2String(edf_datatype2machinetype(i)),
         edf_machine_sizeof(edf_datatype2machinetype(i)) );
@@ -8324,7 +8334,7 @@ void edf_showmachinetypes ( int full )
     printf(" %15s               = %15s\n", "MachineType", "DataType");
   for (i=1; i<EndMType; i++) {
     if ( (full) || (edf_machinetype2datatype(i)) ) {
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         MachineType2String(i), edf_machine_sizeof(i),
         edf_datatype2string(edf_machinetype2datatype(i)),
         edf_data_sizeof(edf_machinetype2datatype(i)) );
@@ -10032,11 +10042,11 @@ int print_history_list( FILE * out, int level, int verbose, HSymb * root )
       fprintf(out,"   key               = %s\n",hline->key);
       fprintf(out,"   line              = %s\n",hline->line);
 //      fprintf(out,"   size              = %zu\n",hline->size);
-      fprintf(out,"   size              = %zu | %zu\n",
+      fprintf(out,"   size              = %zu | %lu\n",
         hline->size,hline->size);
       fprintf(out,"   required          = %d\n",hline->required);
 //      fprintf(out,"   shortlen          = %zu\n",hline->shortlen);
-      fprintf(out,"   shortlen          = %zu | %zu\n",
+      fprintf(out,"   shortlen          = %zu | %lu\n",
         hline->shortlen, hline->shortlen);
       fprintf(out,"   Previous key      = ");
       if ((hline->Previous)!=(HSymb*) NULL)
@@ -10475,8 +10485,6 @@ int history_line_add  ( HSymb ** proot, const char * history_line_key,
                             (long) STRLEN(substring)));
  
     if (n>0) {
-      // strncat(next->line, substring, n ); // not ansic ++++++++++++++
-      // strcat(next->line, "\0"); // ++++++++++++++
       strncpy(next->line+linelen, substring, n); // start at terminating 0
       next->line[linelen+n]='\0'; // write terminating 0
     }
@@ -11343,14 +11351,14 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     if (block->Flags.ExternalDataAlloc) { // use input data buffer for output
       if (data_buffer_len<data_out_len) {
 //        fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-        fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+        fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
                RDA_Error,data_out_len,data_out_len);return(-1);
         }
       } 
     } else { // use supplied buffer for output
     if (buflen<data_out_len) {
 //      fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-      fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
              RDA_Error,data_out_len,data_out_len);return(-1);
       }
     }
@@ -11371,7 +11379,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     if (!(dest = malloc( dest_len ))) {
       *pErrorValue = CouldNotMallocMemory;
 //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1);
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
         RDA_Error,dest_len,dest_len);return(-1); 
     }
     als[alc++] = dest; // add allocated memory
@@ -11394,7 +11402,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     dest_len = buflen;
     if (dest_len<data_out_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",RDA_Error,data_out_len);
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
         RDA_Error,data_out_len,data_out_len);
       return(-1); }
     }
@@ -11406,7 +11414,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
       for ( i=alc; i>0; --i ) if (als[i]) free(als[i]);       
       *pErrorValue = CouldNotMallocMemory;
 //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); 
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
         RDA_Error,dest_len,dest_len);
       return(-1); 
     }
@@ -11570,6 +11578,7 @@ error:     int -1
 ---------------------------------------------------------------------------*/
 int free_data_file ( DFile * file )
 {
+
   /* remove chainlist */
   if (free_data_chain_list( file )) return(-1);
 
@@ -11762,7 +11771,8 @@ int open_as_bsl_file (  const char *fname, const char * mode,
   --------------------------------------------------------------------------+*/
 int open_as_edf_file ( const char *fname, const char * mode,
                        int *pErrorValue, int *pstatus )                 /*---*/
-{ int stream;
+{ static const char * OEDF_Error = "ERROR: open_as_edf_file:" ;
+  int stream=-1;
   int locate_status;
 
   DFile * file;
@@ -11775,7 +11785,8 @@ int open_as_edf_file ( const char *fname, const char * mode,
 
   if (!InitTable) init_file_table( FileTable );
   if ( ( stream=search_free_stream( FileTable ) ) < 0 ) {
-    *pErrorValue = NoMoreStreamsAvailable; return(-1);
+    *pErrorValue = NoMoreStreamsAvailable; 
+    goto open_as_edf_file_error;
   }
 
   if (EDFIO_debug) printf("\"%s\" : stream = %d (%s)\n",fname,stream,mode);
@@ -11785,48 +11796,103 @@ int open_as_edf_file ( const char *fname, const char * mode,
   init_file ( file );
   file->Used = True;
 
-  if ( !(file->Name = newstr( fname ) ) ) return(-1); 
+  if ( !(file->Name = newstr( fname ) ) ) goto open_as_edf_file_error;
 
-  if (STRCMP(mode,Old)==0) { /* open old file */ 
+  if (STRCMP(mode,Old)==0) { 
+    /* open old file */ 
+    if ((cmpr_checkfiletype(fname))>UnCompressed) {
+      // no compressed files allowed
+      *pErrorValue = CouldNotOpenFile;
+      fprintf(stderr,"%s: The file opening mode of %s does not allow compression\n",
+          OEDF_Error,fname);
+      goto open_as_edf_file_error;
+    }
+
     file->Channel = fopen( fname,"rb+");
     file->Flags.ExistingFile = True; 
-    file->Flags.ReadOnlyFile = False; } else
-  if (STRCMP(mode,New)==0) { /* open new file */ 
-    file->Channel = fopen( fname,"wb+");
+    file->Flags.ReadOnlyFile = False; 
+  } else if (STRCMP(mode,New)==0) { 
+    /* open new file */ 
+    if (cmpr_checkfiletype(fname)>UnCompressed) {
+      // open temporary file
+      file->Channel = tmpfile();
+      file->Flags.CompressBeforeClosing = TRUE;
+    } else {
+      file->Channel = fopen( fname,"wb+");
+    }
     file->Flags.ExistingFile = False;
-    file->Flags.ReadOnlyFile = False; } else
-  if (STRCMP(mode,Any)==0) { /* open old file or create new file */
+    file->Flags.ReadOnlyFile = False; 
+  } else if (STRCMP(mode,Any)==0) { 
+    /* open old file or create new file */
+    if ((cmpr_checkfiletype(fname))>UnCompressed) {
+      // no compressed files allowed
+      *pErrorValue = CouldNotOpenFile;
+      fprintf(stderr,"%s: The file opening mode of %s does not allow compression\n",
+          OEDF_Error,fname);
+      goto open_as_edf_file_error;
+    }
     if ( (file->Channel = fopen( fname,"rb+")) ) {
       file->Flags.ExistingFile = True; 
       file->Flags.ReadOnlyFile = False;
-      } else {
+    } else {
       file->Channel = fopen( fname,"wb+");
       file->Flags.ExistingFile = False; 
-      file->Flags.ReadOnlyFile = False; } } else
-  if (STRCMP(mode,Read)==0) { /* open old file */
-    file->Channel = fopen( fname,"rb");
+      file->Flags.ReadOnlyFile = False; 
+    }
+  } else if (STRCMP(mode,Read)==0) { /* open old file */
+    int cmpr, errval;
+    FILE *inp;
+    if ((cmpr=cmpr_checkfiletype(fname))>UnCompressed) {
+      // uncompress file and copy to temporary file
+      file->Channel = tmpfile();
+
+      if ( !(inp=fopen(fname,"rb")) ) {
+        *pErrorValue = CouldNotOpenFile;
+        fprintf(stderr,"%s fopen(%s,\"rb\")\n",
+          OEDF_Error,fname);
+        goto open_as_edf_file_error;
+      }
+      if (cmpr_inflatefile ( file->Channel, inp,
+                       cmpr, NULL, &errval )) {
+        *pErrorValue = CompressionError;
+        fprintf(stderr,"%s cmpr_inflatefile errval=%d (%s)\n",
+          OEDF_Error,errval,cmpr_errval2string(errval));
+        fclose(inp);
+        goto open_as_edf_file_error;
+      }
+      fclose(inp);
+    } else {
+      // open uncompressed file
+      file->Channel = fopen( fname,"rb");
+    }
     file->Flags.ExistingFile = True; 
-    file->Flags.ReadOnlyFile = True; } 
+    file->Flags.ReadOnlyFile = True; 
+  }
   if (STRCMP(mode,Temp)==0) { /* open internal temporary file */
     file->Flags.TemporaryFile = True;
     file->Channel = (FILE *) NULL;
-    } else {
+  } else {
     // open i/o-channel of non-temporary files
     if (file->Channel == (FILE *) NULL) {
-      *pErrorValue = CouldNotOpenFile; return(-1);
-      }
+      *pErrorValue = CouldNotOpenFile;
+      goto open_as_edf_file_error;
+    }
     /* allocate IO-buffer */
     file->Buffer = (char *) malloc(BufferSize*sizeof(char));
     if ( file->Buffer == (char *) NULL ) {
-      *pErrorValue = CouldNotMallocMemory; return(-1);
-      }
-    if ( setvbuf(file->Channel, file->Buffer, _IOFBF, BufferSize) ) {
-      *pErrorValue = CouldNotSetBuffer; return(-1); }
+      *pErrorValue = CouldNotMallocMemory;
+      goto open_as_edf_file_error;
     }
+    if ( setvbuf(file->Channel, file->Buffer, _IOFBF, BufferSize) ) {
+      *pErrorValue = CouldNotSetBuffer;
+      goto open_as_edf_file_error;
+    }
+  }
 
   /* read general header */
   if ( new_general_block( file ) ) {
-      *pErrorValue = ErrorCreatingGeneralBlock; return(-1);
+      *pErrorValue = ErrorCreatingGeneralBlock;
+      goto open_as_edf_file_error;
       }
 
   if ( file->Flags.ExistingFile ) {
@@ -11849,14 +11915,16 @@ int open_as_edf_file ( const char *fname, const char * mode,
       /* verify that end of file is reached */
       if ( locate_status<0 ) {
         /* fatal error */
-        *pErrorValue = ErrorLocatingBlocks; return(-1);
+        *pErrorValue = ErrorLocatingBlocks;
+        goto open_as_edf_file_error;
       }
     } else { 
       if (free_data_file ( file )) {
-        *pErrorValue = CouldNotCloseFile; return(-1); 
+        *pErrorValue = CouldNotCloseFile;
+        goto open_as_edf_file_error;
       };
       *pErrorValue = ErrorReadingGeneralBlock;
-      return(-1); 
+      goto open_as_edf_file_error;
     } /* if read_general_block */ 
 
   } else file->GeneralBlock->Flags.HeaderChanged = True;
@@ -11866,11 +11934,16 @@ int open_as_edf_file ( const char *fname, const char * mode,
     if (!file->LastBlockInFile) { 
       *pstatus = status_error;
       *pErrorValue = CouldNotFindHeader; 
-      return(-1); }
+      goto open_as_edf_file_error;
+    }
 
   *pstatus = status_success;
 
   return(stream);
+
+open_as_edf_file_error:
+
+  return(-1);
 
 } /* open_as_edf_file */
 
@@ -11916,6 +11989,7 @@ error:     int  -1
 HISTORY
 22-Mar-1998 Peter Boesecke
 11-Jul-2001 PB accepts empty files as edf files
+26-Jun-2012 PB cmpr_checkfiletype added
   --------------------------------------------------------------------------+*/
 int data_file_type ( const char * fname, int *pErrorValue, int *pstatus )
 { int dftype = InValidDFType;
@@ -11923,17 +11997,25 @@ int data_file_type ( const char * fname, int *pErrorValue, int *pstatus )
 
   *pstatus = status_error;
 
-  if (!(channel = fopen( fname, "rb" ))) {
+  if (cmpr_checkfiletype(fname)>UnCompressed) {
+    dftype=EdfType;
+    // better, the start of the file should be decompressed,
+    // and the file type checked, but for the moment only
+    // edf files can be compressed with .gz or .Z
+  } else {
+
+    if (!(channel = fopen( fname, "rb" ))) {
       *pErrorValue = CouldNotOpenFile; return(dftype); }
 
-  /* check for edf file */
-  switch ( check_start( channel ) ) {
-    case  0: dftype = EdfType; break;
-    case -1: dftype = EdfType; break; // empty edf file
-    default: dftype = BslType; // check for bsl file name
-  }
+    /* check for edf file */
+    switch ( check_start( channel ) ) {
+      case  0: dftype = EdfType; break;
+      case -1: dftype = EdfType; break; // empty edf file
+      default: dftype = BslType; // check for bsl file name
+    }
 
-  fclose ( channel );
+    fclose ( channel );
+  }
 
   *pstatus     = status_success;
   *pErrorValue = RoutineSucceeded;
@@ -12118,14 +12200,14 @@ DESCRIPTION
 
   --------------------------------------------------------------------------+*/
 void edf_close_data_file ( int stream, int *pErrorValue, int *pstatus ) /*---*/
-{ 
+{ static const char * CEDF_Error = "ERROR: edf_close_data_file";
   int ErrorValue=RoutineSucceeded, status=status_error;
 
   DFile    *file = NULL;
 
   if (EDFIO_debug) printf("edf_close_data_file BEGIN\n");
 
- if ( (stream>=0)&&(stream<MaxFiles) ) { // no need to close
+  if ( (stream>=0)&&(stream<MaxFiles) ) {
     file = &FileTable[stream];
 
     /* flush unsaved data block */
@@ -12134,6 +12216,48 @@ void edf_close_data_file ( int stream, int *pErrorValue, int *pstatus ) /*---*/
 
     /* update active block */
     file->ActiveBlock = (DBlock *) NULL;
+
+    if (file->Flags.CompressBeforeClosing) {
+      /* compress data file before closing */
+      char * fname;
+      int cmpr, errval;
+      FILE *outp;
+      fname=file->Name;
+
+      if ((cmpr=cmpr_checkfiletype(fname))>UnCompressed) {
+        // compress temporary file and write it to fname 
+
+        if (file->Flags.ReadOnlyFile) {
+          *pErrorValue = FileIsNotWritable;
+          fprintf(stderr,"%s File is read-only %s\n", CEDF_Error,fname);
+          goto edf_close_data_file_error;
+        }
+
+        if ( !(outp=fopen(fname,"wb+")) ) {
+          *pErrorValue = CouldNotOpenFile;
+          fprintf(stderr,"%s fopen(%s,\"wb+\")\n",
+            CEDF_Error,fname);
+          goto edf_close_data_file_error;
+        }
+
+        // goto start of file
+        rewind( file->Channel );
+        if (cmpr_deflatefile ( outp, file->Channel,
+                         cmpr, NULL, &errval )) {
+          *pErrorValue = CompressionError;
+          fprintf(stderr,"%s cmpr_deflatefile errval=%d (%s)\n",
+            CEDF_Error,errval,cmpr_errval2string(errval));
+          fclose(outp);
+          goto edf_close_data_file_error;
+        }
+        fclose(outp);
+      } else {
+        *pErrorValue = CompressionError;
+        fprintf(stderr,"%s >>%s<< is not the name of a compressed file\n", 
+          CEDF_Error,fname);
+        goto edf_close_data_file_error;
+      }
+    } // if (file->Flags.CompressBeforeClosing)
 
     if (free_data_file ( file )) {
       status=status_error;
@@ -15620,6 +15744,7 @@ PRIVATE const char *NMSA = "NoMoreStreamsAvailable";
 PRIVATE const char *INVS = "InvalidStream";
 PRIVATE const char *CNOF = "CouldNotOpenFile";
 PRIVATE const char *EOFD = "EndOfFileDetected";
+PRIVATE const char *CMPE = "CompressionError";
 PRIVATE const char *CNFI = "CouldNotFindHeader";
 PRIVATE const char *CNFS = "CouldNotFindSymbol";
 // PRIVATE const char *BSD  = "BadSizeDefinition"; // unused
@@ -15675,6 +15800,7 @@ char * edf_report_data_error ( int ErrorValue )                      /*---*/
       case InvalidStream            : sprintf(errmsg,"\n%s\n",INVS); break;
       case CouldNotOpenFile         : sprintf(errmsg,"\n%s\n",CNOF); break;
       case EndOfFileDetected        : sprintf(errmsg,"\n%s\n",EOFD); break;
+      case CompressionError         : sprintf(errmsg,"\n%s\n",CMPE); break;
       case CouldNotFindHeader       : sprintf(errmsg,"\n%s\n",CNFI); break;
       case CouldNotFindSymbol       : sprintf(errmsg,"\n%s\n",CNFS); break;
       case CouldNotGetBinaryArray   : sprintf(errmsg,"\n%s\n",CNGA); break;

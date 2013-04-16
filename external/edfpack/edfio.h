@@ -329,8 +329,8 @@ edf_print_header            ( FILE * out, const char * header_key,
 
 #define EdfMaxFiles                 20  /* maximum number of file streams */
 #define EdfMaxKeyLen                64      /* maximum length of keywords */
-#define EdfMaxValLen               512        /* maximum length of values */
-#define EdfMaxLinLen               255             /* maximum line length */
+#define EdfMaxValLen              2048        /* maximum length of values */
+#define EdfMaxLinLen              1023             /* maximum line length */
 #define EdfMaxDataChains            20 /* max. number of user data chains */
 #define EdfBufferSize              512            /* size of input buffer */
 #define EdfMaxDimensions EdfBufferSize    /* maximum number of dimensions */
@@ -373,6 +373,7 @@ NoMoreStreamsAvailable,
 InvalidStream,
 CouldNotOpenFile,
 EndOfFileDetected,
+CompressionError,
 CouldNotFindHeader,
 CouldNotFindSymbol,
 BadSizeDefinition,

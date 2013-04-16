@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define ROT3D_VERSION  "rot3d : V1.01 Peter Boesecke 2011-06-16"
+# define ROT3D_VERSION  "rot3d : V1.02 Peter Boesecke 2012-06-04"
 /*---------------------------------------------------------------------------
 NAME
 
@@ -93,6 +93,7 @@ History
   2010-05-17 PB V1.0
   2011-04-18 PB V1.0 rot3d_version() added
   2011-05-17 PB V1.01 Suggested parentheses added
+  2012-06-04 PB V1.02 rot3d_eps: 1e-8 => 1e-10
 
 ---------------------------------------------------------------------------*/
 
@@ -108,7 +109,7 @@ History
 /****************************************************************************
 * Static Variables and Numbers                                              *
 ****************************************************************************/
-static double rot3d_eps=1e-8;
+static double rot3d_eps=1e-10;
 static double rot3d_pi=3.1415926535897932384626;
 
 /****************************************************************************

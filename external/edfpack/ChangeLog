@@ -1,3 +1,8 @@
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Imported r266 of edfpack.
+	* CMakeLists.txt: Added new files, bumped version to 2.223.
+
 2012-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * CMakeLists.txt: Fixed install command.

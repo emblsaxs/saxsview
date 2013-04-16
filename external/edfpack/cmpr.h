@@ -80,10 +80,34 @@
                 int cmpr_method, size_t * pconverted,
                 int * perrval );
 
+  // decompress input file and write to output file
+  PUBLIC extern int cmpr_inflatefile ( FILE * outp, FILE * inp,
+                int cmpr_method, size_t * pconverted,
+                int * perrval );
+
+  // compress input file and write to output file
+  PUBLIC extern int cmpr_deflatefile ( FILE * outp, FILE * inp,
+                int cmpr_method, size_t * pconverted,
+                int * perrval );
+
   PUBLIC extern void cmpr_debug ( int debug );
 
   PUBLIC extern const char *cmpr_errval2string(int errval);
 
   PUBLIC extern const char *cmpr_version ( void );
+
+/****************************************************************************
+*  Additional functions (CMPRUTILS)                                         *
+****************************************************************************/
+
+  // check the extension and return the DCompression type
+  PUBLIC extern int cmpr_checkextension(const char *extension);
+
+  // return the file DCompression type according to its extension
+  PUBLIC extern int cmpr_checkfiletype(const char *filename);
+
+  // adjust the file extension according to the DCompression (cmpr)
+  PUBLIC extern char * cmpr_filename(char * buffer, size_t buflen, 
+                                     const char *filename, int cmpr);
 
 #endif

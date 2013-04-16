@@ -22,7 +22,7 @@
  *   and the GNU Lesser General Public License  along with this program.
  *   If not, see <http://www.gnu.org/licenses/>.
  */
-# define R2T_VERSION  "r2t : V1.0 Peter Boesecke 2010-05-25"
+# define R2T_VERSION  "r2t : V1.01 Peter Boesecke 2012-06-04"
 
 /*---------------------------------------------------------------------------
 NAME
@@ -273,6 +273,8 @@ History
   2010-05-17 Peter Boesecke creation
   2010-05-25 V1.0 Peter Boesecke
   2011-04-18 V1.0 PB r2t_version() added
+  2012-06-04 V1.01 separate zero check for pix and denom
+                   r2t_eps: 1e-8 => 1e-12
 
 ---------------------------------------------------------------------------*/
 
@@ -285,7 +287,7 @@ History
 * Static Variables and Numbers                                              *
 ****************************************************************************/
 
-static double r2t_eps=1e-8;
+static double r2t_eps=1e-12;
 
 /****************************************************************************
 * Routines                                                                  *
@@ -341,9 +343,12 @@ int r2t_bcen1( double *bcen1,
     goto r2t_bcen1_error;
   }
 
-  denom = pix1*(R[1][0]*R[0][1] - R[0][0]*R[1][1]);
+  denom = R[1][0]*R[0][1] - R[0][0]*R[1][1];
 
   if ( fabs(denom)<r2t_eps ) goto r2t_bcen1_error;
+  if ( fabs(pix1)<r2t_eps ) goto r2t_bcen1_error;
+
+  denom *= pix1;
 
   *bcen1 = ( cen1*pix1*( R[1][0]*R[0][1] - R[0][0]*R[1][1]) +
                    dis*(-R[2][0]*R[1][1] + R[1][0]*R[2][1]) ) / denom;
@@ -388,9 +393,12 @@ int r2t_bcen2( double *bcen2,
     goto r2t_bcen2_error;
   }
 
-  denom = pix2*(R[1][0]*R[0][1] - R[0][0]*R[1][1]);
+  denom = R[1][0]*R[0][1] - R[0][0]*R[1][1];
 
   if ( fabs(denom)<r2t_eps ) goto r2t_bcen2_error;
+  if ( fabs(pix2)<r2t_eps ) goto r2t_bcen2_error;
+
+  denom *= pix2;
 
   *bcen2 = ( cen2*pix2*(R[1][0]*R[0][1] - R[0][0]*R[1][1]) +
                    dis*(R[2][0]*R[0][1] - R[0][0]*R[2][1]) ) / denom;
@@ -482,11 +490,14 @@ int r2t_cen1 ( double *cen1,
     goto r2t_cen1_error;
   }
 
-  denom = pix1*(R[2][0]*( R[1][1]*R[0][2] - R[0][1]*R[1][2]) +
-                R[1][0]*(-R[2][1]*R[0][2] + R[0][1]*R[2][2]) + 
-                R[0][0]*( R[2][1]*R[1][2] - R[1][1]*R[2][2]));
+  denom = (R[2][0]*( R[1][1]*R[0][2] - R[0][1]*R[1][2]) +
+           R[1][0]*(-R[2][1]*R[0][2] + R[0][1]*R[2][2]) + 
+           R[0][0]*( R[2][1]*R[1][2] - R[1][1]*R[2][2]));
 
   if ( fabs(denom)<r2t_eps ) goto r2t_cen1_error;
+  if ( fabs(pix1)<r2t_eps ) goto r2t_cen1_error;
+
+  denom *= pix1;
 
   *cen1 = bcen1 + (bdis*(R[2][0]*R[1][1] - R[1][0]*R[2][1]))/denom;
 
@@ -530,11 +541,14 @@ int r2t_cen2 ( double *cen2,
     goto r2t_cen2_error;
   }
 
-  denom = pix2*(R[2][0]*( R[1][1]*R[0][2] - R[0][1]*R[1][2]) +
-                R[1][0]*(-R[2][1]*R[0][2] + R[0][1]*R[2][2]) +
-                R[0][0]*( R[2][1]*R[1][2] - R[1][1]*R[2][2]));
+  denom = (R[2][0]*( R[1][1]*R[0][2] - R[0][1]*R[1][2]) +
+           R[1][0]*(-R[2][1]*R[0][2] + R[0][1]*R[2][2]) +
+           R[0][0]*( R[2][1]*R[1][2] - R[1][1]*R[2][2]));
 
   if ( fabs(denom)<r2t_eps ) goto r2t_cen2_error;
+  if ( fabs(pix2)<r2t_eps ) goto r2t_cen2_error;
+
+  denom *= pix2;
 
   *cen2 = bcen2 + (bdis*(-R[2][0]*R[0][1] + R[0][0]*R[2][1]))/denom;
 

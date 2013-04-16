@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define NUMIO_VERSION      "numio : V1.34 Peter Boesecke 2011-06-16"
+# define NUMIO_VERSION      "numio : V1.35 Peter Boesecke 2012-04-11"
 /*+++------------------------------------------------------------------------
 NAME
   numio.c --- number expressions
@@ -155,6 +155,7 @@ HISTORY
                        in all public functions: perrval can be NULL
   01-Jun-2011 V1.33 PB dpprogram_step: unique error exit
   16-Jun-2011 V1.34 PB double constants marked, e.g. 1->1.0 
+  11-Apr-2012 V1.35 PB dpprogram_step: REST-operation defined like in python
 
 --------------------------------------------------------------------------*/
 
@@ -2109,8 +2110,7 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
       argument1 = accumulator->Value;
       argument2 = accumulator->Next->Value;
       if ( argument2 != 0.0 ) {
-        accumulator->Value =
-          (double) ((long)floor(argument1+0.5)%(long)floor(argument2+0.5));
+        accumulator->Value = argument1-floor(argument1/argument2)*argument2;
       } else errval = NumDivByZero;
 
       break;

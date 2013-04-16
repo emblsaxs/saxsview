@@ -45,8 +45,10 @@ HISTORY
                      MAX_MEM_LEVEL, more debug added to cmpr_deflate and 
                      cmpr_inflate.
   2011-01-20 V1.2 PB only info in case of an error for zlib version<1.2.4
+  2012-06-24 V1.3 PB cmpr_inflatefile and cmpr_deflatefile added
+  2012-06-26 V1.4 PB CMPRUTILS added
 --------------------------------------------------------------------------*/
-# define CMPR_VERSION "cmpr : V1.2 Peter Boesecke 2011-01-20 -- zlib : " ZLIB_VERSION
+# define CMPR_VERSION "cmpr : V1.4 Peter Boesecke 2012-06-26 -- zlib : " ZLIB_VERSION
 /****************************************************************************
 *  Include                                                                  *
 ****************************************************************************/
@@ -211,7 +213,7 @@ int cmpr_deflate ( void * out, size_t outlen,
         break;
       default:
         errval=Z_ERRNO;
-        goto cmpr_deflate_error;
+        goto cmpr_deflate_error1;
     }
 
     /* compress all input */
@@ -268,9 +270,9 @@ int cmpr_deflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_deflate: output buffer too short (%zu of %zu bytes used)\n",
+      printf(" cmpr_deflate: output buffer too short (%lu of %lu bytes used)\n",
         rest_out,outlen);
-      printf("              %zu of %zu input bytes unprocessed.\n",
+      printf("              %lu of %lu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -283,7 +285,8 @@ int cmpr_deflate ( void * out, size_t outlen,
     goto cmpr_deflate_error;
   } else errval=Z_OK;
 
-  if (CMPR_debug) printf(" cmpr_deflate END\n");
+  if (CMPR_debug) 
+    printf(" cmpr_deflate %lu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -295,9 +298,12 @@ cmpr_deflate_error:
   /* clean up and return */
   (void)deflateEnd(&strm);
 
+cmpr_deflate_error1:
+
   fprintf(stderr,"cmpr_deflate: %s (%s)\n",cmpr_errval2string(errval),
     cmpr_version());
-  if (CMPR_debug) printf(" cmpr_deflate END (errval=%d)\n",errval);
+  if (CMPR_debug) 
+    printf(" cmpr_deflate END (errval=%d)\n",errval);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -415,7 +421,7 @@ int cmpr_inflate ( void * out, size_t outlen,
         break;
       default:
         errval=Z_ERRNO;
-        goto cmpr_inflate_error;
+        goto cmpr_inflate_error1;
     }
 
     do {
@@ -461,9 +467,9 @@ int cmpr_inflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
         rest_out,outlen);
-      printf("              %zu of %zu input bytes unprocessed.\n",
+      printf("              %lu of %lu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -476,7 +482,8 @@ int cmpr_inflate ( void * out, size_t outlen,
     goto cmpr_inflate_error;
   } else errval=Z_OK;
 
-  if (CMPR_debug) printf(" cmpr_inflate END\n");
+  if (CMPR_debug)
+    printf(" cmpr_inflate %lu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -487,6 +494,8 @@ cmpr_inflate_error:
 
   /* clean up and return */
   (void)inflateEnd(&strm);
+
+cmpr_inflate_error1:
 
   fprintf(stderr,"cmpr_inflate: %s (%s)\n",cmpr_errval2string(errval),
     cmpr_version());
@@ -515,7 +524,7 @@ SYNOPSIS
 DESCRIPTION
 
   Decompress a maximum of inplen bytes in steps of CHUNK bytes from inp
-  to out using zlib deflate routine. The size of the output buffer is
+  to out using zlib inflate routine. The size of the output buffer is
   outlen.
 
   cmpr_frinflate returns 0 on success and -1 on error. The *perrval returns
@@ -609,7 +618,7 @@ int cmpr_frinflate ( void * out, size_t outlen,
         break;
       default:
         errval=Z_ERRNO;
-        goto cmpr_frinflate_error;
+        goto cmpr_frinflate_error1;
     }
 
     do {
@@ -660,9 +669,9 @@ int cmpr_frinflate ( void * out, size_t outlen,
 
   if ( (errval!=Z_STREAM_END) && (rest_inp>0) && (rest_out==0) ) {
     if (CMPR_debug) {
-      printf(" cmpr_inflate: output buffer too short (%zu of %zu bytes used)\n",
+      printf(" cmpr_inflate: output buffer too short (%lu of %lu bytes used)\n",
         rest_out,outlen);
-      printf("              %zu of %zu input bytes unprocessed.\n",
+      printf("              %lu of %lu input bytes unprocessed.\n",
         rest_inp,inplen);
     }
     errval=Z_ERRNO;
@@ -675,7 +684,8 @@ int cmpr_frinflate ( void * out, size_t outlen,
     goto cmpr_frinflate_error;
   } else errval=Z_OK;
 
-  if (CMPR_debug) printf(" cmpr_inflate END\n");
+  if (CMPR_debug)
+    printf(" cmpr_frinflate %lu bytes converted END\n",converted);
 
   if (pconverted) *pconverted=converted;
   if (perrval) *perrval=errval;
@@ -687,6 +697,8 @@ cmpr_frinflate_error:
   /* clean up and return */
   (void)inflateEnd(&strm);
 
+cmpr_frinflate_error1:
+
   fprintf(stderr,"cmpr_frinflate: %s (%s)\n",cmpr_errval2string(errval),
     cmpr_version());
   if (CMPR_debug) printf(" cmpr_frinflate END (errval=%d)\n",errval);
@@ -697,6 +709,348 @@ cmpr_frinflate_error:
   return(-1);
 
 } // cmpr_frinflate
+
+/*--------------------------------------------------------------------------
+NAME
+
+  cmpr_inflatefile --- read/write from/to file and uncompress using zlib
+
+SYNOPSIS
+
+  int cmpr_inflatefile ( FILE * outp, FILE * inp,
+                         int cmpr_method, size_t * pconverted,
+                         int * perrval );
+
+
+DESCRIPTION
+
+  Decompress the input file inp in steps of CHUNK bytes using zlib inflate 
+  routine and write the result to the output file outp.
+
+  cmpr_inflatefile returns 0 on success and -1 on error. The *perrval returns
+  more specific information: 
+
+  Z_OK on success,
+  Z_MEM_ERROR if memory could not be allocated for processing, 
+  Z_DATA_ERROR if the deflate data is invalid or incomplete, 
+  Z_VERSION_ERROR if the version of zlib.h and the version of the library
+    linked do not match, 
+  Z_ERRNO  in case of an output error, e.g. if the output buffer is too short
+           or the compression method is not defined.
+
+ARGUMENTS
+  FILE * outp          pointer to output buffer
+  FILE * inp           file channel opened for binary read
+  int cmpr_method      compression method
+  size_t * pconverted  number of bytes written to the output file  
+  int * perrval        zlib error value
+
+AUTHOR
+  Peter Boesecke 2012-06-23
+-----------------------------------------------------------------------------*/
+int cmpr_inflatefile ( FILE * outp, FILE * inp,
+                       int cmpr_method, size_t * pconverted,
+                       int * perrval )
+{
+  int errval;
+  z_stream strm;
+
+  unsigned char in[CHUNK];
+  unsigned char out[CHUNK];
+
+  size_t incr_out=(size_t) 0;
+  size_t converted=(size_t) 0;
+
+  if (CMPR_debug) printf("\n cmpr_inflatefile BEGIN\n");
+
+  /* decompress all input */
+  errval = Z_STREAM_END;
+
+    /* allocate inflate state */
+    strm.zalloc = Z_NULL;
+    strm.zfree = Z_NULL;
+    strm.opaque = Z_NULL;
+    strm.avail_in = 0;
+    strm.next_in = Z_NULL;
+
+    switch ( cmpr_method ) {
+      case GzipCompression:
+        /* initialize gzip decompression */
+        if (CMPR_debug) {
+          printf("   gzip: inflateInit2(strm,windowBits)\n");
+          printf("         inflateInit2(...,%d)\n",
+            (MAX_WBITS+16));
+        }
+        errval = inflateInit2(&strm, (MAX_WBITS+16)); // +16 for gzip
+        if (errval != Z_OK) {
+#if !defined(ZLIB_VERNUM) || (ZLIB_VERNUM < 0x1204)
+          /* Versions of zlib < 1.2.4 do not support raw deflate or gzip */
+          fprintf(stderr,"cmpr_inflatefile: zlib library %s < 1.2.4 does not support gzip.\n",
+            ZLIB_VERSION);
+#endif
+          goto cmpr_inflatefile_error;
+        }
+        break;
+      case ZCompression:
+        /* initialize Z decompression */
+        if (CMPR_debug) {
+          printf("   Z: inflateInit(strm)\n");
+          printf("      inflateInit(...)\n");
+        }
+        errval = inflateInit(&strm);
+        if (errval != Z_OK) goto cmpr_inflatefile_error;
+        break;
+      default:
+        errval=Z_ERRNO;
+        goto cmpr_inflatefile_error1;
+    }
+
+    /* decompress until deflate stream ends or end of file */
+    do {
+
+      strm.avail_in = fread(in, 1, CHUNK, inp);
+      if (ferror(inp)) {
+        errval=Z_ERRNO;
+        goto cmpr_inflatefile_error;
+      }
+
+      if (strm.avail_in == 0) break;
+
+      strm.next_in = in;
+
+      /* run inflate() on input until output buffer not full */
+      do {
+
+        strm.avail_out = CHUNK;
+        strm.next_out = out;
+
+        errval = inflate(&strm, Z_NO_FLUSH);
+        switch (errval) {
+          case Z_STREAM_ERROR:
+            goto cmpr_inflatefile_error;
+          case Z_NEED_DICT:
+            errval = Z_DATA_ERROR;
+          case Z_DATA_ERROR:
+          case Z_MEM_ERROR:
+            goto cmpr_inflatefile_error;
+        }
+        incr_out = CHUNK - strm.avail_out;
+        if (fwrite(out, 1, incr_out, outp) != incr_out || ferror(outp)) {
+          errval = Z_ERRNO;
+          goto cmpr_inflatefile_error;
+        }
+        converted += incr_out;
+      } while (strm.avail_out == 0);
+
+    } while (errval != Z_STREAM_END);
+
+  /* clean up */
+  (void)inflateEnd(&strm);
+
+  if (CMPR_debug)
+    printf(" cmpr_inflatefile %lu bytes converted END\n",converted);
+
+  if (pconverted) *pconverted=converted;
+  if (perrval) *perrval=errval;
+
+  return(0);
+
+cmpr_inflatefile_error:
+
+  /* clean up and return */
+  (void)inflateEnd(&strm);
+
+cmpr_inflatefile_error1:
+
+  fprintf(stderr,"cmpr_inflatefile: %s (%s)\n",cmpr_errval2string(errval),
+    cmpr_version());
+  if (CMPR_debug) printf(" cmpr_inflatefile END (errval=%d)\n",errval);
+
+  if (pconverted) *pconverted=converted;
+  if (perrval) *perrval=errval;
+
+  return(-1);
+
+} // cmpr_inflatefile
+
+/*--------------------------------------------------------------------------
+NAME
+
+  cmpr_deflatefile --- read/write from/to file and compress using zlib
+
+SYNOPSIS
+
+  int cmpr_deflatefile ( FILE * outp, FILE * inp,
+                         int cmpr_method, size_t * pconverted,
+                         int * perrval );
+
+DESCRIPTION
+
+  Decompress the input file inp in steps of CHUNK bytes using zlib deflate
+  routine and write the result to the output file outp.
+
+  cmpr_deflatefile returns 0 on success and -1 on error. The *perrval returns
+  more specific information:
+
+  Z_OK on success,
+  Z_MEM_ERROR if memory could not be allocated for processing,
+  Z_DATA_ERROR if the deflate data is invalid or incomplete,
+  Z_VERSION_ERROR if the version of zlib.h and the version of the library
+    linked do not match,
+  Z_ERRNO  in case of an output error, e.g. if the output buffer is too short
+           or the compression method is not defined.
+
+ARGUMENTS
+  FILE * outp          pointer to output buffer
+  FILE * inp           file channel opened for binary read
+  int cmpr_method      compression method
+  size_t * pconverted  number of bytes written to the output file
+  int * perrval        zlib error value
+
+AUTHOR
+  Peter Boesecke 2012-06-23
+-----------------------------------------------------------------------------*/
+int cmpr_deflatefile ( FILE * outp, FILE * inp,
+                       int cmpr_method, size_t * pconverted,
+                       int * perrval )
+{
+
+  int errval, flush;
+  z_stream strm;
+
+  unsigned char in[CHUNK];
+  unsigned char out[CHUNK];
+
+  size_t incr_out=(size_t) 0;
+  size_t converted=(size_t) 0;
+
+  if (CMPR_debug) printf("\n cmpr_deflatefile BEGIN\n");
+
+  /* Compresssion Levels:
+     Z_NO_COMPRESSION
+     Z_BEST_SPEED
+     Z_BEST_COMPRESSION
+     Z_DEFAULT_COMPRESSION */
+
+  /* allocate deflate state */
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  strm.avail_in = 0;
+  strm.next_in = Z_NULL;
+
+  switch ( cmpr_method ) {
+    case GzipCompression:
+      /* initialize gzip compression */
+      if (CMPR_debug) {
+        printf("   gzip: deflateInit2(strm,level,method,windowBits,memLevel,strategy)\n");
+        printf("         deflateInit2(...,%d,%d,%d,%d,%d)\n",
+          Z_DEFAULT_COMPRESSION, Z_DEFLATED, (MAX_WBITS+16),
+          CMPR_DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY);
+      }
+      errval = deflateInit2(&strm, Z_DEFAULT_COMPRESSION, \
+        Z_DEFLATED, (MAX_WBITS+16), \
+        CMPR_DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY); // +16 for gzip
+      if (errval != Z_OK) {
+#if !defined(ZLIB_VERNUM) || (ZLIB_VERNUM < 0x1204)
+      /* Versions of zlib < 1.2.4 do not support raw deflate or gzip */
+        fprintf(stderr,"cmpr_deflate: zlib library %s < 1.2.4 does not support gzip.\n",
+          ZLIB_VERSION);
+#endif
+        goto cmpr_deflatefile_error;
+      }
+      break;
+    case ZCompression:
+      if (CMPR_debug) {
+        printf("   Z: deflateInit(strm,level)\n");
+        printf("      deflateInit(...,%d)\n",
+          Z_DEFAULT_COMPRESSION);
+      }
+      /* initialize Z compression */
+      errval = deflateInit(&strm, Z_DEFAULT_COMPRESSION);
+      if (errval != Z_OK) goto cmpr_deflatefile_error;
+      break;
+    default:
+      errval=Z_ERRNO;
+      goto cmpr_deflatefile_error1;
+  }
+
+  /* compress until end of file */
+  errval = Z_STREAM_END;
+  do {
+      strm.avail_in = fread(in, 1, CHUNK, inp);
+      if (ferror(inp)) {
+          errval = Z_ERRNO;
+          goto cmpr_deflatefile_error;
+      }
+      flush = feof(inp) ? Z_FINISH : Z_NO_FLUSH;
+      strm.next_in = in;
+
+      /* run deflate() on input until output buffer not full, finish
+         compression if all of inp has been read */
+      do {
+          strm.avail_out = CHUNK;
+          strm.next_out = out;
+          errval = deflate(&strm, flush);  /* no bad return value */
+          if (errval==Z_STREAM_ERROR) 
+            goto cmpr_deflatefile_error;
+
+          incr_out = CHUNK - strm.avail_out;
+          if (fwrite(out, 1, incr_out, outp) != incr_out || ferror(outp)) {
+              (void)deflateEnd(&strm);
+              errval = Z_ERRNO;
+              goto cmpr_deflatefile_error;
+          }
+          converted += incr_out; 
+      } while (strm.avail_out == 0);
+
+      if (strm.avail_in!=0) {
+        /* all input must be used */
+        if (CMPR_debug) {
+          printf(" cmpr_deflatefile: not all input deflated (%lu bytes unprocessed)\n",
+            strm.avail_in);
+        }
+        errval=Z_ERRNO;
+        goto cmpr_deflatefile_error;
+      }
+
+      /* done when last data in file processed */
+  } while (flush != Z_FINISH);
+
+  /* clean up */
+  (void)deflateEnd(&strm);
+
+  if (errval!=Z_STREAM_END) {
+    fprintf(stderr, "deflate should report Z_STREAM_END\n");
+    errval=Z_DATA_ERROR;
+    goto cmpr_deflatefile_error;
+  } else errval=Z_OK;
+
+  if (CMPR_debug)
+    printf(" cmpr_deflatefile %lu bytes converted END\n",converted);
+
+  if (pconverted) *pconverted=converted;
+  if (perrval) *perrval=errval;
+
+  return(0);
+
+cmpr_deflatefile_error:
+
+  /* clean up and return */
+  (void)deflateEnd(&strm);
+
+cmpr_deflatefile_error1:
+
+  fprintf(stderr,"cmpr_deflatefile: %s (%s)\n",cmpr_errval2string(errval),
+    cmpr_version());
+  if (CMPR_debug) printf(" cmpr_deflatefile END (errval=%d)\n",errval);
+
+  if (pconverted) *pconverted=converted;
+  if (perrval) *perrval=errval;
+
+  return(-1);
+
+} // cmpr_deflatefile
 
 /*--------------------------------------------------------------------------
 NAME
@@ -737,8 +1091,77 @@ const char * cmpr_errval2string(int errval)
     case Z_VERSION_ERROR:
         return("zlib version mismatch!");
     }
-  return(""); // to make compiler happy
+  return("");
 } // cmpr_errval2string
 
 const char *cmpr_version ( void )
 { return(CMPR_VERSION); }
+
+/****************************************************************************
+*  CMPRUTILS                                                                *
+****************************************************************************/
+/****************************************************************************
+*  Additional include files                                                 *
+****************************************************************************/
+# include <limits.h>
+# include "strlib.h"
+# include "filename.h"
+# include "numio.h"
+
+#ifdef PATH_MAX
+# define CMPR_BUFLEN PATH_MAX
+#else
+# ifdef MAX_FNAME
+#  define CMPR_BUFLEN MAX_FNAME
+# else
+#  define CMPR_BUFLEN 1024
+# endif
+#endif
+
+// returns the compression type
+int cmpr_checkextension(const char *extension)
+{ int cmpr=UnCompressed;
+  if (!strlib_ncasecmp(extension,"Z",1)) cmpr = ZCompression; // decompress
+  else if (!strlib_ncasecmp(extension,"gz",2)) cmpr = GzipCompression; // decompress
+  return(cmpr);
+} // cmpr_checkextension
+
+// returns the file compression type
+int cmpr_checkfiletype(const char *filename)
+{ int cmpr=0;
+  char extension[CMPR_BUFLEN];
+  filename_extension(extension,CMPR_BUFLEN,filename);
+  cmpr = cmpr_checkextension(extension);
+  return( cmpr );
+} // cmpr_checkfiletype
+
+// appends (or removes) the compression extension
+char * cmpr_filename(char * buffer, size_t buflen, const char *filename, int cmpr)
+{ char * pb;
+  size_t blen;
+  if ( cmpr_checkfiletype(filename) > 1 ) {
+    // copy filename to buffer without extension 
+    filename_body ( buffer, buflen, filename );
+  } else {
+    // copy filename to buffer
+    strncpy( buffer, filename, buflen );
+  }
+
+  buffer[buflen-1] = '\0'; // force terminating NULL
+
+  pb = buffer+strlen(buffer);
+  blen = buflen-strlen(buffer);
+  switch (cmpr) {
+    case GzipCompression:
+      strncpy( pb, ".gz", blen );
+      break;
+    case ZCompression:
+      strncpy( pb, ".Z", blen );
+      break;
+  }
+
+  buffer[buflen-1] = '\0'; // force terminating NULL
+
+  return( buffer );
+
+} // cmpr_filename
