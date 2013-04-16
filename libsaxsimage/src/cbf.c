@@ -1,6 +1,6 @@
 /*
  * Read files in .cbf-format (using cbflib).
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009, 2013 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -59,8 +59,11 @@ saxs_image_cbf_read_low_level(cbf_handle cbf,
 
   cbf_select_datablock(cbf, 0);
 
-  cbf_find_category(cbf, "array_data");
-  cbf_find_column(cbf, "data");
+  if (!cbf_find_category(cbf, "array_data"))
+    return -1;
+
+  if (!cbf_find_column(cbf, "data"))
+    return -1;
 
   cbf_get_arrayparameters_wdims(cbf, &compression, NULL, &size, &is_signed,
                                 &is_unsigned, &n, NULL, NULL, &is_real, NULL,

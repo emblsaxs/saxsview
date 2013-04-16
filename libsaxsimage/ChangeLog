@@ -1,6 +1,12 @@
+2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* cbf.c (saxs_image_cbf_read_low_level): Improved checking of library
+	return values (from coverity).
+	* msk.c (saxs_image_msk_read): Likewise.
+
 2013-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* saxsimage.h> Define ENOTSUP if not defined.
+	* saxsimage.h: Define ENOTSUP if not defined.
 
 2013-04-01  Daniel Franke  <dfranke@users.sourceforge.net>
 

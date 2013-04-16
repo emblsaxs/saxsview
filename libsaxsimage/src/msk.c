@@ -36,38 +36,46 @@
 
 
 int saxs_image_msk_read(saxs_image *image, const char *filename) {
-  int magic[4] = { 0 };
+  int magic[4] = { 0 }, datasize, *data = NULL, *tmp;
   int width, height, padding;
-  int row, col, bit, tmp;
+  int row, col, bit;
 
   FILE *fd = fopen(filename, "rb");
   if (!fd)
     return errno;
 
   /* Check the magic header. */
-  fread(magic, sizeof(magic), 1, fd);
+  if (fread(magic, sizeof(magic), 1, fd) != 1)
+    goto error;
 
   /*
    * The first four times four bytes shall contain
    * the characters 'MASK':
    */
-  if (magic[0] != 'M' || magic[1] != 'A' || magic[2] != 'S' || magic[3] != 'K') {
-    fclose(fd);
-    return ENOTSUP;
-  }
+  if (magic[0] != 'M' || magic[1] != 'A' || magic[2] != 'S' || magic[3] != 'K')
+    goto error;
 
   /*
    * Next three four-byte blocks are width, height
    * and (probably) the number of bits of padding.
    */
-  fread(&width, sizeof(width), 1, fd);
-  fread(&height, sizeof(height), 1, fd);
-  fread(&padding, sizeof(padding), 1, fd);
+  if (    fread(&width, sizeof(width), 1, fd) != 1
+       || fread(&height, sizeof(height), 1, fd) != 1
+       || fread(&padding, sizeof(padding), 1, fd) != 1)
+    goto error;
 
   /*
    * Data starts with an offset of 1024 bytes.
    */
-  fseek(fd, 1024, SEEK_SET);
+  if (fseek(fd, 1024, SEEK_SET) != 0)
+    goto error;
+
+  datasize = (width / (sizeof(int) * CHAR_BIT) + 1) * sizeof(int) * height;
+  data     = malloc(datasize);
+  if (fread(data, datasize, 1, fd) != 1)
+    goto error;
+
+  fclose(fd);
 
   /*
    * Read the padding bits, but short-circuit the column loop;
@@ -75,16 +83,25 @@ int saxs_image_msk_read(saxs_image *image, const char *filename) {
    * conditions need to be checked.
    */
   saxs_image_set_size(image, width, height);
-  for (row = 0; row < height; ++row)
-    for (col = 0; col < width; col += sizeof(tmp) * CHAR_BIT) {
-      fread(&tmp, sizeof(tmp), 1, fd);
 
-      for (bit = 0; (unsigned)bit < sizeof(tmp) * CHAR_BIT && col + bit < width; ++bit)
-        saxs_image_set_value(image, col + bit, row, (tmp & (1 << bit)) ? 1.0 : 0.0);
+  tmp = data;
+  for (row = 0; row < height; ++row)
+    for (col = 0; col < width; col += sizeof(int) * CHAR_BIT) {
+      for (bit = 0; (unsigned)bit < sizeof(int) * CHAR_BIT && col + bit < width; ++bit)
+        saxs_image_set_value(image, col + bit, row, ((*tmp) & (1 << bit)) ? 1.0 : 0.0);
+
+      ++tmp;
     }
 
-  fclose(fd);
+  free(data);
   return 0;
+
+error:
+  fclose(fd);
+  if (data)
+    free(data);
+
+  return ENOTSUP;
 }
 
 
