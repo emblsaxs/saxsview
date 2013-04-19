@@ -12,6 +12,7 @@
 #include "qwt_dyngrid_layout.h"
 #include "qwt_math.h"
 #include "qwt_plot_item.h"
+#include "qwt_painter.h"
 #include <qapplication.h>
 #include <qscrollbar.h>
 #include <qscrollarea.h>
@@ -19,75 +20,104 @@
 #include <qstyle.h>
 #include <qstyleoption.h>
 
-static void qwtRenderBackground( QPainter *painter,
-    const QRectF &rect, const QWidget *widget )
-{
-    if ( widget->testAttribute( Qt::WA_StyledBackground ) )
-    {
-        QStyleOption opt;
-        opt.initFrom( widget );
-        opt.rect = rect.toAlignedRect();
-
-        widget->style()->drawPrimitive(
-            QStyle::PE_Widget, &opt, painter, widget);
-    }
-    else
-    {
-        const QBrush brush =
-            widget->palette().brush( widget->backgroundRole() );
-
-        painter->fillRect( rect, brush );
-    }
-}
-
-class QwtLegendMap: public QMap<const QwtPlotItem *, QList<QWidget *> >
+class QwtLegendMap
 {
 public:
+    inline bool isEmpty() const { return d_entries.isEmpty(); }
+
+    void insert( const QVariant &, const QList<QWidget *> & );
+    void remove( const QVariant & );
+
     void removeWidget( const QWidget * );
-    QList<QWidget *> legendWidgets( const QwtPlotItem * ) const;
-    const QwtPlotItem *plotItem( const QWidget * ) const;
-    QwtPlotItem *plotItem( const QWidget * );
+
+    QList<QWidget *> legendWidgets( const QVariant & ) const;
+    QVariant itemInfo( const QWidget * ) const;
+
+private:
+    // we don't know anything about itemInfo and therefore don't have
+    // any key that can be used for a map or hashtab.
+    // But a simple linear list is o.k. here, as we will never have
+    // more than a few entries.
+
+    class Entry
+    {
+    public:
+        QVariant itemInfo;
+        QList<QWidget *> widgets;
+    };
+
+    QList< Entry > d_entries;
 };
 
-void QwtLegendMap::removeWidget( const QWidget *widget )
+void QwtLegendMap::insert( const QVariant &itemInfo, 
+    const QList<QWidget *> &widgets )
 {
-    while ( QwtPlotItem *item = plotItem( widget ) )
+    for ( int i = 0; i < d_entries.size(); i++ )
     {
-        QList<QWidget *> widgets = legendWidgets( item );
-        widgets.removeAll( const_cast< QWidget *>( widget ) );
-        insert( item, widgets );
-    }
-}
-
-QwtPlotItem *QwtLegendMap::plotItem( const QWidget *widget )
-{
-    if ( widget == NULL )
-        return NULL;
-
-    for ( Iterator it = begin(); it != end(); ++it )
-    {
-        const QList< QWidget *> &widgets = it.value();
-        for ( int i = 0; i < widgets.size(); i++ )
+        Entry &entry = d_entries[i];
+        if ( entry.itemInfo == itemInfo )
         {
-            if ( widgets[i] == widget )
-                return const_cast<QwtPlotItem *>( it.key() );
+            entry.widgets = widgets;
+            return;
         }
     }
 
-    return NULL;
+    Entry newEntry;
+    newEntry.itemInfo = itemInfo;
+    newEntry.widgets = widgets;
+
+    d_entries += newEntry;
 }
 
-const QwtPlotItem *QwtLegendMap::plotItem( const QWidget *widget ) const
+void QwtLegendMap::remove( const QVariant &itemInfo )
 {
-    QwtLegendMap *that = const_cast<QwtLegendMap *>( this );
-    return that->plotItem( widget );
+    for ( int i = 0; i < d_entries.size(); i++ )
+    {
+        Entry &entry = d_entries[i];
+        if ( entry.itemInfo == itemInfo )
+        {
+            d_entries.removeAt( i );
+            return;
+        }
+    }
 }
 
-QList<QWidget *> QwtLegendMap::legendWidgets( const QwtPlotItem *item ) const
+void QwtLegendMap::removeWidget( const QWidget *widget )
 {
-    const ConstIterator it = find( item );
-    if ( it != constEnd() )
-        return it.value();
+    QWidget *w = const_cast<QWidget *>( widget );
+
+    for ( int i = 0; i < d_entries.size(); i++ )
+        d_entries[ i ].widgets.removeAll( w );
+}
+
+QVariant QwtLegendMap::itemInfo( const QWidget *widget ) const
+{
+    if ( widget != NULL )
+    {
+        QWidget *w = const_cast<QWidget *>( widget );
+
+        for ( int i = 0; i < d_entries.size(); i++ )
+        {
+            const Entry &entry = d_entries[i];
+            if ( entry.widgets.indexOf( w ) >= 0 )
+                return entry.itemInfo;
+        }
+    }
+
+    return QVariant();
+}
+
+QList<QWidget *> QwtLegendMap::legendWidgets( const QVariant &itemInfo ) const
+{
+    if ( itemInfo.isValid() )
+    {
+        for ( int i = 0; i < d_entries.size(); i++ )
+        {
+            const Entry &entry = d_entries[i];
+            if ( entry.itemInfo == itemInfo )
+                return entry.widgets;
+        }
+    }
 
     return QList<QWidget *>();
 }
@@ -128,22 +158,41 @@ public:
         viewport()->setAutoFillBackground( false );
     }
 
-    virtual bool event( QEvent *ev )
+    virtual bool event( QEvent *event )
     {
-        if ( ev->type() == QEvent::PolishRequest )
+        if ( event->type() == QEvent::PolishRequest )
+        {
             setFocusPolicy( Qt::NoFocus );
+        }
 
-        return QScrollArea::event( ev );
+        if ( event->type() == QEvent::Resize )
+        {
+            // adjust the size to en/disable the scrollbars
+            // before QScrollArea adjusts the viewport size
+
+            const QRect cr = contentsRect();
+
+            int w = cr.width();
+            int h = contentsWidget->heightForWidth( cr.width() );
+            if ( h > w )
+            {
+                w -= verticalScrollBar()->sizeHint().width();
+                h = contentsWidget->heightForWidth( w );
+            }
+
+            contentsWidget->resize( w, h );
+        }
+
+        return QScrollArea::event( event );
     }
 
-    virtual bool viewportEvent( QEvent *e )
+    virtual bool viewportEvent( QEvent *event )
     {
-        bool ok = QScrollArea::viewportEvent( e );
+        bool ok = QScrollArea::viewportEvent( event );
 
-        if ( e->type() == QEvent::Resize )
+        if ( event->type() == QEvent::Resize )
         {
-            QEvent event( QEvent::LayoutRequest );
-            QApplication::sendEvent( contentsWidget, &event );
+            layoutContents();
         }
         return ok;
     }
@@ -171,12 +220,35 @@ public:
         return QSize( vw, vh );
     }
 
+    void layoutContents()
+    {
+        const QwtDynGridLayout *tl = qobject_cast<QwtDynGridLayout *>(
+            contentsWidget->layout() );
+        if ( tl == NULL )
+            return;
+
+        const QSize visibleSize = viewport()->contentsRect().size();
+
+        const int minW = int( tl->maxItemWidth() ) + 2 * tl->margin();
+
+        int w = qMax( visibleSize.width(), minW );
+        int h = qMax( tl->heightForWidth( w ), visibleSize.height() );
+
+        const int vpWidth = viewportSize( w, h ).width();
+        if ( w > vpWidth )
+        {
+            w = qMax( vpWidth, minW );
+            h = qMax( tl->heightForWidth( w ), visibleSize.height() );
+        }
+
+        contentsWidget->resize( w, h );
+    }
+
     QWidget *contentsWidget;
 };
 
 /*!
   Constructor
-
   \param parent Parent widget
 */
 QwtLegend::QwtLegend( QWidget *parent ):
@@ -207,14 +279,28 @@ QwtLegend::~QwtLegend()
     delete d_data;
 }
 
+/*!
+  \brief Set the maximum number of entries in a row
+
+  F.e when the maximum is set to 1 all items are aligned
+  vertically. 0 means unlimited
+
+  \param numColums Maximum number of entries in a row
+
+  \sa maxColumns(), QwtDynGridLayout::setMaxColumns()
+ */
 void QwtLegend::setMaxColumns( uint numColums )
 {
     QwtDynGridLayout *tl = qobject_cast<QwtDynGridLayout *>(
         d_data->view->contentsWidget->layout() );
     if ( tl )
-        tl->setMaxCols( numColums );
+        tl->setMaxColumns( numColums );
 }
 
+/*!
+  \return Maximum number of entries in a row
+  \sa setMaxColumns(), QwtDynGridLayout::maxColumns()
+ */
 uint QwtLegend::maxColumns() const
 {
     uint maxCols = 0;
@@ -222,7 +308,7 @@ uint QwtLegend::maxColumns() const
     const QwtDynGridLayout *tl = qobject_cast<const QwtDynGridLayout *>(
         d_data->view->contentsWidget->layout() );
     if ( tl )
-        maxCols = tl->maxCols();
+        maxCols = tl->maxColumns();
 
     return maxCols;
 }
@@ -256,7 +342,7 @@ QwtLegendData::Mode QwtLegend::defaultItemMode() const
 
 /*!
   The contents widget is the only child of the viewport of 
-  the internal QScrollArea  and the parent widget of all legend items.
+  the internal QScrollArea and the parent widget of all legend items.
 
   \return Container widget of the legend items
 */
@@ -285,7 +371,7 @@ QScrollBar *QwtLegend::verticalScrollBar() const
 
 /*!
   The contents widget is the only child of the viewport of 
-  the internal QScrollArea  and the parent widget of all legend items.
+  the internal QScrollArea and the parent widget of all legend items.
 
   \return Container widget of the legend items
 
@@ -296,27 +382,33 @@ const QWidget *QwtLegend::contentsWidget() const
 }
 
 /*!
-  \brief Update the entries for a plot item
+  \brief Update the entries for an item
 
-  \param plotItem Plot items
-  \param data List of legend entry attributes of plot item
+  \param itemInfo Info for an item
+  \param data List of legend entry attributes for the item
  */
-void QwtLegend::updateLegend( const QwtPlotItem *plotItem, 
+void QwtLegend::updateLegend( const QVariant &itemInfo, 
     const QList<QwtLegendData> &data )
 {
-    QList<QWidget *> widgetList = legendWidgets( plotItem );
+    QList<QWidget *> widgetList = legendWidgets( itemInfo );
 
     if ( widgetList.size() != data.size() )
     {
-        for ( int i = data.size(); i < widgetList.size(); i++ )
-        {
-            widgetList[i]->hide();
-            widgetList[i]->deleteLater();
+        QLayout *contentsLayout = d_data->view->contentsWidget->layout();
 
-            widgetList.removeAt( i );
+        while ( widgetList.size() > data.size() )
+        {
+            QWidget *w = widgetList.takeLast();
+
+            contentsLayout->removeWidget( w );
+
+            // updates might be triggered by signals from the legend widget
+            // itself. So we better don't delete it here.
+
+            w->hide();
+            w->deleteLater();
         }
 
-        QLayout *contentsLayout = d_data->view->contentsWidget->layout();
         for ( int i = widgetList.size(); i < data.size(); i++ )
         {
             QWidget *widget = createWidget( data[i] );
@@ -329,14 +421,14 @@ void QwtLegend::updateLegend( const QwtPlotItem *plotItem,
 
         if ( widgetList.isEmpty() )
         {
-            d_data->itemMap.remove( plotItem );
+            d_data->itemMap.remove( itemInfo );
         }
         else
         {
-            d_data->itemMap.insert( plotItem, widgetList );
+            d_data->itemMap.insert( itemInfo, widgetList );
         }
 
-        updateLayout();
+        updateTabOrder();
     }
     
     for ( int i = 0; i < data.size(); i++ )
@@ -349,6 +441,7 @@ void QwtLegend::updateLegend( const QwtPlotItem *plotItem,
   The default implementation returns a QwtLegendLabel.
 
   \param data Attributes of the legend entry
+  \return Widget representing data on the legend
   
   \note updateWidget() will called soon after createWidget()
         with the same attributes.
@@ -391,10 +484,8 @@ void QwtLegend::updateWidget( QWidget *widget, const QwtLegendData &data )
     }
 }
 
-void QwtLegend::updateLayout()
+void QwtLegend::updateTabOrder()
 {
-    layoutContents();
-
     QLayout *contentsLayout = d_data->view->contentsWidget->layout();
     if ( contentsLayout )
     {
@@ -411,18 +502,6 @@ void QwtLegend::updateLayout()
             w = item->widget();
         }
     }
-
-    if ( parentWidget() && parentWidget()->layout() == NULL )
-    {
-        /*
-           updateGeometry() doesn't post LayoutRequest in certain
-           situations, like when we are hidden. But we want the
-           parent widget notified, so it can show/hide the legend
-           depending on its items.
-         */
-        QApplication::postEvent( parentWidget(),
-            new QEvent( QEvent::LayoutRequest ) );
-    }
 }
 
 //! Return a size hint.
@@ -435,7 +514,7 @@ QSize QwtLegend::sizeHint() const
 }
 
 /*!
-  \return The preferred height, for the width w.
+  \return The preferred height, for a width.
   \param width Width
 */
 int QwtLegend::heightForWidth( int width ) const
@@ -449,33 +528,6 @@ int QwtLegend::heightForWidth( int width ) const
     return h;
 }
 
-/*!
-  Adjust contents widget and item layout to the size of the viewport().
-*/
-void QwtLegend::layoutContents()
-{
-    const QSize visibleSize = 
-        d_data->view->viewport()->contentsRect().size();
-
-    const QwtDynGridLayout *tl = qobject_cast<QwtDynGridLayout *>(
-        d_data->view->contentsWidget->layout() );
-    if ( tl )
-    {
-        const int minW = int( tl->maxItemWidth() ) + 2 * tl->margin();
-
-        int w = qMax( visibleSize.width(), minW );
-        int h = qMax( tl->heightForWidth( w ), visibleSize.height() );
-
-        const int vpWidth = d_data->view->viewportSize( w, h ).width();
-        if ( w > vpWidth )
-        {
-            w = qMax( vpWidth, minW );
-            h = qMax( tl->heightForWidth( w ), visibleSize.height() );
-        }
-
-        d_data->view->contentsWidget->resize( w, h );
-    }
-}
 
 /*!
   Handle QEvent::ChildRemoved andQEvent::LayoutRequest events 
@@ -483,6 +535,8 @@ void QwtLegend::layoutContents()
 
   \param object Object to be filtered
   \param event Event
+
+  \return Forwarded to QwtAbstractLegend::eventFilter()
 */
 bool QwtLegend::eventFilter( QObject *object, QEvent *event )
 {
@@ -503,7 +557,24 @@ bool QwtLegend::eventFilter( QObject *object, QEvent *event )
             }
             case QEvent::LayoutRequest:
             {
-                layoutContents();
+                d_data->view->layoutContents();
+
+                if ( parentWidget() && parentWidget()->layout() == NULL )
+                {
+                    /*
+                       We want the parent widget ( usually QwtPlot ) to recalculate
+                       its layout, when the contentsWidget has changed. But
+                       because of the scroll view we have to forward the LayoutRequest
+                       event manually.
+
+                       We don't use updateGeometry() because it doesn't post LayoutRequest
+                       events when the legend is hidden. But we want the
+                       parent widget notified, so it can show/hide the legend
+                       depending on its items.
+                     */
+                    QApplication::postEvent( parentWidget(),
+                        new QEvent( QEvent::LayoutRequest ) );
+                }                
                 break;
             }
             default:
@@ -511,7 +582,7 @@ bool QwtLegend::eventFilter( QObject *object, QEvent *event )
         }
     }
 
-    return QFrame::eventFilter( object, event );
+    return QwtAbstractLegend::eventFilter( object, event );
 }
 
 /*!
@@ -523,15 +594,15 @@ void QwtLegend::itemClicked()
     QWidget *w = qobject_cast<QWidget *>( sender() );
     if ( w )
     {
-        QwtPlotItem *plotItem = d_data->itemMap.plotItem( w );
-        if ( plotItem )
+        const QVariant itemInfo = d_data->itemMap.itemInfo( w );
+        if ( itemInfo.isValid() )
         {
             const QList<QWidget *> widgetList =
-                d_data->itemMap.legendWidgets( plotItem );
+                d_data->itemMap.legendWidgets( itemInfo );
 
             const int index = widgetList.indexOf( w );
             if ( index >= 0 )
-                Q_EMIT clicked( plotItem, index );
+                Q_EMIT clicked( itemInfo, index );
         }
     }
 }
@@ -545,15 +616,15 @@ void QwtLegend::itemChecked( bool on )
     QWidget *w = qobject_cast<QWidget *>( sender() );
     if ( w )
     {
-        QwtPlotItem *plotItem = d_data->itemMap.plotItem( w );
-        if ( plotItem )
+        const QVariant itemInfo = d_data->itemMap.itemInfo( w );
+        if ( itemInfo.isValid() )
         {
             const QList<QWidget *> widgetList =
-                d_data->itemMap.legendWidgets( plotItem );
+                d_data->itemMap.legendWidgets( itemInfo );
 
             const int index = widgetList.indexOf( w );
             if ( index >= 0 )
-                Q_EMIT checked( plotItem, on, index );
+                Q_EMIT checked( itemInfo, on, index );
         }
     }
 }
@@ -578,7 +649,7 @@ void QwtLegend::renderLegend( QPainter *painter,
         if ( autoFillBackground() ||
             testAttribute( Qt::WA_StyledBackground ) )
         {
-            qwtRenderBackground( painter, rect, this );
+            QwtPainter::drawBackgound( painter, rect, this );
         }
     }
 
@@ -587,9 +658,18 @@ void QwtLegend::renderLegend( QPainter *painter,
     if ( legendLayout == NULL )
         return;
 
-    uint numCols = legendLayout->columnsForWidth( qFloor( rect.width() ) );
+    int left, right, top, bottom;
+    getContentsMargins( &left, &top, &right, &bottom );
+
+    QRect layoutRect; 
+    layoutRect.setLeft( qCeil( rect.left() ) + left );
+    layoutRect.setTop( qCeil( rect.top() ) + top );
+    layoutRect.setRight( qFloor( rect.right() ) - right );
+    layoutRect.setBottom( qFloor( rect.bottom() ) - bottom );
+
+    uint numCols = legendLayout->columnsForWidth( layoutRect.width() );
     QList<QRect> itemRects =
-        legendLayout->layoutItems( rect.toRect(), numCols );
+        legendLayout->layoutItems( layoutRect, numCols );
 
     int index = 0;
 
@@ -629,7 +709,7 @@ void QwtLegend::renderItem( QPainter *painter,
         if ( widget->autoFillBackground() ||
             widget->testAttribute( Qt::WA_StyledBackground ) )
         {
-            qwtRenderBackground( painter, rect, widget );
+            QwtPainter::drawBackgound( painter, rect, widget );
         }
     }
 
@@ -653,43 +733,59 @@ void QwtLegend::renderItem( QPainter *painter,
         titleRect.setX( iconRect.right() + 2 * label->spacing() );
 
         painter->setFont( label->font() );
-        label->data().title().draw( painter, titleRect );
+        painter->setPen( label->palette().color( QPalette::Text ) );
+        const_cast< QwtLegendLabel *>( label )->drawText( painter, titleRect );
     }
 }
 
 /*!
-  \return List of widgets associated to a plot item
-  \sa legendWidget()
+  \return List of widgets associated to a item
+  \param itemInfo Info about an item
+  \sa legendWidget(), itemInfo(), QwtPlot::itemToInfo()
  */
-QList<QWidget *> QwtLegend::legendWidgets( const QwtPlotItem *item ) const
+QList<QWidget *> QwtLegend::legendWidgets( const QVariant &itemInfo ) const
 {
-    return d_data->itemMap.legendWidgets( item );
+    return d_data->itemMap.legendWidgets( itemInfo );
 }
 
 /*!
-  \return First widget in the list of widgets associated to a plot item
-  \note Almost all types of plot items have only one widget
+  \return First widget in the list of widgets associated to an item
+  \param itemInfo Info about an item
+  \sa itemInfo(), QwtPlot::itemToInfo()
+  \note Almost all types of items have only one widget
 */
-QWidget *QwtLegend::legendWidget( const QwtPlotItem *item ) const
+QWidget *QwtLegend::legendWidget( const QVariant &itemInfo ) const
 {
-    const QList<QWidget *> list = d_data->itemMap.legendWidgets( item );
+    const QList<QWidget *> list = d_data->itemMap.legendWidgets( itemInfo );
     if ( list.isEmpty() )
         return NULL;
 
     return list[0];
 }
 
-//! \return True, when no plot item is inserted
+/*!
+  Find the item that is associated to a widget
+
+  \param widget Widget on the legend
+  \return Associated item info
+  \sa legendWidget()
+ */
+QVariant QwtLegend::itemInfo( const QWidget *widget ) const
+{
+    return d_data->itemMap.itemInfo( widget );
+}
+
+//! \return True, when no item is inserted
 bool QwtLegend::isEmpty() const
 {
     return d_data->itemMap.isEmpty();
 }
 
 /*!
-    Return the extent, that is needed for the scroll bars
+    Return the extent, that is needed for the scrollbars
 
     \param orientation Orientation ( 
-    \return The width of the vertical scroll bar for Qt::Horizontal and v.v.
+    \return The width of the vertical scrollbar for Qt::Horizontal and v.v.
  */
 int QwtLegend::scrollExtent( Qt::Orientation orientation ) const
 {

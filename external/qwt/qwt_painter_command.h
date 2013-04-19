@@ -18,19 +18,38 @@
 
 class QPainterPath;
 
+/*!
+  QwtPainterCommand represents the attributes of a paint operation
+  how it is used between QPainter and QPaintDevice
+
+  It is used by QwtGraphic to record and replay paint operations
+
+  \sa QwtGraphic::commands()
+ */
+  
 class QWT_EXPORT QwtPainterCommand
 {
 public:
+    //! Type of the paint command
     enum Type
     {
+        //! Invalid command
         Invalid = -1,
 
+        //! Draw a QPainterPath
         Path,
+
+        //! Draw a QPixmap
         Pixmap,
+
+        //! Draw a QImage
         Image,
+
+        //! QPainter state change
         State
     };
 
+    //! Attributes how to paint a QPixmap 
     struct PixmapData
     {
         QRectF rect;
@@ -38,6 +57,7 @@ public:
         QRectF subRect;
     };
 
+    //! Attributes how to paint a QImage 
     struct ImageData
     {
         QRectF rect;
@@ -46,6 +66,7 @@ public:
         Qt::ImageConversionFlags flags;
     };
 
+    //! Attributes of a state change
     struct StateData
     {
         QPaintEngine::DirtyFlags flags;
@@ -116,28 +137,33 @@ private:
     };
 };
 
+//! \return Type of the command
 inline QwtPainterCommand::Type QwtPainterCommand::type() const
 {
     return d_type;
 }
 
+//! \return Painter path to be painted
 inline const QPainterPath *QwtPainterCommand::path() const
 {
     return d_path;
 }
 
+//! \return Attributes how to paint a QPixmap
 inline const QwtPainterCommand::PixmapData* 
 QwtPainterCommand::pixmapData() const
 {
     return d_pixmapData;
 }
 
+//! \return Attributes how to paint a QImage
 inline const QwtPainterCommand::ImageData * 
 QwtPainterCommand::imageData() const
 {
     return d_imageData;
 }
 
+//! \return Attributes of a state change
 inline const QwtPainterCommand::StateData * 
 QwtPainterCommand::stateData() const
 {

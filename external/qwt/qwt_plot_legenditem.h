@@ -16,12 +16,48 @@
 
 class QFont;
 
+/*!
+  \brief A class which draws a legend inside the plot canvas
+
+  QwtPlotLegendItem can be used to draw a inside the plot canvas.
+  It can be used together with a QwtLegend or instead of it
+  to have more space for the plot canvas.
+
+  In opposite to QwtLegend the legend item is not interactive. 
+  To identify mouse clicks on a legend item an event filter
+  needs to be installed catching mouse events ob the plot canvas.
+  The geometries of the legend items are available using
+  legendGeometries().
+  
+  The legend item is aligned to plot canvas according to 
+  its alignment() flags. It might have a background for the
+  complete legend ( usually semi transparent ) or for
+  each legend item.
+
+  \note An external QwtLegend with a transparent background 
+        on top the plot canvas might be another option 
+        with a similar effect.
+*/
+
 class QWT_EXPORT QwtPlotLegendItem: public QwtPlotItem
 {
 public:
+    /*!
+      \brief Background mode
+
+      Depending on the mode the complete legend or each item 
+      might have an background.
+
+      The default setting is LegendBackground.
+
+       \sa setBackgroundMode(), setBackgroundBrush(), drawBackground()
+     */
     enum BackgroundMode
     {
+        //! The legend has a background
         LegendBackground,
+
+        //! Each item has a background
         ItemBackground
     };
 
@@ -78,18 +114,21 @@ public:
     virtual void updateLegend( const QwtPlotItem *,
         const QList<QwtLegendData> & );
 
-    QRect geometry( const QRectF &canvasRect ) const;
+    virtual QRect geometry( const QRectF &canvasRect ) const;
 
     virtual QSize minimumSize( const QwtLegendData & ) const;
     virtual int heightForWidth( const QwtLegendData &, int w ) const;
+
+    QList< const QwtPlotItem * > plotItems() const;
+    QList< QRect > legendGeometries( const QwtPlotItem * ) const;
 
 protected:
     virtual void drawLegendData( QPainter *painter, 
         const QwtPlotItem *, const QwtLegendData &, const QRectF & ) const;
 
-private:
-    void drawBackground( QPainter *, const QRectF &rect ) const;
+    virtual void drawBackground( QPainter *, const QRectF &rect ) const;
 
+private:
     class PrivateData;
     PrivateData *d_data;
 };

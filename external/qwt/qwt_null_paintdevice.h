@@ -18,11 +18,11 @@
   \brief A null paint device doing nothing
 
   Sometimes important layout/rendering geometries are not 
-  available or changable from the public Qt class interface. 
+  available or changeable from the public Qt class interface. 
   ( f.e hidden in the style implementation ).
 
   QwtNullPaintDevice can be used to manipulate or filter out 
-  these informations by analyzing the stream of paint primitives.
+  this information by analyzing the stream of paint primitives.
 
   F.e. QwtNullPaintDevice is used by QwtPlotCanvas to identify
   styled backgrounds with rounded corners.
@@ -112,6 +112,7 @@ public:
     virtual void updateState( const QPaintEngineState &state );
 
 protected:
+    //! \return Size needed to implement metric()
     virtual QSize sizeMetrics() const = 0;
 
 private:

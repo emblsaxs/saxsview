@@ -69,7 +69,7 @@ class QwtPainterCommand;
     Because the offset for drawing the outline depends on the shape 
     of the painter path ( the peak of a triangle is different than the flat side ) 
     scaling with a fixed aspect ratio always needs to be calculated from the 
-	control point rectangle.
+    control point rectangle.
 
     \sa QwtPainterCommand
  */
@@ -77,8 +77,8 @@ class QWT_EXPORT QwtGraphic: public QwtNullPaintDevice
 {
 public:
     /*! 
-		Hint how to render a graphic
-		\sa setRenderHint(), testRenderHint()
+        Hint how to render a graphic
+        \sa setRenderHint(), testRenderHint()
      */
     enum RenderHint
     {
@@ -131,7 +131,7 @@ public:
     QImage toImage( const QSize &, 
         Qt::AspectRatioMode = Qt::IgnoreAspectRatio  ) const;
 
-	QRectF scaledBoundingRect( double sx, double sy ) const;
+    QRectF scaledBoundingRect( double sx, double sy ) const;
 
     QRectF boundingRect() const;
     QRectF controlPointRect() const;

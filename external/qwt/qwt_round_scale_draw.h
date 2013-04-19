@@ -14,15 +14,13 @@
 #include "qwt_abstract_scale_draw.h"
 #include <qpoint.h>
 
-class QPen;
-
 /*!
   \brief A class for drawing round scales
 
   QwtRoundScaleDraw can be used to draw round scales.
-  The circle segment can be adjusted by QwtRoundScaleDraw::setAngleRange().
+  The circle segment can be adjusted by setAngleRange().
   The geometry of the scale can be specified with
-  QwtRoundScaleDraw::moveCenter() and QwtRoundScaleDraw::setRadius().
+  moveCenter() and setRadius().
 
   After a scale division has been specified as a QwtScaleDiv object
   using QwtAbstractScaleDraw::setScaleDiv(const QwtScaleDiv &s),
@@ -47,9 +45,9 @@ public:
     virtual double extent( const QFont & ) const;
 
 protected:
-    virtual void drawTick( QPainter *p, double val, double len ) const;
-    virtual void drawBackbone( QPainter *p ) const;
-    virtual void drawLabel( QPainter *p, double val ) const;
+    virtual void drawTick( QPainter *, double val, double len ) const;
+    virtual void drawBackbone( QPainter * ) const;
+    virtual void drawLabel( QPainter *, double val ) const;
 
 private:
     QwtRoundScaleDraw( const QwtRoundScaleDraw & );

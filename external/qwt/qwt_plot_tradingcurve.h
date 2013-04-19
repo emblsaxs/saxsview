@@ -20,6 +20,20 @@
 
   QwtPlotTradingCurve supports candlestick or bar ( OHLC ) charts
   that are used in the domain of technical analysis.
+
+  While the length ( height or width depending on orientation() ) 
+  of each symbol depends on the corresponding OHLC sample the size
+  of the other dimension can be controlled using:
+
+  - setSymbolExtent()
+  - setSymbolMinWidth()
+  - setSymbolMaxWidth()
+
+  The extent is a size in scale coordinates, so that the symbol width
+  is increasing when the plot is zoomed in. Minimum/Maximum width
+  is in widget coordinates independent from the zoom level. 
+  When setting the minimum and maximum to the same value, the width of 
+  the symbol is fixed. 
 */
 class QWT_EXPORT QwtPlotTradingCurve: 
     public QwtPlotSeriesItem, QwtSeriesStore<QwtOHLCSample>
@@ -45,7 +59,7 @@ public:
         Bar,
 
         /*!
-          The range between openeing/closing price are displayed as
+          The range between opening/closing price are displayed as
           a filled box. The fill brush depends on the direction of the
           price movement. The box is connected to the highest/lowest
           values by lines.
@@ -67,10 +81,10 @@ public:
      */
     enum Direction
     {
-        //! The closing price is higher than the openening price
+        //! The closing price is higher than the opening price
         Increasing,
 
-        //! The closing price is lower than the openening price
+        //! The closing price is lower than the opening price
         Decreasing
     };
 
@@ -98,18 +112,27 @@ public:
     bool testPaintAttribute( PaintAttribute ) const;
 
     void setSamples( const QVector<QwtOHLCSample> & );
+    void setSamples( QwtSeriesData<QwtOHLCSample> * );
 
     void setSymbolStyle( SymbolStyle style );
     SymbolStyle symbolStyle() const;
 
+    void setSymbolPen( const QColor &, 
+        qreal width = 0.0, Qt::PenStyle = Qt::SolidLine );
     void setSymbolPen( const QPen & );
     QPen symbolPen() const;
 
     void setSymbolBrush( Direction, const QBrush & );
     QBrush symbolBrush( Direction ) const;
 
-    void setSymbolWidth( double width );
-    double symbolWidth() const;
+    void setSymbolExtent( double width );
+    double symbolExtent() const;
+
+    void setMinSymbolWidth( double );
+    double minSymbolWidth() const;
+
+    void setMaxSymbolWidth( double );
+    double maxSymbolWidth() const;
 
     virtual void drawSeries( QPainter *painter,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
@@ -127,8 +150,15 @@ protected:
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 
-    virtual void drawUserSymbol( QPainter *,
-        SymbolStyle, double symbolWidth, const QwtOHLCSample & ) const;
+    virtual void drawUserSymbol( QPainter *, 
+        SymbolStyle, const QwtOHLCSample &,
+        Qt::Orientation, bool inverted, double width ) const;
+
+    void drawBar( QPainter *painter, const QwtOHLCSample &, 
+        Qt::Orientation, bool inverted, double width ) const;
+
+    void drawCandleStick( QPainter *, const QwtOHLCSample &, 
+        Qt::Orientation, double width ) const;
 
     virtual double scaledSymbolWidth(
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,

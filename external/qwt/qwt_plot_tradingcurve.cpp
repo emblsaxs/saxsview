@@ -25,72 +25,14 @@ static inline bool qwtIsSampleInside( const QwtOHLCSample &sample,
     return !isOffScreen;
 }
 
-static inline void qwtDrawBar( QPainter *painter,
-    const QwtOHLCSample &sample, Qt::Orientation orientation, 
-    bool inverted, double width )
-{
-    double w2 = 0.5 * width;
-    if ( inverted )
-        w2 *= -1;
-
-    if ( orientation == Qt::Vertical )
-    {
-        QwtPainter::drawLine( painter,
-            sample.time, sample.low, sample.time, sample.high );
-
-        QwtPainter::drawLine( painter,
-            sample.time - w2, sample.open, sample.time, sample.open );
-        QwtPainter::drawLine( painter,
-            sample.time + w2, sample.close, sample.time, sample.close );
-    }
-    else
-    {
-        QwtPainter::drawLine( painter, sample.low, sample.time,
-            sample.high, sample.time );
-        QwtPainter::drawLine( painter,
-            sample.open, sample.time - w2, sample.open, sample.time );
-        QwtPainter::drawLine( painter,
-            sample.close, sample.time + w2, sample.close, sample.time );
-    }
-}
-
-static inline void qwtDrawCandleStick( QPainter *painter,
-    const QwtOHLCSample &sample, Qt::Orientation orientation, double width )
-{
-    const double t = sample.time;
-    const double v1 = qMin( sample.low, sample.high );
-    const double v2 = qMin( sample.open, sample.close );
-    const double v3 = qMax( sample.low, sample.high );
-    const double v4 = qMax( sample.open, sample.close );
-
-    if ( orientation == Qt::Vertical )
-    {
-        QwtPainter::drawLine( painter, t, v1, t, v2 );
-        QwtPainter::drawLine( painter, t, v3, t, v4 );
-
-        QRectF rect( t - 0.5 * width, sample.open,
-            width, sample.close - sample.open );
-
-        QwtPainter::drawRect( painter, rect );
-    }
-    else
-    {
-        QwtPainter::drawLine( painter, v1, t, v2, t );
-        QwtPainter::drawLine( painter, v3, t, v4, t );
-
-        const QRectF rect( sample.open, t - 0.5 * width,
-            sample.close - sample.open, width );
-
-        QwtPainter::drawRect( painter, rect );
-    }
-}
-
 class QwtPlotTradingCurve::PrivateData
 {
 public:
     PrivateData():
         symbolStyle( QwtPlotTradingCurve::CandleStick ),
-        symbolWidth( 0.6 ),
+        symbolExtent( 0.6 ),
+        minSymbolWidth( 2.0 ),
+        maxSymbolWidth( -1.0 ),
         paintAttributes( QwtPlotTradingCurve::ClipSymbols )
     {
         symbolBrush[0] = QBrush( Qt::white );
@@ -98,7 +40,9 @@ public:
     }
 
     QwtPlotTradingCurve::SymbolStyle symbolStyle;
-    double symbolWidth;
+    double symbolExtent;
+    double minSymbolWidth;
+    double maxSymbolWidth;
 
     QPen symbolPen;
     QBrush symbolBrush[2]; // Increasing/Decreasing
@@ -167,7 +111,7 @@ void QwtPlotTradingCurve::setPaintAttribute(
 }
 
 /*!
-    \brief Return the current paint attributes
+    \return True, when attribute is enabled
     \sa PaintAttribute, setPaintAttribute()
 */
 bool QwtPlotTradingCurve::testPaintAttribute(
@@ -189,11 +133,27 @@ void QwtPlotTradingCurve::setSamples(
 }
 
 /*!
+  Assign a series of samples
+    
+  setSamples() is just a wrapper for setData() without any additional
+  value - beside that it is easier to find for the developer.
+    
+  \param data Data
+  \warning The item takes ownership of the data object, deleting
+           it when its not used anymore. 
+*/
+void QwtPlotTradingCurve::setSamples(
+    QwtSeriesData<QwtOHLCSample> *data )
+{
+    setData( data );
+}   
+
+/*!
   Set the symbol style
 
   \param style Symbol style
 
-  \sa symbolStyle(), setSymbolWidth(),
+  \sa symbolStyle(), setSymbolExtent(),
       setSymbolPen(), setSymbolBrush()
 */
 void QwtPlotTradingCurve::setSymbolStyle( SymbolStyle style )
@@ -209,11 +169,30 @@ void QwtPlotTradingCurve::setSymbolStyle( SymbolStyle style )
 
 /*!
   \return Symbol style
-  \sa setSymbolStyle(), symbolWidth(), symbolPen(), symbolBrush()
+  \sa setSymbolStyle(), symbolExtent(), symbolPen(), symbolBrush()
 */
 QwtPlotTradingCurve::SymbolStyle QwtPlotTradingCurve::symbolStyle() const
 {
     return d_data->symbolStyle;
+}
+
+/*! 
+  Build and assign the symbol pen
+    
+  In Qt5 the default pen width is 1.0 ( 0.0 in Qt4 ) what makes it
+  non cosmetic ( see QPen::isCosmetic() ). This method has been introduced
+  to hide this incompatibility.
+    
+  \param color Pen color
+  \param width Pen width
+  \param style Pen style
+    
+  \sa pen(), brush()
+ */ 
+void QwtPlotTradingCurve::setSymbolPen( 
+    const QColor &color, qreal width, Qt::PenStyle style )
+{   
+    setSymbolPen( QPen( color, width, style ) );
 }
 
 /*!
@@ -284,22 +263,24 @@ QBrush QwtPlotTradingCurve::symbolBrush( Direction direction ) const
 }
 
 /*!
-  \brief Set the width of the symbol
+  \brief Set the extent of the symbol
 
   The width of the symbol is given in scale coordinates. When painting
-  a the symbols the width is scaled into paint device coordinates
-  by scaledSymbolWidth().
+  a symbol the width is scaled into paint device coordinates
+  by scaledSymbolWidth(). The scaled width is bounded by
+  minSymbolWidth(), maxSymbolWidth()
 
-  \param width Symbol width in scale coordinates
+  \param extent Symbol width in scale coordinates
 
-  \sa symbolWidth(), scaledSymbolWidth()
+  \sa symbolExtent(), scaledSymbolWidth(), 
+      setMinSymbolWidth(), setMaxSymbolWidth()
 */
-void QwtPlotTradingCurve::setSymbolWidth( double width )
+void QwtPlotTradingCurve::setSymbolExtent( double extent )
 {
-    width = qMax( 0.0, width );
-    if ( width != d_data->symbolWidth )
+    extent = qMax( 0.0, extent );
+    if ( extent != d_data->symbolExtent )
     {
-        d_data->symbolWidth = width;
+        d_data->symbolExtent = extent;
 
         legendChanged();
         itemChanged();
@@ -307,12 +288,68 @@ void QwtPlotTradingCurve::setSymbolWidth( double width )
 }
 
 /*!
-  \return Symbol width in scale coordinates
-  \sa setSymbolWidth(), scaledSymbolWidth()
+  \return Extent of a symbol in scale coordinates
+  \sa setSymbolExtent(), scaledSymbolWidth(),
+      minSymbolWidth(), maxSymbolWidth()
 */
-double QwtPlotTradingCurve::symbolWidth() const
+double QwtPlotTradingCurve::symbolExtent() const
 {
-    return d_data->symbolWidth;
+    return d_data->symbolExtent;
+}
+
+/*!
+  Set a minimum for the symbol width
+
+  \param width Width in paint device coordinates
+  \sa minSymbolWidth(), setMaxSymbolWidth(), setSymbolExtent()
+ */
+void QwtPlotTradingCurve::setMinSymbolWidth( double width )
+{
+    width = qMax( width, 0.0 );
+    if ( width != d_data->minSymbolWidth )
+    {
+        d_data->minSymbolWidth = width;
+
+        legendChanged();
+        itemChanged();
+    }
+}
+
+/*!
+  \return Minmum for the symbol width
+  \sa setMinSymbolWidth(), maxSymbolWidth(), symbolExtent()
+ */
+double QwtPlotTradingCurve::minSymbolWidth() const
+{
+    return d_data->minSymbolWidth;
+}
+
+/*!
+  Set a maximum for the symbol width
+
+  A value <= 0.0 means an unlimited width
+
+  \param width Width in paint device coordinates
+  \sa maxSymbolWidth(), setMinSymbolWidth(), setSymbolExtent()
+ */
+void QwtPlotTradingCurve::setMaxSymbolWidth( double width )
+{
+    if ( width != d_data->maxSymbolWidth )
+    {
+        d_data->maxSymbolWidth = width;
+    
+        legendChanged();
+        itemChanged();
+    }
+}
+
+/*!
+  \return Maximum for the symbol width
+  \sa setMaxSymbolWidth(), minSymbolWidth(), symbolExtent()
+ */
+double QwtPlotTradingCurve::maxSymbolWidth() const
+{
+    return d_data->maxSymbolWidth;
 }
 
 /*!
@@ -334,7 +371,7 @@ QRectF QwtPlotTradingCurve::boundingRect() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first point to be painted
   \param to Index of the last point to be painted. If to < 0 the
          curve will be painted to its last point.
@@ -368,7 +405,7 @@ void QwtPlotTradingCurve::drawSeries( QPainter *painter,
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first point to be painted
   \param to Index of the last point to be painted
 
@@ -406,8 +443,6 @@ void QwtPlotTradingCurve::drawSymbols( QPainter *painter,
     }
 
     const bool inverted = timeMap->isInverting();
-
-
     const bool doClip = d_data->paintAttributes & ClipSymbols;
     const bool doAlign = QwtPainter::roundingAlignment( painter );
 
@@ -451,15 +486,15 @@ void QwtPlotTradingCurve::drawSymbols( QPainter *painter,
             {
                 case Bar:
                 {
-                    qwtDrawBar( painter,
-                        translatedSample, orient, inverted, symbolWidth );
+                    drawBar( painter, translatedSample, 
+                        orient, inverted, symbolWidth );
                     break;
                 }
                 case CandleStick:
                 {
                     painter->setBrush( d_data->symbolBrush[ brushIndex ] );
-                    qwtDrawCandleStick( painter,
-                        translatedSample, orient, symbolWidth );
+                    drawCandleStick( painter, translatedSample, 
+                        orient, symbolWidth );
                     break;
                 }
                 default:
@@ -468,7 +503,7 @@ void QwtPlotTradingCurve::drawSymbols( QPainter *painter,
                     {
                         painter->setBrush( d_data->symbolBrush[ brushIndex ] );
                         drawUserSymbol( painter, d_data->symbolStyle,
-                            symbolWidth, translatedSample );
+                            translatedSample, orient, inverted, symbolWidth );
                     }
                 }
             }
@@ -483,17 +518,110 @@ void QwtPlotTradingCurve::drawSymbols( QPainter *painter,
 
   \param painter Qt painter, initialized with pen/brush
   \param symbolStyle Symbol style
-  \param symbolWidth Width of the symbol in paint device metrics
   \param sample Samples already translated into paint device coordinates
+  \param orientation Vertical or horizontal
+  \param inverted True, when the opposite scale 
+                  ( Qt::Vertical: x, Qt::Horizontal: y ) is increasing
+                  in the opposite direction as QPainter coordinates.
+  \param symbolWidth Width of the symbol in paint device coordinates
 */
 void QwtPlotTradingCurve::drawUserSymbol( QPainter *painter,
-    SymbolStyle symbolStyle, double symbolWidth,
-    const QwtOHLCSample &sample ) const
+    SymbolStyle symbolStyle, const QwtOHLCSample &sample,
+    Qt::Orientation orientation, bool inverted, double symbolWidth ) const
 {
     Q_UNUSED( painter )
     Q_UNUSED( symbolStyle )
+    Q_UNUSED( orientation )
+    Q_UNUSED( inverted )
     Q_UNUSED( symbolWidth )
     Q_UNUSED( sample )
+}
+
+/*!
+  \brief Draw a bar
+
+  \param painter Qt painter, initialized with pen/brush
+  \param sample Sample, already translated into paint device coordinates
+  \param orientation Vertical or horizontal
+  \param inverted When inverted is false the open tick is painted
+                  to the left/top, otherwise it is painted right/bottom.
+                  The close tick is painted in the opposite direction
+                  of the open tick.
+                  painted in the opposite d
+                  opposite direction.
+  \param width Width or height of the candle, depending on the orientation
+
+  \sa Bar
+*/
+void QwtPlotTradingCurve::drawBar( QPainter *painter,
+    const QwtOHLCSample &sample, Qt::Orientation orientation, 
+    bool inverted, double width ) const
+{
+    double w2 = 0.5 * width;
+    if ( inverted )
+        w2 *= -1;
+
+    if ( orientation == Qt::Vertical )
+    {
+        QwtPainter::drawLine( painter,
+            sample.time, sample.low, sample.time, sample.high );
+
+        QwtPainter::drawLine( painter,
+            sample.time - w2, sample.open, sample.time, sample.open );
+        QwtPainter::drawLine( painter,
+            sample.time + w2, sample.close, sample.time, sample.close );
+    }
+    else
+    {
+        QwtPainter::drawLine( painter, sample.low, sample.time,
+            sample.high, sample.time );
+        QwtPainter::drawLine( painter,
+            sample.open, sample.time - w2, sample.open, sample.time );
+        QwtPainter::drawLine( painter,
+            sample.close, sample.time + w2, sample.close, sample.time );
+    }
+}
+
+/*!
+  \brief Draw a candle stick
+
+  \param painter Qt painter, initialized with pen/brush
+  \param sample Samples already translated into paint device coordinates
+  \param orientation Vertical or horizontal
+  \param width Width or height of the candle, depending on the orientation
+
+  \sa CandleStick
+*/
+void QwtPlotTradingCurve::drawCandleStick( QPainter *painter,
+    const QwtOHLCSample &sample, Qt::Orientation orientation, 
+    double width ) const
+{
+    const double t = sample.time;
+    const double v1 = qMin( sample.low, sample.high );
+    const double v2 = qMin( sample.open, sample.close );
+    const double v3 = qMax( sample.low, sample.high );
+    const double v4 = qMax( sample.open, sample.close );
+
+    if ( orientation == Qt::Vertical )
+    {
+        QwtPainter::drawLine( painter, t, v1, t, v2 );
+        QwtPainter::drawLine( painter, t, v3, t, v4 );
+
+        QRectF rect( t - 0.5 * width, sample.open,
+            width, sample.close - sample.open );
+
+        QwtPainter::drawRect( painter, rect );
+    }
+    else
+    {
+        QwtPainter::drawLine( painter, v1, t, v2, t );
+        QwtPainter::drawLine( painter, v3, t, v4, t );
+
+        const QRectF rect( sample.open, t - 0.5 * width,
+            sample.close - sample.open, width );
+
+        QwtPainter::drawRect( painter, rect );
+    }
 }
 
 /*!
@@ -513,16 +641,19 @@ QwtGraphic QwtPlotTradingCurve::legendIcon( int index,
 }
 
 /*!
-  \param Scale the symbol width into paint coordinates
+  Calculate the symbol width in paint coordinates
+
+  The width is calculated by scaling the symbol extent into
+  paint device coordinates bounded by the minimum/maximum
+  symbol width.
 
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
 
-  \return Scaled symbol width, or a a minimum of 2,
-          when it gets too small
+  \return Symbol width in paint coordinates
 
-  \sa setSymbolWidth()
+  \sa symbolExtent(), minSymbolWidth(), maxSymbolWidth()
 */
 double QwtPlotTradingCurve::scaledSymbolWidth(
     const QwtScaleMap &xMap, const QwtScaleMap &yMap,
@@ -530,13 +661,22 @@ double QwtPlotTradingCurve::scaledSymbolWidth(
 {
     Q_UNUSED( canvasRect );
 
+    if ( d_data->maxSymbolWidth > 0.0 &&
+        d_data->minSymbolWidth >= d_data->maxSymbolWidth )
+    {
+        return d_data->minSymbolWidth;
+    }
+
     const QwtScaleMap *map =
         ( orientation() == Qt::Vertical ) ? &xMap : &yMap;
 
-    double w = map->transform( d_data->symbolWidth ) - map->transform( 0.0 );
-    w = qAbs( w );
-    if ( w < 2.0 )
-        w = 2.0;
+    const double pos = map->transform( map->s1() + d_data->symbolExtent ); 
 
-    return qAbs( w );
+    double width = qAbs( pos - map->p1() );
+
+    width = qMax( width,  d_data->minSymbolWidth );
+    if ( d_data->maxSymbolWidth > 0.0 )
+        width = qMin( width, d_data->maxSymbolWidth );
+
+    return width;
 }

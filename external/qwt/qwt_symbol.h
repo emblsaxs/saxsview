@@ -94,14 +94,26 @@ public:
         Path,
 
         /*!
+          The symbol is represented by a pixmap. The pixmap is centered
+          or aligned to its pin point.
+
+          \sa setPinPoint()
          */
         Pixmap,
 
         /*!
+          The symbol is represented by a graphic. The graphic is centered
+          or aligned to its pin point.
+
+          \sa setPinPoint()
          */
         Graphic,
 
         /*!
+          The symbol is represented by a SVG graphic. The graphic is centered
+          or aligned to its pin point.
+
+          \sa setPinPoint()
          */
         SvgDocument,
 
@@ -143,7 +155,7 @@ public:
         Cache,
 
         /*! 
-           Use a cache wehn one of the following condiditions is true:
+           Use a cache when one of the following conditions is true:
 
            - The symbol is rendered with the software 
              renderer ( QPaintEngine::Raster )
@@ -176,6 +188,7 @@ public:
     void setBrush( const QBrush& b );
     const QBrush& brush() const;
 
+    void setPen( const QColor &, qreal width = 0.0, Qt::PenStyle = Qt::SolidLine );
     void setPen( const QPen & );
     const QPen& pen() const;
 

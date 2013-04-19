@@ -15,7 +15,7 @@
 #include <qrect.h>
 
 /*!
-  \brief A bitfield corresponding to the pixels of a rectangle
+  \brief A bit field corresponding to the pixels of a rectangle
 
   QwtPixelMatrix is intended to filter out duplicates in an
   unsorted array of points.
@@ -29,10 +29,10 @@ public:
     void setRect( const QRect& rect );
     QRect rect() const;
 
-    bool testPixel( const QPoint& pos ) const;
-    bool testAndSetPixel( const QPoint& pos, bool on );
+    bool testPixel( int x, int y ) const;
+    bool testAndSetPixel( int x, int y, bool on );
 
-    int index( const QPoint& pos ) const;
+    int index( int x, int y ) const;
 
 private:
     QRect d_rect;
@@ -41,28 +41,31 @@ private:
 /*!
   \brief Test if a pixel has been set
 
-  \param pos Position
+  \param x X-coordinate
+  \param y Y-coordinate
+
   \return true, when pos is outside of rect(), or when the pixel
           has already been set.
  */
-inline bool QwtPixelMatrix::testPixel( const QPoint& pos ) const
+inline bool QwtPixelMatrix::testPixel( int x, int y ) const
 {
-    const int idx = index( pos );
+    const int idx = index( x, y );
     return ( idx >= 0 ) ? testBit( idx ) : true;
 }
 
 /*!
   \brief Set a pixel and test if a pixel has been set before
 
-  \param pos Position
+  \param x X-coordinate
+  \param y Y-coordinate
   \param on Set/Clear the pixel
 
   \return true, when pos is outside of rect(), or when the pixel
           was set before.
  */
-inline bool QwtPixelMatrix::testAndSetPixel( const QPoint& pos, bool on )
+inline bool QwtPixelMatrix::testAndSetPixel( int x, int y, bool on )
 {
-    const int idx = index( pos );
+    const int idx = index( x, y );
     if ( idx < 0 )
         return true;
 
@@ -73,18 +76,23 @@ inline bool QwtPixelMatrix::testAndSetPixel( const QPoint& pos, bool on )
 }
 
 /*!
-  \brief Calculate the index in the bitfield correxponding to a position
+  \brief Calculate the index in the bit field corresponding to a position
 
-  \param pos Position
+  \param x X-coordinate
+  \param y Y-coordinate
   \return Index, when rect() contains pos - otherwise -1.
  */
-inline int QwtPixelMatrix::index( const QPoint& pos ) const
+inline int QwtPixelMatrix::index( int x, int y ) const
 {
-    if ( !d_rect.contains( pos ) )
+    const int dx = x - d_rect.x();
+    if ( dx < 0 || dx >= d_rect.width() )
         return -1;
 
-    return d_rect.width() * ( pos.y() - d_rect.y() )
-           + ( pos.x() - d_rect.x() );
+    const int dy = y - d_rect.y();
+    if ( dy < 0 || dy >= d_rect.height() )
+        return -1;
+
+    return dy * d_rect.width() + dx;
 }
 
 #endif

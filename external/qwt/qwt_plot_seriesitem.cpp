@@ -82,7 +82,7 @@ Qt::Orientation QwtPlotSeriesItem::orientation() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
 */
 void QwtPlotSeriesItem::draw( QPainter *painter,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,

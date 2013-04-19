@@ -19,7 +19,7 @@ class QRect;
 class QRectF;
 
 /*!
-  \brief Some clipping algos
+  \brief Some clipping algorithms
 */
 
 class QWT_EXPORT QwtClipper

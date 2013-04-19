@@ -54,7 +54,7 @@ public:
         AtomicPainter = 0x01,
 
         /*!
-          When FullRepaint is set the plot canvas is explicitely repainted
+          When FullRepaint is set the plot canvas is explicitly repainted
           after the samples have been rendered.
          */
         FullRepaint = 0x02,
@@ -63,7 +63,7 @@ public:
           When QwtPlotCanvas::BackingStore is enabled the painter
           has to paint to the backing store and the widget. In certain 
           situations/environments it might be faster to paint to 
-          the backing store only and then copy the backingstore to the canvas.
+          the backing store only and then copy the backing store to the canvas.
           This flag can also be useful for settings, where Qt fills the
           the clip region with the widget background.
          */

@@ -14,7 +14,6 @@
 #include "qwt_painter.h"
 #include "qwt_scale_map.h"
 #include "qwt_plot.h"
-#include "qwt_plot_canvas.h"
 #include "qwt_curve_fitter.h"
 #include "qwt_symbol.h"
 #include "qwt_point_mapper.h"
@@ -157,7 +156,7 @@ void QwtPlotCurve::setPaintAttribute( PaintAttribute attribute, bool on )
 }
 
 /*!
-    \brief Return the current paint attributes
+    \return True, when attribute is enabled
     \sa setPaintAttribute()
 */
 bool QwtPlotCurve::testPaintAttribute( PaintAttribute attribute ) const
@@ -174,21 +173,21 @@ bool QwtPlotCurve::testPaintAttribute( PaintAttribute attribute ) const
 */
 void QwtPlotCurve::setLegendAttribute( LegendAttribute attribute, bool on )
 {
-    if ( on != ( d_data->legendAttributes & attribute ) )
+    if ( on != testLegendAttribute( attribute ) )
     {
-
         if ( on )
             d_data->legendAttributes |= attribute;
         else
             d_data->legendAttributes &= ~attribute;
 
         qwtUpdateLegendIconSize( this );
+        legendChanged();
     }
 }
 
 /*!
-    \brief Return the current paint attributes
-    \sa setLegendAttribute()
+  \return True, when attribute is enabled
+  \sa setLegendAttribute()
 */
 bool QwtPlotCurve::testLegendAttribute( LegendAttribute attribute ) const
 {
@@ -213,8 +212,8 @@ void QwtPlotCurve::setStyle( CurveStyle style )
 }
 
 /*!
-    Return the current style
-    \sa setStyle()
+  \return Style of the curve
+  \sa setStyle()
 */
 QwtPlotCurve::CurveStyle QwtPlotCurve::style() const
 {
@@ -222,12 +221,16 @@ QwtPlotCurve::CurveStyle QwtPlotCurve::style() const
 }
 
 /*!
-  Assign a symbol
+  \brief Assign a symbol
+
+  The curve will take the ownership of the symbol, hence the previously
+  set symbol will be delete by setting a new one. If \p symbol is 
+  \c NULL no symbol will be drawn.
 
   \param symbol Symbol
   \sa symbol()
 */
-void QwtPlotCurve::setSymbol( const QwtSymbol *symbol )
+void QwtPlotCurve::setSymbol( QwtSymbol *symbol )
 {
     if ( symbol != d_data->symbol )
     {
@@ -248,6 +251,24 @@ void QwtPlotCurve::setSymbol( const QwtSymbol *symbol )
 const QwtSymbol *QwtPlotCurve::symbol() const
 {
     return d_data->symbol;
+}
+
+/*!
+  Build and assign a pen
+
+  In Qt5 the default pen width is 1.0 ( 0.0 in Qt4 ) what makes it
+  non cosmetic ( see QPen::isCosmetic() ). This method has been introduced
+  to hide this incompatibility.
+
+  \param color Pen color
+  \param width Pen width
+  \param style Pen style
+
+  \sa pen(), brush()
+ */
+void QwtPlotCurve::setPen( const QColor &color, qreal width, Qt::PenStyle style )
+{
+    setPen( QPen( color, width, style ) );
 }
 
 /*!
@@ -317,7 +338,7 @@ const QBrush& QwtPlotCurve::brush() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first point to be painted
   \param to Index of the last point to be painted. If to < 0 the
          curve will be painted to its last point.
@@ -367,7 +388,7 @@ void QwtPlotCurve::drawSeries( QPainter *painter,
   \param style curve style, see QwtPlotCurve::CurveStyle
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from index of the first point to be painted
   \param to index of the last point to be painted
   \sa draw(), drawDots(), drawLines(), drawSteps(), drawSticks()
@@ -412,7 +433,7 @@ void QwtPlotCurve::drawCurve( QPainter *painter, int style,
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from index of the first point to be painted
   \param to index of the last point to be painted
 
@@ -438,22 +459,24 @@ void QwtPlotCurve::drawLines( QPainter *painter,
         clipRect = canvasRect.adjusted(-pw, -pw, pw, pw);
     }
 
-    // The raster paint engine is significantly faster
-    // for rendering QPolygon than for QPolygonF. So let's
-    // see if we can use them.
-
     bool doIntegers = false;
 
-    if ( doAlign && !testRenderHint( QwtPlotItem::RenderFloats )
-        && !QwtPainter::isX11GraphicsSystem() )
+#if QT_VERSION < 0x040800
+
+    // For Qt <= 4.7 the raster paint engine is significantly faster
+    // for rendering QPolygon than for QPolygonF. So let's
+    // see if we can use it.
+
+    if ( painter->paintEngine()->type() == QPaintEngine::Raster )
     {
         // In case of filling or fitting performance doesn't count
         // because both operations are much more expensive
-        // then drawing the polyline itsself
+        // then drawing the polyline itself
 
         if ( !doFit && !doFill )
             doIntegers = true; 
     }
+#endif
 
     const bool noDuplicates = d_data->paintAttributes & FilterPoints;
 
@@ -512,7 +535,7 @@ void QwtPlotCurve::drawLines( QPainter *painter,
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from index of the first point to be painted
   \param to index of the last point to be painted
 
@@ -565,7 +588,7 @@ void QwtPlotCurve::drawSticks( QPainter *painter,
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from index of the first point to be painted
   \param to index of the last point to be painted
 
@@ -612,7 +635,9 @@ void QwtPlotCurve::drawDots( QPainter *painter,
     else if ( d_data->paintAttributes & ImageBuffer )
     {
         const QImage image = mapper.toImage( xMap, yMap,
-            data(), from, to, color.rgba() );
+            data(), from, to, d_data->pen, 
+            painter->testRenderHint( QPainter::Antialiasing ),
+            renderThreadCount() );
 
         painter->drawImage( canvasRect.toAlignedRect(), image );
     }
@@ -638,7 +663,7 @@ void QwtPlotCurve::drawDots( QPainter *painter,
     }
     else
     {
-        if ( doAlign && !testRenderHint( QwtPlotItem::RenderFloats ) )
+        if ( doAlign )
         {
             const QPolygon points = mapper.toPoints(
                 xMap, yMap, data(), from, to ); 
@@ -663,7 +688,7 @@ void QwtPlotCurve::drawDots( QPainter *painter,
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from index of the first point to be painted
   \param to index of the last point to be painted
 
@@ -808,7 +833,7 @@ QwtCurveFitter *QwtPlotCurve::curveFitter() const
   \param painter Painter
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param polygon Polygon - will be modified !
 
   \sa setBrush(), setBaseline(), setStyle()
@@ -863,11 +888,8 @@ void QwtPlotCurve::closePolyline( QPainter *painter,
     
     if ( orientation() == Qt::Vertical )
     {
-        if ( yMap.transformation()->type() == QwtScaleTransformation::Log10 )
-        {
-            if ( baseline < QwtScaleMap::LogMin )
-                baseline = QwtScaleMap::LogMin;
-        }
+        if ( yMap.transformation() )
+            baseline = yMap.transformation()->bounded( baseline );
 
         double refY = yMap.transform( baseline );
         if ( doAlign )
@@ -878,11 +900,8 @@ void QwtPlotCurve::closePolyline( QPainter *painter,
     }
     else
     {
-        if ( xMap.transformation()->type() == QwtScaleTransformation::Log10 )
-        {
-            if ( baseline < QwtScaleMap::LogMin )
-                baseline = QwtScaleMap::LogMin;
-        }
+        if ( xMap.transformation() )
+            baseline = xMap.transformation()->bounded( baseline );
 
         double refX = xMap.transform( baseline );
         if ( doAlign )
@@ -900,7 +919,7 @@ void QwtPlotCurve::closePolyline( QPainter *painter,
   \param symbol Curve symbol
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first point to be painted
   \param to Index of the last point to be painted
 
@@ -970,7 +989,7 @@ double QwtPlotCurve::baseline() const
 
   \param pos Position, where to look for the closest curve point
   \param dist If dist != NULL, closestPoint() returns the distance between
-              the position and the clostest curve point
+              the position and the closest curve point
   \return Index of the closest curve point, or -1 if none can be found
           ( f.e when the curve has no points )
   \note closestPoint() implements a dumb algorithm, that iterates
@@ -1012,7 +1031,7 @@ int QwtPlotCurve::closestPoint( const QPoint &pos, double *dist ) const
 }
 
 /*!
-    \return Icon representing the curve on the legend
+   \return Icon representing the curve on the legend
 
    \param index Index of the legend entry 
                 ( ignored as there is only one )
@@ -1089,13 +1108,30 @@ QwtGraphic QwtPlotCurve::legendIcon( int index,
 }
 
 /*!
-  Initialize data with an array of points (explicitly shared).
+  Initialize data with an array of points.
 
   \param samples Vector of points
+  \note QVector is implicitly shared
+  \note QPolygonF is derived from QVector<QPointF>
 */
 void QwtPlotCurve::setSamples( const QVector<QPointF> &samples )
 {
     setData( new QwtPointSeriesData( samples ) );
+}
+
+/*!
+  Assign a series of points
+
+  setSamples() is just a wrapper for setData() without any additional
+  value - beside that it is easier to find for the developer.
+
+  \param data Data
+  \warning The item takes ownership of the data object, deleting
+           it when its not used anymore.
+*/
+void QwtPlotCurve::setSamples( QwtSeriesData<QPointF> *data )
+{
+    setData( data );
 }
 
 #ifndef QWT_NO_COMPAT

@@ -9,17 +9,28 @@
 
 #include "qwt_painter_command.h"
 
+//! Construct an invalid command
 QwtPainterCommand::QwtPainterCommand():
     d_type( Invalid )
 {
 }
 
+//! Copy constructor
 QwtPainterCommand::QwtPainterCommand( const QPainterPath &path ):
     d_type( Path )
 {
     d_path = new QPainterPath( path );
 }
 
+/*!
+  Constructor for Pixmap paint operation
+
+  \param rect Target rectangle
+  \param pixmap Pixmap
+  \param subRect Rectangle inside the pixmap
+
+  \sa QPainter::drawPixmap()
+ */
 QwtPainterCommand::QwtPainterCommand( const QRectF &rect,
         const QPixmap &pixmap, const QRectF& subRect ):
     d_type( Pixmap )
@@ -30,6 +41,16 @@ QwtPainterCommand::QwtPainterCommand( const QRectF &rect,
     d_pixmapData->subRect = subRect;
 }
 
+/*!
+  Constructor for Image paint operation
+
+  \param rect Target rectangle
+  \param image Image
+  \param subRect Rectangle inside the image
+  \param flags Conversion flags
+
+  \sa QPainter::drawImage()
+ */
 QwtPainterCommand::QwtPainterCommand( const QRectF &rect,
         const QImage &image, const QRectF& subRect,
         Qt::ImageConversionFlags flags ):
@@ -42,6 +63,10 @@ QwtPainterCommand::QwtPainterCommand( const QRectF &rect,
     d_imageData->flags = flags;
 }
 
+/*! 
+  Constructor for State paint operation
+  \param state Paint engine state
+ */  
 QwtPainterCommand::QwtPainterCommand( const QPaintEngineState &state ):
     d_type( State )
 {
@@ -95,16 +120,28 @@ QwtPainterCommand::QwtPainterCommand( const QPaintEngineState &state ):
         d_stateData->opacity = state.opacity();
 }
 
+/*!
+  Copy constructor
+  \param other Command to be copied
+  
+ */
 QwtPainterCommand::QwtPainterCommand(const QwtPainterCommand &other)
 {
     copy( other );
 }
 
+//! Destructor
 QwtPainterCommand::~QwtPainterCommand()
 {
     reset();
 }
 
+/*!
+  Assignment operator
+
+  \param other Command to be copied
+  \return Modified command
+ */
 QwtPainterCommand &QwtPainterCommand::operator=(const QwtPainterCommand &other)
 {
     reset();
@@ -175,21 +212,25 @@ void QwtPainterCommand::reset()
     d_type = Invalid;
 }
 
+//! \return Painter path to be painted
 QPainterPath *QwtPainterCommand::path() 
 {
     return d_path;
 }
 
+//! \return Attributes how to paint a QPixmap
 QwtPainterCommand::PixmapData* QwtPainterCommand::pixmapData() 
 {
     return d_pixmapData;
 }
 
+//! \return Attributes how to paint a QImage
 QwtPainterCommand::ImageData* QwtPainterCommand::imageData() 
 {
     return d_imageData;
 }
 
+//! \return Attributes of a state change
 QwtPainterCommand::StateData* QwtPainterCommand::stateData() 
 {
     return d_stateData;

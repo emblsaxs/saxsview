@@ -41,7 +41,7 @@ public:
       \param painter Painter
       \param xMap Maps x-values into pixel coordinates.
       \param yMap Maps y-values into pixel coordinates.
-      \param canvasRect Contents rect of the canvas
+      \param canvasRect Contents rectangle of the canvas
       \param from Index of the first point to be painted
       \param to Index of the last point to be painted. If to < 0 the
              curve will be painted to its last point.

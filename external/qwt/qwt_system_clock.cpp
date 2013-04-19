@@ -159,7 +159,7 @@ double QwtHighResolutionClock::msecsTo(
         mach_timebase_info_data_t info;
         kern_return_t err = mach_timebase_info( &info );
 
-        //Convert the timebase into ms
+        // convert the timebase into ms
         if ( err == 0  )
             conversion = 1e-6 * ( double ) info.numer / ( double ) info.denom;
     }
@@ -356,9 +356,8 @@ void QwtSystemClock::start()
 }
 
 /*!
-  The start time to the current time and
-  return the time, that is elapsed since the
-  previous start time.
+  Set the start time to the current time 
+  \return Time, that is elapsed since the previous start time.
 */
 double QwtSystemClock::restart()
 {

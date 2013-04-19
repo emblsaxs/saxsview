@@ -98,9 +98,6 @@ public:
 
     void invalidateCache();
 
-    void setRenderThreadCount( uint numThreads );
-    uint renderThreadCount() const;
-
     virtual void draw( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &rect ) const;
@@ -124,6 +121,8 @@ protected:
       \param yMap Y-Scale Map
       \param area Requested area for the image in scale coordinates
       \param imageSize Requested size of the image
+   
+      \return Rendered image
      */
     virtual QImage renderImage( const QwtScaleMap &xMap,
         const QwtScaleMap &yMap, const QRectF &area,

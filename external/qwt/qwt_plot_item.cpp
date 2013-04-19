@@ -24,6 +24,7 @@ public:
         attributes( 0 ),
         interests( 0 ),
         renderHints( 0 ),
+        renderThreadCount( 1 ),
         z( 0.0 ),
         xAxis( QwtPlot::xBottom ),
         yAxis( QwtPlot::yLeft ),
@@ -34,9 +35,13 @@ public:
     mutable QwtPlot *plot;
 
     bool isVisible;
+
     QwtPlotItem::ItemAttributes attributes;
     QwtPlotItem::ItemInterests interests;
+
     QwtPlotItem::RenderHints renderHints;
+    uint renderThreadCount;
+
     double z;
 
     int xAxis;
@@ -181,7 +186,9 @@ void QwtPlotItem::setTitle( const QwtText &title )
         d_data->title = title;
 
         legendChanged();
+#if 0
         itemChanged();
+#endif
     }
 }
 
@@ -297,6 +304,34 @@ bool QwtPlotItem::testRenderHint( RenderHint hint ) const
 }
 
 /*!
+   On multi core systems rendering of certain plot item 
+   ( f.e QwtPlotRasterItem ) can be done in parallel in 
+   several threads.
+
+   The default setting is set to 1.
+
+   \param numThreads Number of threads to be used for rendering.
+                     If numThreads is set to 0, the system specific
+                     ideal thread count is used.
+
+   The default thread count is 1 ( = no additional threads )
+*/
+void QwtPlotItem::setRenderThreadCount( uint numThreads )
+{
+    d_data->renderThreadCount = numThreads;
+}
+
+/*!
+   \return Number of threads to be used for rendering.
+           If numThreads() is set to 0, the system specific
+           ideal thread count is used.
+*/
+uint QwtPlotItem::renderThreadCount() const
+{
+    return d_data->renderThreadCount;
+}
+
+/*!
    Set the size of the legend icon
 
    The default setting is 8x8 pixels
@@ -306,7 +341,11 @@ bool QwtPlotItem::testRenderHint( RenderHint hint ) const
 */
 void QwtPlotItem::setLegendIconSize( const QSize &size )
 {
-    d_data->legendIconSize = size;
+    if ( d_data->legendIconSize != size )
+    {
+        d_data->legendIconSize = size;
+        legendChanged();
+    }
 }
 
 /*!
@@ -338,6 +377,17 @@ QwtGraphic QwtPlotItem::legendIcon(
     return QwtGraphic();
 }
 
+/*!
+   \brief Return a default icon from a brush
+
+   The default icon is a filled rectangle used
+   in several derived classes as legendIcon().
+
+   \param brush Fill brush
+   \param size Icon size
+
+   \return A filled rectangle
+ */
 QwtGraphic QwtPlotItem::defaultIcon( 
     const QBrush &brush, const QSizeF &size ) const
 {   
@@ -392,7 +442,7 @@ bool QwtPlotItem::isVisible() const
 }
 
 /*!
-   Update the legend and call QwtPlot::autoRefresh for the
+   Update the legend and call QwtPlot::autoRefresh() for the
    parent plot.
 
    \sa QwtPlot::legendChanged(), QwtPlot::autoRefresh()
@@ -416,12 +466,12 @@ void QwtPlotItem::legendChanged()
 /*!
    Set X and Y axis
 
-   The item will painted according to the coordinates its Axes.
+   The item will painted according to the coordinates of its Axes.
 
-   \param xAxis X Axis
-   \param yAxis Y Axis
+   \param xAxis X Axis ( QwtPlot::xBottom or QwtPlot::xTop )
+   \param yAxis Y Axis ( QwtPlot::yLeft or QwtPlot::yRight )
 
-   \sa setXAxis(), setYAxis(), xAxis(), yAxis()
+   \sa setXAxis(), setYAxis(), xAxis(), yAxis(), QwtPlot::Axis
 */
 void QwtPlotItem::setAxes( int xAxis, int yAxis )
 {
@@ -439,8 +489,8 @@ void QwtPlotItem::setAxes( int xAxis, int yAxis )
 
    The item will painted according to the coordinates its Axes.
 
-   \param axis X Axis
-   \sa setAxes(), setYAxis(), xAxis()
+   \param axis X Axis ( QwtPlot::xBottom or QwtPlot::xTop )
+   \sa setAxes(), setYAxis(), xAxis(), QwtPlot::Axis
 */
 void QwtPlotItem::setXAxis( int axis )
 {
@@ -456,8 +506,8 @@ void QwtPlotItem::setXAxis( int axis )
 
    The item will painted according to the coordinates its Axes.
 
-   \param axis Y Axis
-   \sa setAxes(), setXAxis(), yAxis()
+   \param axis Y Axis ( QwtPlot::yLeft or QwtPlot::yRight )
+   \sa setAxes(), setXAxis(), yAxis(), QwtPlot::Axis
 */
 void QwtPlotItem::setYAxis( int axis )
 {
@@ -482,12 +532,35 @@ int QwtPlotItem::yAxis() const
 
 /*!
    \return An invalid bounding rect: QRectF(1.0, 1.0, -2.0, -2.0)
+   \note A width or height < 0.0 is ignored by the autoscaler
 */
 QRectF QwtPlotItem::boundingRect() const
 {
     return QRectF( 1.0, 1.0, -2.0, -2.0 ); // invalid
 }
 
+/*!
+   \brief Calculate a hint for the canvas margin
+
+   When the QwtPlotItem::Margins flag is enabled the plot item
+   indicates, that it needs some margins at the borders of the canvas.
+   This is f.e. used by bar charts to reserve space for displaying
+   the bars.
+
+   The margins are in target device coordinates ( pixels on screen )
+
+   \param xMap Maps x-values into pixel coordinates.
+   \param yMap Maps y-values into pixel coordinates.
+   \param canvasRect Contents rectangle of the canvas in painter coordinates
+   \param left Returns the left margin
+   \param top Returns the top margin
+   \param right Returns the right margin
+   \param bottom Returns the bottom margin
+
+   \return The default implementation returns 0 for all margins
+
+   \sa QwtPlot::getCanvasMarginsHint(), QwtPlot::updateCanvasMargins()
+ */
 void QwtPlotItem::getCanvasMarginHint( const QwtScaleMap &xMap, 
     const QwtScaleMap &yMap, const QRectF &canvasRect,
     double &left, double &top, double &right, double &bottom ) const
@@ -500,12 +573,34 @@ void QwtPlotItem::getCanvasMarginHint( const QwtScaleMap &xMap,
     left = top = right = bottom = 0.0;
 }
 
+/*!
+   \brief Return all information, that is needed to represent
+          the item on the legend
+
+   Most items are represented by one entry on the legend
+   showing an icon and a text, but f.e. QwtPlotMultiBarChart
+   displays one entry for each bar.
+
+   QwtLegendData is basically a list of QVariants that makes it
+   possible to overload and reimplement legendData() to 
+   return almost any type of information, that is understood
+   by the receiver that acts as the legend.
+
+   The default implementation returns one entry with 
+   the title() of the item and the legendIcon().
+
+   \return Data, that is needed to represent the item on the legend
+   \sa title(), legendIcon(), QwtLegend, QwtPlotLegendItem
+ */
 QList<QwtLegendData> QwtPlotItem::legendData() const
 {
     QwtLegendData data;
+
+    QwtText label = title();
+    label.setRenderFlags( label.renderFlags() & Qt::AlignLeft );
             
     QVariant titleValue;
-    qVariantSetValue( titleValue, title() );
+    qVariantSetValue( titleValue, label );
     data.setValue( QwtLegendData::TitleRole, titleValue );
         
     const QwtGraphic graphic = legendIcon( 0, legendIconSize() );
@@ -531,7 +626,7 @@ QList<QwtLegendData> QwtPlotItem::legendData() const
    updateScaleDiv()
 
    updateScaleDiv() is only called when the ScaleInterest interest
-   is enabled. The default implemention does nothing.
+   is enabled. The default implementation does nothing.
 
    \param xScaleDiv Scale division of the x-axis
    \param yScaleDiv Scale division of the y-axis
@@ -552,10 +647,12 @@ void QwtPlotItem::updateScaleDiv( const QwtScaleDiv &xScaleDiv,
    be displayed on a legend ! ) will have to implement updateLegend().
 
    updateLegend() is only called when the LegendInterest interest
-   is enabled. The default implemention does nothing.
+   is enabled. The default implementation does nothing.
 
    \param item Plot item to be displayed on a legend
    \param data Attributes how to display item on the legend
+
+   \sa QwtPlotLegendItem
 
    \note Plot items, that want to be displayed on a legend
          need to enable the QwtPlotItem::Legend flag and to implement
@@ -569,12 +666,12 @@ void QwtPlotItem::updateLegend( const QwtPlotItem *item,
 }
 
 /*!
-   \brief Calculate the bounding scale rect of 2 maps
+   \brief Calculate the bounding scale rectangle of 2 maps
 
-   \param xMap X map
-   \param yMap X map
+   \param xMap Maps x-values into pixel coordinates.
+   \param yMap Maps y-values into pixel coordinates.
 
-   \return Bounding scale rect of the scale maps, normalized
+   \return Bounding scale rect of the scale maps, not normalized
 */
 QRectF QwtPlotItem::scaleRect( const QwtScaleMap &xMap,
     const QwtScaleMap &yMap ) const
@@ -584,12 +681,12 @@ QRectF QwtPlotItem::scaleRect( const QwtScaleMap &xMap,
 }
 
 /*!
-   \brief Calculate the bounding paint rect of 2 maps
+   \brief Calculate the bounding paint rectangle of 2 maps
 
-   \param xMap X map
-   \param yMap X map
+   \param xMap Maps x-values into pixel coordinates.
+   \param yMap Maps y-values into pixel coordinates.
 
-   \return Bounding paint rect of the scale maps, normalized
+   \return Bounding paint rectangle of the scale maps, not normalized
 */
 QRectF QwtPlotItem::paintRect( const QwtScaleMap &xMap,
     const QwtScaleMap &yMap ) const

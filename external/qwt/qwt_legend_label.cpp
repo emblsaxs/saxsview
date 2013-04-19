@@ -55,6 +55,12 @@ public:
     int spacing;
 };
 
+/*!
+  Set the attributes of the legend label
+
+  \param legendData Attributes of the label
+  \sa data()
+ */
 void QwtLegendLabel::setData( const QwtLegendData &legendData )
 {
     d_data->legendData = legendData;
@@ -75,6 +81,10 @@ void QwtLegendLabel::setData( const QwtLegendData &legendData )
     }
 }
 
+/*!
+  \return Attributes of the label
+  \sa setData(), QwtPlotItem::legendData()
+ */
 const QwtLegendData &QwtLegendLabel::data() const
 {
     return d_data->legendData;
@@ -138,8 +148,7 @@ void QwtLegendLabel::setItemMode( QwtLegendData::Mode mode )
 }
 
 /*!
-   Return the item mode
-
+   \return Item mode
    \sa setItemMode()
 */
 QwtLegendData::Mode QwtLegendLabel::itemMode() const
@@ -175,7 +184,8 @@ QPixmap QwtLegendLabel::icon() const
 }
 
 /*!
-   Change the spacing
+   \brief Change the spacing between icon and text
+
    \param spacing Spacing
    \sa spacing(), QwtTextLabel::margin()
 */
@@ -195,7 +205,7 @@ void QwtLegendLabel::setSpacing( int spacing )
 }
 
 /*!
-   Return the spacing
+   \return Spacing between icon and text
    \sa setSpacing(), QwtTextLabel::margin()
 */
 int QwtLegendLabel::spacing() const

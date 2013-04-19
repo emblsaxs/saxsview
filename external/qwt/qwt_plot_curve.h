@@ -120,7 +120,7 @@ public:
           A QwtCurveFitter tries to
           interpolate/smooth the curve, before it is painted.
 
-          \note Curve fitting requires temorary memory
+          \note Curve fitting requires temporary memory
           for calculating coefficients and additional points.
           If painting in QwtPlotCurve::Fitted mode is slow it might be better
           to fit the points, before they are passed to QwtPlotCurve.
@@ -186,7 +186,7 @@ public:
           Tries to reduce the data that has to be painted, by sorting out
           duplicates, or paintings outside the visible area. Might have a
           notable impact on curves with many close points.
-          Only a couple of very basic filtering algos are implemented.
+          Only a couple of very basic filtering algorithms are implemented.
          */
         FilterPoints = 0x02,
 
@@ -229,6 +229,7 @@ public:
     void setSamples( const QVector<double> &xData, const QVector<double> &yData );
 #endif
     void setSamples( const QVector<QPointF> & );
+    void setSamples( QwtSeriesData<QPointF> * );
 
     int closestPoint( const QPoint &pos, double *dist = NULL ) const;
 
@@ -240,6 +241,7 @@ public:
     void setCurveAttribute( CurveAttribute, bool on = true );
     bool testCurveAttribute( CurveAttribute ) const;
 
+    void setPen( const QColor &, qreal width = 0.0, Qt::PenStyle = Qt::SolidLine );
     void setPen( const QPen & );
     const QPen &pen() const;
 
@@ -252,7 +254,7 @@ public:
     void setStyle( CurveStyle style );
     CurveStyle style() const;
 
-    void setSymbol( const QwtSymbol *s );
+    void setSymbol( QwtSymbol * );
     const QwtSymbol *symbol() const;
 
     void setCurveFitter( QwtCurveFitter * );
@@ -276,19 +278,19 @@ protected:
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 
-    void drawLines( QPainter *p,
+    virtual void drawLines( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 
-    void drawSticks( QPainter *p,
+    virtual void drawSticks( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 
-    void drawDots( QPainter *p,
+    virtual void drawDots( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 
-    void drawSteps( QPainter *p,
+    virtual void drawSteps( QPainter *p,
         const QwtScaleMap &xMap, const QwtScaleMap &yMap,
         const QRectF &canvasRect, int from, int to ) const;
 

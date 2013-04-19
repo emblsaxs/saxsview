@@ -26,7 +26,7 @@ QwtAbstractLegend::~QwtAbstractLegend()
 
 /*!
    Return the extent, that is needed for elements to scroll
-   the legend ( usually scroll bars ),
+   the legend ( usually scrollbars ),
 
    \param orientation Orientation
    \return Extent of the corresponding scroll element

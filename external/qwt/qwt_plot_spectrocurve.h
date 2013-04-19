@@ -46,6 +46,8 @@ public:
     bool testPaintAttribute( PaintAttribute ) const;
 
     void setSamples( const QVector<QwtPoint3D> & );
+    void setSamples( QwtSeriesData<QwtPoint3D> * );
+
 
     void setColorMap( QwtColorMap * );
     const QwtColorMap *colorMap() const;

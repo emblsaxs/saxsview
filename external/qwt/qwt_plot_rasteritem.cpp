@@ -14,6 +14,7 @@
 #include <qdesktopwidget.h>
 #include <qpainter.h>
 #include <qpaintengine.h>
+#include <qmath.h>
 #if QT_VERSION >= 0x040400
 #include <qthread.h>
 #include <qfuture.h>
@@ -26,14 +27,12 @@ class QwtPlotRasterItem::PrivateData
 public:
     PrivateData():
         alpha( -1 ),
-        renderThreadCount( 1 ),
         paintAttributes( QwtPlotRasterItem::PaintInDeviceResolution )
     {
         cache.policy = QwtPlotRasterItem::NoCache;
     }
 
     int alpha;
-    uint renderThreadCount;
 
     QwtPlotRasterItem::PaintAttributes paintAttributes;
 
@@ -473,7 +472,7 @@ void QwtPlotRasterItem::setPaintAttribute( PaintAttribute attribute, bool on )
 }
 
 /*!
-    \brief Return the current paint attributes
+    \return True, when attribute is enabled
     \sa PaintAttribute, setPaintAttribute()
 */
 bool QwtPlotRasterItem::testPaintAttribute( PaintAttribute attribute ) const
@@ -570,44 +569,13 @@ void QwtPlotRasterItem::invalidateCache()
 }
 
 /*!
-   Rendering an image from the raster data can often be done
-   parallel on a multicore system.
-
-   \param numThreads Number of threads to be used for rendering.
-                     If numThreads is set to 0, the system specific
-                     ideal thread count is used.
-
-   The default thread count is 1 ( = no additional threads )
-
-   \warning Rendering in multiple threads is only supported for Qt >= 4.4
-   \sa renderThreadCount(), renderImage(), renderTile()
-*/
-void QwtPlotRasterItem::setRenderThreadCount( uint numThreads )
-{
-    d_data->renderThreadCount = numThreads;
-}
-
-/*!
-   \return Number of threads to be used for rendering.
-           If numThreads is set to 0, the system specific
-           ideal thread count is used.
-
-   \warning Rendering in multiple threads is only supported for Qt >= 4.4
-   \sa setRenderThreadCount(), renderImage(), renderTile()
-*/
-uint QwtPlotRasterItem::renderThreadCount() const
-{
-    return d_data->renderThreadCount;
-}
-
-/*!
    \brief Pixel hint
 
    The geometry of a pixel is used to calculated the resolution and
    alignment of the rendered image. 
 
    Width and height of the hint need to be the horizontal  
-   and vertical distances between 2 neighboured points. 
+   and vertical distances between 2 neighbored points. 
    The center of the hint has to be the position of any point 
    ( it doesn't matter which one ).
 
@@ -637,7 +605,7 @@ QRectF QwtPlotRasterItem::pixelHint( const QRectF &area ) const
   \param painter Painter
   \param xMap X-Scale Map
   \param yMap Y-Scale Map
-  \param canvasRect Contents rect of the plot canvas
+  \param canvasRect Contents rectangle of the plot canvas
 */
 void QwtPlotRasterItem::draw( QPainter *painter,
     const QwtScaleMap &xMap, const QwtScaleMap &yMap,
@@ -652,7 +620,7 @@ void QwtPlotRasterItem::draw( QPainter *painter,
     const QwtInterval yInterval = interval( Qt::YAxis );
 
     /*
-        Scaling a rastered image always results in a loss of
+        Scaling an image always results in a loss of
         precision/quality. So we always render the image in
         paint device resolution.
     */
@@ -679,11 +647,11 @@ void QwtPlotRasterItem::draw( QPainter *painter,
     QRectF pixelRect = pixelHint(area);
     if ( !pixelRect.isEmpty() )
     {
-        const QRectF r = QwtScaleMap::invTransform( 
-            xxMap, yyMap, QRectF(0, 0, 1, 1) ).normalized();
+        // pixel in target device resolution 
+        const double dx = qAbs( xxMap.invTransform( 1 ) - xxMap.invTransform( 0 ) );
+        const double dy = qAbs( yyMap.invTransform( 1 ) - yyMap.invTransform( 0 ) );
 
-        if ( r.width() > pixelRect.width() &&
-            r.height() > pixelRect.height() )
+        if ( dx > pixelRect.width() && dy > pixelRect.height() )
         {
             /*
               When the resolution of the data pixels is higher than
@@ -795,7 +763,7 @@ QwtInterval QwtPlotRasterItem::interval(Qt::Axis axis) const
 }
 
 /*!
-   \return Bounding rect of the data
+   \return Bounding rectangle of the data
    \sa QwtPlotRasterItem::interval()
 */
 QRectF QwtPlotRasterItem::boundingRect() const
@@ -928,6 +896,8 @@ QImage QwtPlotRasterItem::compose(
    \param area Area to be painted on the image
    \param imageSize Image size
    \param pixelSize Width/Height of a data pixel
+
+   \return Calculated scale map
 */
 QwtScaleMap QwtPlotRasterItem::imageMap(
     Qt::Orientation orientation,

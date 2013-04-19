@@ -98,7 +98,7 @@ void QwtPlotSpectroCurve::setPaintAttribute( PaintAttribute attribute, bool on )
 }
 
 /*!
-    \brief Return the current paint attributes
+    \return True, when attribute is enabled
     \sa PaintAttribute, setPaintAttribute()
 */
 bool QwtPlotSpectroCurve::testPaintAttribute( PaintAttribute attribute ) const
@@ -114,6 +114,22 @@ void QwtPlotSpectroCurve::setSamples( const QVector<QwtPoint3D> &samples )
 {
     setData( new QwtPoint3DSeriesData( samples ) );
 }
+
+/*!
+  Assign a series of samples
+    
+  setSamples() is just a wrapper for setData() without any additional
+  value - beside that it is easier to find for the developer.
+    
+  \param data Data
+  \warning The item takes ownership of the data object, deleting
+           it when its not used anymore. 
+*/
+void QwtPlotSpectroCurve::setSamples(
+    QwtSeriesData<QwtPoint3D> *data )
+{
+    setData( data );
+}  
 
 /*!
   Change the color map
@@ -210,7 +226,7 @@ double QwtPlotSpectroCurve::penWidth() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted. If to < 0 the
          series will be painted to its last sample.
@@ -242,7 +258,7 @@ void QwtPlotSpectroCurve::drawSeries( QPainter *painter,
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted. If to < 0 the
          series will be painted to its last sample.

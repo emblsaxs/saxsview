@@ -15,14 +15,13 @@
 #include <qvector.h>
 
 class QwtPlot;
-class QwtPlotCanvas;
 
 /*!
   \brief QwtPlotPicker provides selections on a plot canvas
 
   QwtPlotPicker is a QwtPicker tailored for selections on
   a plot canvas. It is set to a x-Axis and y-Axis and
-  translates all pixel coordinates into this coodinate system.
+  translates all pixel coordinates into this coordinate system.
 */
 
 class QWT_EXPORT QwtPlotPicker: public QwtPicker
@@ -30,14 +29,13 @@ class QWT_EXPORT QwtPlotPicker: public QwtPicker
     Q_OBJECT
 
 public:
-    explicit QwtPlotPicker( QwtPlotCanvas * );
+    explicit QwtPlotPicker( QWidget *canvas );
     virtual ~QwtPlotPicker();
 
-    explicit QwtPlotPicker( int xAxis, int yAxis, QwtPlotCanvas * );
+    explicit QwtPlotPicker( int xAxis, int yAxis, QWidget * );
 
     explicit QwtPlotPicker( int xAxis, int yAxis,
-        RubberBand rubberBand, DisplayMode trackerMode,
-        QwtPlotCanvas * );
+        RubberBand rubberBand, DisplayMode trackerMode, QWidget * );
 
     virtual void setAxis( int xAxis, int yAxis );
 
@@ -47,19 +45,19 @@ public:
     QwtPlot *plot();
     const QwtPlot *plot() const;
 
-    QwtPlotCanvas *canvas();
-    const QwtPlotCanvas *canvas() const;
+    QWidget *canvas();
+    const QWidget *canvas() const;
 
 Q_SIGNALS:
 
     /*!
-      A signal emitted in case of selectionFlags() & PointSelection.
+      A signal emitted in case of QwtPickerMachine::PointSelection.
       \param pos Selected point
     */
     void selected( const QPointF &pos );
 
     /*!
-      A signal emitted in case of selectionFlags() & RectSelection.
+      A signal emitted in case of QwtPickerMachine::RectSelection.
       \param rect Selected rectangle
     */
     void selected( const QRectF &rect );

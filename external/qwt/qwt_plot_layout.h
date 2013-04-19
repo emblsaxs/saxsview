@@ -19,6 +19,8 @@
   It is used by the QwtPlot widget to organize its internal widgets
   or by QwtPlot::print() to render its content to a QPaintDevice like
   a QPrinter, QPixmap/QImage or QSvgRenderer.
+
+  \sa QwtPlot::setPlotLayout()
 */
 
 class QWT_EXPORT QwtPlotLayout
@@ -83,15 +85,21 @@ public:
 
     virtual void invalidate();
 
-    const QRectF &titleRect() const;
-    const QRectF &footerRect() const;
-    const QRectF &legendRect() const;
-    const QRectF &scaleRect( int axis ) const;
-    const QRectF &canvasRect() const;
+    QRectF titleRect() const;
+    QRectF footerRect() const;
+    QRectF legendRect() const;
+    QRectF scaleRect( int axis ) const;
+    QRectF canvasRect() const;
 
     class LayoutData;
 
 protected:
+
+    void setTitleRect( const QRectF & );
+    void setFooterRect( const QRectF & );
+    void setLegendRect( const QRectF & );
+    void setScaleRect( int axis, const QRectF & );
+    void setCanvasRect( const QRectF & );
 
     QRectF layoutLegend( Options options, const QRectF & ) const;
     QRectF alignLegend( const QRectF &canvasRect,

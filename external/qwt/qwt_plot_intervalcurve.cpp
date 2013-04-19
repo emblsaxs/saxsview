@@ -12,6 +12,7 @@
 #include "qwt_scale_map.h"
 #include "qwt_clipper.h"
 #include "qwt_painter.h"
+#include <string.h>
 
 #include <qpainter.h>
 
@@ -23,7 +24,7 @@ static inline bool qwtIsHSampleInside( const QwtIntervalSample &sample,
     const double x2 = sample.interval.maxValue();
 
     const bool isOffScreen = ( y < yMin ) || ( y > yMax )
-        || ( x1 < xMin && x2 < xMin ) || ( x1 > yMax && x2 > xMax );
+        || ( x1 < xMin && x2 < xMin ) || ( x1 > xMax && x2 > xMax );
 
     return !isOffScreen;
 }
@@ -131,7 +132,7 @@ void QwtPlotIntervalCurve::setPaintAttribute(
 }
 
 /*!
-    \brief Return the current paint attributes
+    \return True, when attribute is enabled
     \sa PaintAttribute, setPaintAttribute()
 */
 bool QwtPlotIntervalCurve::testPaintAttribute(
@@ -148,6 +149,22 @@ void QwtPlotIntervalCurve::setSamples(
     const QVector<QwtIntervalSample> &samples )
 {
     setData( new QwtIntervalSeriesData( samples ) );
+}
+
+/*!
+  Assign a series of samples
+    
+  setSamples() is just a wrapper for setData() without any additional
+  value - beside that it is easier to find for the developer.
+    
+  \param data Data
+  \warning The item takes ownership of the data object, deleting
+           it when its not used anymore.
+*/
+void QwtPlotIntervalCurve::setSamples( 
+    QwtSeriesData<QwtIntervalSample> *data )
+{
+    setData( data );
 }
 
 /*!
@@ -168,7 +185,7 @@ void QwtPlotIntervalCurve::setStyle( CurveStyle style )
 }
 
 /*!
-    \brief Return the current style
+    \return Style of the curve
     \sa setStyle()
 */
 QwtPlotIntervalCurve::CurveStyle QwtPlotIntervalCurve::style() const
@@ -204,6 +221,24 @@ const QwtIntervalSymbol *QwtPlotIntervalCurve::symbol() const
 }
 
 /*!
+  Build and assign a pen
+    
+  In Qt5 the default pen width is 1.0 ( 0.0 in Qt4 ) what makes it
+  non cosmetic ( see QPen::isCosmetic() ). This method has been introduced
+  to hide this incompatibility.
+    
+  \param color Pen color
+  \param width Pen width
+  \param style Pen style
+    
+  \sa pen(), brush()
+ */
+void QwtPlotIntervalCurve::setPen( const QColor &color, qreal width, Qt::PenStyle style )
+{   
+    setPen( QPen( color, width, style ) );
+}   
+
+/*!
   \brief Assign a pen
   \param pen New pen
   \sa pen(), brush()
@@ -220,7 +255,7 @@ void QwtPlotIntervalCurve::setPen( const QPen &pen )
 }
 
 /*!
-    \brief Return the pen used to draw the lines
+    \return Pen used to draw the lines
     \sa setPen(), brush()
 */
 const QPen& QwtPlotIntervalCurve::pen() const
@@ -275,7 +310,7 @@ QRectF QwtPlotIntervalCurve::boundingRect() const
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted. If to < 0 the
          series will be painted to its last sample.
@@ -324,7 +359,7 @@ void QwtPlotIntervalCurve::drawSeries( QPainter *painter,
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted. If to < 0 the
          series will be painted to its last sample.
@@ -417,13 +452,13 @@ void QwtPlotIntervalCurve::drawTube( QPainter *painter,
             QPolygonF p;
 
             p.resize( size );
-            qMemCopy( p.data(), points, size * sizeof( QPointF ) );
-            p = QwtClipper::clipPolygonF( canvasRect, p );
+            ::memcpy( p.data(), points, size * sizeof( QPointF ) );
+            p = QwtClipper::clipPolygonF( clipRect, p );
             QwtPainter::drawPolyline( painter, p );
 
             p.resize( size );
-            qMemCopy( p.data(), points + size, size * sizeof( QPointF ) );
-            p = QwtClipper::clipPolygonF( canvasRect, p );
+            ::memcpy( p.data(), points + size, size * sizeof( QPointF ) );
+            p = QwtClipper::clipPolygonF( clipRect, p );
             QwtPainter::drawPolyline( painter, p );
         }
         else
@@ -443,7 +478,7 @@ void QwtPlotIntervalCurve::drawTube( QPainter *painter,
   \param symbol Interval symbol
   \param xMap x map
   \param yMap y map
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted
 

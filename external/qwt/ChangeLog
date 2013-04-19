@@ -1,3 +1,8 @@
+2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* Imported r1698 from qwt/trunk.
+	* CMakeLists.txt: Updated file list.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * CMakeLists.txt: Use saxsview-convenience macros.

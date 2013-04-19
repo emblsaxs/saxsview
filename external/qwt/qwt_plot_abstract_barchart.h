@@ -7,35 +7,33 @@
  * modify it under the terms of the Qwt License, Version 1.0
  *****************************************************************************/
 
-#ifndef QWT_PLOT_BAR_ITEM_H
-#define QWT_PLOT_BAR_ITEM_H
+#ifndef QWT_PLOT_ABSTRACT_BAR_CHART_H
+#define QWT_PLOT_ABSTRACT_BAR_CHART_H
 
 #include "qwt_global.h"
 #include "qwt_plot_seriesitem.h"
 #include "qwt_series_data.h"
 
-class QwtColumnRect;
-class QwtColumnSymbol;
+/*!
+  \brief Abstract base class for bar chart items
 
-class QWT_EXPORT QwtPlotBarItem: public QwtPlotSeriesItem
+  In opposite to almost all other plot items bar charts can't be 
+  displayed inside of their bounding rectangle and need a special
+  API  how to calculate the width of the bars and how they affect
+  the layout of the attached plot.
+ */
+class QWT_EXPORT QwtPlotAbstractBarChart: public QwtPlotSeriesItem
 {
 public:
-    enum ChartAttribute
-    {
-        ShowLabels = 0x01
-    };
-
-    typedef QFlags<ChartAttribute> ChartAttributes;
-
     /*!
         \brief Mode how to calculate the bar width
 
-        setLayoutPolicy(), setLayoutHint()
+        setLayoutPolicy(), setLayoutHint(), barWidthHint()
      */
     enum LayoutPolicy
     {
         /*!
-          The sample width is calculated by deviding the bounding rectangle
+          The sample width is calculated by dividing the bounding rectangle
           by the number of samples.
 
           \sa boundingRectangle()
@@ -44,12 +42,12 @@ public:
         AutoAdjustSamples,
 
         /*!
-          The barWidthHint() defines an interval in axis coordinates
+          layoutHint() defines an interval in axis coordinates
          */
         ScaleSamplesToAxes,
 
         /*!
-          The bar width is calculated by multiplying the barWidthHint()
+          The bar width is calculated by multiplying layoutHint()
           with the height or width of the canvas.
 
           \sa boundingRectangle()
@@ -57,16 +55,13 @@ public:
         ScaleSampleToCanvas,
 
         /*!
-          The barWidthHint() defines a fixed width in paint device coordinates.
+          layoutHint() defines a fixed width in paint device coordinates.
          */
         FixedSampleSize
     };
 
-    explicit QwtPlotBarItem( const QwtText &title );
-    virtual ~QwtPlotBarItem();
-
-    void setChartAttribute( ChartAttribute, bool on = true );
-    bool testChartAttribute( ChartAttribute ) const;
+    explicit QwtPlotAbstractBarChart( const QwtText &title );
+    virtual ~QwtPlotAbstractBarChart();
 
     void setLayoutPolicy( LayoutPolicy );
     LayoutPolicy layoutPolicy() const;
@@ -88,6 +83,7 @@ public:
         const QRectF &canvasRect,
         double &left, double &top, double &right, double &bottom) const;
 
+
 protected:
     double sampleWidth( const QwtScaleMap &map,
         double canvasSize, double dataSize,
@@ -97,7 +93,5 @@ private:
     class PrivateData;
     PrivateData *d_data;
 };
-
-Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotBarItem::ChartAttributes )
 
 #endif

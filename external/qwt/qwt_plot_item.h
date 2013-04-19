@@ -16,6 +16,7 @@
 #include "qwt_graphic.h"
 #include <qrect.h>
 #include <qlist.h>
+#include <qmetatype.h>
 
 class QPainter;
 class QwtScaleMap;
@@ -49,7 +50,7 @@ class QwtPlot;
     - ...
 
   Depending on the QwtPlotItem::ItemAttribute flags, an item is included
-  into autoscaling or has an entry on the legnd.
+  into autoscaling or has an entry on the legend.
 
   Before misusing the existing item classes it might be better to
   implement a new type of plot item
@@ -112,6 +113,16 @@ public:
 
         //! For QwtPlotMultiBarChart
         Rtti_PlotMultiBarChart,
+
+        //! For QwtPlotShapeItem
+        Rtti_PlotShape,
+
+        //! For QwtPlotTextLabel
+        Rtti_PlotTextLabel,
+
+        //! For QwtPlotZoneItem
+        Rtti_PlotZone,
+
         /*! 
            Values >= Rtti_PlotUserItem are reserved for plot items
            not implemented in the Qwt library.
@@ -135,7 +146,8 @@ public:
 
         /*!
            The boundingRect() of the item is included in the
-           autoscaling calculation.
+           autoscaling calculation as long as its width or height
+           is >= 0.0.
          */
         AutoScale = 0x02,
 
@@ -155,7 +167,7 @@ public:
 
        Plot items might depend on the situation of the corresponding
        plot widget. By enabling an interest the plot item will be
-       notified, when the corrsponding attribute of the plot widgets
+       notified, when the corresponding attribute of the plot widgets
        has changed.
 
        \sa setItemAttribute(), testItemAttribute(), ItemInterest
@@ -188,24 +200,7 @@ public:
     enum RenderHint
     {
         //! Enable antialiasing
-        RenderAntialiased = 0x1,
-
-        /*!
-          Certain painter operations are faster, when using integers
-          than floats ( f.e raster paint engine: drawPolyline() ) - even
-          if the corresponding paint engine doesn't support floats at all.
-          So a plot item might decide to transform coordinates into integers 
-          for these paint engines.
-
-          By setting RenderFloats this optimization can be suppressed.
-
-          \note For paint engines, that can use floats ( SVG, PDF ) this
-                flag has no effect, because these are rendered always
-                as floats.
-
-          \sa QwtPainter::roundingAlignment()
-         */
-        RenderFloats = 0x2
+        RenderAntialiased = 0x1
     };
 
     //! Render hints
@@ -233,6 +228,9 @@ public:
 
     void setRenderHint( RenderHint, bool on = true );
     bool testRenderHint( RenderHint ) const;
+
+    void setRenderThreadCount( uint numThreads );
+    uint renderThreadCount() const;
 
     void setLegendIconSize( const QSize & );
     QSize legendIconSize() const;
@@ -303,5 +301,7 @@ private:
 Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotItem::ItemAttributes )
 Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotItem::ItemInterests )
 Q_DECLARE_OPERATORS_FOR_FLAGS( QwtPlotItem::RenderHints )
+
+Q_DECLARE_METATYPE( QwtPlotItem * )
 
 #endif

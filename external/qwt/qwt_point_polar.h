@@ -60,7 +60,7 @@ private:
 
 /*!
     Constructs a null point, with a radius and azimuth set to 0.0.
-    \sa QPointF::isNull
+    \sa QPointF::isNull()
 */
 inline QwtPointPolar::QwtPointPolar():
     d_azimuth( 0.0 ),

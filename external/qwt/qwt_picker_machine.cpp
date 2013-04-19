@@ -397,15 +397,17 @@ QList<QwtPickerMachine::Command> QwtPickerPolygonMachine::transition(
                 }
                 else
                 {
-                    cmdList += End;
-                    setState( 0 );
+                    cmdList += Append;
                 }
             }
             if ( eventPattern.mouseMatch( QwtEventPattern::MouseSelect2, 
                 static_cast<const QMouseEvent *>( event ) ) )
             {
                 if ( state() == 1 )
-                    cmdList += Append;
+                {
+                    cmdList += End;
+                    setState( 0 );
+                }
             }
             break;
         }
@@ -430,17 +432,91 @@ QList<QwtPickerMachine::Command> QwtPickerPolygonMachine::transition(
                 }
                 else
                 {
-                    cmdList += End;
-                    setState( 0 );
+                    cmdList += Append;
                 }
             }
             else if ( eventPattern.keyMatch( QwtEventPattern::KeySelect2, 
                 static_cast<const QKeyEvent *> ( event ) ) )
             {
                 if ( state() == 1 )
-                    cmdList += Append;
+                {
+                    cmdList += End;
+                    setState( 0 );
+                }
             }
             break;
+        }
+        default:
+            break;
+    }
+
+    return cmdList;
+}
+
+//! Constructor
+QwtPickerDragLineMachine::QwtPickerDragLineMachine():
+    QwtPickerMachine( PolygonSelection )
+{
+}
+
+//! Transition
+QList<QwtPickerMachine::Command> QwtPickerDragLineMachine::transition(
+    const QwtEventPattern &eventPattern, const QEvent *event )
+{
+    QList<QwtPickerMachine::Command> cmdList;
+
+    switch( event->type() )
+    {
+        case QEvent::MouseButtonPress:
+        {
+            if ( eventPattern.mouseMatch( QwtEventPattern::MouseSelect1,
+                static_cast<const QMouseEvent *>( event ) ) )
+            {
+                if ( state() == 0 )
+                {
+                    cmdList += Begin;
+                    cmdList += Append;
+                    cmdList += Append;
+                    setState( 1 );
+                }
+            }
+            break;
+        }
+        case QEvent::KeyPress:
+        {
+            if ( eventPattern.keyMatch( QwtEventPattern::KeySelect1,
+                static_cast<const QKeyEvent *> ( event ) ) )
+            {
+                if ( state() == 0 )
+                {
+                    cmdList += Begin;
+                    cmdList += Append;
+                    cmdList += Append;
+                    setState( 1 );
+                }
+                else
+                {
+                    cmdList += End;
+                    setState( 0 );
+                }
+            }
+            break;
+        }
+        case QEvent::MouseMove:
+        case QEvent::Wheel:
+        {
+            if ( state() != 0 )
+                cmdList += Move;
+
+            break;
+        }
+        case QEvent::MouseButtonRelease:
+        {
+            if ( state() != 0 )
+            {
+                cmdList += End;
+                setState( 0 );
+            }
         }
         default:
             break;

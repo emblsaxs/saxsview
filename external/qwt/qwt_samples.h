@@ -124,7 +124,7 @@ inline bool QwtSetSample::operator!=( const QwtSetSample &other ) const
     return !( *this == other );
 }
 
-// \return All values of the set added
+//! \return All values of the set added
 inline double QwtSetSample::added() const
 {
     double y = 0.0;
@@ -218,6 +218,7 @@ inline bool QwtOHLCSample::isValid() const
 
    For valid samples the limits of this interval are always low/high.
 
+   \return Bounding interval
    \sa isValid()
  */
 inline QwtInterval QwtOHLCSample::boundingInterval() const

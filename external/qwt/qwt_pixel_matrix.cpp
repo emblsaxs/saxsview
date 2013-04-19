@@ -12,7 +12,7 @@
 /*!
   \brief Constructor
 
-  \rect Bounding rectangle for the matrix
+  \param rect Bounding rectangle for the matrix
 */
 QwtPixelMatrix::QwtPixelMatrix( const QRect& rect ):
     QBitArray( qMax( rect.width() * rect.height(), 0 ) ),

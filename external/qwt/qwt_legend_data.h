@@ -18,11 +18,24 @@
 #include <qmap.h>
 
 /*!
-    \brief Attributes of an entry on a legend
+  \brief Attributes of an entry on a legend
+
+  QwtLegendData is an abstract container ( like QAbstractModel )
+  to exchange attributes, that are only known between to 
+  the plot item and the legend. 
+  
+  By overloading QwtPlotItem::legendData() any other set of attributes
+  could be used, that can be handled by a modified ( or completely 
+  different ) implementation of a legend.
+
+  \sa QwtLegend, QwtPlotLegendItem
+  \note The stockchart example implements a legend as a tree
+        with checkable items
  */
 class QWT_EXPORT QwtLegendData
 {
 public:
+    //! Mode defining how a legend entry interacts
     enum Mode
     {
         //! The legend item is not interactive, like a label
@@ -35,13 +48,19 @@ public:
         Checkable
     };
 
+    //! Identifier how to interprete a QVariant
     enum Role
     {
+        // The value is a Mode
         ModeRole, 
 
+        // The value is a title
         TitleRole, 
+
+        // The value is an icon
         IconRole, 
 
+        // Values < UserRole are reserved for internal use
         UserRole  = 32
     };
 

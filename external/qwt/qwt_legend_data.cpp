@@ -9,34 +9,65 @@
 
 #include "qwt_legend_data.h"
 
+//! Constructor
 QwtLegendData::QwtLegendData()
 {
 }
 
+//! Destructor
 QwtLegendData::~QwtLegendData()
 {
 }
 
+/*!
+  Set the legend attributes
+
+  QwtLegendData actually is a QMap<int, QVariant> with some
+  convenience interfaces
+
+  \param map Values
+  \sa values()
+ */
 void QwtLegendData::setValues( const QMap<int, QVariant> &map )
 {
     d_map = map;
 }
 
+/*!
+  \return Legend attributes
+  \sa setValues()
+ */
 const QMap<int, QVariant> &QwtLegendData::values() const
 {
     return d_map;
 }
 
+/*!
+  \param role Attribute role
+  \return True, when the internal map has an entry for role
+ */
 bool QwtLegendData::hasRole( int role ) const
 {
     return d_map.contains( role );
 }
 
+/*!
+  Set an attribute value
+
+  \param role Attribute role
+  \param data Attribute value
+
+  \sa value()
+ */
 void QwtLegendData::setValue( int role, const QVariant &data )
 {
     d_map[role] = data;
 }
 
+/*!
+  \param role Attribute role
+  \return Attribute value for a specific role
+ */
 QVariant QwtLegendData::value( int role ) const
 {
     if ( !d_map.contains( role ) )
@@ -45,11 +76,13 @@ QVariant QwtLegendData::value( int role ) const
     return d_map[role];
 }
 
+//! \return True, when the internal map is empty
 bool QwtLegendData::isValid() const
 {
     return !d_map.isEmpty();
 }
 
+//! \return Value of the TitleRole attribute
 QwtText QwtLegendData::title() const
 {
     QwtText text;
@@ -67,6 +100,7 @@ QwtText QwtLegendData::title() const
     return text;
 }
 
+//! \return Value of the IconRole attribute
 QwtGraphic QwtLegendData::icon() const
 {
     const QVariant iconValue = value( QwtLegendData::IconRole );
@@ -80,6 +114,7 @@ QwtGraphic QwtLegendData::icon() const
     return graphic;
 }
 
+//! \return Value of the ModeRole attribute
 QwtLegendData::Mode QwtLegendData::mode() const
 {
     const QVariant modeValue = value( QwtLegendData::ModeRole );

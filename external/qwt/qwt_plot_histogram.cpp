@@ -60,7 +60,6 @@ public:
   Constructor
   \param title Title of the histogram.
 */
-
 QwtPlotHistogram::QwtPlotHistogram( const QwtText &title ):
     QwtPlotSeriesItem( title )
 {
@@ -113,13 +112,31 @@ void QwtPlotHistogram::setStyle( HistogramStyle style )
 }
 
 /*!
-    Return the current style
+    \return Style of the histogram
     \sa HistogramStyle, setStyle()
 */
 QwtPlotHistogram::HistogramStyle QwtPlotHistogram::style() const
 {
     return d_data->style;
 }
+
+/*!
+  Build and assign a pen
+    
+  In Qt5 the default pen width is 1.0 ( 0.0 in Qt4 ) what makes it
+  non cosmetic ( see QPen::isCosmetic() ). This method has been introduced
+  to hide this incompatibility.
+    
+  \param color Pen color
+  \param width Pen width
+  \param style Pen style
+    
+  \sa pen(), brush()
+ */
+void QwtPlotHistogram::setPen( const QColor &color, qreal width, Qt::PenStyle style )
+{   
+    setPen( QPen( color, width, style ) );
+}   
 
 /*!
   Assign a pen, that is used in a style() depending way.
@@ -184,7 +201,7 @@ const QBrush &QwtPlotHistogram::brush() const
   \sa style(), symbol(), drawColumn(), pen(), brush()
 
   \note In applications, where different intervals need to be displayed
-        in a different way ( f.e different colors or even using differnt symbols)
+        in a different way ( f.e different colors or even using different symbols)
         it is recommended to overload drawColumn().
 */
 void QwtPlotHistogram::setSymbol( const QwtColumnSymbol *symbol )
@@ -285,12 +302,28 @@ void QwtPlotHistogram::setSamples(
 }
 
 /*!
+  Assign a series of samples
+    
+  setSamples() is just a wrapper for setData() without any additional
+  value - beside that it is easier to find for the developer.
+    
+  \param data Data
+  \warning The item takes ownership of the data object, deleting
+           it when its not used anymore.
+*/
+void QwtPlotHistogram::setSamples( 
+    QwtSeriesData<QwtIntervalSample> *data )
+{
+    setData( data );
+}
+
+/*!
   Draw a subset of the histogram samples
 
   \param painter Painter
   \param xMap Maps x-values into pixel coordinates.
   \param yMap Maps y-values into pixel coordinates.
-  \param canvasRect Contents rect of the canvas
+  \param canvasRect Contents rectangle of the canvas
   \param from Index of the first sample to be painted
   \param to Index of the last sample to be painted. If to < 0 the
          series will be painted to its last sample.
@@ -539,8 +572,11 @@ void QwtPlotHistogram::flushPolygon( QPainter *painter,
             polygon += QPointF( baseLine, polygon.last().y() );
             polygon += QPointF( baseLine, polygon.first().y() );
         }
+
         QwtPainter::drawPolygon( painter, polygon );
-        polygon.resize( polygon.size() - 2 );
+
+        polygon.pop_back();
+        polygon.pop_back();
     }
     if ( d_data->pen.style() != Qt::NoPen )
     {
@@ -608,7 +644,7 @@ QwtColumnRect QwtPlotHistogram::columnRect( const QwtIntervalSample &sample,
   \param sample Sample to be displayed
 
   \note In applications, where different intervals need to be displayed
-        in a different way ( f.e different colors or even using differnt symbols)
+        in a different way ( f.e different colors or even using different symbols)
         it is recommended to overload drawColumn().
 */
 void QwtPlotHistogram::drawColumn( QPainter *painter,
@@ -637,13 +673,14 @@ void QwtPlotHistogram::drawColumn( QPainter *painter,
 }
 
 /*!
-   A plain rectangle without pen using the brush()
+  A plain rectangle without pen using the brush()
 
-   \param index Index of the legend entry 
+  \param index Index of the legend entry 
                 ( ignored as there is only one )
-   \param size Icon size
+  \param size Icon size
+  \return A graphic displaying the icon
     
-   \sa QwtPlotItem::setLegendIconSize(), QwtPlotItem::legendData()
+  \sa QwtPlotItem::setLegendIconSize(), QwtPlotItem::legendData()
 */
 QwtGraphic QwtPlotHistogram::legendIcon( int index,
     const QSizeF &size ) const
