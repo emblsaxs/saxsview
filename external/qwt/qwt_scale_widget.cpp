@@ -899,6 +899,13 @@ int QwtScaleWidget::colorBarWidth() const
     return d_data->colorBar.width;
 }
 
+void QwtScaleWidget::setColorBarInterval( const QwtInterval &interval )
+{
+    d_data->colorBar.interval = interval;
+    if ( isColorBarEnabled() )
+        layoutScale();
+}
+
 /*!
   \return Value interval for the color bar
   \sa setColorMap(), colorMap()

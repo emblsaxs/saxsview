@@ -1,8 +1,8 @@
 Index: qwt_scale_widget.cpp
 ===================================================================
---- qwt_scale_widget.cpp	(revision 226)
+--- qwt_scale_widget.cpp	(revision 383)
 +++ qwt_scale_widget.cpp	(working copy)
-@@ -876,6 +876,13 @@
+@@ -899,6 +899,13 @@
      return d_data->colorBar.width;
  }
  
@@ -18,9 +18,9 @@ Index: qwt_scale_widget.cpp
    \sa setColorMap(), colorMap()
 Index: qwt_scale_widget.h
 ===================================================================
---- qwt_scale_widget.h	(revision 226)
+--- qwt_scale_widget.h	(revision 383)
 +++ qwt_scale_widget.h	(working copy)
-@@ -95,9 +95,10 @@
+@@ -96,9 +96,10 @@
      int colorBarWidth() const;
  
      void setColorMap( const QwtInterval &, QwtColorMap * );

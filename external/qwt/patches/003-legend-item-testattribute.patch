@@ -1,6 +1,6 @@
 Index: qwt_plot_legenditem.cpp
 ===================================================================
---- qwt_plot_legenditem.cpp	(revision 234)
+--- qwt_plot_legenditem.cpp	(revision 383)
 +++ qwt_plot_legenditem.cpp	(working copy)
 @@ -81,22 +81,23 @@
  
@@ -39,3 +39,14 @@ Index: qwt_plot_legenditem.cpp
  }
  
  QSize QwtLegendLayoutItem::sizeHint() const
+@@ -736,7 +737,9 @@
+     const QwtPlotItem *plotItem, const QwtLegendData &data, 
+     const QRectF &rect ) const
+ {
+-    Q_UNUSED( plotItem );
++    // No point trying to draw something that is not visible ...
++    if (!plotItem->isVisible())
++        return;
+ 
+     const int m = d_data->itemMargin;
+     const QRectF r = rect.toRect().adjusted( m, m, -m, -m );

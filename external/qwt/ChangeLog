@@ -1,5 +1,14 @@
 2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* patches/003-legend-item-testattribute.patch: Updated.
+	* patches/004-set-colorbar-interval.patch: Updated.
+	* qwt_scale_widget.h: Applied updated patch.
+	* qwt_scale_widget.cpp: Likewise.
+	* qwt_plot_legenditem.cpp: Likewise.
+	* CMakeLists.txt: Added missing file.
+
+2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* Imported r1698 from qwt/trunk.
 	* CMakeLists.txt: Updated file list.
 

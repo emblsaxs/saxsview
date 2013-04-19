@@ -8,7 +8,8 @@ qt4_wrap_cpp (MOC qwt_abstract_slider.h qwt_analog_clock.h qwt_compass.h
                   qwt_plot_zoomer.h qwt_scale_widget.h qwt_slider.h
                   qwt_text_label.h qwt_thermo.h qwt_wheel.h
                   qwt_plot_renderer.h qwt_sampling_thread.h
-                  qwt_abstract_legend.h qwt_legend_label.h)
+                  qwt_abstract_legend.h qwt_legend_label.h
+                  qwt_abstract_scale.h)
 
 set (HEADERS qwt.h qwt_dial_needle.h qwt_plot_magnifier.h
              qwt_scale_div.h qwt_abstract_scale.h qwt_plot_abstract_barchart.h
