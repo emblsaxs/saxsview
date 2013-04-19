@@ -1,3 +1,8 @@
+2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_image.cpp (setupCanvas): Updated to match changes in qwt.
+	* saxsview_plot.cpp (setupCanvas): Likewise.
+
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_transformation.cpp (dtor): Added missing dtor implementation.

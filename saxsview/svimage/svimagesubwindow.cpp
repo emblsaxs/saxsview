@@ -41,7 +41,7 @@
 
 class ImagePicker : public QwtPlotPicker {
 public:
-  ImagePicker(SaxsviewFrame *f, QwtPlotCanvas *canvas)
+  ImagePicker(SaxsviewFrame *f, QWidget *canvas)
    : QwtPlotPicker(canvas), frame(f) {
   }
 

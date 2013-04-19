@@ -43,7 +43,7 @@
 
 #include <QtGui>
 
-class Log10ScaleEngine : public QwtLog10ScaleEngine {
+class Log10ScaleEngine : public QwtLogScaleEngine {
 public:
   //
   // Try to avoid that the color scale maps out the range
@@ -55,9 +55,9 @@ public:
   QwtScaleDiv divideScale(double x1, double x2,
                           int numMajorSteps, int numMinorSteps,
                           double stepSize = 0.0) const {
-    return QwtLog10ScaleEngine::divideScale(qMax(1.0, x1), x2,
-                                            numMajorSteps, numMinorSteps,
-                                            stepSize);
+    return QwtLogScaleEngine::divideScale(qMax(1.0, x1), x2,
+                                          numMajorSteps, numMinorSteps,
+                                          stepSize);
   }
 };
 
@@ -83,6 +83,7 @@ public:
   Saxsview::ColorMap colorMap;
 
   QwtPlotScaleItem *scales[QwtPlot::axisCnt];
+  QwtPlotCanvas *canvas;
   QwtPlotPanner *panner;
   QwtPlotZoomer *zoomer;
   QwtPlotRescaler *rescaler;
@@ -95,14 +96,17 @@ SaxsviewImage::Private::Private()
 }
 
 void SaxsviewImage::Private::setupCanvas(SaxsviewImage *image) {
-  // initial background color
-  image->setAutoFillBackground(true);
-  image->setPalette(Qt::white);
-  image->canvas()->setFrameStyle(QFrame::NoFrame);
-  image->canvas()->setLineWidth(1);
+  canvas = new QwtPlotCanvas(image);
+  canvas->setFrameStyle(QFrame::NoFrame);
+  canvas->setLineWidth(1);
 
   // margin around the plot
   image->setContentsMargins(12, 12, 12, 12);
+
+  // initial background color
+  image->setAutoFillBackground(true);
+  image->setPalette(Qt::white);
+  image->setCanvas(canvas);
 }
 
 void SaxsviewImage::Private::setupScales(SaxsviewImage *image) {
@@ -241,9 +245,9 @@ void SaxsviewImage::Private::updateScaleAndColor(SaxsviewImage *image,
 SaxsviewImage::SaxsviewImage(QWidget *parent)
  : QwtPlot(parent), p(new Private) {
 
+  p->setupCanvas(this);
   p->setupPanner(this);
   p->setupZoomer(this);
-  p->setupCanvas(this);
   p->setupScales(this);
 }
 

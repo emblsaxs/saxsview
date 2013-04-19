@@ -47,7 +47,7 @@ class SaxsviewPlot::Private {
 public:
   Private(SaxsviewPlot *p)
    : plot(p), transformation(0), antiAliasing(false), blockReplot(false),
-     legend(0L), marker(0L), panner(0L), zoomer(0L),
+     canvas(0L), legend(0L), marker(0L), panner(0L), zoomer(0L),
      currentLineColor(0), currentErrorBarColor(0) {
   }
 
@@ -67,6 +67,7 @@ public:
   bool antiAliasing;
   bool blockReplot;
 
+  QwtPlotCanvas *canvas;
   QwtPlotLegendItem *legend;
   QwtPlotScaleItem *scales[QwtPlot::axisCnt];
   QwtPlotMarker *marker;
@@ -78,11 +79,14 @@ public:
 };
 
 void SaxsviewPlot::Private::setupCanvas() {
+  canvas = new QwtPlotCanvas(plot);
+  canvas->setFrameStyle(QFrame::NoFrame);
+  canvas->setLineWidth(1);
+
   // initial background color
   plot->setAutoFillBackground(true);
   plot->setPalette(Qt::white);
-  plot->canvas()->setFrameStyle(QFrame::NoFrame);
-  plot->canvas()->setLineWidth(1);
+  plot->setCanvas(canvas);
 }
 
 void SaxsviewPlot::Private::setupLegend() {
