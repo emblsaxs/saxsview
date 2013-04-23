@@ -275,19 +275,11 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   if (code || concentration) {
     line = lines_create();
 
-    if (description) {
-      lines_printf(line, "Sample: %.15s", saxs_property_value(description));
-    }
-    if (concentration) {
-      char *oldline = strdup(line->line_buffer);
-      lines_printf(line, "%s  c= %s mg/ml", oldline, saxs_property_value(concentration));
-      free(oldline);
-    }
-    if (code) {
-      char *oldline = strdup(line->line_buffer);
-      lines_printf(line, "%s  Code: %.8s", oldline, saxs_property_value(code));
-      free(oldline);
-    }
+    lines_printf(line, "Sample: %.15s  c= %s mg/ml  Code: %.8s",
+                 description ? saxs_property_value(description) : "",
+                 concentration ? saxs_property_value(concentration): "0.0",
+                 code ? saxs_property_value(code) : "");
+
     lines_append(lines, line);
   }
 

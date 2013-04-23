@@ -1,3 +1,8 @@
+2013-04-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_dat.c (atsas_dat_write_header): When writing the header,
+	make sure that all basic fields are there, even if empty.
+
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_dat.c: Bumped copyright years.
