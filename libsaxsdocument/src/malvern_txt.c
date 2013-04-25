@@ -180,8 +180,6 @@ malvern_txt_parse_data(struct saxs_document *doc,
 
     saxs_curve *c = saxs_document_curve(doc);
     while (!duplicate && c) {
-      printf("compare %d vs '%s': %d\n", i, saxs_curve_title(c), saxs_curve_compare(curves[i], c));
-      
       if (saxs_curve_compare(curves[i], c) == 0)
         duplicate = 1;
 

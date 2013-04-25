@@ -1,5 +1,10 @@
 2013-04-25  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/malvern_txt.c (malvern_txt_parse_data): Removed left
+	over debug statement.
+
+2013-04-25  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/saxsdocument.h (saxs_document_copy_curve): New.
 	(saxs_curve_compare): New.
 	(saxs_curve_set_title): New.
