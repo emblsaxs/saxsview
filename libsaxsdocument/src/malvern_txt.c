@@ -33,9 +33,24 @@
 #include <float.h>
 #include <assert.h>
 
-#ifndef DBL_EPSILON
-#define DBL_EPSILON 1e-16
-#endif
+/*
+ * Count the TABs to determine the number of columns
+ * in a line.
+ */
+static int
+malvern_txt_count_columns(struct line *l) {
+  if (l && l->line_buffer) {
+    int n = 1;
+    char *c = l->line_buffer;
+
+    while (*c)
+      n += (*c++ == '\t');
+
+    return n;
+
+  } else
+    return 0;
+}
 
 
 /*
@@ -47,15 +62,7 @@ malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
   int i = 0;
   char *c, *buffer, *p;
 
-  /*
-   * Count the TABs to allocate the number of entries in
-   * the 'columns' vector.
-   */
-  *n = 1;
-  c = l->line_buffer;
-  while (*c)
-    *n += (*c++ == '\t');
-
+  *n = malvern_txt_count_columns(l);
   *columns = (char**)malloc(*n * sizeof(char*));
 
   /* No column label is larger than the whole header string. */
@@ -75,41 +82,31 @@ malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
   free(buffer);
 }
 
-static int
-malvern_txt_parse_column_values(struct line *l, double *values, int n) {
-  int cnt = 0;
-  char *p;
+static void
+malvern_txt_parse_column_values(struct line *l, double **values, int *n) {
+  *n = malvern_txt_count_columns(l);
+  *values = (double*)malloc(*n * sizeof(double));
 
-  if (!l || !l->line_buffer)
-    return 0;
+  if (*n > 0) {
+    int k = 0;
+    char *p = l->line_buffer;
 
-  p = l->line_buffer;
-  while (*p) {
-    assert(cnt < n);
+    while (*p) {
+      if (sscanf(p, "%lf", &(*values)[k]) != 1)
+        break;
 
-    if (sscanf(p, "%lf", &values[cnt]) != 1)
-      break;
+      k += 1;
 
-    /*
-     * It was found that some files may have more data columns than 
-     * header entries. However, this seems not to be extra data, but
-     * simply a duplicated column. Thus, if two or more consecutive
-     * values are exactly identical, we ignore every one but the first.
-     */
-    if (cnt == 0 || fabs(values[cnt-1] - values[cnt]) > DBL_EPSILON)
-      cnt += 1;
+      /* Skip leading whitespace, if any. */
+      while (*p && isspace(*p)) ++p;
 
-    /* Skip leading whitespace, if any. */
-    while (*p && isspace(*p)) ++p;
+      /* Skip the floating point value until the next separator is found. */
+      while (*p && !isspace(*p)) ++p;
 
-    /* Skip the floating point value until the next separator is found. */
-    while (*p && !isspace(*p)) ++p;
-
-    /* Skip all consecutive separators up to the next value (think " , "). */
-    while (*p && isspace(*p)) ++p;
+      /* Skip all consecutive separators up to the next value (think " , "). */
+      while (*p && isspace(*p)) ++p;
+    }
   }
-
-  return cnt;
 }
 
 
@@ -126,19 +123,35 @@ malvern_txt_parse_header(struct saxs_document *doc,
 static int
 malvern_txt_parse_data(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
-  int i, n, m;
+
+  int i, j, n;
   char **headers = NULL;
-  struct saxs_curve **curves;
   double *values;
+
+  /*
+   * Read everything into a temporary document first.
+   * It was found that some files may have more data columns than 
+   * header entries. However, this seems not to be extra data, but
+   * simply a duplicated column. Thus, once everything is parsed
+   * into the temporary document, compare the curves, drop duplicates
+   * and copy unique ones into the actual document with the correct
+   * header title.
+   */
+  struct saxs_document *tmpdoc;
+  struct saxs_curve **curves;
 
   /* The list of column names. */
   malvern_txt_parse_column_headers(firstline, &headers, &n);
   firstline = firstline->next;
 
-  /* The list of curves. */
-  curves = (struct saxs_curve **) malloc(n * sizeof(struct saxs_curve*));
-  for (i = 0; i < n; ++i)
-    curves[i] = saxs_document_add_curve(doc, headers[i],
+  /*
+   * An oversized list of curves to accomodate for duplicate columns
+   * (with temporary titles).
+   */
+  tmpdoc = saxs_document_create();
+  curves = (struct saxs_curve **) malloc(2 * n * sizeof(struct saxs_curve*));
+  for (i = 0; i < 2*n; ++i)
+    curves[i] = saxs_document_add_curve(tmpdoc, "tmp",
                                         SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
   /*
@@ -149,20 +162,44 @@ malvern_txt_parse_data(struct saxs_document *doc,
    * It is assumed that the first column represents the x-axis; here
    * it should be the retention volume.
    */
-  values = (double*) malloc(n * sizeof(double));
   while (firstline != lastline) {
-    m = malvern_txt_parse_column_values(firstline, values, n);
-    for (i = 1; i < m; ++i)
+    malvern_txt_parse_column_values(firstline, &values, &n);
+    for (i = 1; i < n; ++i)
       saxs_curve_add_data(curves[i], values[0], 0.0, values[i], 0.0);
 
+    free(values);
     firstline = firstline->next;
   }
+
+  /*
+   * Compare the curves, copy the unique ones to the original document.
+   */
+  j = 1;
+  for (i = 0; i < saxs_document_curve_count(tmpdoc); ++i) {
+    int duplicate = 0;
+
+    saxs_curve *c = saxs_document_curve(doc);
+    while (!duplicate && c) {
+      printf("compare %d vs '%s': %d\n", i, saxs_curve_title(c), saxs_curve_compare(curves[i], c));
+      
+      if (saxs_curve_compare(curves[i], c) == 0)
+        duplicate = 1;
+
+      c = saxs_curve_next(c);
+    }
+
+    if (!duplicate && saxs_curve_data_count(curves[i]) > 0) {
+      c = saxs_document_copy_curve(doc, curves[i]);
+      saxs_curve_set_title(c, headers[j++]);
+    }
+  }
+
+  saxs_document_free(tmpdoc);
 
   for (i = 0; i < n; ++i)
     free(headers[i]);
 
   free(headers);
-  free(values);
   free(curves);
 
   return 0;

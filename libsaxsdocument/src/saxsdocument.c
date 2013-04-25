@@ -29,6 +29,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <math.h>
+
+#ifndef DBL_EPSILON
+#define DBL_EPSILON 1e-16
+#endif
+
 
 struct saxs_document {
   char *doc_filename;
@@ -245,9 +251,45 @@ saxs_curve_title(saxs_curve *curve) {
   return curve ? curve->curve_title : NULL;
 }
 
+void
+saxs_curve_set_title(saxs_curve *curve, const char *title) {
+  if (curve) {
+    if (curve->curve_title)
+      free(curve->curve_title);
+
+    if (title)
+      curve->curve_title = strdup(title);
+    else
+      curve->curve_title = NULL;
+  }
+}
+
 int
 saxs_curve_type(saxs_curve *curve) {
   return curve ? curve->curve_type : -1;
+}
+
+int
+saxs_curve_compare(saxs_curve *a, saxs_curve *b) {
+  saxs_data *da, *db;
+
+  if (saxs_curve_data_count(a) != saxs_curve_data_count(b))
+    return 1;
+
+  da = saxs_curve_data(a);
+  db = saxs_curve_data(b);
+  while (da && db) {
+    if (fabs(da->x - db->x) > DBL_EPSILON
+         || fabs(da->x_err - db->x_err) > DBL_EPSILON
+         || fabs(da->y - db->y) > DBL_EPSILON
+         || fabs(da->y_err - db->y_err) > DBL_EPSILON)
+      return 1;
+
+    da = da->next;
+    db = db->next;
+  }
+
+  return 0;
 }
 
 int
@@ -321,6 +363,23 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
   doc->doc_curve_count += 1;
 
   return curve;
+}
+
+saxs_curve*
+saxs_document_copy_curve(saxs_document *doc, saxs_curve *in) {
+  saxs_curve *out = NULL;
+
+  if (in) {
+    out = saxs_document_add_curve(doc, in->curve_title, in->curve_type);
+
+    saxs_data *data = saxs_curve_data(in);
+    while (data) {
+      saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
+      data = data->next;
+    }
+  }
+
+  return out;
 }
 
 void saxs_curve_add_data(saxs_curve *curve,

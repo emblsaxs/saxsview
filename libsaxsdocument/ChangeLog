@@ -1,6 +1,22 @@
-2013-04-27  Daniel Franke  <dfranke@users.sourceforge.net>
+2013-04-25  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* atsas_dat.c (atsas_dat_write_header): When writing the header,
+	* src/saxsdocument.h (saxs_document_copy_curve): New.
+	(saxs_curve_compare): New.
+	(saxs_curve_set_title): New.
+	* src/saxsdocument.c (saxs_document_copy_curve): New.
+	(saxs_curve_compare): New.
+	(saxs_curve_set_title): New.
+	* src/malvern_txt.c (malvern_txt_count_columns): New.
+	(malvern_txt_parse_column_headers): Use new function.
+	(malvern_txt_parse_column_values): Parse as many columns
+	as there are, do not drop perceived duplicates.
+	(malvern_txt_parse_data): Read everything into a temporary
+	document, then copy non-duplicate curves and set the correct
+	titles.
+
+2013-04-23  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (atsas_dat_write_header): When writing the header,
 	make sure that all basic fields are there, even if empty.
 
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>

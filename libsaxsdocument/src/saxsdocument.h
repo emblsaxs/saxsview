@@ -225,6 +225,10 @@ saxs_document_property_find_first(saxs_document *doc, const char *name);
 saxs_curve*
 saxs_document_add_curve(saxs_document *doc, const char *title, int type);
 
+saxs_curve*
+saxs_document_copy_curve(saxs_document *doc, saxs_curve *in);
+
+
 /**
  * @brief The number of curves in a document.
  *
@@ -250,6 +254,9 @@ saxs_curve_find_next(saxs_curve *curve, int type);
 const char*
 saxs_curve_title(saxs_curve *curve);
 
+void
+saxs_curve_set_title(saxs_curve *curve, const char *title);
+
 int
 saxs_curve_type(saxs_curve *curve);
 
@@ -266,6 +273,9 @@ saxs_curve_data(saxs_curve *curve);
 
 saxs_data*
 saxs_data_next(saxs_data *data);
+
+int
+saxs_curve_compare(saxs_curve *a, saxs_curve *b);
 
 double
 saxs_data_x(saxs_data *data);
