@@ -309,6 +309,26 @@ int atsas_out_read(struct saxs_document *doc,
   struct line *scattering_begin, *probability_begin, *footer;
 
   /*
+   * .out files may come with multiple repeated data sections,
+   * i.e. multiple full GNOM runs are being appended into the
+   * same file. Some people would call it a feature, others
+   * would consider it a bug. Thus, check if there are multiple
+   * data sections first, if yes, this "format" is not supported.
+   */
+  int n = 0;
+  current = firstline;
+  while(current) {
+    if (strstr(current->line_buffer,
+                 "S          J EXP       ERROR       J REG       I REG"))
+      n += 1;
+
+    current = current->next;
+  }
+
+  if (n > 1)
+    return ENOTSUP;
+
+  /*
    * .out-files were meant to be human readable and are thus
    * "nicely" formatted for this purpose.
    *
