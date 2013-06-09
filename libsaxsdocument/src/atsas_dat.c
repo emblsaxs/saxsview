@@ -526,18 +526,27 @@ atsas_header_txt_read(struct saxs_document *doc,
   /*
    * A header text is special in the sense that each and every line
    * must be formatted as "key : value". To make sure that this is
-   * the case, verify that each line has a ':' or is empty.
+   * the case, verify that each line has a ':' or is empty - but
+   * avoid completely empty files.
    *
    * This is particularly useful when reading buffers of unknown
    * format (e.g. stdin) and this reader is not the right one to
    * handle things.
    */
-  struct line *l = firstline;
-  while (l && l != lastline
-           && (strchr(l->line_buffer, ':') || strlen(l->line_buffer) == 0))
-    l = l->next;
+  int key_value_pairs = 0;
 
-  if (l != lastline)
+  struct line *l = firstline;
+  while (l && l != lastline) {
+    if (strchr(l->line_buffer, ':'))
+      key_value_pairs += 1;
+
+    else if (strlen(l->line_buffer) > 0)
+      break;
+
+    l = l->next;
+  }
+
+  if (key_value_pairs == 0 || l != lastline)
     return ENOTSUP;
   
   while (firstline && firstline != lastline) {

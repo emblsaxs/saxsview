@@ -1,3 +1,10 @@
+2013-06-09  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c (lines_write): Check for and stop after errors
+	on write, e.g. on disk full.
+	* src/atsas_dat.c (atsas_header_txt_read): Make sure that a header
+	contains at least one key-value pair, thus avoid empty files.
+
 2013-04-30  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_out.c (atsas_out_read): Scan the input lines for multiple data

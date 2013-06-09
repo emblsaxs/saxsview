@@ -192,19 +192,24 @@ int lines_read(struct line **lines, const char *filename) {
 }
 
 int lines_write(struct line *lines, const char *filename) {
+  int res = 0;
   struct line *line;
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "w") : stdout;
-  if (!fd)
-    return errno;
+  if (fd) {
+    for (line = lines; line; line = line->next)
+      if (fprintf(fd, "%s\n", line->line_buffer) < 0) {
+        res = errno;
+        break;
+      }
 
-  for (line = lines; line; line = line->next)
-    fprintf(fd, "%s\n", line->line_buffer);
+    if (strcmp(filename, "-"))
+      fclose(fd);
 
-  if (strcmp(filename, "-"))
-    fclose(fd);
+  } else
+    res = errno;
 
-  return 0;
+  return res;
 }
 
 
