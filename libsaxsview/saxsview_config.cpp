@@ -42,8 +42,42 @@ SaxsviewConfig::SaxsviewConfig() {
   // Check the config, create default values and update existing ones,
   // if necessary.
   //
-  // TODO: set a version flag and check it?
-  //
+  const int currentConfigVersion = 1;
+  int configVersion = settings().value("configVersion", -1).toInt();
+
+  if (configVersion < currentConfigVersion) {
+    QFile configFile(settings().fileName());
+    configFile.open(QIODevice::ReadOnly);
+    QString configText = configFile.readAll();
+    configFile.close();
+
+    QMessageBox msg;
+    msg.setIcon(QMessageBox::Warning);
+    msg.setWindowTitle("Saxsview Configuration Update");
+    msg.setText("The saxsview configuration file format changed.");
+    msg.setInformativeText("The saxsview configuration file format changed "
+                           "in an incompatible way. Your configuration file "
+                           "needs to be updated to the latest version. Any "
+                           "changes you made previously will be lost. The "
+                           "current configuration is available in the "
+                           "detailed section for reference.\n"
+                           "\n"
+                          "Proceed?");
+    msg.setDetailedText(configText);
+    msg.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msg.exec();
+
+    //
+    // FIXME: qApp->exit does not work, there is no event loop yet.
+    //        Is there a lesss brutal way than exit() to achieve this?
+    //
+    if (msg.standardButton(msg.clickedButton()) == QMessageBox::No)
+      exit(1);
+
+    settings().clear();
+    settings().setValue("configVersion", currentConfigVersion);
+  }
+
   if (!settings().contains("Templates/template/size"))
     setDefaultCurveTemplates();
 

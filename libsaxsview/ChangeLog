@@ -1,3 +1,9 @@
+2013-06-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_config.cpp (SaxsviewConfig): Check a configuration version
+	flag, possibly inform the user that the configuration needs to be
+	updated if incompatible changes have been made.
+
 2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_image.cpp (setupCanvas): Updated to match changes in qwt.
