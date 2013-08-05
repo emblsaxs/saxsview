@@ -1,3 +1,8 @@
+2013-08-05  Al Kikhney  <plmnnk@users.sourceforge.net>
+
+	* src/atsas_out.c (parse_scattering_data): Read the regularized curve 
+	(J REG) in addition to the desmeared curve (I REG).
+
 2013-06-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (lines_write): Check for and stop after errors

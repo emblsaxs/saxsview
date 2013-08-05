@@ -220,9 +220,10 @@ static int parse_scattering_data(struct saxs_document *doc,
                                  struct line *firstline,
                                  struct line *lastline) {
 
-  saxs_curve *curve_exp, *curve_reg;
+  saxs_curve *curve_exp, *curve_reg, *curve_des;
   curve_exp = saxs_document_add_curve(doc, "data", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
   curve_reg = saxs_document_add_curve(doc, "fit", SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+  curve_des = saxs_document_add_curve(doc, "desmeared", SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
 
   /*
    * Skip empty and header lines until extrapolated data is
@@ -235,11 +236,12 @@ static int parse_scattering_data(struct saxs_document *doc,
     if (sscanf(firstline->line_buffer, "%lf %lf %lf %lf %lf",
                &s, &jexp, &err, &jreg, &ireg) == 5) {
       saxs_curve_add_data(curve_exp, s, 0.0, jexp, err);
-      saxs_curve_add_data(curve_reg, s, 0.0, ireg, 0.0);
+      saxs_curve_add_data(curve_reg, s, 0.0, jreg, 0.0);
+      saxs_curve_add_data(curve_des, s, 0.0, ireg, 0.0);
 
     } else if (sscanf(firstline->line_buffer, "%lf %lf",
                       &s, &ireg) == 2) {
-      saxs_curve_add_data(curve_reg, s, 0.0, ireg, 0.0);
+      saxs_curve_add_data(curve_des, s, 0.0, ireg, 0.0);
 
     }
 
