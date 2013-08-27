@@ -1,3 +1,8 @@
+2013-08-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (parse_basic_information): Re-use code as description
+	if no description was found.
+
 2013-08-05  Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* src/atsas_out.c (parse_scattering_data): Read the regularized curve 

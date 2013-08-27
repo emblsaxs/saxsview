@@ -92,6 +92,17 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
       p = code;
       while (isspace(*p)) ++p;
       saxs_document_add_property(doc, "sample-code", p);
+
+      /*
+       * There may be cases where the description is empty.
+       * If this is the case, reuse the code as description
+       * to avoid issues later on (see atsas_dat_parse_footer
+       * where it is assumed that all three values are present).
+       */
+      if (saxs_document_property_find_first(doc, "sample-concentration")
+           && saxs_document_property_find_first(doc, "sample-code")
+           && !saxs_document_property_find_first(doc, "sample-description"))
+        saxs_document_add_property(doc, "sample-description", p);
     }
   }
 }
