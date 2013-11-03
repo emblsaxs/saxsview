@@ -1,3 +1,7 @@
+2013-11-03  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/tiff.c (saxs_image_tiff_read): Handle 16bit unsigned TIFFs.
+
 2013-04-16  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* cbf.c (saxs_image_cbf_read_low_level): Improved checking of library

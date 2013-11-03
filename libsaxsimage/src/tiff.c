@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <limits.h>
-#include <assert.h>
+#include <errno.h>
 
 /*
  * Define a set of custom fields.
@@ -161,9 +161,10 @@ static void saxs_image_tiff_read_header(saxs_image *image, TIFF *tiff,
 int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   TIFF *tiff;
   tstrip_t strip;
-  uint16 bpp, spp;
+  tdata_t *data;
+
+  uint16 bpp, spp, format;
   uint32 width, height, x, y;
-  int *data;
 
   tiff_initialize();
 
@@ -180,24 +181,65 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
   if (TIFFGetField(tiff, TIFFTAG_SAMPLESPERPIXEL, &spp) == 0)
     spp = 1;
 
+  /*
+   * MAR165 CCD cameras write 16bit unsigned TIFF images,
+   * but do not seem to set the SAMPLEFORMAT to UINT as would
+   * be appropriate (according to an example image from APS).
+   *
+   * Pilatus images are 32bit signed TIFF images. The Pilatus
+   * software seems to write the SAMPLEFORMAT, but just in case
+   * we determine the format according to bpp if not defined.
+   */
+  if (TIFFGetField(tiff, TIFFTAG_SAMPLEFORMAT, &format) == 0) {
+    if (bpp == 16)
+      format = SAMPLEFORMAT_UINT;
+    else if (bpp == 32)
+      format = SAMPLEFORMAT_INT;
+    else
+      format = SAMPLEFORMAT_VOID;
+  }
+
   data = _TIFFmalloc(width * height * bpp/CHAR_BIT * spp);
 
   for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)
     TIFFReadEncodedStrip(tiff,
                          strip,
                          ((char*)data) + strip * TIFFStripSize(tiff),
-                         (tsize_t) -1);
+                         (tsize_t) - 1);
 
   saxs_image_set_size(image, width, height);
-  for (x = 0; x < width; ++x)
-    for (y = 0; y < height; ++y)
-      if (spp == 1) {
-        saxs_image_set_value(image, x, height - y - 1, *(data + y * width + x) * 1.0);
 
-      } else if (spp == 3) {
-        unsigned char *rgb = (char *)(data) + (y * width + x)*3;
-        saxs_image_set_value(image, x, height - y - 1, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
-      }
+  if (spp == 1) {
+    /*
+     * Sometimes C++-style templates would come in handy.
+     * Instead we need to make do with the preprocessor;
+     * add cases as needed.
+     */
+#define SET_VALUE(type)                                               \
+  do {                                                                \
+    for (x = 0; x < width; ++x)                                       \
+      for (y = 0; y < height; ++y)                                    \
+        saxs_image_set_value(image, x, height - y - 1,                \
+                             (double)(*((type*)data + y * width + x))); \
+  } while(0)
+
+    if (format == SAMPLEFORMAT_UINT && bpp == 16)         /* MAR165 CCD */
+      SET_VALUE(uint16);
+    else if (format == SAMPLEFORMAT_INT && bpp == 16)
+      SET_VALUE(int16);
+    else if (format == SAMPLEFORMAT_UINT && bpp == 32)
+      SET_VALUE(uint32);
+    else if (format == SAMPLEFORMAT_INT && bpp == 32)     /* PILATUS */
+      SET_VALUE(int32);
+    else
+      return ENOENT;
+
+#undef SET_VALUE
+
+  } else if (spp == 3) {
+    unsigned char *rgb = (char *)(data) + (y * width + x)*3;
+    saxs_image_set_value(image, x, height - y - 1, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
+  }
 
   TIFFClose(tiff);
   _TIFFfree(data);
