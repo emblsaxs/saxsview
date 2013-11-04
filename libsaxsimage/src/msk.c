@@ -70,7 +70,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename) {
   if (fseek(fd, 1024, SEEK_SET) != 0)
     goto error;
 
-  datasize = (width / (sizeof(int) * CHAR_BIT) + 1) * sizeof(int) * height;
+  datasize = ceil(width / (double)(sizeof(int) * CHAR_BIT)) * sizeof(int) * height;
   data     = malloc(datasize);
   if (fread(data, datasize, 1, fd) != 1)
     goto error;
