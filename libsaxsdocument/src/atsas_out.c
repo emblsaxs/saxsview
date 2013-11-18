@@ -320,8 +320,8 @@ int atsas_out_read(struct saxs_document *doc,
   int n = 0;
   current = firstline;
   while(current) {
-    if (strstr(current->line_buffer,
-                 "S          J EXP       ERROR       J REG       I REG"))
+    if (strcmp(current->line_buffer,
+                 "S          J EXP       ERROR       J REG       I REG") == 0)
       n += 1;
 
     current = current->next;
@@ -344,8 +344,8 @@ int atsas_out_read(struct saxs_document *doc,
    */
   current = firstline;
   while(current
-        && !strstr(current->line_buffer,
-                   "S          J EXP       ERROR       J REG       I REG"))
+        && strcmp(current->line_buffer,
+                  "S          J EXP       ERROR       J REG       I REG") != 0)
     current = current->next;
 
   scattering_begin = current;
