@@ -1,5 +1,19 @@
 2013-11-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/columns.h (struct line): Cache the column values.
+	(saxs_reader_columns_values): New.
+	* src/columns.c (lines_create): Initialise the column values.
+	(lines_printf): Reset column values.
+	(lines_free): Free column values.
+	(columns_tokenize): New; does what saxs_reader_columns_count used to do.
+	(saxs_reader_columns_count): Only return cached column count.
+	(saxs_reader_columns_values): New, return cached column values.
+	(saxs_reader_columns_scan): Tokenize lines.
+	(columns_parse): Removed.
+	(saxs_reader_columns_parse): Use cached values.
+
+2013-11-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/columns.h (struct line): Cache the column count.
 	* src/columns.c (lines_create): Initialise the column count.
 	(lines_printf): Reset column count.

@@ -40,6 +40,9 @@ struct line {
   /* Number of data columns found. */
   int line_column_count;
 
+  /* The values found. */
+  double *line_column_values;
+
   struct line *next;
 };
 
@@ -162,6 +165,12 @@ saxs_reader_columns_parse(struct saxs_document *doc,
 int
 saxs_reader_columns_count(struct line *l);
 
+/**
+ * @brief Get the data values in a given line.
+ * @param l
+ * @returns The data values in line @a l.
+ */
+double* saxs_reader_columns_values(struct line *l);
 
 /**
  * @brief Count the number of data values in a file.

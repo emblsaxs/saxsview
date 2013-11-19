@@ -48,10 +48,11 @@ struct line* lines_create() {
 
   line = malloc(sizeof(struct line));
   if (line) {
-    line->line_column_count = -1;
-    line->line_length       = 80;
-    line->line_buffer       = malloc(line->line_length);
-    line->next              = NULL;
+    line->line_column_count  = -1;
+    line->line_column_values = NULL;
+    line->line_length        = 80;
+    line->line_buffer        = malloc(line->line_length);
+    line->next               = NULL;
 
     if (line->line_buffer) {
       memset(line->line_buffer, 0, line->line_length);
@@ -110,7 +111,12 @@ int lines_printf(struct line *l, const char *fmt, ...) {
 
   free(l->line_buffer);
   l->line_buffer       = buffer;
+
   l->line_column_count = -1;
+  if (l->line_column_values) {
+    free(l->line_column_values);
+    l-> line_column_values = NULL;
+  }
 
   return n;
 }
@@ -222,6 +228,9 @@ void lines_free(struct line *lines) {
     if (line->line_buffer)
       free(line->line_buffer);
 
+    if (line->line_column_values)
+      free(line->line_column_values);
+
     oldline = line;
     line = line->next;
 
@@ -230,17 +239,17 @@ void lines_free(struct line *lines) {
 }
 
 
-int saxs_reader_columns_count(struct line *l) {
+static void columns_tokenize(struct line *l) {
   int cnt = 0;
   char *p;
   double value;
+  double *values = NULL;
 
   if (!l || strlen(l->line_buffer) == 0)
-    return 0;
+    return;
 
-  /* If we already counted the columns before, use the cached value. */
   if (l->line_column_count >= 0)
-    return l->line_column_count;
+    return;
 
   p = l->line_buffer;
   while (*p) {
@@ -248,6 +257,8 @@ int saxs_reader_columns_count(struct line *l) {
       break;
 
     cnt += 1;
+    values = realloc(values, cnt * sizeof(double));
+    values[cnt-1] = value;
 
     /* Skip leading whitespace, if any. */
     while (*p && isspace(*p)) ++p;
@@ -267,9 +278,25 @@ int saxs_reader_columns_count(struct line *l) {
    * then this is not a data line. A data line contains only numbers and
    * whitespaces.
    */
-  l->line_column_count = *p ? 0 : cnt;
+  if (*p) {
+    l->line_column_count = 0;
+    l->line_column_values = NULL;
+    free(values);
 
+  } else {
+    l->line_column_count  = cnt;
+    l->line_column_values = values;
+  }
+}
+
+
+int saxs_reader_columns_count(struct line *l) {
   return l->line_column_count;
+}
+
+
+double* saxs_reader_columns_values(struct line *l) {
+  return l->line_column_values;
 }
 
 
@@ -311,6 +338,7 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
      * Try to read everything as floating-point numbers.
      * If this succeeds, we probably have a data line.
      */
+    columns_tokenize(currentline);
     colcnt = saxs_reader_columns_count(currentline);
 
     if (colcnt == 0 || (datalines > 0 && datacolumns != colcnt)) {
@@ -345,37 +373,6 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
   return 0;
 }
 
-
-static int columns_parse(struct line *l, double *values) {
-  int cnt = 0;
-  char *p;
-  double *value = values;
-
-  if (!l || !l->line_buffer)
-    return 0;
-
-  p = l->line_buffer;
-  while (*p) {
-    if (sscanf(p, "%lf", value) != 1)
-      break;
-
-    cnt += 1;
-
-    ++value;
-
-    /* Skip leading whitespace, if any. */
-    while (*p && isspace(*p)) ++p;
-
-    /* Skip the floating point value until the next separator is found. */
-    while (*p && !issep(*p)) ++p;
-    
-    /* Skip all consecutive separators up to the next value (think " , "). */
-    while (*p && issep(*p)) ++p;
-  }
-
-  return cnt;
-}
-
 int saxs_reader_columns_parse(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline,
                               int xcol, double xfactor,
@@ -403,10 +400,9 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   curve = saxs_document_add_curve(doc, title, type);
 
-  values = malloc(colcnt * sizeof(double));
   while (firstline != lastline) {
     if (saxs_reader_columns_count(firstline) == colcnt) {
-      columns_parse(firstline, values);
+      values = saxs_reader_columns_values(firstline);
       saxs_curve_add_data (curve, values[xcol] * xfactor, 0.0,
                            values[ycol] * yfactor,
                            y_errcol >= 0 ? values[y_errcol] : 0.0);
@@ -414,7 +410,6 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
     firstline = firstline->next;
   }
-  free(values);
 
   return 0;
 }
