@@ -37,6 +37,9 @@ struct line {
   size_t line_length;
   char *line_buffer;
 
+  /* Number of data columns found. */
+  int line_column_count;
+
   struct line *next;
 };
 

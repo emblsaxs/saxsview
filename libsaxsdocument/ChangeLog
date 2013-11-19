@@ -1,6 +1,14 @@
+2013-11-19  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.h (struct line): Cache the column count.
+	* src/columns.c (lines_create): Initialise the column count.
+	(lines_printf): Reset column count.
+	(saxs_reader_columns_count): Cache the number of columns counted,
+	return cached value if available.
+
 2013-11-18  Daniel Franke  <dfranke@users.sourceforge.net>
 
-	* atsas_out.c (atsas_out_read): Compare the whole line to find
+	* src/atsas_out.c (atsas_out_read): Compare the whole line to find
 	identifiers.
 
 2013-08-27  Daniel Franke  <dfranke@users.sourceforge.net>

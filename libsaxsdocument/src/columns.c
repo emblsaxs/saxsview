@@ -48,9 +48,10 @@ struct line* lines_create() {
 
   line = malloc(sizeof(struct line));
   if (line) {
-    line->line_length = 80;
-    line->line_buffer = malloc(line->line_length);
-    line->next        = NULL;
+    line->line_column_count = -1;
+    line->line_length       = 80;
+    line->line_buffer       = malloc(line->line_length);
+    line->next              = NULL;
 
     if (line->line_buffer) {
       memset(line->line_buffer, 0, line->line_length);
@@ -108,7 +109,8 @@ int lines_printf(struct line *l, const char *fmt, ...) {
   va_end(va);
 
   free(l->line_buffer);
-  l->line_buffer = buffer;
+  l->line_buffer       = buffer;
+  l->line_column_count = -1;
 
   return n;
 }
@@ -236,6 +238,10 @@ int saxs_reader_columns_count(struct line *l) {
   if (!l || strlen(l->line_buffer) == 0)
     return 0;
 
+  /* If we already counted the columns before, use the cached value. */
+  if (l->line_column_count >= 0)
+    return l->line_column_count;
+
   p = l->line_buffer;
   while (*p) {
     if (sscanf(p, "%lf", &value) != 1)
@@ -261,7 +267,9 @@ int saxs_reader_columns_count(struct line *l) {
    * then this is not a data line. A data line contains only numbers and
    * whitespaces.
    */
-  return *p ? 0 : cnt;
+  l->line_column_count = *p ? 0 : cnt;
+
+  return l->line_column_count;
 }
 
 
