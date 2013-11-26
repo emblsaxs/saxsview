@@ -102,11 +102,11 @@ saxs_document_read(saxs_document *doc, const char *infile,
  *
  * @param doc      A non-NULL document-pointer created by @ref saxs_document_create.
  * @param outfile  Output-filename; writes to stdout if @c -.
- * @param format   A known format (e.g. "dat"). An attempt is made to deduce the
- *                 format from the output filename if NULL.
+ * @param format   A known format (e.g. "atsas-dat-3-column"). An attempt is made to
+ *                 deduce the format from the output filename if NULL.
  *
  * @returns 0 on success, a non-null error code on error; ENOTSUP if no format
- *          handler could successfully read the file.
+ *          handler could successfully write the file.
  */
 int
 saxs_document_write(saxs_document *doc, const char *outfile,
