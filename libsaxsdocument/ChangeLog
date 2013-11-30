@@ -1,3 +1,7 @@
+2013-11-30  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* columns.c (columns_tokenize): Ignore lines with NAN values.
+
 2013-11-26  Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* saxsdocument.h (saxs_document_write): Updated documentation.

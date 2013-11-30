@@ -256,16 +256,27 @@ static void columns_tokenize(struct line *l) {
     if (sscanf(p, "%lf", &value) != 1)
       break;
 
-    cnt += 1;
-    values = realloc(values, cnt * sizeof(double));
-    values[cnt-1] = value;
+    /* 
+     * Reject any line that contains NANs as hardly
+     * anything can deal with those anyway.
+     */
+    if (!isnan(value)) {
+      cnt += 1;
+      values = realloc(values, cnt * sizeof(double));
+      values[cnt-1] = value;
+
+    } else {
+      /* Reset the line, cleanup done below. */
+      p = l->line_buffer;
+      break;
+    }
 
     /* Skip leading whitespace, if any. */
     while (*p && isspace(*p)) ++p;
 
     /* Skip the floating point value until the next separator is found. */
     while (*p && !issep(*p)) ++p;
-    
+
     /* Skip all consecutive separators up to the next value (think " , "). */
     while (*p && issep(*p)) ++p;
   }
