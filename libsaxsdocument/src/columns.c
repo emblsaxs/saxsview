@@ -302,6 +302,9 @@ static void columns_tokenize(struct line *l) {
 
 
 int saxs_reader_columns_count(struct line *l) {
+  if (l->line_column_count < 0)
+    columns_tokenize(l);
+
   return l->line_column_count;
 }
 
@@ -349,7 +352,6 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
      * Try to read everything as floating-point numbers.
      * If this succeeds, we probably have a data line.
      */
-    columns_tokenize(currentline);
     colcnt = saxs_reader_columns_count(currentline);
 
     if (colcnt == 0 || (datalines > 0 && datacolumns != colcnt)) {
