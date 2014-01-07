@@ -1,6 +1,7 @@
-document; lyzexp.out; 3; 14;
+document; lyzexp.out; 4; 14;
 curve; data; 1; 196;
-curve; fit; 2; 213;
+curve; fit; 2; 196;
+curve; desmeared; 2; 213;
 curve; p(r); 4; 101;
 property; creator; GNOM;
 property; creator-version; 4.5a;
