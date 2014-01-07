@@ -317,7 +317,7 @@ double* saxs_reader_columns_values(struct line *l) {
 int saxs_reader_columns_scan(struct line *lines, struct line **header,
                              struct line **data, struct line **footer) {
 
-  struct line *currentline;
+  struct line *currentline, *tmpdata;
 
   /*
    * Parse all the lines and try to determine the data format
@@ -332,8 +332,8 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
   /*
    * Initial assumption: data only, no header, no footer
    */
-  *header = *data = lines;
-  *footer = NULL;
+  *header = tmpdata = lines;
+  *data = *footer = NULL;
 
   for (currentline = lines; currentline; currentline = currentline->next) {
     int colcnt;
@@ -357,7 +357,7 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
     if (colcnt == 0 || (datalines > 0 && datacolumns != colcnt)) {
       if (!datafound) {
         /* Reject the current preliminary data block and start a new one. */
-        *data        = currentline;
+        tmpdata     = currentline;
         datalines   = 1;
         datacolumns = colcnt;
 
@@ -371,7 +371,7 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
       }
 
     } else if (datalines == 0) {
-      *data        = currentline;
+      tmpdata     = currentline;
       datalines   = 1;
       datacolumns = colcnt;
 
@@ -382,6 +382,9 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
     if (datalines > 5 && !datafound)
       datafound = 1;
   }
+
+  if (datafound)
+    *data = tmpdata;
 
   return 0;
 }
@@ -452,13 +455,13 @@ int saxs_reader_columns_parse_lines(struct saxs_document *doc,
   if (!header && !data && !footer)
     return ENOTSUP;
 
-  if (parse_header && (res = parse_header(doc, header, data) != 0))
+  if (parse_header && header && (res = parse_header(doc, header, data) != 0))
     return res;
 
-  if (parse_data && (res = parse_data(doc, data, footer) != 0))
+  if (parse_data && data && (res = parse_data(doc, data, footer) != 0))
     return res;
 
-  if (parse_footer && (res = parse_footer(doc, footer, lastline) != 0))
+  if (parse_footer && footer && (res = parse_footer(doc, footer, lastline) != 0))
     return res;
 
   return 0;
