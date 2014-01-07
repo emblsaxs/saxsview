@@ -1,3 +1,9 @@
+2014-01-07  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/columns.c (columns_tokenize): Verify that only finite values are
+	used and no INFs pass through.
+	* src/cansas_xml.c: Suppress unrelated error messages.
+
 2013-12-02  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* columns.c (saxs_reader_columns_count): Tokenize line if not done yet.

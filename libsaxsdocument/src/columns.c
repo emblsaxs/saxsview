@@ -31,7 +31,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-
+#include <math.h>
 
 /*
  * Similar to the POSIX "character classification routines";
@@ -257,10 +257,10 @@ static void columns_tokenize(struct line *l) {
       break;
 
     /* 
-     * Reject any line that contains NANs as hardly
+     * Reject any value that is not finite, i.e. NAN or INF, as hardly
      * anything can deal with those anyway.
      */
-    if (!isnan(value)) {
+    if (isfinite(value)) {
       cnt += 1;
       values = realloc(values, cnt * sizeof(double));
       values[cnt-1] = value;

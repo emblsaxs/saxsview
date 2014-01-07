@@ -126,7 +126,7 @@ int cansas_xml_1_0_read(saxs_document *doc, struct line *firstline, struct line 
 
   xmlDocPtr xmldoc = xmlReadIO((xmlInputReadCallback)cansas_read_callback,
                                NULL, &firstline, NULL, NULL,
-                               XML_PARSE_NOWARNING);
+                               XML_PARSE_NOWARNING | XML_PARSE_NOERROR);
   if (!xmldoc)
     return EINVAL;
 
