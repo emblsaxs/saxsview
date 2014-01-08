@@ -260,7 +260,7 @@ static void columns_tokenize(struct line *l) {
      * Reject any value that is not finite, i.e. NAN or INF, as hardly
      * anything can deal with those anyway.
      */
-    if (isfinite(value)) {
+    if (!isnan(value) && !isinf(value)) {
       cnt += 1;
       values = realloc(values, cnt * sizeof(double));
       values[cnt-1] = value;
