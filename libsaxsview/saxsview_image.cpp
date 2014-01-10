@@ -650,8 +650,8 @@ SaxsviewFrame::~SaxsviewFrame() {
 
 QSize SaxsviewFrame::size() const {
   if (data())
-    return QSize(data()->interval(Qt::XAxis).width(),
-                 data()->interval(Qt::YAxis).width());
+    return QSize(data()->interval(Qt::XAxis).width() + 1,
+                 data()->interval(Qt::YAxis).width() + 1);
   else
     return QSize();
 }
@@ -829,8 +829,8 @@ bool SaxsviewMask::isModified() const {
 
 QSize SaxsviewMask::size() const {
   if (data())
-    return QSize(data()->interval(Qt::XAxis).width(),
-                 data()->interval(Qt::YAxis).width());
+    return QSize(data()->interval(Qt::XAxis).width() + 1,
+                 data()->interval(Qt::YAxis).width() + 1);
   else
     return QSize();
 }
@@ -894,8 +894,8 @@ SaxsviewFrameData::SaxsviewFrameData(const QSize& size)
   p->data = saxs_image_create();
   saxs_image_set_size(p->data, size.width(), size.height());
 
-  setInterval(Qt::XAxis, QwtInterval(0.0, size.width()));
-  setInterval(Qt::YAxis, QwtInterval(0.0, size.height()));
+  setInterval(Qt::XAxis, QwtInterval(0.0, size.width() - 1.0));
+  setInterval(Qt::YAxis, QwtInterval(0.0, size.height() - 1.0));
   setInterval(Qt::ZAxis, QwtInterval(0.0, 1.0));
 }
 

@@ -1,3 +1,9 @@
+2014-01-10  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsview_image.cpp (SaxsviewMask::size): Fixed offset error.
+	(SaxsviewFrame::size): Likewise.
+	(SaxsviewFrameData::SaxsviewFrameData): Likewise.
+
 2013-06-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_config.cpp (SaxsviewConfig): Check a configuration version
