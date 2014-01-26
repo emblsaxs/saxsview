@@ -1,7 +1,6 @@
 /*
  * Common code to read columnized data in text files.
- * Copyright (C) 2009, 2011, 2012, 2013
- *  Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -479,22 +478,20 @@ int saxs_writer_columns_write_file(struct saxs_document *doc,
   int res;
   struct line *lines = NULL;
 
-  if ((res = write_header && write_header(doc, &lines)) != 0)
-    goto error;
+  res = 0;
+  if (write_header && (res = write_header(doc, &lines) != 0))
+    goto exit;
 
-  if ((res = write_data && write_data(doc, &lines)) != 0)
-    goto error;
+  if (write_data && (res = write_data(doc, &lines) != 0))
+    goto exit;
 
-  if ((res = write_footer && write_footer(doc, &lines)) != 0)
-    goto error;
+  if (write_footer && (res = write_footer(doc, &lines) != 0))
+    goto exit;
 
-  if ((res = lines_write(lines, filename)) != 0)
-    goto error;
+  if ((res = lines_write(lines, filename)) == 0)
+    goto exit;
 
-  lines_free(lines);
-  return 0;
-
-error:
+exit:
   lines_free(lines);
   return res;
 }

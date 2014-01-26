@@ -1,3 +1,16 @@
+2014-01-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/saxsdocument.h (saxs_curve_has_y_err): New.
+	* src/saxsdocument.c (saxs_curve_has_y_err): New.
+	(saxs_document_write): Made more symmetric to reading, try to find an
+	alternative format if the specified format didn't work.
+	* src/atsas_dat.c (atsas_dat_3_column_write_data): Verify that the
+	available data matches the format.
+	(atsas_dat_4_column_write_data): Likewise.
+	(atsas_dat_n_column_write_data): Likewise.
+	* src/columns.c (saxs_writer_columns_write_file): Fixed callback return
+	value checks.
+
 2014-01-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (columns_tokenize): Replaced isfinite by !isnan && !isinf

@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS document creation and access.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -264,6 +264,9 @@ void
 saxs_curve_add_data(saxs_curve *curve,
                     double x, double x_err,
                     double y, double y_err);
+
+int
+saxs_curve_has_y_err(saxs_curve *curve);
 
 int
 saxs_curve_data_count(saxs_curve *curve);

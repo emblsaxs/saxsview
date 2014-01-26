@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS document creation and access.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -116,7 +116,10 @@ int saxs_document_read(saxs_document *doc, const char *filename,
     handler = saxs_document_format_find_next(handler, filename, format);
   }
 
-  /* If nothing found, start again, trying each data handler in turn. */
+  /*
+   * If nothing found, start again, trying each data handler in turn.
+   * First one to accept the data, i.e. returns a value of 0, wins.
+   */
   if (!handler) {
     handler = saxs_document_format_first();
     while (handler) {
@@ -129,8 +132,8 @@ int saxs_document_read(saxs_document *doc, const char *filename,
     }
   }
 
-  /* Here everything was read in successfully, keep the info around. */
   if (res == 0) {
+    /* Here everything was read in successfully, keep the info around. */
     if (doc->doc_lines) lines_free(doc->doc_lines);
     doc->doc_lines = l;
     l = NULL;
@@ -145,19 +148,48 @@ int saxs_document_read(saxs_document *doc, const char *filename,
 
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
+
+  /* FIXME: create lines here and store them if writing to lines was successful
+            (symmetric to reading). This also requires an interface changes to the write routines. */
+
   int res = ENOTSUP;
 
+  /*
+   * First we shall try to determine the file type according to the
+   * specified format or the file extension. If that doesn't work,
+   * iterate through all known formats to see if any can write the data.
+   */
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->write) {
       res = handler->write(doc, filename);
-      if (res == 0) {
-        if (doc->doc_filename) free(doc->doc_filename);
-        doc->doc_filename = strdup(filename);
+      if (res == 0)
         break;
-      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
+  }
+
+  /*
+   * If nothing found, start again, trying each data handler in turn.
+   * First one to accept the data, i.e. returns a value of 0, wins.
+   */
+  if (!handler) {
+    handler = saxs_document_format_first();
+    while (handler) {
+      if (handler->write) {
+        res = handler->write(doc, filename);
+        if (res == 0)
+          break;
+      }
+      handler = saxs_document_format_next(handler);
+    }
+  }
+
+  if (res == 0) {
+    if (doc->doc_filename)
+      free(doc->doc_filename);
+
+    doc->doc_filename = strdup(filename);
   }
 
   return res;
@@ -401,4 +433,20 @@ void saxs_curve_add_data(saxs_curve *curve,
 
   curve->curve_data_tail = data;
   curve->curve_data_count += 1;
+}
+
+int
+saxs_curve_has_y_err(saxs_curve *curve) {
+  if (curve) {
+    saxs_data *data = saxs_curve_data(curve);
+
+    while (data) {
+      if (saxs_data_y_err(data) > 0.0)
+        return 1;
+
+      data = saxs_data_next(data);
+    }
+  }
+
+  return 0;
 }

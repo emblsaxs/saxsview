@@ -1,6 +1,6 @@
 /*
  * Read/write files in .dat-format (used by EMBL-Hamburg).
- * Copyright (C) 2009-2013 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -363,8 +363,17 @@ static int
 atsas_dat_3_column_write_data(struct saxs_document *doc,
                               struct line **lines) {
 
-  saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
-  saxs_data *data = saxs_curve_data(curve);
+  saxs_curve *curve;
+  saxs_data *data;
+
+  if (saxs_document_curve_count(doc) != 1)
+    return ENOTSUP;
+
+  curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  if (!saxs_curve_has_y_err(curve))
+    return ENOTSUP;
+
+  data = saxs_curve_data(curve);
   while (data) {
     struct line *l = lines_create();
     lines_printf(l, "%14e %14e %14e",
@@ -379,9 +388,6 @@ atsas_dat_3_column_write_data(struct saxs_document *doc,
 
 int
 atsas_dat_3_column_write(struct saxs_document *doc, const char *filename) {
-  if (saxs_document_curve_count(doc) < 1)
-    return ENOTSUP;
-
   return saxs_writer_columns_write_file(doc, filename,
                                         atsas_dat_write_header,
                                         atsas_dat_3_column_write_data,
@@ -421,15 +427,23 @@ atsas_dat_4_column_read(struct saxs_document *doc,
 
 static int
 atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
+  saxs_curve *curve1, *curve2;
+  saxs_data *data1, *data2;
 
-  saxs_curve *curve1 = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
-  saxs_data *data1 = saxs_curve_data(curve1);
+  if (saxs_document_curve_count(doc) != 2)
+    return ENOTSUP;
 
-  saxs_curve *curve2 = saxs_curve_next(curve1);
-  saxs_data *data2 = saxs_curve_data(curve2);
+  curve1 = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  curve2 = saxs_curve_next(curve1);
+  if (!saxs_curve_has_y_err(curve1) || !saxs_curve_has_y_err(curve2))
+    return ENOTSUP;
+
+  data1 = saxs_curve_data(curve1);
+  data2 = saxs_curve_data(curve2);
 
   while (data1 && data2) {
     struct line *l = lines_create();
+
     lines_printf(l, "%14e %14e %14e %14e",
                  saxs_data_x(data1), saxs_data_y(data1),
                  saxs_data_y_err(data1), saxs_data_y_err(data2));
@@ -444,9 +458,6 @@ atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
 
 int
 atsas_dat_4_column_write(struct saxs_document *doc, const char *filename) {
-  if (saxs_document_curve_count(doc) < 2)
-    return ENOTSUP;
-
   return saxs_writer_columns_write_file(doc, filename,
                                         atsas_dat_write_header,
                                         atsas_dat_4_column_write_data,
@@ -487,6 +498,9 @@ atsas_dat_n_column_read(struct saxs_document *doc,
 static int
 atsas_dat_n_column_write_data(struct saxs_document *doc, struct line **lines) {
   struct line *firstline = NULL;
+
+  if (saxs_document_curve_count(doc) < 1)
+    return ENOTSUP;
 
   /* Write the first column with 's' values, create lines in the process. */
   saxs_curve *curve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
