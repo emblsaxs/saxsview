@@ -149,9 +149,7 @@ int saxs_document_read(saxs_document *doc, const char *filename,
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
 
-  /* FIXME: create lines here and store them if writing to lines was successful
-            (symmetric to reading). This also requires an interface changes to the write routines. */
-
+  struct line *l = NULL;
   int res = ENOTSUP;
 
   /*
@@ -162,7 +160,7 @@ int saxs_document_write(saxs_document *doc, const char *filename,
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->write) {
-      res = handler->write(doc, filename);
+      res = handler->write(doc, &l);
       if (res == 0)
         break;
     }
@@ -177,7 +175,7 @@ int saxs_document_write(saxs_document *doc, const char *filename,
     handler = saxs_document_format_first();
     while (handler) {
       if (handler->write) {
-        res = handler->write(doc, filename);
+        res = handler->write(doc, &l);
         if (res == 0)
           break;
       }
@@ -186,12 +184,18 @@ int saxs_document_write(saxs_document *doc, const char *filename,
   }
 
   if (res == 0) {
-    if (doc->doc_filename)
-      free(doc->doc_filename);
+    res = lines_write(l, filename);
+    if (res == 0) {
+      if (doc->doc_lines) lines_free(doc->doc_lines);
+      doc->doc_lines = l;
+      l = NULL;
 
-    doc->doc_filename = strdup(filename);
+      if (doc->doc_filename) free(doc->doc_filename);
+      doc->doc_filename = strdup(filename);
+    }
   }
 
+  lines_free(l);
   return res;
 }
 

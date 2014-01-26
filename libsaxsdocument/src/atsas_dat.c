@@ -387,11 +387,11 @@ atsas_dat_3_column_write_data(struct saxs_document *doc,
 }
 
 int
-atsas_dat_3_column_write(struct saxs_document *doc, const char *filename) {
-  return saxs_writer_columns_write_file(doc, filename,
-                                        atsas_dat_write_header,
-                                        atsas_dat_3_column_write_data,
-                                        atsas_dat_write_footer);
+atsas_dat_3_column_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         atsas_dat_write_header,
+                                         atsas_dat_3_column_write_data,
+                                         atsas_dat_write_footer);
 }
 
 /**************************************************************************/
@@ -457,11 +457,11 @@ atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
 }
 
 int
-atsas_dat_4_column_write(struct saxs_document *doc, const char *filename) {
-  return saxs_writer_columns_write_file(doc, filename,
-                                        atsas_dat_write_header,
-                                        atsas_dat_4_column_write_data,
-                                        atsas_dat_write_footer);
+atsas_dat_4_column_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         atsas_dat_write_header,
+                                         atsas_dat_4_column_write_data,
+                                         atsas_dat_write_footer);
 }
 
 
@@ -536,11 +536,11 @@ atsas_dat_n_column_write_data(struct saxs_document *doc, struct line **lines) {
 }
 
 int
-atsas_dat_n_column_write(struct saxs_document *doc, const char *filename) {
-  return saxs_writer_columns_write_file(doc, filename,
-                                        atsas_dat_write_header,
-                                        atsas_dat_n_column_write_data,
-                                        atsas_dat_write_footer);
+atsas_dat_n_column_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         atsas_dat_write_header,
+                                         atsas_dat_n_column_write_data,
+                                         atsas_dat_write_footer);
 }
 
 /**************************************************************************/

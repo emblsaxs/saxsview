@@ -467,31 +467,29 @@ int saxs_reader_columns_parse_lines(struct saxs_document *doc,
 }
 
 
-int saxs_writer_columns_write_file(struct saxs_document *doc,
-                                   const char *filename,
-                                   int (*write_header)(struct saxs_document*,
-                                                       struct line **),
-                                   int (*write_data)(struct saxs_document*,
-                                                     struct line **),
-                                   int (*write_footer)(struct saxs_document*,
-                                                       struct line **)) {
-  int res;
-  struct line *lines = NULL;
+int saxs_writer_columns_write_lines(struct saxs_document *doc, struct line **lines,
+                                    int (*write_header)(struct saxs_document*,
+                                                        struct line **),
+                                    int (*write_data)(struct saxs_document*,
+                                                      struct line **),
+                                    int (*write_footer)(struct saxs_document*,
+                                                        struct line **)) {
+  int res = 0;
+  struct line *l = NULL;
 
-  res = 0;
-  if (write_header && (res = write_header(doc, &lines) != 0))
-    goto exit;
+  if (res == 0 && write_header)
+    res = write_header(doc, &l);
 
-  if (write_data && (res = write_data(doc, &lines) != 0))
-    goto exit;
+  if (res == 0 && write_data)
+    res = write_data(doc, &l);
 
-  if (write_footer && (res = write_footer(doc, &lines) != 0))
-    goto exit;
+  if (res == 0 && write_footer)
+    res = write_footer(doc, &l);
 
-  if ((res = lines_write(lines, filename)) == 0)
-    goto exit;
+  if (res == 0)
+    *lines = l;
+  else
+    lines_free(l);
 
-exit:
-  lines_free(lines);
   return res;
 }

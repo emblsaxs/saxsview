@@ -1,6 +1,6 @@
 /*
  * Common code to read columnized data in text files.
- * Copyright (C) 2009, 2011 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -206,7 +206,7 @@ saxs_reader_columns_parse_lines(struct saxs_document *doc,
  * @brief 
  *
  * @param doc
- * @param filename
+ * @param l
  * @param write_header
  * @param write_data
  * @param write_footer
@@ -214,14 +214,13 @@ saxs_reader_columns_parse_lines(struct saxs_document *doc,
  * @returns
  */
 int
-saxs_writer_columns_write_file(struct saxs_document *doc,
-                               const char *filename,
-                               int (*write_header)(struct saxs_document*,
-                                                   struct line **),
-                               int (*write_data)(struct saxs_document*,
-                                                 struct line **),
-                               int (*write_footer)(struct saxs_document*,
-                                                   struct line **));
+saxs_writer_columns_write_lines(struct saxs_document *doc, struct line **l,
+                                int (*write_header)(struct saxs_document*,
+                                                    struct line **),
+                                int (*write_data)(struct saxs_document*,
+                                                  struct line **),
+                                int (*write_footer)(struct saxs_document*,
+                                                    struct line **));
 
 
 #ifdef __cplusplus

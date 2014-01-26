@@ -1,6 +1,6 @@
 /*
  * Read files in .csv-format.
- * Copyright (C) 2011, 2012 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2011-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -110,11 +110,11 @@ csv_write_data(struct saxs_document *doc, struct line **lines) {
 }
 
 int
-csv_write(struct saxs_document *doc, const char *filename) {
-  return saxs_writer_columns_write_file(doc, filename,
-                                        csv_write_header,
-                                        csv_write_data,
-                                        0L);
+csv_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         csv_write_header,
+                                         csv_write_data,
+                                         0L);
 }
 
 
