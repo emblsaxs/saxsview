@@ -32,7 +32,7 @@
 #include <string.h>
 
 int saxs_image_edf_read(saxs_image *image, const char *filename) {
-  int fd, edf_errno, status;
+  int i, fd, edf_errno, status;
   float *data = NULL;
   long *dim = NULL;    /* allocated by edf_read_data, first element
                           holds number of elements to follow */
@@ -45,15 +45,21 @@ int saxs_image_edf_read(saxs_image *image, const char *filename) {
     return status;
   }
 
-  edf_read_data(fd,
-                0,               /* Image index 0 */
-                1,               /* Memory 1 (image data), -1 (variance) */
-                &dim,
-                &size,
-                (void**) &data, MFloat,
-                &edf_errno, &status);
+  /*
+   * The image index seems to vary depending on what kind of images are
+   * used; data frames seem to have index 0, mask frames index 1?!
+   */
+  status = -1;
+  for (i = 0; i < 10 && status != 0; ++i)
+    edf_read_data(fd,
+                  i,               /* Image index 0 */
+                  1,               /* Memory 1 (image data), -1 (variance) */
+                  &dim,
+                  &size,
+                  (void**) &data, MFloat,
+                  &edf_errno, &status);
 
-  if (!status) {
+  if (status == 0) {
     int x, y;
     saxs_image_set_size(image, dim[1], dim[2]);
     for (x = 0; x < dim[1]; ++x)
