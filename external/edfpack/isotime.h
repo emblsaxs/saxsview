@@ -73,6 +73,14 @@ DESCRIPTION
 # define ISOTIMELEN 64  // sssssss...sssssssss.uuuuuu
 
 /******************************************************************************
+* Public Enums                                                                *
+******************************************************************************/
+enum IsotimeMode {
+  IsotimeModeInvalid=0,
+  IsotimeModeNoSpace, IsotimeModeSpace
+};
+
+/******************************************************************************
 * Public Type Defs                                                            *
 ******************************************************************************/
 
@@ -91,7 +99,8 @@ typedef struct isotime_epoch {
 
 PUBLIC extern 
        IsotimeEpoch isotime2epoch   (const char *isotime_s);
-       IsotimeEpoch string2epoch    (const char *string);
+       IsotimeEpoch string2epoch    (const char *epoch_s);
+       IsotimeEpoch shiftepoch      (IsotimeEpoch epoch, IsotimeEpoch shift);
        IsotimeEpoch setoffset2epoch (IsotimeEpoch epoch, const char *offset_s);
        IsotimeEpoch addoffset2epoch (IsotimeEpoch epoch, const char *offset_s);
        const char * epoch2isotime   (char buffer[], size_t buflen, 
@@ -99,5 +108,8 @@ PUBLIC extern
        const char * epoch2string    (char buffer[], size_t buflen, 
                                      IsotimeEpoch epoch);
        const char * isotime_version (void);
-       void isotime_debug           (int debug);
+       const char * isotime_mode2str(int mode);
+       int          isotime_str2mode(const char *mode_s);
+       void         isotime_mode    (int mode);
+       void         isotime_debug   (int debug);
 #endif

@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define STATFUNC_VERSION      "statfunc : V1.0 Peter Boesecke 2012-02-09"
+# define STATFUNC_VERSION      "statfunc : V1.2 Peter Boesecke 2012-09-13"
 /*+++------------------------------------------------------------------------
 NAME
   statfunc.c --- statfunc calculation
@@ -51,6 +51,8 @@ HISTORY
                       median1 -> median (no averaging)
                       dmediance, dquantilance,
                       mean, variance
+  2012-09-12 V1.1  PB dquantilance removed (not used, not well defined)
+  2012-09-13 V1.2  PB dquantilance redefined 
 --------------------------------------------------------------------------*/
 
 /****************************************************************************
@@ -381,7 +383,7 @@ NAME
 
 SYNOPSIS
 
-  double median ( const double a[], long n );
+  double median ( double a[], long n );
 
 ARGUMENTS
 
@@ -613,7 +615,7 @@ PUBLIC long minmaxfilter ( double a[], long n,
 /*--------------------------------------------------------------------------
 NAME
 
-  dmediance --- returns the median of the squared differences a[]-m 
+  dmediance --- square of the median of the differences ||a[]-m||
 
 SYNOPSIS
 
@@ -629,9 +631,9 @@ ARGUMENTS
 
 DESCRPTION
 
-  Calculates and returns the median of the squared differences a[]-m.
-  If more than 50% of the elements of a[] are equal to m the returned
-  value is zero.
+  Calculates and returns the square of the median of the modules of the
+  differences a[]-m. If more than 50% of the elements of a[] are equal to m 
+  the returned value is zero.
   If a is NULL or n<=0 the returned value is 0.
 
 --------------------------------------------------------------------------*/
@@ -645,11 +647,11 @@ PUBLIC double dmediance ( const double a[], long n, double m )
     if (!(amm = (double*) malloc( sizeof(double)*n )))
       goto dmediance_error;
 
-    // calculate amm[] = (a[]-m)
+    // calculate amm[] = ||a[]-m||
     for (i=0;i<n;i++)
       amm[i]=fabs(a[i]-m);
 
-    // dmediance = dmedian ( amm[], n )^2
+    // dmediance = dmedian ( amm[], n )
     value = dmedian( amm, n );
 
     if (amm)
@@ -670,40 +672,56 @@ dmediance_error:
 /*--------------------------------------------------------------------------
 NAME
 
-  dquantilance --- returns the squared p-quantil distance of a[]
+  dquantilance --- square of the p-quantil of the differences ||a[]-m||
 
 SYNOPSIS
 
-  double dquantilance ( double a[], long n, double p );
+  double dquantilance ( const double a[], long n, double p, double m );
 
 ARGUMENTS
 
-  const double a[]  (i) : input table with n elements (modified)
+  const double a[]  (i) : input table with n elements
   long n            (i) : number of elements
-  double p          (i) : 0<p<=1 dquantil(..,1-p)-dquantil(..,p)
+  double p          (i) : quantil
+  double m          (i) : p-quantil average
 
-  return double (o) : squared p-quantil distance of a[]
+  return double (o) : p-quantil of the squared differences a[]-m 
 
 DESCRPTION
 
-  Calculates the squared p-quantil distance of a[]. If p<=0 o p>=1 the 
-  squared half difference between the maximum and the minimum value of a[] 
-  is returned. If a is NULL or n<=0 the returned value is 0.
+  Calculates and returns the square of the p-quantil of the modules of the
+  differences a[]-m. If more than p*100% of the elements of a[] are equal 
+  to m the returned value is zero.
+  If a is NULL or n<=0 the returned value is 0.
 
 --------------------------------------------------------------------------*/
-PUBLIC double dquantilance ( double a[], long n, double p )
-{ double value=0.0;
+PUBLIC double dquantilance ( const double a[], long n, double p, double m )
+{ double *amm=NULL;
+  double value=0.0;
+  long i;
 
   if ( (a) && (n>0) ) {
+    // allocate amm
+    if (!(amm = (double*) malloc( sizeof(double)*n )))
+      goto dquantilance_error;
 
-    // dquantilance = dmedian ( amm[], n )^2
-    value = (dquantil( a, n, 1.0-p ) - dquantil( a, n, p ))*0.5;
+    // calculate amm[] = ||a[]-m||
+    for (i=0;i<n;i++)
+      amm[i]=fabs(a[i]-m);
 
+    // dquantilance = dquantil ( amm[], n, p )
+    value = dquantil( amm, n, p );
+
+    if (amm)
+      free(amm);
   }
 
   return(value*value);
 
 dquantilance_error:
+
+  if (amm)
+    free(amm);
 
   return(value*value);
 

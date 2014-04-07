@@ -428,14 +428,13 @@ CouldNotReadHeader
 enum DType { InValidDType,
              Unsigned8=1, Signed8,      Unsigned16,    Signed16,
              Unsigned32,  Signed32,     Unsigned64,    Signed64,
-             FloatIEEE32, DoubleIEEE64, Unused11,      Unused12,
-             FloatVAX32,  DoubleVAX64,  FloatConvex32, DoubleConvex64,
+             FloatIEEE32, FloatIEEE64,  FloatIEEE128,  Unused12,
              EndDType };
 
 enum MType { InValidMType,
              MUnsignedChar=1,    MChar,       MUnsignedShort, MShort,
              MUnsignedInteger,   MInteger,    MUnsignedLong,  MLong,
-             MFloat,             MDouble,
+             MFloat,             MDouble,     MQuadruple,
              EndMType };
 
 /***************************************************************************

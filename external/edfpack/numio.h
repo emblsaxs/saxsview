@@ -207,6 +207,7 @@ PUBLIC extern int num_prog_print_list             ( FILE * out,
 # define NumProgramError          14 
 # define NumNoInstruction         15
 # define NumNoAccumulator         16
+# define NumBadUnit               17
 
 #endif
 

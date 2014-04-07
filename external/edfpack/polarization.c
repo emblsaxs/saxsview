@@ -22,7 +22,7 @@
  *   and the GNU Lesser General Public License  along with this program.
  *   If not, see <http://www.gnu.org/licenses/>.
  */
-# define POLARIZATION_VERSION "polarization : V1.61 Peter Boesecke 2011-07-11"
+# define POLARIZATION_VERSION "polarization : V1.62 Peter Boesecke 2013-04-16"
 /*+++------------------------------------------------------------------------
 NAME
 
@@ -42,6 +42,7 @@ HISTORY
   2010-12-12-V1.5 unused PolarizationParams removed
   2011-06-22 V1.6 orientation recalculation 1..16 added
   2011-07-11 V1.61 polarization.h: Ori was double, defined as long int
+  2013-04-16 V1.62 Description updated with Thomson scattering
 
 DESCRIPTION
 
@@ -136,6 +137,24 @@ normal incidence and k the wavenumber (1/wavelength). SAXS-coordinates are
 correspondingly defined in the unprojected and in the projected image.
 
 Polarization factor
+
+At low energies (E/c^2 << electron mass) the scattering of photons by
+atomically bound electrons is elastic and is described by the Thomson 
+differential cross section. It relates the flux density Phiin [ph/s/m2] of 
+the incoming photons with the spherical flux Iout [ph/s/sr] of the scattered 
+photons per steradian:
+
+  dsigmaThomson/dOmega = Iout/Phiin = re^2 * P(Ein,Eout)
+
+re = ec^2/(4*pi*e0*me*c^2) is the classical electron radius and P(Ein,kin,kout)
+is the polarization factor. It is a function of the plane of polarization and 
+the direction of the incoming photon (Ein, kin) and the direction of the 
+scattered photon (kout).
+
+Integrating the Thomson differential cross over all directions (4 pi) 
+yields the Thomson cross section sigmaThompson:
+
+  sigmaThompson = 8/3 pi re^2
 
 The E-vector Eout of the scattered beam kout is proportional to the projection 
 of the E-vector Ein of the incident beam kin to the transversal plane of the 

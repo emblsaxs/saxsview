@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define NUMIO_VERSION      "numio : V1.35 Peter Boesecke 2012-04-11"
+# define NUMIO_VERSION      "numio : V1.38 Peter Boesecke 2013-03-20"
 /*+++------------------------------------------------------------------------
 NAME
   numio.c --- number expressions
@@ -156,6 +156,15 @@ HISTORY
   01-Jun-2011 V1.33 PB dpprogram_step: unique error exit
   16-Jun-2011 V1.34 PB double constants marked, e.g. 1->1.0 
   11-Apr-2012 V1.35 PB dpprogram_step: REST-operation defined like in python
+  06-Mar-2013 V1.36 PB alternative symbol for digital information (Byte)
+                       added: B. B can also be used as Bel (non-SI) because 
+                       Bel and Byte are dimensionless. Alternative symbols 
+                       for nautical mile added: NM, nmi.
+  12-Mar-2013 V1.37 PB num_double2str: to ensure a valid unit name for 
+                       option unit the unit tail is checked with 
+                       numprog_is_empty after conversion. In case of an
+                       error -> errval=NumBadUnit.
+  20-Mar-2013 V1.38 PB floor division '//' added
 
 --------------------------------------------------------------------------*/
 
@@ -181,14 +190,14 @@ enum NumCommand {
   InValidNumCommand, PUSHVAL, PUSHADDR, NEG, MUL,
   NOT, EQU, NEQ, LE, LT, 
   GE, GT, AND, OR, IF,
-  DIV, REST, ADD, SUB, RAD,
-  DEG, PI, SIN, COS, TAN,
-  ASIN, ACOS, ATAN, ATAN2, SINH,
-  COSH, TANH, FLOOR, CEIL, FABS,
-  EXP, LOG, LOG10, POW, SQRT,
-  ROUND, GAMMA, FMIN, FMAX, DEGC2K, 
-  K2DEGC, DEGF2K, K2DEGF, DEGK2K, K2DEGK,
-  DEGF2DEGC, DEGC2DEGF,
+  DIV, FLOORDIV, REST, ADD, SUB, 
+  RAD, DEG, PI, SIN, COS, 
+  TAN, ASIN, ACOS, ATAN, ATAN2, 
+  SINH, COSH, TANH, FLOOR, CEIL, 
+  FABS, EXP, LOG, LOG10, POW, 
+  SQRT, ROUND, GAMMA, FMIN, FMAX, 
+  DEGC2K, K2DEGC, DEGF2K, K2DEGF, DEGK2K, 
+  K2DEGK, DEGF2DEGC, DEGC2DEGF,
   EndNumCommand
 };
  
@@ -196,14 +205,14 @@ static const char * NumCommandStrings[] = {
   "Invalid", "PUSHVAL", "PUSHADDR", "NEG", "MUL",
   "NOT", "EQU", "NEQ", "LE", "LT", 
   "GE", "GT", "AND", "OR", "IF",
-  "DIV", "REST", "ADD", "SUB", "RAD",
-  "DEG", "PI", "SIN", "COS", "TAN",
-  "ASIN", "ACOS", "ATAN", "ATAN2", "SINH",
-  "COSH", "TANH", "FLOOR", "CEIL", "FABS",
-  "EXP", "LOG", "LOG10", "POW", "SQRT",
-  "ROUND", "GAMMA", "FMIN", "FMAX", "DEGC2K", 
-  "K2DEGC", "DEGF2K", "K2DEGF", "DEGK2K", "K2DEGK",
-  "DEGF2DEGC", "DEGC2DEGF",
+  "DIV", "FLOORDIV", "REST", "ADD", "SUB", 
+  "RAD", "DEG", "PI", "SIN", "COS", 
+  "TAN", "ASIN", "ACOS", "ATAN", "ATAN2", 
+  "SINH", "COSH", "TANH", "FLOOR", "CEIL", 
+  "FABS", "EXP", "LOG", "LOG10", "POW", 
+  "SQRT", "ROUND", "GAMMA", "FMIN", "FMAX", 
+  "DEGC2K", "K2DEGC", "DEGF2K", "K2DEGF", "DEGK2K", 
+  "K2DEGK", "DEGF2DEGC", "DEGC2DEGF",
   (const char *) NULL
 };
 
@@ -299,6 +308,37 @@ char * numprog_newstr( const char * string )
   return( newstring );
  
 } /* numprog_newstr */
+
+/*---------------------------------------------------------------------------
+NAME
+
+    numprog_is_empty --- returns 1 if the input string is empty or not allocated
+
+SYNOPSIS
+
+   int numprog_is_empty( const char *s );
+
+DESCRIPTION
+
+   Rreturns 1 if the input string s contains only white space, if it
+   has the length 0, or is the NULL pointer, otherwise 0.
+
+RETURN VALUE
+
+   1: if string is empty, 0: otherwise
+
+---------------------------------------------------------------------------*/
+int numprog_is_empty( const char *s )
+{ const char *ps;
+  int empty=1;
+
+  if (s) {
+    ps = s;
+    while (*ps) { empty = empty&&isspace(*ps); ps++; }
+  }
+  return( empty );
+
+} /* numprog_is_empty */
 
 /*---------------------------------------------------------------------------
 NAME
@@ -2099,6 +2139,22 @@ int dpprogram_step ( NumProg * program, NumInstr * instruction,
 
       break;
 
+    case FLOORDIV:
+
+      accumulator = numprog_down_accumulator( program );
+      if (!accumulator) {
+        errval = NumNoAccumulator;
+        goto dpprogram_step_error;
+      }
+
+      argument1 = accumulator->Value;
+      argument2 = accumulator->Next->Value;
+      if ( argument2 != 0.0 ) {
+        accumulator->Value = floor( argument1 / argument2 );
+      } else errval = NumDivByZero;
+
+      break;
+
     case REST:
 
       accumulator = numprog_down_accumulator( program );
@@ -3589,8 +3645,9 @@ int dpconstant_init ( void )
 
   const double mol_   = 1.0;              /* molecular amount */
 
-  const double Byte_  = 1.0;              /* binary, B means Bel and
-                                             cannot be used here */
+  const double Byte_  = 1.0;              /* binary, B could mean Byte or Bel. Because
+                                             both are dimensionless, B can be used for
+                                             both of them without loss of generality. */
 
   DPConstant * element;
 
@@ -3759,6 +3816,10 @@ int dpconstant_init ( void )
                                  "mile", mile_, &element )) return(-1);
   if ( dpconstant_insert       ( "length", "m", 
                                  "sm", sm_, &element )) return(-1);
+  if ( dpconstant_insert       ( "length", "m", 
+                                 "nmi", sm_, &element )) return(-1);
+  if ( dpconstant_insert       ( "length", "m", 
+                                 "NM", sm_, &element )) return(-1);
 
  /* Speed (m/s) */
   if ( dpconstant_insert       ( "speed", "m/s",
@@ -3839,43 +3900,79 @@ int dpconstant_init ( void )
                                  "psi", psi_, &element ) ) return(-1);
   if ( dpconstant_insert       ( "pressure", "Pa", "Torr", Torr_,
                                  &element ) ) return(-1);
- /* Binary constants (Byte) */
-  if ( dpconstant_insert       ( "Byte", "Byte", "Byte",
+ /* Digital Information (Byte) */
+  if ( dpconstant_insert       ( "Byte (digital information)", "Byte", "Byte",
                                   Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "KiloByte", "Byte", "kByte",
+  if ( dpconstant_insert       ( "KiloByte (digital information)", "Byte", "kByte",
                                   Kilo*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "MegaByte", "Byte", "MByte",
+  if ( dpconstant_insert       ( "MegaByte (digital information)", "Byte", "MByte",
                                   Mega*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "GigaByte", "Byte", "GByte",
+  if ( dpconstant_insert       ( "GigaByte (digital information)", "Byte", "GByte",
                                   Giga*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "TeraByte", "Byte", "TByte",
+  if ( dpconstant_insert       ( "TeraByte (digital information)", "Byte", "TByte",
                                   Tera*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "PetaByte", "Byte", "PByte",
+  if ( dpconstant_insert       ( "PetaByte (digital information)", "Byte", "PByte",
                                   Peta*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "ExaByte", "Byte", "EByte",
+  if ( dpconstant_insert       ( "ExaByte (digital information)", "Byte", "EByte",
                                   Exa*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "ZettaByte", "Byte", "ZByte",
+  if ( dpconstant_insert       ( "ZettaByte (digital information)", "Byte", "ZByte",
                                   Zetta*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "YottaByte", "Byte", "YByte",
+  if ( dpconstant_insert       ( "YottaByte (digital information)", "Byte", "YByte",
                                   Yotta*Byte_, &element ) ) return(-1);
 
-  if ( dpconstant_insert       ( "KibiByte", "Byte", "KiByte", 
+  if ( dpconstant_insert       ( "KibiByte (digital information)", "Byte", "KiByte", 
                                   pow(1024,1)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "MebiByte", "Byte", "MiByte", 
+  if ( dpconstant_insert       ( "MebiByte (digital information)", "Byte", "MiByte", 
                                   pow(1024,2)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "GibiByte", "Byte", "GiByte", 
+  if ( dpconstant_insert       ( "GibiByte (digital information)", "Byte", "GiByte", 
                                   pow(1024,3)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "TebiByte", "Byte", "TiByte", 
+  if ( dpconstant_insert       ( "TebiByte (digital information)", "Byte", "TiByte", 
                                   pow(1024,4)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "PebiByte", "Byte", "PiByte", 
+  if ( dpconstant_insert       ( "PebiByte (digital information)", "Byte", "PiByte", 
                                   pow(1024,5)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "ExbiByte", "Byte", "EiByte", 
+  if ( dpconstant_insert       ( "ExbiByte (digital information)", "Byte", "EiByte", 
                                   pow(1024,6)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "ZebiByte", "Byte", "ZiByte", 
+  if ( dpconstant_insert       ( "ZebiByte (digital information)", "Byte", "ZiByte", 
                                   pow(1024,7)*Byte_, &element ) ) return(-1);
-  if ( dpconstant_insert       ( "YobiByte", "Byte", "YiByte", 
+  if ( dpconstant_insert       ( "YobiByte (digital information)", "Byte", "YiByte", 
                                   pow(1024,8)*Byte_, &element ) ) return(-1);
 
+ /* Digital Information (B) */
+  if ( dpconstant_insert       ( "Byte (digital information)", "Byte", "B",
+                                  Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "KiloByte (digital information)", "Byte", "kB",
+                                  Kilo*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "MegaByte (digital information)", "Byte", "MB",
+                                  Mega*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "GigaByte (digital information)", "Byte", "GB",
+                                  Giga*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "TeraByte (digital information)", "Byte", "TB",
+                                  Tera*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "PetaByte (digital information)", "Byte", "PB",
+                                  Peta*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "ExaByte (digital information)", "Byte", "EB",
+                                  Exa*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "ZettaByte (digital information)", "Byte", "ZB",
+                                  Zetta*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "YottaByte (digital information)", "Byte", "YB",
+                                  Yotta*Byte_, &element ) ) return(-1);
+
+  if ( dpconstant_insert       ( "KibiByte (digital information)", "Byte", "KiB",
+                                  pow(1024,1)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "MebiByte (digital information)", "Byte", "MiB",
+                                  pow(1024,2)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "GibiByte (digital information)", "Byte", "GiB",
+                                  pow(1024,3)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "TebiByte (digital information)", "Byte", "TiB",
+                                  pow(1024,4)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "PebiByte (digital information)", "Byte", "PiB",
+                                  pow(1024,5)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "ExbiByte (digital information)", "Byte", "EiB",
+                                  pow(1024,6)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "ZebiByte (digital information)", "Byte", "ZiB",
+                                  pow(1024,7)*Byte_, &element ) ) return(-1);
+  if ( dpconstant_insert       ( "YobiByte (digital information)", "Byte", "YiB",
+                                  pow(1024,8)*Byte_, &element ) ) return(-1);
 
   DPConstantInit = 1;
 
@@ -4360,13 +4457,27 @@ void dpterm( NumProg * program, const char **ps, int level, int * perrval)
 
          break;
        case '/' :
-         (*ps)++; dpfactor0(program,ps,level,perrval);
-         if (*perrval==NumSuccess) {
+         (*ps)++; 
+           switch (**ps) {
+             case '/' : // floor division
+               (*ps)++; dpfactor0(program,ps,level,perrval);
+               if (*perrval==NumSuccess) {
 
-           if (numprog_append_instruction ( program, 0, DIV, 2, 0, 
-             NULL, NULL )) { *perrval = NumProgramError; return; }
+                 if (numprog_append_instruction ( program, 0, FLOORDIV, 2, 0, 
+                   NULL, NULL )) { *perrval = NumProgramError; return; }
 
-         }
+               }
+               break;
+              default : // floating point division
+               dpfactor0(program,ps,level,perrval);
+               if (*perrval==NumSuccess) {
+
+                 if (numprog_append_instruction ( program, 0, DIV, 2, 0, 
+                   NULL, NULL )) { *perrval = NumProgramError; return; }
+
+               }
+               break;
+           }
          break;
        case '%' :
          (*ps)++; dpfactor0(program,ps,level,perrval);
@@ -4799,7 +4910,7 @@ void dpcomparison( NumProg * program, const char **ps,
                 equality    = comparison ["=="|"!=" comparison]
                 comparison  = expression ["<"|"<="|">"|">=" expression]
                 expression  = ["+"|"-"] term {"+"|"-" term}
-                 term       = factor1 {"*"|"/"|"%" factor1}
+                 term       = factor0 {"*"|"/"|"%"|"//" factor0}
                   factor0   = ["!"] factor1
                   factor1   = factor2 {"_" factor2}
                   factor2   = number | function | constant | "(" EXPRESSION ")"
@@ -5459,11 +5570,16 @@ PUBLIC char *num_double2str( char buffer[], unsigned long buflen,
   int errval;
   char tmp[128], *tmp_unit;
   double val, unit_val, tmp_unit_val;
+  const char *unit_tail;
 
   if ((unit) && (strlen(unit)>0)) {
     // get unit
-    unit_val = num_str2double( unit, NULL, &errval );
+    unit_val = num_str2double( unit, &unit_tail, &errval );
     if (errval) goto num_double2str_error;
+    if (!numprog_is_empty(unit_tail)) {
+      errval = NumBadUnit;
+      goto num_double2str_error;
+    }
     
     errval = NumDivByZero; 
     if ( unit_val == 0.0 ) goto num_double2str_error; 
@@ -5689,6 +5805,11 @@ PUBLIC char *num_errval2str( char buffer[], unsigned long buflen, int errval )
              break;
       case NumNoAccumulator :
              strncpy(buffer,"not enough program registers",buflen-1);
+             buffer[buflen-1]='\0';
+             break;
+  
+      case NumBadUnit :
+             strncpy(buffer,"bad unit",buflen-1);
              buffer[buflen-1]='\0';
              break;
   

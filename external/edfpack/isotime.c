@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define ISOTIME_VERSION      "isotime : V1.4 Peter Boesecke 2010-12-12"
+# define ISOTIME_VERSION      "isotime : V1.6 Peter Boesecke 2012-10-28"
 /*+++------------------------------------------------------------------------
 NAME
    isotime --- routines for isotime conversion 
@@ -39,6 +39,9 @@ HISTORY
   2010-05-27 V1.3 PB trim: unsigned long -> long, otherwise the condition
                            i>=0 in for loop would always be TRUE
   2010-12-12 V1.4 PB _convert2epoch: all epoch value preset
+  2012-10-27 V1.5 PB cpo: skip leading white spaces,
+                     shiftepoch added
+  2012-10-28 V1.6 PB isotime_mode, isotime_str2mode, isotime_mode2str
 
 PUBLIC extern
        IsotimeEpoch isotime2epoch( const char * isotime_s ),
@@ -53,12 +56,19 @@ LIMITATION
   would be possible to add the number of days since 1970-01-01. This would
   increase the time to +-~5e6 years.
 
+  isotime modes: 
+    IsotimeModeNoSpace: write isotime string without spaces (default), e.g.
+                        2012-01-01T11:23:44.234000+0200
+    IsotimeModeSpace:   write isotime string with spaces, e.g.
+                        2012-01-01 11:23:44.234000 +0200
+
 ----------------------------------------------------------------------------*/
 /******************************************************************************
 * Include Files                                                               *
 ******************************************************************************/
 
 # include "isotime.h"
+# include "strlib.h"
 
 /******************************************************************************
 * Private Definitions                                                         *
@@ -85,6 +95,7 @@ LIMITATION
 * Static Variables                                                          *
 ****************************************************************************/
 static int ISOTIME_debug = 0;
+static int ISOTIME_mode = IsotimeModeNoSpace;
 
 /*--------------------------------------------------------------------------*/
 /* long leap_days: number of accumulated leap days until 1st day of the year*/
@@ -366,6 +377,10 @@ char * cpo( char buffer[], size_t buflen, char * s )
   cnt = buflen-1;
 
   if ( s ) {
+
+    // skip leading white spaces
+    while (isspace(*ps)) ps++;
+
     // check start character '-' or '+'
     if ((*ps!='-')&&(*ps!='+')&&(*ps!='Z')) goto cpoerr;
 
@@ -562,9 +577,18 @@ IsotimeEpoch _isotime2epoch(const char * isotime_s)
 /* Scans epoch string and converts it to epoch. The input string has the    */
 /* format <seconds>[.<fraction>].                                           */
 /* Returns epoch, epoch.status!=0 in case of an error                       */
+/*                                                                          */
+/* Positive and negative times equal to epoch.sec + epoch.fract.            */
+/* The fraction is normalized to 0.0 <= epoch.fract < 1.0                   */
+/*                                                                          */
+/* Example:                                                                 */
+/* time  = floor(time) + time-floor(time)                                   */
+/*       = time.sec    + time.fract                                         */
+/*  10.7 = 10         + 0.7                                                 */
+/* -10.7 = -11        + 0.3                                                 */
 /*--------------------------------------------------------------------------*/
-IsotimeEpoch _string2epoch(const char *string)
-{ 
+IsotimeEpoch _string2epoch(const char *epoch_s)
+{ long base;
   IsotimeEpoch epoch;
   char epobuf[EPOLEN], *pr;
   char secbuf[SLEN], *ps;
@@ -573,7 +597,7 @@ IsotimeEpoch _string2epoch(const char *string)
   long sec=0;
   double fract=0.0;
 
-  if (ISOTIME_debug>0) fprintf(stderr,"_string2epoch >>%s<<\n",string);
+  if (ISOTIME_debug>0) fprintf(stderr,"_string2epoch >>%s<<\n",epoch_s);
 
   epoch.status = -1;
   epoch.sec    = 0;
@@ -581,7 +605,7 @@ IsotimeEpoch _string2epoch(const char *string)
   epoch.offset = 0;
 
   // trim isotime_s, convert to uppercase and copy to trimmed
-  ps = trim( epobuf, EPOLEN, string );
+  ps = trim( epobuf, EPOLEN, epoch_s );
   if (ISOTIME_debug>1) fprintf(stderr," trim returns >>%s<<\n",ps);
 
   // copy seconds
@@ -592,7 +616,8 @@ IsotimeEpoch _string2epoch(const char *string)
   pr = cpf( frabuf, SLEN, pf );
   if (ISOTIME_debug>1) fprintf(stderr," fraction >>%s<<\n",frabuf);
 
-  if ( strlen(pr) ) { // error, if rest is not empty
+  if ( strlen(pr) ) { 
+    // error, if rest is not empty
     fprintf( stderr, "ERROR: Cannot read epoch \"%s\"\n",epobuf );
     fprintf( stderr, "       Format: [+|-]sssssssssss[.uuuuuuu]\n" );
     fprintf( stderr, "               e.g. \"1149254287\", \"+1149254287.1\"\n");
@@ -603,7 +628,13 @@ IsotimeEpoch _string2epoch(const char *string)
   sscanf(frabuf,"%lf",&fract);
 
   epoch.sec = sec;
-  epoch.fract = fract;
+  if (sec>=0) epoch.fract = fract;
+  epoch.fract = -fract;
+
+  // normalize fract and sec
+  base = floor(epoch.fract);
+  epoch.fract -= (double) base;
+  epoch.sec   += base;
 
   epoch.status = 0;
 
@@ -761,6 +792,59 @@ offerr: if (ISOTIME_debug>0) fprintf(stderr,"setoffset2epoch END\n");
 
 /*+++------------------------------------------------------------------------
 NAME
+  shiftepoch --- shifts epoch by shift 
+
+SYNOPSIS
+
+  IsotimeEpoch shiftepoch(IsotimeEpoch epoch, IsotimeEpoch shift);
+
+DESCRIPTION
+
+  Adds shift to epoch. shift.offset is ignored.
+
+RETURN VALUE
+
+  updated epoch
+
+----------------------------------------------------------------------------*/
+IsotimeEpoch shiftepoch(IsotimeEpoch epoch, IsotimeEpoch shift)
+{ long base;
+  char epobuf[EPOLEN];
+
+  if (ISOTIME_debug>0) fprintf(stderr,"shiftepoch BEGIN\n");
+
+  if ( epoch.status ) goto shifterr;
+  if ( shift.status ) goto shifterr;
+
+  if (ISOTIME_debug>1) {
+    fprintf( stderr,"epoch >>%s<<, ", epoch2string(epobuf,EPOLEN,epoch));
+    fprintf( stderr,"shift >>%s<<\n", epoch2string(epobuf,EPOLEN,shift));
+  }
+
+  epoch.sec   += shift.sec;
+  epoch.fract += shift.fract;
+
+  // normalize fract and sec
+  base = (long) floor(epoch.fract);
+  epoch.fract -= (double) base;
+  epoch.sec   += base;
+
+  if (ISOTIME_debug>1) {
+    fprintf( stderr,"result >>%s<<, ", epoch2string(epobuf,EPOLEN,epoch));
+  }
+
+  if (ISOTIME_debug>0) fprintf(stderr,"shiftepoch END\n");
+
+  return ( epoch );
+
+shifterr: if (ISOTIME_debug>0) fprintf(stderr,"shiftepoch END\n");
+  epoch.status = -1;
+  return ( epoch );
+
+} // shiftepoch
+
+/*+++------------------------------------------------------------------------
+NAME
   isotime2epoch --- convert isotime string to IsotimeEpoch
 
 SYNOPSIS
@@ -861,7 +945,6 @@ const char * epoch2isotime( char buffer[], size_t buflen, IsotimeEpoch epoch )
     epoch.sec   += base;
 
     // convert2time
-
     fract = epoch.fract;
 
     if (epoch.offset<0) osign_c='-'; else osign_c='+';
@@ -890,7 +973,6 @@ const char * epoch2isotime( char buffer[], size_t buflen, IsotimeEpoch epoch )
     mm    = floor(ts/60);
     ts   -= mm*60;
     ss    = ts;
-
 
     days += DAYS_19700101; // == year*365+leap_days
 
@@ -926,9 +1008,17 @@ const char * epoch2isotime( char buffer[], size_t buflen, IsotimeEpoch epoch )
     else                   { month=12; day=yd-334-leap; } // Dec
 
     // print
-    sprintf( buffer, "%04ld-%02ld-%02ldT%02ld:%02ld:%02ld.%06ld%c%02ld%02ld",
+    switch (ISOTIME_mode) {
+      case IsotimeModeSpace:
+        sprintf(buffer,"%04ld-%02ld-%02ld %02ld:%02ld:%02ld.%06ld %c%02ld%02ld",
+                year,month,day,hh,mm,ss,(long) floor(epoch.fract*1e6+0.5),
+                osign_c,labs(Hh),labs(Mm) );
+        break;
+      default: // IsotimeModeNoSpace
+        sprintf(buffer,"%04ld-%02ld-%02ldT%02ld:%02ld:%02ld.%06ld%c%02ld%02ld",
              year,month,day,hh,mm,ss,(long) floor(epoch.fract*1e6+0.5),
              osign_c,labs(Hh),labs(Mm) );
+    }
   }
 
   if (ISOTIME_debug>0) fprintf(stderr,"epoch2isotime %s END\n",buffer);
@@ -966,7 +1056,17 @@ const char * epoch2string ( char buffer[], size_t buflen, IsotimeEpoch epoch )
     base = floor(epoch.fract);
     epoch.fract -= (double) base;
     epoch.sec   += base;
-    sprintf( buffer,"%ld.%06ld",epoch.sec,(long) floor(epoch.fract*1e6+0.5));
+    if (epoch.sec>=0)
+      sprintf( buffer," %ld.%06ld",epoch.sec,(long) floor(epoch.fract*1e6+0.5));
+    else { // invert sign
+      epoch.fract = -epoch.fract;
+      epoch.sec   = -epoch.sec;
+      // normalize fract and sec
+      base = floor(epoch.fract);
+      epoch.fract -= (double) base;
+      epoch.sec   += base;
+      sprintf( buffer,"-%ld.%06ld",epoch.sec,(long) floor(epoch.fract*1e6+0.5));
+    }
   }
 
   return( buffer );
@@ -975,16 +1075,77 @@ const char * epoch2string ( char buffer[], size_t buflen, IsotimeEpoch epoch )
 
 /*+++------------------------------------------------------------------------
 NAME
+  isotime_mode2str --- return isotime mode as string 
+
+SYNOPSIS
+
+  void isotime_mode2str( int mode );
+
+DESCRIPTION
+  int mode : isotime mode
+
+RETURN VALUE
+
+  const char* : isotime mode string
+
+----------------------------------------------------------------------------*/
+const char *isotime_mode2str ( int mode )
+{ switch (mode ) {
+    case IsotimeModeNoSpace: return("nospace");
+    case IsotimeModeSpace: return("space");
+  }
+  return("invalid"); 
+} /* isotime_mode2str */
+
+/*+++------------------------------------------------------------------------
+NAME
+  isotime_str2mode --- return input string as isotime mode
+
+SYNOPSIS
+
+  int isotime_str2mode ( const char *mode_s )
+
+DESCRIPTION
+  const char *mode_s : isotime mode string
+
+RETURN VALUE
+
+  const char*
+
+----------------------------------------------------------------------------*/
+int isotime_str2mode ( const char *mode_s )
+{ int mode = IsotimeModeInvalid;
+  char *str;
+
+  str = strlib_newstr( mode_s );
+
+  if (str) {
+    strlib_trim ( str );
+    strlib_tolower ( str );
+
+    if (!strcmp(str,"nospace")) mode = IsotimeModeNoSpace;
+    else if (!strcmp(str,"space")) mode = IsotimeModeSpace;
+    else mode = IsotimeModeInvalid;
+
+    free(str);
+  }
+
+  return(mode);
+
+} // isotime_str2mode
+
+/*+++------------------------------------------------------------------------
+NAME
   isotime_version --- return version
-    
-SYNOPSIS 
-    
+
+SYNOPSIS
+
   char *isotime_version ( void )
 
 DESCRIPTION
-    
-    
-RETURN VALUE 
+
+
+RETURN VALUE
 
    pointer to the version string
 
@@ -992,6 +1153,30 @@ RETURN VALUE
 const char *isotime_version ( void )
 { return ( ISOTIME_VERSION );
 } /* isotime_version */
+
+/*+++------------------------------------------------------------------------
+NAME
+  isotime_mode --- set isotime mode
+
+SYNOPSIS
+
+  void isotime_mode ( int mode );
+
+DESCRIPTION
+  void isotime_mode : selects IsotimeMode
+
+RETURN VALUE
+
+   void
+
+----------------------------------------------------------------------------*/
+void isotime_mode ( int mode )
+{  if (ISOTIME_debug>0) fprintf(stderr,"isotime_mode BEGIN\n");
+  ISOTIME_mode = mode;
+  if (ISOTIME_debug>1) fprintf(stderr," ISOTIME_mode >>%s<<\n",
+                         isotime_mode2str(ISOTIME_mode));
+  if (ISOTIME_debug>0) fprintf(stderr,"isotime_mode END\n");
+} /* isotime_mode */
 
 /*+++------------------------------------------------------------------------
 NAME 
@@ -1014,4 +1199,3 @@ RETURN VALUE
 void isotime_debug ( int debug )
 { ISOTIME_debug = debug;
 } /* isotime_debug */
-

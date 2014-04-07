@@ -62,13 +62,13 @@ DESCRIPTION
 ***************************************************************************/
 
 PUBLIC extern double 
-       dmedian ( double a[], long n ),
+       dmedian ( double a[], long n ), // averaging, if n is an even number 
      dmediance ( const double a[], long n, double m ),
-       median  ( double a[], long n ),
+       median  ( double a[], long n ), // no averaging
        minimum ( double a[], long n ),
        maximum ( double a[], long n ),
       dquantil ( double a[], long n, double p ),
-  dquantilance ( double a[], long n, double p ),
+  dquantilance ( const double a[], long n, double p, double m ),
           mean ( double a[], long n ),
       variance ( double a[], long n, double m );
 

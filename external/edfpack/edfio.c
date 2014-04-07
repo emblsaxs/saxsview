@@ -23,7 +23,7 @@
  *   If not, see <http://www.gnu.org/licenses/>.
  */
 
-# define EDFIO_VERSION      "edfio : V2.41 Peter Boesecke 2012-07-03"
+# define EDFIO_VERSION      "edfio : V2.42 Peter Boesecke 2012-08-30"
 /*+++------------------------------------------------------------------------
 NAME
    edfio --- EDF data format specific file access routines
@@ -159,7 +159,7 @@ HISTORY
                       Unsigned64 and Signed64 renamed to UnsignedLong and
                       SignedLong (unchanged in DTypeStringsAliases),
                       in DSize:
-                      Size of DoubleValue (DoubleIEEE64) corrected from 4 
+                      Size of DoubleValue (FloatIEEE64) corrected from 4 
                       to 8 bytes
 01-May-2000 PB V1.21  new in edfio.h:
                       -> edf_showmachinetypes
@@ -501,6 +501,12 @@ HISTORY
                       supported for edf-files.
 2012-07-03 PB 2.41    EdfMaxValLen increased from 512 to 2048 
                       EdfMaxLinLen increased from 255 to 1023
+2012-08-30 PB 2.42    DTypeStrings and DType (edfio.h):
+                      DoubleIEEE64 -> FloatIEEE64,
+                      Quadruple, QuadrupleValue, FloatIEEE128
+                      removed: 
+                      FloatVAX32, DoubleVAX64, FloatConvex32, DoubleConvex64
+                      DATA_FORMAT_VERSION -> 2.42
 --------------------------------------------------------------------------*/
 
 /***************************************************************************
@@ -786,7 +792,7 @@ typedef struct Data_File {                     /* Definition of a file table */
 * Version and general setup values                                         *
 ***************************************************************************/
 # define DATA_FORMAT_NAME         "EDF"
-# define DATA_FORMAT_VERSION      "2.40"
+# define DATA_FORMAT_VERSION      "2.42"
 # define DATA_BLOCKS_DEFAULT      UNDETERMINED      /* undetermined value */ 
 # define BLOCK_BOUNDARY           512                            /* bytes */
 # define PAD_WIDTH                78   /* width of padded text +2-0 chars */
@@ -856,24 +862,21 @@ PRIVATE const char * DTypeStringsAliases[18] =
            { INVALID,
              "Unsigned8",   "Signed8",      "Unsigned16",    "Signed16",
              "Unsigned32",  "Signed32",     "Unsigned64",    "Signed64",
-             "FloatIEEE32", "DoubleIEEE64", "UnAssigned",    "UnAssigned",
-             "FloatVAX32",  "DoubleVAX64",  "FloatConvex32", "DoubleConvex64",
+             "FloatIEEE32", "FloatIEEE64",  "FloatIEEE128",    "UnAssigned",
              (const char *) NULL };
 
 PRIVATE const char * DTypeStringsAliases1[18] =
       { INVALID,
         "UnsignedByte",    "SignedByte",    "UnsignedShort", "SignedShort",
         "UnsignedLong",    "SignedLong",    "Unsigned64",    "Signed64",
-        "Float",           "DoubleValue",   "UnAssigned",    "UnAssigned",
-        "FloatVAX32",      "DoubleVAX64",   "FloatConvex32", "DoubleConvex64",
+        "Float",           "Double",        "Quadruple",     "UnAssigned",
         (const char *) NULL };
 
 PRIVATE const char * DTypeStrings[18] =
       { INVALID,
         "UnsignedByte",    "SignedByte",    "UnsignedShort", "SignedShort",
         "UnsignedInteger", "SignedInteger", "Unsigned64",    "Signed64", 
-        "FloatValue",      "DoubleValue",   "UnAssigned",    "UnAssigned",
-        "FloatVAX32",      "DoubleVAX64",   "FloatConvex32", "DoubleConvex64",
+        "FloatValue",      "DoubleValue",   "QuadrupleValue", "UnAssigned",
         (const char *) NULL };
 
 PRIVATE const size_t DSize[17] = 
@@ -2810,7 +2813,7 @@ int insert_symbol( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   previous = (SElement *) NULL;
@@ -2899,7 +2902,7 @@ int search_symbol( DBlock * block, const char * Key, SElement ** symbol )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING (search_symbol): The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING (search_symbol): The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -3004,7 +3007,7 @@ int remove_symbol( DBlock * block, const char * Key, SElement ** Next )
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   /* search symbol */
@@ -3040,7 +3043,7 @@ int insert_symbol_root( DBlock * block, const char * Key,
   /* warning, if Key too long */
   if ( strlen(Key)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(Key), strlen(Key), Key, MaxKeyLen ); }
 
   if ( block == (DBlock *) NULL) return(-1);
@@ -3255,7 +3258,7 @@ int insert_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   if ( chain == (DChain *) NULL ) return(-1);
@@ -3336,7 +3339,7 @@ int search_data_block( DChain * chain, const char * BlockKey, DBlock ** block )
   /* warning, if BlockKey too long */
   if ( strlen(BlockKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(BlockKey), strlen(BlockKey), BlockKey, MaxKeyLen ); }
 
   /* search block */
@@ -3416,7 +3419,7 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  BinaryFileLen           = %lu\n",block->BinaryFileLen);
       fprintf(out,"  Data                    = %p\n",block->Data);
 //      fprintf(out,"  DataLen (DataBufferLen) = %zu (%zu)\n",
-      fprintf(out,"  DataLen (DataBufferLen) = %zu | %zu (%zu)\n",
+      fprintf(out,"  DataLen (DataBufferLen) = %zu | %lu (%lu)\n",
                           block->DataLen,block->DataLen,block->DataBufferLen);
       fprintf(out,"  DataType                = %ld\n",block->DataType);
       fprintf(out,"  DataByteOrder           = %s\n",
@@ -3429,7 +3432,7 @@ int print_data_block_list( FILE * out, DChain * chain, int level, int verbose )
       fprintf(out,"  DataDim                 = %p\n",block->DataDim);
       fprintf(out,"  Raw                     = %p\n",block->Raw);
 //      fprintf(out,"  RawLen (RawBufferLen)   = %zu (%zu)\n",
-      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %zu (%zu)\n",
+      fprintf(out,"  RawLen (RawBufferLen)   = %zu | %lu (%lu)\n",
                           block->RawLen,block->RawLen,block->RawBufferLen);
 
       if (block->DataDim) for (i_dim=0;i_dim<=block->DataDim[0];i_dim++) 
@@ -3479,7 +3482,7 @@ int insert_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   if ( file == (DFile *) NULL ) return(-1);
@@ -3534,7 +3537,7 @@ int search_data_chain( DFile * file, const char * ChainKey, DChain ** chain )
   /* warning, if ChainKey too long */
   if ( strlen(ChainKey)>MaxKeyLen ) {
 //    fprintf(stderr,"\nWARNING: The length %zu of %10s... exceeds %d\n",
-    fprintf(stderr,"\nWARNING: The length %zu | %zu of %10s... exceeds %d\n",
+    fprintf(stderr,"\nWARNING: The length %zu | %lu of %10s... exceeds %d\n",
              strlen(ChainKey), strlen(ChainKey), ChainKey, MaxKeyLen ); }
 
   /* search chain */
@@ -6010,7 +6013,7 @@ int locate_block( DFile * file , DBlock **pblock )
     /* FIT2D KLORA FORMAT (V1_SIZE_KEY missing, but dimensions given) */
     data_len = edf_dim_product(data_dim)*edf_data_sizeof(get_data_type(block_tmp));
     if (EDFIO_debug) {
-      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%zu\n",\
+      printf ("FIT2D KLORA FORMAT dim[0]=%lu, dim[1]=%lu, dim[2]=%lu, data_len=%lu\n",\
         data_dim[0],data_dim[1],data_dim[2],data_len);
     }
     binary_len = data_len;
@@ -7014,7 +7017,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     printf(" block                = %p\n", block);
     printf(" buffer               = %p\n", buffer);
 //    printf(" buflen               = %zu\n", buflen);
-    printf(" buflen               = %zu | %zu\n", buflen, buflen);
+    printf(" buflen               = %zu | %lu\n", buflen, buflen);
     printf(" data_dim[0]          = %ld\n", data_dim[0]);
     for (i=1;i<=data_dim[0];i++) 
       printf("  data_dim[%d]         = %ld\n", i, data_dim[i]);
@@ -7023,14 +7026,14 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     printf(" data_value_offset    = %ld\n", data_value_offset);
     printf(" raster_configuration = %ld\n", raster_configuration);
 //    printf(" data_size            = %zu\n", data_size);
-    printf(" data_size            = %zu | %zu\n", data_size, data_size);
+    printf(" data_size            = %zu | %lu\n", data_size, data_size);
     printf(" data_number          = %ld\n", data_number);
 //    printf(" data_len             = %zu\n", data_len);
-    printf(" data_len             = %zu | %zu\n", data_len, data_len);
+    printf(" data_len             = %zu | %lu\n", data_len, data_len);
     printf(" compression          = %s\n", edf_compression2string(compression));
     printf(" data_pos             = %ld\n", data_pos);
 //    printf(" bytes_to_read        = %zu\n", bytes_to_read);
-    printf(" bytes_to_read        = %zu | %zu\n", bytes_to_read, bytes_to_read);
+    printf(" bytes_to_read        = %zu | %lu\n", bytes_to_read, bytes_to_read);
   } /* EDFIO_debug */
 
   /* update DataDim array in block */
@@ -7092,7 +7095,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
     if (EDFIO_debug) printf(" Use supplied buffer\n");
     if (buflen<data_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",GBA_Error,data_len); 
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
         GBA_Error,data_len,data_len); 
       return(-1); }
     block->Flags.ExternalDataAlloc = True;
@@ -7122,7 +7125,7 @@ int get_binary_array ( DBlock * block, void * buffer, size_t buflen,
   /* check length */
   if (data_len-bytes_read>0) {
 //    fprintf(stderr,"%s read bytes %zu less than array size %zu\n",
-    fprintf(stderr,"%s read bytes %zu | %zu less than array size %zu | %zu\n",
+    fprintf(stderr,"%s read bytes %zu | %lu less than array size %zu | %lu\n",
       GBA_Error, bytes_read, bytes_read, data_len, data_len ); return(-1); }
     
   /* close external file */
@@ -8244,8 +8247,8 @@ void initmachinetypes ( void )
      case 4 : machinetype[FloatIEEE32]    = MFloat;
               datatype[MFloat]            = FloatIEEE32;
               break;
-     case 8 : machinetype[DoubleIEEE64]   = MFloat;
-              datatype[MFloat]            = DoubleIEEE64;
+     case 8 : machinetype[FloatIEEE64]   = MFloat;
+              datatype[MFloat]            = FloatIEEE64;
               break;
      }
 
@@ -8254,8 +8257,8 @@ void initmachinetypes ( void )
      case 4 : machinetype[FloatIEEE32]    = MDouble;
               datatype[MDouble]           = FloatIEEE32;
               break;
-     case 8 : machinetype[DoubleIEEE64]   = MDouble;
-              datatype[MDouble]           = DoubleIEEE64;
+     case 8 : machinetype[FloatIEEE64]   = MDouble;
+              datatype[MDouble]           = FloatIEEE64;
               break;
      }
 
@@ -8308,7 +8311,7 @@ void edf_showdatatypes ( int full )
     printf(" %15s               = %15s\n",  "DataType", "MachineType");
   for (i=1; i<EndDType; i++) {
     if ( (full) || (edf_datatype2machinetype(i)) ) { 
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         edf_datatype2string(i), edf_data_sizeof(i),
         MachineType2String(edf_datatype2machinetype(i)),
         edf_machine_sizeof(edf_datatype2machinetype(i)) );
@@ -8334,7 +8337,7 @@ void edf_showmachinetypes ( int full )
     printf(" %15s               = %15s\n", "MachineType", "DataType");
   for (i=1; i<EndMType; i++) {
     if ( (full) || (edf_machinetype2datatype(i)) ) {
-      printf(" %15s (%5zu bytes) = %15s (%5zu bytes)\n",
+      printf(" %15s (%5lu bytes) = %15s (%5lu bytes)\n",
         MachineType2String(i), edf_machine_sizeof(i),
         edf_datatype2string(edf_machinetype2datatype(i)),
         edf_data_sizeof(edf_machinetype2datatype(i)) );
@@ -10042,11 +10045,11 @@ int print_history_list( FILE * out, int level, int verbose, HSymb * root )
       fprintf(out,"   key               = %s\n",hline->key);
       fprintf(out,"   line              = %s\n",hline->line);
 //      fprintf(out,"   size              = %zu\n",hline->size);
-      fprintf(out,"   size              = %zu | %zu\n",
+      fprintf(out,"   size              = %zu | %lu\n",
         hline->size,hline->size);
       fprintf(out,"   required          = %d\n",hline->required);
 //      fprintf(out,"   shortlen          = %zu\n",hline->shortlen);
-      fprintf(out,"   shortlen          = %zu | %zu\n",
+      fprintf(out,"   shortlen          = %zu | %lu\n",
         hline->shortlen, hline->shortlen);
       fprintf(out,"   Previous key      = ");
       if ((hline->Previous)!=(HSymb*) NULL)
@@ -11351,14 +11354,14 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     if (block->Flags.ExternalDataAlloc) { // use input data buffer for output
       if (data_buffer_len<data_out_len) {
 //        fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-        fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+        fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
                RDA_Error,data_out_len,data_out_len);return(-1);
         }
       } 
     } else { // use supplied buffer for output
     if (buflen<data_out_len) {
 //      fprintf(stderr,"%s allocated buffer < %zu bytes\n",
-      fprintf(stderr,"%s allocated buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s allocated buffer < %zu | %lu bytes\n",
              RDA_Error,data_out_len,data_out_len);return(-1);
       }
     }
@@ -11379,7 +11382,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     if (!(dest = malloc( dest_len ))) {
       *pErrorValue = CouldNotMallocMemory;
 //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1);
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
         RDA_Error,dest_len,dest_len);return(-1); 
     }
     als[alc++] = dest; // add allocated memory
@@ -11402,7 +11405,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
     dest_len = buflen;
     if (dest_len<data_out_len) {
 //      fprintf(stderr,"%s supplied buffer < %zu bytes\n",RDA_Error,data_out_len);
-      fprintf(stderr,"%s supplied buffer < %zu | %zu bytes\n",
+      fprintf(stderr,"%s supplied buffer < %zu | %lu bytes\n",
         RDA_Error,data_out_len,data_out_len);
       return(-1); }
     }
@@ -11414,7 +11417,7 @@ int renorm_data_array ( DBlock * block, void * buffer, size_t buflen,
       for ( i=alc; i>0; --i ) if (als[i]) free(als[i]);       
       *pErrorValue = CouldNotMallocMemory;
 //      fprintf(stderr,"%s malloc of %zu bytes failed\n",RDA_Error,dest_len);return(-1); 
-      fprintf(stderr,"%s malloc of %zu | %zu bytes failed\n",
+      fprintf(stderr,"%s malloc of %zu | %lu bytes failed\n",
         RDA_Error,dest_len,dest_len);
       return(-1); 
     }

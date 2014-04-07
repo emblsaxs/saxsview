@@ -20,7 +20,7 @@ if (ZLIB_FOUND)
   add_shared_library (edf
                       SOURCES ${EDFPACK_HEADERS} ${EDFPACK_SOURCES}
                       LIBRARIES m ${ZLIB_LIBRARIES}
-                      VERSION 2.223)
+                      VERSION 2.233)
   install_library (TARGETS edf)
 
 else (ZLIB_FOUND)

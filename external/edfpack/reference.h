@@ -93,7 +93,7 @@ DESCRIPTION
   pixel index      : Machine dependent numbering of pixels inside an array.
                      The machine dependent numbering starts with INDEXSTART.
   pixel number     : Machine independent numbering of a pixel.
-                     The machine indedpendend numbering starts with NUMBERSTART.
+                     The machine independend numbering starts with NUMBERSTART.
   pixel coordinate : Machine independent coordinate of a pixel array.
                      ARRAYSTART is the pixel coordinate of the
                      center of the pixel with the index INDEXSTART.

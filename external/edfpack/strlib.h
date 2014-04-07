@@ -38,6 +38,7 @@ DESCRIPTION
 
 ***********************************************************************---*/
 #ifndef _STRLIB_
+# define _STRLIB_
 
 /***************************************************************************
 * General Definitions                                                      *
@@ -119,7 +120,6 @@ PUBLIC extern const char
   // return version string
   *strlib_version ( void );
 
-# define _STRLIB_
 #endif /* _STRLIB_ */
 
 /****************************************************************************
