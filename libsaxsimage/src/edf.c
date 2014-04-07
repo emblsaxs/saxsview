@@ -46,7 +46,7 @@ int saxs_image_edf_read(saxs_image *image, const char *filename) {
   }
 
   edf_read_data(fd,
-                1,               /* Image 1 */
+                0,               /* Image index 0 */
                 1,               /* Memory 1 (image data), -1 (variance) */
                 &dim,
                 &size,

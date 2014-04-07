@@ -1,3 +1,7 @@
+2014-04-07  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* srd/edf.c (saxs_image_edf_read): Read image index 0, not index 1.
+
 2013-11-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/msk.c (saxs_image_msk_read): Fixed computation of data bytes if
