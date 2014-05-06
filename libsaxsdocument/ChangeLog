@@ -1,5 +1,10 @@
 2014-05-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* fortran/fsaxsdocument.f90 (saxs_document_data): Removed type argument,
+	removed all OPTIONAL attributes, added more error checking.
+
+2014-05-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/atsas_fir_fit.c (atsas_fit_write_header): New.
 	(atsas_fit_3_column_write_data): New.
 	(atsas_fit_3_column_write): New.

@@ -250,11 +250,11 @@ CONTAINS
     END DO
   END SUBROUTINE
 
-  SUBROUTINE saxs_document_data(doc, x, y, y_err, type, k)
+  SUBROUTINE saxs_document_data(doc, x, y, y_err, k, status)
     TYPE(saxs_document), INTENT(inout)                :: doc
     REAL(DBL), DIMENSION(:), ALLOCATABLE, INTENT(out) :: x, y, y_err
-    INTEGER, INTENT(in), OPTIONAL                     :: type
-    INTEGER, INTENT(in), OPTIONAL                     :: k
+    INTEGER, INTENT(in)                               :: k
+    INTEGER, INTENT(out)                              :: status
 
     INTEGER :: i
 
@@ -344,32 +344,30 @@ CONTAINS
     TYPE(C_PTR) :: data
     INTEGER     :: n
 
-    IF (PRESENT(type)) THEN
-      curve = c_saxs_document_curve_find(doc%c_ptr, type)
-    ELSE
-      curve = c_saxs_document_curve(doc%c_ptr)
-    END IF
-
-    IF (PRESENT(k)) THEN
-      i = 1
-      DO WHILE(i < k .AND. C_ASSOCIATED(curve))
-        curve = c_saxs_curve_next(curve)
-        i     = i + 1
-      END DO
-    END IF
-
-    n = c_saxs_curve_data_count(curve)
-    ALLOCATE(x(n), y(n), y_err(n))
-
-    n = 0
-    data = c_saxs_curve_data(curve)
-    DO WHILE (C_ASSOCIATED(data))
-      n        = n + 1
-      x(n)     = c_saxs_data_x(data)
-      y(n)     = c_saxs_data_y(data)
-      y_err(n) = c_saxs_data_y_err(data)
-      data     = c_saxs_data_next(data)
+    i = 1
+    curve = c_saxs_document_curve(doc%c_ptr)
+    DO WHILE(i < k .AND. C_ASSOCIATED(curve))
+      curve = c_saxs_curve_next(curve)
+      i     = i + 1
     END DO
+
+    IF (C_ASSOCIATED(curve)) THEN
+      n = c_saxs_curve_data_count(curve)
+      ALLOCATE(x(n), y(n), y_err(n))
+
+      n = 0
+      data = c_saxs_curve_data(curve)
+      DO WHILE (C_ASSOCIATED(data))
+        n        = n + 1
+        x(n)     = c_saxs_data_x(data)
+        y(n)     = c_saxs_data_y(data)
+        y_err(n) = c_saxs_data_y_err(data)
+        data     = c_saxs_data_next(data)
+      END DO
+      status = 0
+    ELSE
+      status = 99
+    END IF
   END SUBROUTINE
 
   SUBROUTINE saxs_document_add_real_property(doc, name, value)
