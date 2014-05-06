@@ -1,3 +1,11 @@
+2014-05-06  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_fir_fit.c (atsas_fit_write_header): New.
+	(atsas_fit_3_column_write_data): New.
+	(atsas_fit_3_column_write): New.
+	(saxs_document_format_register_atsas_fir_fit): Enabled writing of 3-column
+	fit files.
+
 2014-01-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/saxsdocument_format.h (saxs_document_format): Synchronized

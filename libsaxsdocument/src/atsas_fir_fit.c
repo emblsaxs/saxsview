@@ -56,6 +56,24 @@ atsas_fir_fit_parse_footer(struct saxs_document *doc,
 
 /**************************************************************************/
 static int
+atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
+  struct line *line;
+
+  saxs_property *title;
+  title = saxs_document_property_find_first(doc, "title");
+
+  /* First line, if no title is available, this line is empty. */
+  line = lines_create();
+  if (title)
+    lines_printf(line, "%s", saxs_property_value(title));
+  lines_append(lines, line);
+
+  return 0;
+}
+
+
+/**************************************************************************/
+static int
 atsas_fir_4_column_parse_data(struct saxs_document *doc,
                               struct line *firstline, struct line *lastline) {
 
@@ -109,6 +127,43 @@ atsas_fit_3_column_read(struct saxs_document *doc,
                                          atsas_fir_fit_parse_header,
                                          atsas_fit_3_column_parse_data,
                                          atsas_fir_fit_parse_footer);
+}
+
+
+int
+atsas_fit_3_column_write_data(struct saxs_document *doc,
+                              struct line **lines) {
+
+  saxs_curve *expcurve, *fitcurve;
+  saxs_data *expdata, *fitdata;
+
+  if (saxs_document_curve_count(doc) != 2)
+    return ENOTSUP;
+
+  expcurve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  fitcurve = saxs_curve_next(expcurve);
+
+  expdata = saxs_curve_data(expcurve);
+  fitdata = saxs_curve_data(fitcurve);
+  while (expdata && fitdata) {
+    struct line *l = lines_create();
+    lines_printf(l, "%14e %14e %14e",
+                 saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y_err(fitdata));
+    lines_append(lines, l);
+
+    expdata = saxs_data_next(expdata);
+    fitdata = saxs_data_next(fitdata);
+  }
+
+  return 0;
+}
+
+int
+atsas_fit_3_column_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         atsas_fit_write_header,
+                                         atsas_fit_3_column_write_data,
+                                         NULL);
 }
 
 
@@ -272,7 +327,7 @@ saxs_document_format_register_atsas_fir_fit() {
   saxs_document_format atsas_fit_3_column = {
      "fit", "atsas-fit-3-column",
      "ATSAS fit against data (3 column; DAMMIN, DAMMIF, ...)",
-     atsas_fit_3_column_read, NULL, NULL
+     atsas_fit_3_column_read, atsas_fit_3_column_write, NULL
   };
 
   saxs_document_format atsas_fit_4_column = {
