@@ -210,6 +210,27 @@ static int parse_header(struct saxs_document *doc,
       saxs_document_add_property(doc, "total-estimate",
                                  extract(firstline, ":"));
 
+// FIXME
+    else if (strstr(firstline->line_buffer, "Reciprocal space Rg"))
+      saxs_document_add_property(doc, "reciprocal-space-rg",
+                                 extract(firstline, ":"));
+
+    else if (strstr(firstline->line_buffer, "Reciprocal space I(0)"))
+      saxs_document_add_property(doc, "reciprocal-space-I0",
+                                 extract(firstline, ":"));
+
+    else if (strstr(firstline->line_buffer, "Real space Rg"))
+      saxs_document_add_property(doc, "real-space-rg",
+                                 extract(firstline, ":"));
+
+    else if (strstr(firstline->line_buffer, "Real space I(0)"))
+      saxs_document_add_property(doc, "real-space-I0",
+                                 extract(firstline, ":"));
+
+    else if (strstr(firstline->line_buffer, "Total Estimate"))
+      saxs_document_add_property(doc, "total-estimate",
+                                 extract(firstline, ":"));
+
     firstline = firstline->next;
   }
 
