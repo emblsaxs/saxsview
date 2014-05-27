@@ -1,3 +1,8 @@
+2014-05-27  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* atsas_fir_fit.c (atsas_fit_3_column_write_data): Fixed writing of
+	the actual fit data.
+
 2014-05-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_out.c (parse_header): Temporarily handle new style .out

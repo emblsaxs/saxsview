@@ -148,7 +148,7 @@ atsas_fit_3_column_write_data(struct saxs_document *doc,
   while (expdata && fitdata) {
     struct line *l = lines_create();
     lines_printf(l, "%14e %14e %14e",
-                 saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y_err(fitdata));
+                 saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y(fitdata));
     lines_append(lines, l);
 
     expdata = saxs_data_next(expdata);
