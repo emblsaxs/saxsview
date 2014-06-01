@@ -1,6 +1,6 @@
 /*
  * Read files in .out-format (e.g. written by GNOM).
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2014 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -211,6 +211,14 @@ static int parse_header(struct saxs_document *doc,
                                  extract(firstline, ":"));
 
 // FIXME
+    else if (strstr(firstline->line_buffer, "Points skipped"))
+      saxs_document_add_property(doc, "leading-points-omitted",
+                                 extract(firstline, ":"));
+
+    else if (strstr(firstline->line_buffer, "Points omitted"))
+      saxs_document_add_property(doc, "trailing-points-omitted",
+                                 extract(firstline, ":"));
+
     else if (strstr(firstline->line_buffer, "Reciprocal space Rg"))
       saxs_document_add_property(doc, "reciprocal-space-rg",
                                  extract(firstline, ":"));

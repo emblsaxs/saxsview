@@ -1,3 +1,8 @@
+2014-06-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_out.c: Bumped copyright years.
+	(parse_header): Also recognize omitted points at the beginning and end.
+
 2014-05-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* atsas_fir_fit.c (atsas_fit_3_column_write_data): Fixed writing of
