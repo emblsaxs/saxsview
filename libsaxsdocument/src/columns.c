@@ -41,6 +41,27 @@ static int issep(int c) {
   return isspace(c) || c == ',' || c == ';';
 }
 
+static int is_utf8(const unsigned char *data) {
+  return data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF;
+}
+
+static int is_utf16_le(const unsigned char *data) {
+  return data[0] == 0xFE && data[1] == 0xFF;
+}
+
+static int is_utf16_be(const unsigned char *data) {
+  return data[0] == 0xFF && data[1] == 0xFE;
+}
+
+static int is_utf32_le(const unsigned char *data) {
+  return data[0] == 0x00 && data[1] == 0x00 && data[2] == 0xFE && data[3] == 0xFF;
+}
+
+static int is_utf32_be(const unsigned char *data) {
+  return data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00;
+}
+
+
 
 struct line* lines_create() {
   struct line *line;
@@ -120,7 +141,6 @@ int lines_printf(struct line *l, const char *fmt, ...) {
   return n;
 }
 
-
 int lines_read(struct line **lines, const char *filename) {
   struct line *head, *tail;
   int c;
@@ -193,8 +213,26 @@ int lines_read(struct line **lines, const char *filename) {
   if (strcmp(filename, "-"))
     fclose(fd);
 
-  *lines = head;
+  /*
+   * Check if we have a unicode file. We can deal with UTF-8,
+   * although some text may be garbled.
+   *
+   * Error out on all other unicode formats for now.
+   * Later we may fully support unicode, if needed.
+   */
+  if (    is_utf16_le((unsigned char*)head->line_buffer)
+       || is_utf16_be((unsigned char*)head->line_buffer)
+       || is_utf32_le((unsigned char*)head->line_buffer)
+       || is_utf32_be((unsigned char*)head->line_buffer)) {
 
+    lines_free(head);
+    return EILSEQ;
+
+  } else if (is_utf8((unsigned char*)head->line_buffer)) {
+    /* Do nothing? */
+  }
+
+  *lines = head;
   return 0;
 }
 
