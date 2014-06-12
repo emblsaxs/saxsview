@@ -1,3 +1,7 @@
+2014-06-12  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_out.c (parse_header): Handle first/last instead of skip/omit.
+
 2014-06-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/columns.c (is_utf8): New.

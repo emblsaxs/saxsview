@@ -210,13 +210,15 @@ static int parse_header(struct saxs_document *doc,
       saxs_document_add_property(doc, "total-estimate",
                                  extract(firstline, ":"));
 
-// FIXME
-    else if (strstr(firstline->line_buffer, "Points skipped"))
-      saxs_document_add_property(doc, "leading-points-omitted",
+// FIXME-1: properly handle 4.6 and 5.0 file versions.
+// FIXME-2: first-point, last-point only work if there was only one input file,
+//          if there are multiple, things get messy.
+    else if (strstr(firstline->line_buffer, "First data point used"))
+      saxs_document_add_property(doc, "first-point",
                                  extract(firstline, ":"));
 
-    else if (strstr(firstline->line_buffer, "Points omitted"))
-      saxs_document_add_property(doc, "trailing-points-omitted",
+    else if (strstr(firstline->line_buffer, "Last data point used"))
+      saxs_document_add_property(doc, "last-point",
                                  extract(firstline, ":"));
 
     else if (strstr(firstline->line_buffer, "Reciprocal space Rg"))
