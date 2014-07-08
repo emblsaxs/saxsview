@@ -48,13 +48,20 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
    *
    * The description may contain whitespaces, thus, anything between
    * the first ':' and the last 'c=' is assumed to be the description.
+   *
+   * Interesting effects may be observed if a random string contains
+   * a "c=" and a ":", but in any order, e.g.
+   *
+   *     "Extrapolation to c=0 from: [...]"
+   *
+   * So, double check at least that the ":" comes before the "c=".
    */
 
   char *colon_pos = strchr(l->line_buffer, ':');
   char *conc_pos  = strstr(l->line_buffer, "c=");
   char *p;
 
-  if (conc_pos) {
+  if (conc_pos && conc_pos > colon_pos) {
     char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
 
     if (colon_pos)
