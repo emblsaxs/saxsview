@@ -81,19 +81,23 @@ saxs_document_format_init() {
     return;
 
   /*
+   * Register from the more specific to the less specific;
+   * when iterating to find a specialized format, sometimes e.g.
+   * csv matches a subset of, say, atsas_out.
+   *
    * TODO: is there a way (simple) to register known formats in a
    *       platform independent way without enumerating them?
    */
-  saxs_document_format_register_atsas_dat();
-  saxs_document_format_register_atsas_fir_fit();
-  saxs_document_format_register_atsas_int();
-  saxs_document_format_register_atsas_out();
-  saxs_document_format_register_csv();
-  saxs_document_format_register_maxlab_rad();
-  saxs_document_format_register_malvern_txt();
 #ifdef HAVE_LIBXML2
   saxs_document_format_register_cansas_xml();
 #endif
+  saxs_document_format_register_malvern_txt();
+  saxs_document_format_register_atsas_out();
+  saxs_document_format_register_atsas_int();
+  saxs_document_format_register_atsas_fir_fit();
+  saxs_document_format_register_atsas_dat();
+  saxs_document_format_register_csv();
+  saxs_document_format_register_maxlab_rad();
 
   saxs_document_format_initialized = 1;
 

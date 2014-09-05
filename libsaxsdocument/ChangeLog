@@ -1,3 +1,8 @@
+2014-09-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* saxsdocument_format.c (saxs_document_format_init): Register file formats
+	in order of the more specific to the less specific.
+
 2014-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_dat.c (parse_basic_information): Avoid negative string
