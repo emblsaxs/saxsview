@@ -271,6 +271,44 @@ error:
   return res;
 }
 
+int
+atsas_fit_4_column_write_data(struct saxs_document *doc,
+                              struct line **lines) {
+
+  saxs_curve *expcurve, *fitcurve;
+  saxs_data *expdata, *fitdata;
+
+  if (saxs_document_curve_count(doc) != 2)
+    return ENOTSUP;
+
+  expcurve = saxs_document_curve_find(doc, SAXS_CURVE_SCATTERING_DATA);
+  fitcurve = saxs_curve_next(expcurve);
+
+  if (!saxs_curve_has_y_err(expcurve))
+    return ENOTSUP;
+
+  expdata = saxs_curve_data(expcurve);
+  fitdata = saxs_curve_data(fitcurve);
+  while (expdata && fitdata) {
+    struct line *l = lines_create();
+    lines_printf(l, "%14e %14e %14e %14e",
+                 saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y_err(expdata), saxs_data_y(fitdata));
+    lines_append(lines, l);
+
+    expdata = saxs_data_next(expdata);
+    fitdata = saxs_data_next(fitdata);
+  }
+
+  return 0;
+}
+
+int
+atsas_fit_4_column_write(struct saxs_document *doc, struct line **l) {
+  return saxs_writer_columns_write_lines(doc, l,
+                                         atsas_fit_write_header,
+                                         atsas_fit_4_column_write_data,
+                                         NULL);
+}
 
 /**************************************************************************/
 static int
@@ -333,7 +371,7 @@ saxs_document_format_register_atsas_fir_fit() {
   saxs_document_format atsas_fit_4_column = {
      "fit", "atsas-fit-4-column",
      "ATSAS fit against data (4 column; SASREF, ...)",
-     atsas_fit_4_column_read, NULL, NULL
+     atsas_fit_4_column_read, atsas_fit_4_column_write, NULL
   };
 
   saxs_document_format atsas_fit_5_column = {

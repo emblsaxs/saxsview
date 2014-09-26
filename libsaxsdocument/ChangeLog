@@ -1,3 +1,9 @@
+2014-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_fir_fit.c (atsas_fit_4_column_write_data): New.
+	(atsas_fit_4_column_write): New.
+	(saxs_document_format_register_atsas_fir_fit): Register new writer.
+
 2014-09-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsdocument_format.c (saxs_document_format_init): Register file formats
