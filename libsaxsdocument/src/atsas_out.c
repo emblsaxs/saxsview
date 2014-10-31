@@ -339,87 +339,82 @@ static int parse_footer(struct saxs_document *doc,
 int atsas_out_read(struct saxs_document *doc,
                    struct line *firstline, struct line *lastline) {
   struct line *current;
-  struct line *scattering_begin, *probability_begin, *footer;
+  struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
 
   /*
    * .out files may come with multiple repeated data sections,
    * i.e. multiple full GNOM runs are being appended into the
    * same file. Some people would call it a feature, others
-   * would consider it a bug. Thus, check if there are multiple
-   * data sections first, if yes, this "format" is not supported.
-   */
-  int n = 0;
-  current = firstline;
-  while(current) {
-    if (strcmp(current->line_buffer,
-                 "S          J EXP       ERROR       J REG       I REG") == 0)
-      n += 1;
-
-    current = current->next;
-  }
-
-  if (n > 1)
-    return ENOTSUP;
-
-  /*
+   * would consider it a bug. As per popular request, these
+   * multi-segment files should be accepted and only the last
+   * section should be read (if complete); ignore the rest.
+   *
    * .out-files were meant to be human readable and are thus
    * "nicely" formatted for this purpose.
    *
    * Scan the lines, separate sections (header, scattering data,
    * probability data, footer) to be parsed later.
    */
-
-  /*
-   * The header starts at the first line and ends with:
-   *     "S          J EXP       ERROR       J REG       I REG"
-   */
   current = firstline;
-  while(current
-        && strcmp(current->line_buffer,
-                  "S          J EXP       ERROR       J REG       I REG") != 0)
+  while(current) {
+    /*
+     * The header starts with the program name and version:
+     * "           ####    G N O M   ---   Version 4.6                       ####"
+     */
+    if (strstr(current->line_buffer, "G N O M")) {
+      header            = current;
+      scattering_begin  = NULL;
+      probability_begin = NULL;
+      footer            = NULL;
+    }
+
+    /*
+     * The scattering data (experimental and regularized) starts at the
+     * first line and ends with:
+     *     "S          J EXP       ERROR       J REG       I REG"
+     */
+    if (strstr(current->line_buffer, "J EXP")
+         && strstr(current->line_buffer, "ERROR")
+         && strstr(current->line_buffer, "J REG")
+         && strstr(current->line_buffer, "I REG"))
+      scattering_begin = current;
+
+    /*
+     * Scattering data ends with:
+     *     "Distance distribution  function of particle"       (gnom jobtype 0)
+     *     "Characteristic function of particle thickness"     (gnom jobtype 3)
+     *     "Distance distribution function of cross-section"   (gnom jobtype 4)
+     *     "Length distribution function of long cylinders"    (gnom jobtype 5)
+     *     "Surface distribution function of spherical shells" (gnom jobtype 6)
+     */
+    if (strstr(current->line_buffer, "function of particle")
+         || strstr(current->line_buffer, "particle thickness")
+         || strstr(current->line_buffer, "function of cross-section")
+         || strstr(current->line_buffer, "function of long cylinders")
+         || strstr(current->line_buffer, "function of spherical shells"))
+      probability_begin = current;
+  
+    /*
+     * Probability data ends with:
+     *     "Reciprocal space"
+     */
+    if (strstr(current->line_buffer, "Reciprocal space"))
+      footer = current;
+
     current = current->next;
-
-  scattering_begin = current;
-
-  /*
-   * Scattering data ends with:
-   *     "Distance distribution  function of particle"       (gnom jobtype 0)
-   *     "Characteristic function of particle thickness"     (gnom jobtype 3)
-   *     "Distance distribution function of cross-section"   (gnom jobtype 4)
-   *     "Length distribution function of long cylinders"    (gnom jobtype 5)
-   *     "Surface distribution function of spherical shells" (gnom jobtype 6)
-   */
-  while (current
-         && !strstr(current->line_buffer, "function of particle")
-         && !strstr(current->line_buffer, "particle thickness")
-         && !strstr(current->line_buffer, "function of cross-section")
-         && !strstr(current->line_buffer, "function of long cylinders")
-         && !strstr(current->line_buffer, "function of spherical shells"))
-    current = current->next;
-
-  probability_begin = current;
-
-  /*
-   * Probability data ends with:
-   *     "Reciprocal space"
-   */
-  while (current
-         && !strstr(current->line_buffer, "Reciprocal space"))
-    current = current->next;
-
-  footer = current;
+  }
 
   /*
    * If none of the sections was found, the lines do not
    * come from a GNOM .out file.
    */
-  if (!scattering_begin && !probability_begin && !footer)
+  if (!header && !scattering_begin && !probability_begin && !footer)
     return ENOTSUP;
 
   /*
    * Now parse the individual sections and extract the data.
    */
-  parse_header(doc, firstline, scattering_begin);
+  parse_header(doc, header, scattering_begin);
   parse_scattering_data(doc, scattering_begin, probability_begin);
   parse_probability_data(doc, probability_begin, footer);
   parse_footer(doc, footer, lastline);

@@ -1,3 +1,8 @@
+2014-10-31  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_out.c (atsas_out_read): In a multi-run .out file,
+	read the last section.
+
 2014-09-26  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_fir_fit.c (atsas_fit_4_column_write_data): New.
