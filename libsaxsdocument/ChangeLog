@@ -1,3 +1,7 @@
+2014-11-05  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_out.c (atsas_out_read): Fixed recognition of footer.
+
 2014-10-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_out.c (atsas_out_read): In a multi-run .out file,

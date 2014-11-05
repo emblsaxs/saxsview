@@ -395,10 +395,13 @@ int atsas_out_read(struct saxs_document *doc,
       probability_begin = current;
   
     /*
-     * Probability data ends with:
-     *     "Reciprocal space"
+     * Probability data ends with (v4.x):
+     *     "Reciprocal space: Rg =   xx.xx     , I(0) =   x.xxxxxx"
+     * or nothing at all (v5.x).
      */
-    if (strstr(current->line_buffer, "Reciprocal space"))
+    if (strstr(current->line_buffer, "Reciprocal space")
+         && strstr(current->line_buffer, "Rg")
+         && strstr(current->line_buffer, "I(0)"))
       footer = current;
 
     current = current->next;
