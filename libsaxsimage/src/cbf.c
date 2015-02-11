@@ -90,7 +90,7 @@ saxs_image_cbf_read_low_level(cbf_handle cbf,
 }
 
 
-int saxs_image_cbf_read(saxs_image *image, const char *filename) {
+int saxs_image_cbf_read(saxs_image *image, const char *filename, size_t frame) {
   size_t width, height, res;
   int *data;
   cbf_handle cbf;
@@ -117,7 +117,7 @@ int saxs_image_cbf_read(saxs_image *image, const char *filename) {
   if (res == 0) {
     size_t x, y;
 
-    saxs_image_set_size(image, width, height);
+    saxs_image_set_size(image, width, height, 1, 1);
     for (x = 0; x < width; ++x)
       for (y = 0; y < height; ++y)
         saxs_image_set_value(image, x, height - y - 1, *(data + y * width + x));

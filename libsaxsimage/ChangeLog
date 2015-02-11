@@ -1,5 +1,27 @@
 2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/saxsimage.h: Bumped copyright years.
+	(saxs_image_read_frame): New.
+	(saxs_image_frame_count): New.
+	(saxs_image_current_frame): New.
+	(saxs_image_set_size): Added frame count and current frame.
+	* src/saxsimage.cpp: Bumped copyright years.
+	(saxs_image_read_frame): New.
+	(saxs_image_frame_count): New.
+	(saxs_image_current_frame): New.
+	(saxs_image_set_size): Added frame count and current frame.
+	(saxs_image_create): Initialize frame count and current frame.
+	(saxs_image_copy): Likewise.
+	* src/saxsimage_format.h (saxs_image_format): Added frame argument
+	to read function.
+	* src/cbf.c (saxs_image_cbf_read): Take frame argument, set frame
+	count and current frame.
+	* src/edf.c (saxs_image_edf_read): Likewise.
+	* src/msk.c (saxs_image_msk_read): Likewise.
+	* src/tiff.c (saxs_image_tiff_read): Likewise.
+
+2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/saxsimage.c (saxs_image_update_cache): Verify that there is
 	a valid image.
 	(saxs_image_value_min): Likewise.

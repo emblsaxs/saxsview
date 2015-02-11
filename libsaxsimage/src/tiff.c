@@ -158,7 +158,7 @@ static void saxs_image_tiff_read_header(saxs_image *image, TIFF *tiff,
   }
 }
 
-int saxs_image_tiff_read(saxs_image *image, const char *filename) {
+int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) {
   TIFF *tiff;
   tstrip_t strip;
   tdata_t *data;
@@ -207,7 +207,7 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename) {
                          ((char*)data) + strip * TIFFStripSize(tiff),
                          (tsize_t) - 1);
 
-  saxs_image_set_size(image, width, height);
+  saxs_image_set_size(image, width, height, 1, 1);
 
   if (spp == 1) {
     /*

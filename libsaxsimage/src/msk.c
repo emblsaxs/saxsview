@@ -35,7 +35,7 @@
 #endif
 
 
-int saxs_image_msk_read(saxs_image *image, const char *filename) {
+int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   int magic[4] = { 0 }, datasize, *data = NULL, *tmp;
   int width, height, padding;
   int row, col, bit;
@@ -82,7 +82,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename) {
    * this simplifies reading as no further special boundary
    * conditions need to be checked.
    */
-  saxs_image_set_size(image, width, height);
+  saxs_image_set_size(image, width, height, 1, 1);
 
   tmp = data;
   for (row = 0; row < height; ++row)

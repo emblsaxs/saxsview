@@ -31,7 +31,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-int saxs_image_edf_read(saxs_image *image, const char *filename) {
+int saxs_image_edf_read(saxs_image *image, const char *filename, size_t frame) {
   int i, fd, edf_errno, status;
   float *data = NULL;
   long *dim = NULL;    /* allocated by edf_read_data, first element
@@ -61,7 +61,7 @@ int saxs_image_edf_read(saxs_image *image, const char *filename) {
 
   if (status == 0) {
     int x, y;
-    saxs_image_set_size(image, dim[1], dim[2]);
+    saxs_image_set_size(image, dim[1], dim[2], 1, 1);
     for (x = 0; x < dim[1]; ++x)
       for (y = 0; y < dim[2]; ++y)
         saxs_image_set_value(image, x, y, *(data + y * dim[1] + x));

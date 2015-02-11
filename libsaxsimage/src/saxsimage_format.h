@@ -33,7 +33,7 @@ extern "C" {
 struct saxs_image;
 
 struct saxs_image_format {
-  int (*read)(struct saxs_image*, const char *filename);
+  int (*read)(struct saxs_image*, const char *filename, size_t frame);
   int (*write)(struct saxs_image*, const char *filename);
 };
 typedef struct saxs_image_format saxs_image_format;

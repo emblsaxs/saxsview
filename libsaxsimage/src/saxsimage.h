@@ -1,6 +1,6 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009, 2010 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2015 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -54,6 +54,9 @@ int
 saxs_image_read(saxs_image *image, const char *filename, const char *format);
 
 int
+saxs_image_read_frame(saxs_image *image, size_t frameid);
+
+int
 saxs_image_write(saxs_image *image, const char *filename, const char *format);
 
 void
@@ -65,8 +68,17 @@ saxs_image_width(saxs_image *image);
 size_t
 saxs_image_height(saxs_image *image);
 
+int
+saxs_image_frame_count(saxs_image *image);
+
+int
+saxs_image_current_frame(saxs_image *image);
+
 void
-saxs_image_set_size(saxs_image *image, size_t width, size_t height);
+saxs_image_set_size(saxs_image *image,
+                    size_t width, size_t height,
+                    size_t frame_count, size_t current_frame);
+
 
 /**
  * Filters out values below 0.

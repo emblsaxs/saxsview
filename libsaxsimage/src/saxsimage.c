@@ -1,7 +1,6 @@
 /*
  * Main API for SAXS image creation and access.
- * Copyright (C) 2009, 2010, 2011
- * Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2015 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -31,6 +30,7 @@
 #include <string.h>
 #include <limits.h>
 #include <float.h>
+#include <errno.h>
 
 struct saxs_image {
   char *image_filename;
@@ -38,6 +38,9 @@ struct saxs_image {
   size_t image_width;
   size_t image_height;
   double *image_data;
+
+  size_t image_frame_count;
+  size_t image_current_frame;
 
   /* Callback functions to deal with the current format. */
   saxs_image_format *image_format;
@@ -79,15 +82,17 @@ saxs_image*
 saxs_image_create() {
   saxs_image *image = malloc(sizeof(saxs_image));
 
-  image->image_filename   = NULL;
-  image->image_width      = 0;
-  image->image_height     = 0;
-  image->image_data       = NULL;
-  image->cache_valid      = 0;
-  image->cache_min_value  = DBL_MAX;
-  image->cache_max_value  = DBL_MIN;
-  image->image_format     = NULL;
-  image->image_properties = saxs_property_list_create();
+  image->image_filename      = NULL;
+  image->image_width         = 0;
+  image->image_height        = 0;
+  image->image_data          = NULL;
+  image->image_frame_count   = 0;
+  image->image_current_frame = 0;
+  image->cache_valid         = 0;
+  image->cache_min_value     = DBL_MAX;
+  image->cache_max_value     = DBL_MIN;
+  image->image_format        = NULL;
+  image->image_properties    = saxs_property_list_create();
 
   return image;
 }
@@ -96,15 +101,18 @@ saxs_image*
 saxs_image_copy(saxs_image *image) {
   saxs_image *copy = malloc(sizeof(saxs_image));
 
-  copy->image_filename   = strdup(image->image_filename);
-  copy->image_data       = NULL;
-  copy->image_format     = NULL;
-  copy->cache_valid      = image->cache_valid;
-  copy->cache_min_value  = image->cache_min_value;
-  copy->cache_max_value  = image->cache_max_value;
-  copy->image_properties = saxs_property_list_create();
+  copy->image_filename      = strdup(image->image_filename);
+  copy->image_data          = NULL;
+  copy->image_format        = NULL;
+  copy->image_frame_count   = image->image_frame_count;
+  copy->image_current_frame = image->image_current_frame;
+  copy->cache_valid         = image->cache_valid;
+  copy->cache_min_value     = image->cache_min_value;
+  copy->cache_max_value     = image->cache_max_value;
+  copy->image_properties    = saxs_property_list_create();
 
-  saxs_image_set_size(copy, image->image_width, image->image_height);
+  saxs_image_set_size(copy, image->image_width, image->image_height,
+                      image->image_frame_count, image->image_current_frame);
   memcpy(copy->image_data, image->image_data,
          image->image_width * image->image_height * sizeof(double));
 
@@ -121,7 +129,7 @@ saxs_image_read(saxs_image *image, const char *filename, const char *format) {
   image->image_filename = strdup(filename);
   image->image_format   = handler;
 
-  return image->image_format->read(image, filename);
+  return image->image_format->read(image, filename, 1);
 }
 
 int
@@ -167,16 +175,37 @@ saxs_image_height(saxs_image *image) {
   return image ? image->image_height : 0;
 }
 
+int
+saxs_image_frame_count(saxs_image *image) {
+  return image ? image->image_frame_count : 0;
+}
+
+int
+saxs_image_current_frame(saxs_image *image) {
+  return image ? image->image_current_frame : 0;
+}
+
 void
-saxs_image_set_size(saxs_image *image, size_t width, size_t height) {
+saxs_image_set_size(saxs_image *image, size_t width, size_t height,
+                    size_t frame_count, size_t current_frame) {
+
   if (image->image_data)
     free(image->image_data);
 
-  image->image_width  = width;
-  image->image_height = height;
-  image->image_data   = (double*) calloc(width * height, sizeof(double));
+  image->image_width         = width;
+  image->image_height        = height;
+  image->image_frame_count   = frame_count;
+  image->image_current_frame = current_frame;
+  image->image_data          = (double*) calloc(width * height, sizeof(double));
 }
 
+int
+saxs_image_read_frame(saxs_image *image, size_t frame) {
+  if (frame > saxs_image_frame_count(image))
+    return EINVAL;
+
+  return image->image_format->read(image, image->image_filename, frame);
+}
 
 
 double
