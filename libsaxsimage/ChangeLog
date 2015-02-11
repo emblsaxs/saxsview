@@ -1,3 +1,10 @@
+2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/saxsimage.c (saxs_image_update_cache): Verify that there is
+	a valid image.
+	(saxs_image_value_min): Likewise.
+	(saxs_image_value_max): Likewise.
+
 2014-04-07  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* srd/edf.c (saxs_image_edf_read): Iterate through a range of image

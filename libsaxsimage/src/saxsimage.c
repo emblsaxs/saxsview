@@ -52,7 +52,7 @@ struct saxs_image {
 
 static void
 saxs_image_update_cache(saxs_image *image) {
-  if (!image->cache_valid) {
+  if (image && !image->cache_valid) {
     size_t i, j;
     const size_t width = saxs_image_width(image);
     const size_t height = saxs_image_height(image);
@@ -213,14 +213,22 @@ saxs_image_set_value(saxs_image *image, int x, int y, double value) {
 
 double
 saxs_image_value_min(saxs_image *image) {
-  saxs_image_update_cache(image);
-  return image->cache_min_value;
+  if (image) {
+    saxs_image_update_cache(image);
+    return image->cache_min_value;
+
+  } else
+    return 0.0;
 }
 
 double
 saxs_image_value_max(saxs_image *image) {
-  saxs_image_update_cache(image);
-  return image->cache_max_value;
+  if (image) {
+    saxs_image_update_cache(image);
+    return image->cache_max_value;
+
+  } else
+    return 0.0;
 }
 
 
