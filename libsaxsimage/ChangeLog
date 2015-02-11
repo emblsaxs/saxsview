@@ -1,5 +1,11 @@
 2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* src/hdf5.c: New.
+	* src/saxsimage_format.c: Register HDF5 format.
+	* CMakeLists.txt: Conditionally add hdf5.c if the HDF5 package was found.
+
+2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/saxsimage.h: Bumped copyright years.
 	(saxs_image_read_frame): New.
 	(saxs_image_frame_count): New.

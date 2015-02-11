@@ -1,6 +1,6 @@
 /*
  * Format handling of SAXS images.
- * Copyright (C) 2009 Daniel Franke <dfranke@users.sourceforge.net>
+ * Copyright (C) 2009-2015 Daniel Franke <dfranke@users.sourceforge.net>
  *
  * This file is part of libsaxsdocument.
  *
@@ -42,6 +42,10 @@ saxs_image_format_msk(const char*, const char*);
 saxs_image_format*
 saxs_image_format_tiff(const char*, const char*);
 #endif
+#ifdef HAVE_HDF5
+saxs_image_format*
+saxs_image_format_hdf5(const char*, const char*);
+#endif
 
 saxs_image_format*
 saxs_image_format_find(const char *filename, const char *format) {
@@ -54,6 +58,9 @@ saxs_image_format_find(const char *filename, const char *format) {
     saxs_image_format_msk,
 #ifdef HAVE_TIFF
     saxs_image_format_tiff,
+#endif
+#ifdef HAVE_HDF5
+    saxs_image_format_hdf5,
 #endif
     NULL
   };
