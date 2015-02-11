@@ -892,7 +892,7 @@ SaxsviewFrameData::SaxsviewFrameData(const QSize& size)
   : QwtRasterData(), p(new Private) {
 
   p->data = saxs_image_create();
-  saxs_image_set_size(p->data, size.width(), size.height());
+  saxs_image_set_size(p->data, size.width(), size.height(), 1, 1);
 
   setInterval(Qt::XAxis, QwtInterval(0.0, size.width() - 1.0));
   setInterval(Qt::YAxis, QwtInterval(0.0, size.height() - 1.0));
