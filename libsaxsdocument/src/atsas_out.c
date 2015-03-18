@@ -30,6 +30,8 @@
 #include <ctype.h>
 #include <errno.h>
 
+/* Size of the static buffers used in extract() and extract_line() */
+#define EXTRACT_BUFFER_SIZE 1024
 
 /**************************************************************************/
 /*
@@ -39,18 +41,18 @@
  * Note: not reentrant, uses static buffer for convenience.
  */
 static const char* extract(struct line *l, const char *delim) {
-  static char substr[1024];
+  static char substr[EXTRACT_BUFFER_SIZE];
   char *p = substr, *q;
 
-  memset(p, 0, 1024);
+  memset(p, 0, EXTRACT_BUFFER_SIZE);
   q = strstr(l->line_buffer, delim);
   if (q) {
     q += strlen(delim);
 
-    while (q && isspace(*q))
+    while (isspace(*q))
       ++q;
 
-    while (q && *q && !isspace(*q))
+    while (*q && !isspace(*q) && ((p - substr) < EXTRACT_BUFFER_SIZE))
       *p++ = *q++;
   }
 
@@ -65,24 +67,24 @@ static const char* extract(struct line *l, const char *delim) {
  * Note: not reentrant, uses static buffer for convenience.
  */
 static const char* extract_line(struct line *l, const char *delim) {
-  static char substr[1024];
+  static char substr[EXTRACT_BUFFER_SIZE];
   char *p = substr, *q;
 
-  memset(p, 0, 1024);
+  memset(p, 0, EXTRACT_BUFFER_SIZE);
   q = strstr(l->line_buffer, delim);
   if (q) {
     q += strlen(delim);
 
     /* Trim leading whitespace ... */
-    while (q && isspace(*q))
+    while (isspace(*q))
       ++q;
 
-    while (q && *q)
+    while (*q && ((p - substr) < EXTRACT_BUFFER_SIZE))
       *p++ = *q++;
 
     /* ... and trailing whitespace. */
-    q = p + l->line_length + 1;
-    while (q && (isspace(*q) || *q == '\0') && q >= p)
+    q = p + 1;
+    while ((isspace(*q) || *q == '\0') && (q >= substr))
       *q-- = '\0';
   }
 
