@@ -151,6 +151,12 @@ int lines_read(struct line **lines, const char *filename) {
     return errno;
 
   head = tail =  lines_create();
+  if (!head) {
+    if (strcmp(filename, "-"))
+      fclose(fd);
+    return errno;
+  }
+
   line_ptr = tail->line_buffer;
 
   while (!feof(fd)) {
@@ -203,6 +209,13 @@ int lines_read(struct line **lines, const char *filename) {
        */
       tail->line_length *= 2;
       tail->line_buffer = calloc(sizeof(char), tail->line_length);
+      if (!(tail->line_buffer)){
+        lines_free(head);
+        free(old_line);
+        if (strcmp(filename, "-"))
+          fclose(fd);
+        return errno;
+      }
       strncpy(tail->line_buffer, old_line, old_line_length);
       free(old_line);
 

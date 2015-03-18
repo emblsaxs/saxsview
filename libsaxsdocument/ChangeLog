@@ -1,3 +1,7 @@
+2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/columns.c (lines_read): Added checks for malloc returning NULL
+
 2014-11-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_out.c (atsas_out_read): Fixed recognition of footer.
