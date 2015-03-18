@@ -2,6 +2,7 @@
 
 	* src/columns.c (lines_read): Added checks for malloc returning NULL
 	* src/atsas_out.c: Check for buffer overruns in extract and extract_line
+	* src/atsas_int.c: Check for parse errors
 
 2014-11-05  Daniel Franke  <dfranke@users.sourceforge.net>
 
