@@ -25,7 +25,7 @@
 #define LIBSAXSDOCUMENT_COLUMNS_H
 
 #include <sys/types.h>
-
+#include <assert.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -222,6 +222,36 @@ saxs_writer_columns_write_lines(struct saxs_document *doc, struct line **l,
                                 int (*write_footer)(struct saxs_document*,
                                                     struct line **));
 
+
+#ifdef NDEBUG
+
+#define assert_valid_line(l)
+#define assert_valid_line_or_null(l)
+#define assert_valid_lineset(first,last)
+#define assert_valid_lineset_or_null(first)
+
+#else
+
+#define assert_valid_line(l) { \
+  assert(l != NULL); \
+  assert(l->line_buffer != NULL); \
+  assert(l->line_length > strlen(l->line_buffer)); \
+  assert(l->line_column_count >= -1); \
+  if (l->line_column_count == -1) assert(l->line_column_values == NULL); \
+  if (l->line_column_count >= 1) assert(l->line_column_values != NULL); \
+}
+
+#define assert_valid_line_or_null(l) { \
+  if (l != NULL) { assert_valid_line(l); } \
+}
+
+void assert_valid_lineset(const struct line* first, const struct line* last);
+
+#define assert_valid_lineset_or_null(first) { \
+  if (first != NULL) assert_valid_lineset(first, NULL); \
+}
+
+#endif
 
 #ifdef __cplusplus
 }

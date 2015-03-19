@@ -62,32 +62,9 @@ static int is_utf32_be(const unsigned char *data) {
   return data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00;
 }
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 
-#define assert_valid_line(l)
-#define assert_valid_line_or_null(l)
-#define assert_valid_lineset(first,last)
-#define assert_valid_lineset_or_null(first)
-
-#else
-
-//static void assert_valid_line(const struct line* l) {
-#define assert_valid_line(l) { \
-  assert(l != NULL); \
-  assert(l->line_buffer != NULL); \
-  assert(l->line_length > strlen(l->line_buffer)); \
-  assert(l->line_column_count >= -1); \
-  if (l->line_column_count == -1) assert(l->line_column_values == NULL); \
-  if (l->line_column_count >= 1) assert(l->line_column_values != NULL); \
-}
-
-//static void assert_valid_line_or_null(const struct line* l) {
-#define assert_valid_line_or_null(l) { \
-  if (l != NULL) { assert_valid_line(l); } \
-}
-
-static void assert_valid_lineset(const struct line* first, const struct line* last) {
-//#define assert_valid_lineset(first) {
+void assert_valid_lineset(const struct line* first, const struct line* last) {
   assert_valid_line(first);
   assert_valid_line_or_null(last);
   const struct line *current = first;
@@ -95,11 +72,6 @@ static void assert_valid_lineset(const struct line* first, const struct line* la
     assert_valid_line(current);
     current = current->next;
   }
-}
-
-//static void assert_valid_lineset_or_null(const struct line* first) {
-#define assert_valid_lineset_or_null(first) { \
-  if (first != NULL) assert_valid_lineset(first, NULL); \
 }
 
 #endif

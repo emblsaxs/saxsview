@@ -41,6 +41,7 @@
  * Note: not reentrant, uses static buffer for convenience.
  */
 static const char* extract(struct line *l, const char *delim) {
+  assert_valid_line(l);
   static char substr[EXTRACT_BUFFER_SIZE];
   char *p = substr, *q;
 
@@ -67,6 +68,8 @@ static const char* extract(struct line *l, const char *delim) {
  * Note: not reentrant, uses static buffer for convenience.
  */
 static const char* extract_line(struct line *l, const char *delim) {
+  assert_valid_line(l);
+
   static char substr[EXTRACT_BUFFER_SIZE];
   char *p = substr, *q;
 
@@ -93,6 +96,8 @@ static const char* extract_line(struct line *l, const char *delim) {
 
 static int parse_header(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
+
+  assert_valid_lineset(firstline, lastline);
 
   while (firstline != lastline) {
     /*
@@ -253,6 +258,8 @@ static int parse_scattering_data(struct saxs_document *doc,
                                  struct line *firstline,
                                  struct line *lastline) {
 
+  assert_valid_lineset(firstline, lastline);
+
   saxs_curve *curve_exp, *curve_reg, *curve_des;
   curve_exp = saxs_document_add_curve(doc, "data", SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
   curve_reg = saxs_document_add_curve(doc, "fit", SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
@@ -288,6 +295,8 @@ static int parse_probability_data(struct saxs_document *doc,
                                   struct line *firstline,
                                   struct line *lastline) {
 
+  assert_valid_lineset(firstline, lastline);
+
   /*
    * Skip empty and header lines until data is found ...
    */
@@ -305,6 +314,8 @@ static int parse_probability_data(struct saxs_document *doc,
 
 static int parse_footer(struct saxs_document *doc,
                         struct line *firstline, struct line *lastline) {
+
+  assert_valid_lineset(firstline, lastline);
 
   while (firstline != lastline) {
     /*
@@ -340,8 +351,12 @@ static int parse_footer(struct saxs_document *doc,
 
 int atsas_out_read(struct saxs_document *doc,
                    struct line *firstline, struct line *lastline) {
+
+  assert_valid_lineset(firstline, lastline);
+
   struct line *current;
   struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
+  int res;
 
   /*
    * .out files may come with multiple repeated data sections,
@@ -410,20 +425,26 @@ int atsas_out_read(struct saxs_document *doc,
   }
 
   /*
-   * If none of the sections was found, the lines do not
+   * If any of the sections was not found, the lines do not
    * come from a GNOM .out file.
    */
-  if (!header && !scattering_begin && !probability_begin && !footer)
+  if (!header || !scattering_begin || !probability_begin || !footer)
     return ENOTSUP;
 
   /*
    * Now parse the individual sections and extract the data.
    */
-  parse_header(doc, header, scattering_begin);
-  parse_scattering_data(doc, scattering_begin, probability_begin);
-  parse_probability_data(doc, probability_begin, footer);
-  parse_footer(doc, footer, lastline);
-  return 0;
+  res = parse_header(doc, header, scattering_begin);
+  if (res)
+    return res;
+  res = parse_scattering_data(doc, scattering_begin, probability_begin);
+  if (res)
+    return res;
+  res = parse_probability_data(doc, probability_begin, footer);
+  if (res)
+    return res;
+  res = parse_footer(doc, footer, lastline);
+  return res;
 }
 
 
