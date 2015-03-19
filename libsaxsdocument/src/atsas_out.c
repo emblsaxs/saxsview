@@ -393,8 +393,11 @@ int atsas_out_read(struct saxs_document *doc,
     if (strstr(current->line_buffer, "J EXP")
          && strstr(current->line_buffer, "ERROR")
          && strstr(current->line_buffer, "J REG")
-         && strstr(current->line_buffer, "I REG"))
+         && strstr(current->line_buffer, "I REG")) {
       scattering_begin = current;
+      probability_begin = NULL;
+      footer = NULL;
+    }
 
     /*
      * Scattering data ends with:
@@ -408,8 +411,10 @@ int atsas_out_read(struct saxs_document *doc,
          || strstr(current->line_buffer, "particle thickness")
          || strstr(current->line_buffer, "function of cross-section")
          || strstr(current->line_buffer, "function of long cylinders")
-         || strstr(current->line_buffer, "function of spherical shells"))
+         || strstr(current->line_buffer, "function of spherical shells")) {
       probability_begin = current;
+      footer = NULL;
+    }
   
     /*
      * Probability data ends with (v4.x):
@@ -418,8 +423,9 @@ int atsas_out_read(struct saxs_document *doc,
      */
     if (strstr(current->line_buffer, "Reciprocal space")
          && strstr(current->line_buffer, "Rg")
-         && strstr(current->line_buffer, "I(0)"))
+         && strstr(current->line_buffer, "I(0)")) {
       footer = current;
+    }
 
     current = current->next;
   }
