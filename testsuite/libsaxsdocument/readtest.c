@@ -17,5 +17,5 @@ int main(int argc, char** argv){
     printf("Number of curves: %d\n", saxs_document_curve_count(doc));
   }
   saxs_document_free(doc);
-
+  return 0;
 }
