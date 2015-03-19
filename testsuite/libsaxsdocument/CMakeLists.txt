@@ -75,3 +75,4 @@ endforeach (test)
 #                                                     ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 # endforeach (test)
 
+add_subdirectory(crashtests)

@@ -2,6 +2,7 @@
 
 	* libsaxsdocument/readtest.c: Allow specifying a format in the second argument
 	* libsaxsdocument/CMakeLists.txt: Added a test that non-SAXS files should be accepted if a format is specified
+	* libsaxsdocument/crashtests/: New set of tests for files that cause libsaxsdocument to crash
 
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
