@@ -6,6 +6,7 @@
 	* src/columns.h: Added assertion functions / macros to allow other code to check validity of lines and columns
 	* src/atsas_out.c: Added some assertions and fixed a bug that was causing crashing
 	* src/atsas_out.c: Only accept files with the sections in the correct order
+	* src/saxsproperty.c: Check the return value of malloc
 
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 

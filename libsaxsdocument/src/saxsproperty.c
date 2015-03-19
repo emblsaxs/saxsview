@@ -45,9 +45,11 @@ saxs_property_create(const char *name, const char *value) {
     return NULL;
 
   property = malloc(sizeof(saxs_property));
-  property->name = strdup(name);
-  property->value = strdup(value);
-  property->next = NULL;
+  if (property) {
+    property->name = strdup(name);
+    property->value = strdup(value);
+    property->next = NULL;
+  }
 
   return property;
 }
@@ -92,11 +94,11 @@ saxs_property_free(saxs_property *property) {
 saxs_property_list*
 saxs_property_list_create() {
   saxs_property_list *list = malloc(sizeof(saxs_property_list));
-
-  list->count = 0;
-  list->head = NULL;
-  list->tail = NULL;
-
+  if (list) {
+    list->count = 0;
+    list->head = NULL;
+    list->tail = NULL;
+  }
   return list;
 }
 
