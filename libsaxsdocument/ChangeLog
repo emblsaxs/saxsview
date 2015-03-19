@@ -1,3 +1,7 @@
+2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c (saxs_document_read): Don't accept a document that has no curves and no properties 
+
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/columns.c (lines_read): Added checks for malloc returning NULL

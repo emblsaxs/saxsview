@@ -1,3 +1,8 @@
+2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* libsaxsdocument/readtest.c: Allow specifying a format in the second argument
+	* libsaxsdocument/CMakeLists.txt: Added a test that non-SAXS files should be accepted if a format is specified
+
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* libsaxsdocument/readtest.c: New program for very simple tests

@@ -125,8 +125,15 @@ int saxs_document_read(saxs_document *doc, const char *filename,
     while (handler) {
       if (handler->read) {
         res = handler->read(doc, l, NULL);
-        if (res == 0)
-          break;
+        if (res == 0) {
+          /* When looping through all handlers, only consider it a success
+           * if at least one curve or property can be read */
+          if (saxs_document_curve_count(doc) > 0 ||
+              saxs_document_property_count(doc) > 0)
+            break;
+          else 
+            res = ENOTSUP;
+        }
       }
       handler = saxs_document_format_next(handler);
     }
