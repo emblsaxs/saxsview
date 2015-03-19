@@ -127,9 +127,8 @@ int saxs_document_read(saxs_document *doc, const char *filename,
         res = handler->read(doc, l, NULL);
         if (res == 0) {
           /* When looping through all handlers, only consider it a success
-           * if at least one curve or property can be read */
-          if (saxs_document_curve_count(doc) > 0 ||
-              saxs_document_property_count(doc) > 0)
+           * if at least one curve can be read */
+          if (saxs_document_curve_count(doc) > 0)
             break;
           else 
             res = ENOTSUP;

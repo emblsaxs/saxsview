@@ -28,7 +28,7 @@ set_property (TEST read-notsaxsdata PROPERTY FAIL_REGULAR_EXPRESSION "Result: 0 
 # Trying to read a file which is obviously not SAXS data -- forcing the use of a particular format
 add_test (NAME read-notsaxsdata-force
           COMMAND $<TARGET_FILE:readtest> ${CMAKE_CURRENT_SOURCE_DIR}/doctest.c atsas-int)
-set_property (TEST read-notsaxsdata PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 ")
+set_property (TEST read-notsaxsdata-force PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 ")
 
 # read-only tests for .dat-files
 set (DATTESTS "empty;whitespace;columns;bsa;bsa-sub;long-lines")

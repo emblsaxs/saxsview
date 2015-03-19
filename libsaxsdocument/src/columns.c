@@ -31,6 +31,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <math.h>
+#include <assert.h>
 
 /*
  * Similar to the POSIX "character classification routines";
@@ -61,7 +62,47 @@ static int is_utf32_be(const unsigned char *data) {
   return data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00;
 }
 
+#ifdef NDEBUG
 
+#define assert_valid_line(l)
+#define assert_valid_line_or_null(l)
+#define assert_valid_lineset(first,last)
+#define assert_valid_lineset_or_null(first)
+
+#else
+
+//static void assert_valid_line(const struct line* l) {
+#define assert_valid_line(l) { \
+  assert(l != NULL); \
+  assert(l->line_buffer != NULL); \
+  assert(l->line_length > strlen(l->line_buffer)); \
+  assert(l->line_column_count >= -1); \
+  if (l->line_column_count == -1) assert(l->line_column_values == NULL); \
+  if (l->line_column_count >= 1) assert(l->line_column_values != NULL); \
+}
+
+//static void assert_valid_line_or_null(const struct line* l) {
+#define assert_valid_line_or_null(l) { \
+  if (l != NULL) { assert_valid_line(l); } \
+}
+
+static void assert_valid_lineset(const struct line* first, const struct line* last) {
+//#define assert_valid_lineset(first) {
+  assert_valid_line(first);
+  assert_valid_line_or_null(last);
+  const struct line *current = first;
+  while (current != last) {
+    assert_valid_line(current);
+    current = current->next;
+  }
+}
+
+//static void assert_valid_lineset_or_null(const struct line* first) {
+#define assert_valid_lineset_or_null(first) { \
+  if (first != NULL) assert_valid_lineset(first, NULL); \
+}
+
+#endif
 
 struct line* lines_create() {
   struct line *line;
@@ -83,12 +124,15 @@ struct line* lines_create() {
     }
   }
 
+  assert_valid_line_or_null(line);
   return line;
 }
 
 
 void
 lines_append(struct line **lines, struct line *l) {
+  assert_valid_lineset_or_null(*lines);
+  assert_valid_line(l);
   if (l) {
     if (*lines) {
       struct line *tail = *lines;
@@ -101,10 +145,12 @@ lines_append(struct line **lines, struct line *l) {
       *lines = l;
     }
   }
+  assert_valid_lineset(*lines, l);
 }
 
 
 int lines_printf(struct line *l, const char *fmt, ...) {
+  assert_valid_line(l);
   int n;
 
   /*
@@ -246,10 +292,12 @@ int lines_read(struct line **lines, const char *filename) {
   }
 
   *lines = head;
+  assert_valid_lineset(*lines, NULL);
   return 0;
 }
 
 int lines_write(struct line *lines, const char *filename) {
+  assert_valid_lineset(lines, NULL);
   int res = 0;
   struct line *line;
 
@@ -272,6 +320,7 @@ int lines_write(struct line *lines, const char *filename) {
 
 
 void lines_free(struct line *lines) {
+  assert_valid_lineset_or_null(lines);
   struct line *line = lines, *oldline;
 
   while (line) {
@@ -290,6 +339,7 @@ void lines_free(struct line *lines) {
 
 
 static void columns_tokenize(struct line *l) {
+  assert_valid_line_or_null(l);
   int cnt = 0;
   char *p;
   double value;
@@ -348,18 +398,22 @@ static void columns_tokenize(struct line *l) {
     l->line_column_count  = cnt;
     l->line_column_values = values;
   }
+  assert_valid_line(l);
 }
 
 
 int saxs_reader_columns_count(struct line *l) {
+  assert_valid_line(l);
   if (l->line_column_count < 0)
     columns_tokenize(l);
 
+  assert_valid_line(l);
   return l->line_column_count;
 }
 
 
 double* saxs_reader_columns_values(struct line *l) {
+  assert_valid_line(l);
   return l->line_column_values;
 }
 
@@ -367,6 +421,7 @@ double* saxs_reader_columns_values(struct line *l) {
 int saxs_reader_columns_scan(struct line *lines, struct line **header,
                              struct line **data, struct line **footer) {
 
+  assert_valid_lineset(lines, NULL);
   struct line *currentline, *tmpdata;
 
   /*
@@ -446,6 +501,7 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
                               int y_errcol,
                               const char *title, int type) {
 
+  assert_valid_lineset(firstline, lastline);
   int colcnt;
   double *values;
   struct saxs_curve *curve;
@@ -492,6 +548,8 @@ int saxs_reader_columns_parse_lines(struct saxs_document *doc,
                                     int (*parse_footer)(struct saxs_document*,
                                                         struct line *,
                                                         struct line *)) {
+
+  assert_valid_lineset(firstline, lastline);
   int res;
   struct line *header = NULL, *data = NULL, *footer = NULL;
 
@@ -537,10 +595,11 @@ int saxs_writer_columns_write_lines(struct saxs_document *doc, struct line **lin
   if (res == 0 && write_footer)
     res = write_footer(doc, &l);
 
-  if (res == 0)
+  if (res == 0) {
+    assert_valid_lineset(l, NULL);
     *lines = l;
-  else
+  } else {
     lines_free(l);
-
+  }
   return res;
 }

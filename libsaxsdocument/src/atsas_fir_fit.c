@@ -253,7 +253,7 @@ atsas_fit_4_column_read(struct saxs_document *doc,
   if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     goto error;
 
-  if (saxs_reader_columns_count(data) != 4) {
+  if ((data == NULL) || saxs_reader_columns_count(data) != 4) {
     res = ENOTSUP;
     goto error;
   }

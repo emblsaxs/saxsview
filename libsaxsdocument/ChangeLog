@@ -1,6 +1,8 @@
 2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
 
-	* src/saxsdocument.c (saxs_document_read): Don't accept a document that has no curves and no properties 
+	* src/saxsdocument.c (saxs_document_read): Don't accept a document that has no curves
+	* src/columns.c: Added lots of assertions to catch invalid uses of lines structures
+	* src/atsas_fir_fit.c: Check whether the data section is NULL before counting the columns
 
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
