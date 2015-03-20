@@ -276,10 +276,10 @@ int lines_read(struct line **lines, const char *filename) {
   return 0;
 }
 
-int lines_write(struct line *lines, const char *filename) {
+int lines_write(const struct line *lines, const char *filename) {
   assert_valid_lineset(lines, NULL);
   int res = 0;
-  struct line *line;
+  const struct line *line;
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "w") : stdout;
   if (fd) {
@@ -387,13 +387,15 @@ int saxs_reader_columns_count(struct line *l) {
   if (l->line_column_count < 0)
     columns_tokenize(l);
 
-  assert_valid_line(l);
   return l->line_column_count;
 }
 
 
 double* saxs_reader_columns_values(struct line *l) {
   assert_valid_line(l);
+  if (l->line_column_count < 0)
+    columns_tokenize(l);
+
   return l->line_column_values;
 }
 

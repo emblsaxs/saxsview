@@ -50,7 +50,7 @@ saxs_property_free(saxs_property *property);
  *      @ref saxs_document_property_find
  */
 saxs_property*
-saxs_property_next(saxs_property *property);
+saxs_property_next(const saxs_property *property);
 
 /**
  * @brief Advance to next named property.
@@ -63,7 +63,7 @@ saxs_property_next(saxs_property *property);
  *      @ref saxs_document_property_find
  */
 saxs_property*
-saxs_property_find_next(saxs_property *property, const char *name);
+saxs_property_find_next(const saxs_property *property, const char *name);
 
 /**
  * @brief The name of a property.
@@ -71,7 +71,7 @@ saxs_property_find_next(saxs_property *property, const char *name);
  * @returns The name of a property, NULL if the property pointer is NULL.
  */
 const char*
-saxs_property_name(saxs_property *property);
+saxs_property_name(const saxs_property *property);
 
 /**
  * @brief The value of a property.
@@ -79,7 +79,7 @@ saxs_property_name(saxs_property *property);
  * @returns The value of a property, NULL if the property pointer is NULL.
  */
 const char*
-saxs_property_value(saxs_property *property);
+saxs_property_value(const saxs_property *property);
 
 
 
@@ -94,13 +94,13 @@ void
 saxs_property_list_insert(saxs_property_list *list, saxs_property *property);
 
 int
-saxs_property_list_count(saxs_property_list *list);
+saxs_property_list_count(const saxs_property_list *list);
 
 saxs_property*
-saxs_property_list_first(saxs_property_list *list);
+saxs_property_list_first(const saxs_property_list *list);
 
 saxs_property*
-saxs_property_list_find_first(saxs_property_list *list, const char *name);
+saxs_property_list_find_first(const saxs_property_list *list, const char *name);
 
 void
 saxs_property_list_free(saxs_property_list *list);

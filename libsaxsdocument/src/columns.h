@@ -102,7 +102,7 @@ lines_read(struct line **lines, const char *filename);
  * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
  */
 int
-lines_write(struct line *lines, const char *filename);
+lines_write(const struct line *lines, const char *filename);
 
 
 /**

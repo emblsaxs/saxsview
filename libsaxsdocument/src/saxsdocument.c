@@ -299,43 +299,43 @@ void saxs_document_free(saxs_document *doc) {
 
 
 saxs_property*
-saxs_document_property_first(saxs_document *doc) {
+saxs_document_property_first(const saxs_document *doc) {
   return doc ? saxs_property_list_first(doc->doc_properties) : NULL;
 }
 
 saxs_property*
-saxs_document_property_find_first(saxs_document *doc, const char *name) {
+saxs_document_property_find_first(const saxs_document *doc, const char *name) {
   return doc ? saxs_property_list_find_first(doc->doc_properties, name) : NULL;
 }
 
 int
-saxs_document_property_count(saxs_document *doc) {
+saxs_document_property_count(const saxs_document *doc) {
   return doc ? saxs_property_list_count(doc->doc_properties) : 0;
 }
 
 const char *
-saxs_document_filename(saxs_document *doc) {
+saxs_document_filename(const saxs_document *doc) {
   return doc ? doc->doc_filename : NULL;
 }
 
 int
-saxs_document_curve_count(saxs_document *doc) {
+saxs_document_curve_count(const saxs_document *doc) {
   return doc ? doc->doc_curve_count : 0;
 }
 
 saxs_curve*
-saxs_document_curve(saxs_document *doc) {
+saxs_document_curve(const saxs_document *doc) {
   return doc ? doc->doc_curves_head : NULL;
 }
 
 saxs_curve*
-saxs_curve_next(saxs_curve *curve) {
+saxs_curve_next(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   return curve ? curve->next : NULL;
 }
 
 saxs_curve*
-saxs_document_curve_find(saxs_document *doc, int type) {
+saxs_document_curve_find(const saxs_document *doc, int type) {
   saxs_curve *curve = doc ? doc->doc_curves_head : NULL;
 
   while (curve && !(curve->curve_type & type))
@@ -346,21 +346,20 @@ saxs_document_curve_find(saxs_document *doc, int type) {
 }
 
 saxs_curve*
-saxs_curve_find_next(saxs_curve *curve, int type) {
+saxs_curve_find_next(const saxs_curve *curve, int type) {
   assert_valid_curve_or_null(curve);
 
-  if (curve)
-    curve = curve->next;
+  saxs_curve* nextcurve = (curve) ? curve->next : NULL;
 
-  while (curve && !(curve->curve_type & type))
-    curve = curve->next;
+  while (nextcurve && !(nextcurve->curve_type & type))
+    nextcurve = nextcurve->next;
 
-  assert_valid_curve_or_null(curve);
-  return curve;
+  assert_valid_curve_or_null(nextcurve);
+  return nextcurve;
 }
 
 const char*
-saxs_curve_title(saxs_curve *curve) {
+saxs_curve_title(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   return curve ? curve->curve_title : NULL;
 }
@@ -383,13 +382,13 @@ saxs_curve_set_title(saxs_curve *curve, const char *title) {
 }
 
 int
-saxs_curve_type(saxs_curve *curve) {
+saxs_curve_type(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   return curve ? curve->curve_type : -1;
 }
 
 int
-saxs_curve_compare(saxs_curve *a, saxs_curve *b) {
+saxs_curve_compare(const saxs_curve *a, const saxs_curve *b) {
   
   assert_valid_curve(a);
   assert_valid_curve(b);
@@ -416,39 +415,39 @@ saxs_curve_compare(saxs_curve *a, saxs_curve *b) {
 }
 
 int
-saxs_curve_data_count(saxs_curve *curve) {
+saxs_curve_data_count(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   return curve ? curve->curve_data_count : 0;
 }
 
 saxs_data*
-saxs_curve_data(saxs_curve *curve) {
+saxs_curve_data(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   return curve ? curve->curve_data_head : NULL;
 }
 
 saxs_data*
-saxs_data_next(saxs_data *data) {
+saxs_data_next(const saxs_data *data) {
   assert_valid_data_or_null(data);
   return data ? data->next : NULL;
 }
 
-double saxs_data_x(saxs_data *data) {
+double saxs_data_x(const saxs_data *data) {
   assert_valid_data_or_null(data);
   return data ? data->x : 0.0;
 }
 
-double saxs_data_x_err(saxs_data *data) {
+double saxs_data_x_err(const saxs_data *data) {
   assert_valid_data_or_null(data);
   return data ? data->y_err : 0.0;
 }
 
-double saxs_data_y(saxs_data *data) {
+double saxs_data_y(const saxs_data *data) {
   assert_valid_data_or_null(data);
   return data ? data->y : 0.0;
 }
 
-double saxs_data_y_err(saxs_data *data) {
+double saxs_data_y_err(const saxs_data *data) {
   assert_valid_data_or_null(data);
   return data ? data->y_err : 0.0;
 }
@@ -497,7 +496,7 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
 }
 
 saxs_curve*
-saxs_document_copy_curve(saxs_document *doc, saxs_curve *in) {
+saxs_document_copy_curve(saxs_document *doc, const saxs_curve *in) {
   assert_valid_curve_or_null(in);
   
   saxs_curve *out = NULL;
@@ -542,7 +541,7 @@ void saxs_curve_add_data(saxs_curve *curve,
 }
 
 int
-saxs_curve_has_y_err(saxs_curve *curve) {
+saxs_curve_has_y_err(const saxs_curve *curve) {
   assert_valid_curve_or_null(curve);
   if (curve) {
     saxs_data *data = saxs_curve_data(curve);

@@ -1,5 +1,12 @@
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+	* src/saxsdocument.[ch]: Added const qualifiers to functions which do not modify their arguments
+	* src/saxsdocument_format.[ch]: ditto
+	* src/saxsproperty.[ch]: ditto
+	* src/columns.[ch]: ditto
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
 	* src/saxsdocument.c: Allow x_err and y_err to be negative, but don't allow Infinity or NaN
 	* src/atsas_out.c: Skip data lines with infinity or NaN
 

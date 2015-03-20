@@ -161,7 +161,7 @@ saxs_document_format_first() {
 
 
 saxs_document_format*
-saxs_document_format_next(saxs_document_format *format) {
+saxs_document_format_next(const saxs_document_format *format) {
   return format ? format->next : NULL;
 }
 
@@ -177,19 +177,19 @@ saxs_document_format_find_first(const char *filename,
 }
 
 saxs_document_format*
-saxs_document_format_find_next(saxs_document_format *head,
+saxs_document_format_find_next(const saxs_document_format *head,
                                const char *filename,
                                const char *formatname) {
 
-  saxs_document_format *format;
+  saxs_document_format *format, *search_head;
   if (head)
-    head = head->next;
+    search_head = head->next;
   else
-    head = format_head;
+    search_head = format_head;
 
   /* Try to find the named format first. */
   if (formatname) {
-    for (format = head; format; format = format->next)
+    for (format = search_head; format; format = format->next)
       if (!compare_format(format->name, formatname))
         return format;
   }
@@ -198,7 +198,7 @@ saxs_document_format_find_next(saxs_document_format *head,
      a format that matches the extension. */
   if (filename) {
     const char *extension = suffix(filename);
-    for (format = head; format; format = format->next)
+    for (format = search_head; format; format = format->next)
       if (!compare_format(format->extension, extension))
         return format;
   }

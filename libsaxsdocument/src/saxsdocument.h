@@ -128,7 +128,7 @@ saxs_document_free(saxs_document *doc);
  *          @ref saxs_document_write, the corresponding filename otherwise.
  */
 const char*
-saxs_document_filename(saxs_document *doc);
+saxs_document_filename(const saxs_document *doc);
 
 
 /**
@@ -168,7 +168,7 @@ saxs_document_add_property(saxs_document *doc,
  * @returns The number of properties in the current document.
  */
 int
-saxs_document_property_count(saxs_document *doc);
+saxs_document_property_count(const saxs_document *doc);
 
 /**
  * @brief Traverse all properties of a document.
@@ -189,7 +189,7 @@ saxs_document_property_count(saxs_document *doc);
  *      @ref saxs_property_next
  */
 saxs_property*
-saxs_document_property_first(saxs_document *doc);
+saxs_document_property_first(const saxs_document *doc);
 
 
 /**
@@ -214,7 +214,7 @@ saxs_document_property_first(saxs_document *doc);
  *      @ref saxs_property_next
  */
 saxs_property*
-saxs_document_property_find_first(saxs_document *doc, const char *name);
+saxs_document_property_find_first(const saxs_document *doc, const char *name);
 
 
 
@@ -226,7 +226,7 @@ saxs_curve*
 saxs_document_add_curve(saxs_document *doc, const char *title, int type);
 
 saxs_curve*
-saxs_document_copy_curve(saxs_document *doc, saxs_curve *in);
+saxs_document_copy_curve(saxs_document *doc, const saxs_curve *in);
 
 
 /**
@@ -237,28 +237,28 @@ saxs_document_copy_curve(saxs_document *doc, saxs_curve *in);
  * @returns The number of curves in the document.
  */
 int
-saxs_document_curve_count(saxs_document *doc);
+saxs_document_curve_count(const saxs_document *doc);
 
 saxs_curve*
-saxs_document_curve(saxs_document *doc);
+saxs_document_curve(const saxs_document *doc);
 
 saxs_curve*
-saxs_document_curve_find(saxs_document *doc, int type);
+saxs_document_curve_find(const saxs_document *doc, int type);
 
 saxs_curve*
-saxs_curve_next(saxs_curve *curve);
+saxs_curve_next(const saxs_curve *curve);
 
 saxs_curve*
-saxs_curve_find_next(saxs_curve *curve, int type);
+saxs_curve_find_next(const saxs_curve *curve, int type);
 
 const char*
-saxs_curve_title(saxs_curve *curve);
+saxs_curve_title(const saxs_curve *curve);
 
 void
 saxs_curve_set_title(saxs_curve *curve, const char *title);
 
 int
-saxs_curve_type(saxs_curve *curve);
+saxs_curve_type(const saxs_curve *curve);
 
 void
 saxs_curve_add_data(saxs_curve *curve,
@@ -266,31 +266,31 @@ saxs_curve_add_data(saxs_curve *curve,
                     double y, double y_err);
 
 int
-saxs_curve_has_y_err(saxs_curve *curve);
+saxs_curve_has_y_err(const saxs_curve *curve);
 
 int
-saxs_curve_data_count(saxs_curve *curve);
+saxs_curve_data_count(const saxs_curve *curve);
 
 saxs_data*
-saxs_curve_data(saxs_curve *curve);
+saxs_curve_data(const saxs_curve *curve);
 
 saxs_data*
-saxs_data_next(saxs_data *data);
+saxs_data_next(const saxs_data *data);
 
 int
-saxs_curve_compare(saxs_curve *a, saxs_curve *b);
+saxs_curve_compare(const saxs_curve *a, const saxs_curve *b);
 
 double
-saxs_data_x(saxs_data *data);
+saxs_data_x(const saxs_data *data);
 
 double
-saxs_data_x_err(saxs_data *data);
+saxs_data_x_err(const saxs_data *data);
 
 double
-saxs_data_y(saxs_data *data);
+saxs_data_y(const saxs_data *data);
 
 double
-saxs_data_y_err(saxs_data *data);
+saxs_data_y_err(const saxs_data *data);
 
 #ifdef __cplusplus
 }

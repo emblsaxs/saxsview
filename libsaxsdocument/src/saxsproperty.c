@@ -55,26 +55,26 @@ saxs_property_create(const char *name, const char *value) {
 }
 
 saxs_property*
-saxs_property_next(saxs_property *property) {
+saxs_property_next(const saxs_property *property) {
   return property ? property->next : NULL;
 }
 
 saxs_property*
-saxs_property_find_next(saxs_property *property, const char *name) {
-  property = property ? property->next : NULL;
-  while (property && (strcmp(property->name, name) != 0))
-    property = property->next;
+saxs_property_find_next(const saxs_property *property, const char *name) {
+  saxs_property* nextproperty = property ? property->next : NULL;
+  while (nextproperty && (strcmp(nextproperty->name, name) != 0))
+    nextproperty = nextproperty->next;
 
-  return property;
+  return nextproperty;
 }
 
 const char*
-saxs_property_name(saxs_property *property) {
+saxs_property_name(const saxs_property *property) {
   return property ? property->name : NULL;
 }
 
 const char*
-saxs_property_value(saxs_property *property) {
+saxs_property_value(const saxs_property *property) {
   return property ? property->value : NULL;
 }
 
@@ -116,17 +116,17 @@ saxs_property_list_insert(saxs_property_list *list, saxs_property *property) {
 }
 
 int
-saxs_property_list_count(saxs_property_list *list) {
+saxs_property_list_count(const saxs_property_list *list) {
   return list ? list->count : 0;
 }
 
 saxs_property*
-saxs_property_list_first(saxs_property_list *list) {
+saxs_property_list_first(const saxs_property_list *list) {
   return list ? list->head : NULL;
 }
 
 saxs_property*
-saxs_property_list_find_first(saxs_property_list *list, const char *name) {
+saxs_property_list_find_first(const saxs_property_list *list, const char *name) {
   saxs_property *property = saxs_property_list_first(list);
 
   while (property && strcmp(saxs_property_name(property), name) != 0)

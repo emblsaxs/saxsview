@@ -99,7 +99,7 @@ saxs_document_format_first();
 
 
 saxs_document_format*
-saxs_document_format_next(saxs_document_format*);
+saxs_document_format_next(const saxs_document_format*);
 
 
 /**
@@ -125,7 +125,7 @@ saxs_document_format_find_first(const char *filename,
 
 
 saxs_document_format*
-saxs_document_format_find_next(saxs_document_format*,
+saxs_document_format_find_next(const saxs_document_format*,
                                const char *filename,
                                const char *formatname);
 
