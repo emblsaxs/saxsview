@@ -69,7 +69,8 @@ lines_append(struct line **lines, struct line *l);
  * If the current line length is too short, the line buffer is increased
  * to hold the full output.
  *
- * @returns The number of characters printed to the line.
+ * @returns The number of characters printed to the line, or a negative 
+ *          number on failure.
  */
 int
 lines_printf(struct line *l, const char *fmt, ...);

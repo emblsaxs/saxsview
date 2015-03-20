@@ -131,6 +131,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
    * original line buffer.
    */
   char *buffer = malloc(l->line_length);
+  if (!buffer) return -errno;
 
   va_list va;
   va_start(va, fmt);
@@ -140,7 +141,13 @@ int lines_printf(struct line *l, const char *fmt, ...) {
     va_end(va);
 
     l->line_length = n + 1;
-    buffer = realloc(buffer, l->line_length);
+    char *newbuffer = realloc(buffer, l->line_length);
+    if (!newbuffer) {
+      free(buffer);
+      return -errno;
+    } else {
+      buffer = newbuffer;
+    }
 
     va_start(va, fmt);
     n = vsnprintf(buffer, l->line_length, fmt, va);
@@ -156,6 +163,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
     l-> line_column_values = NULL;
   }
 
+  assert_valid_line(l);
   return n;
 }
 

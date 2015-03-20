@@ -8,6 +8,7 @@
 	* src/atsas_out.c: Only accept files with the sections in the correct order
 	* src/saxsproperty.c: Check the return value of malloc
 	* src/saxsdocument.c: Add assertions for valid curves
+	* src/columns.c: Check the return value of malloc/realloc
 
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
