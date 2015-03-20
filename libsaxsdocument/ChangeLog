@@ -7,6 +7,7 @@
 	* src/atsas_out.c: Added some assertions and fixed a bug that was causing crashing
 	* src/atsas_out.c: Only accept files with the sections in the correct order
 	* src/saxsproperty.c: Check the return value of malloc
+	* src/saxsdocument.c: Add assertions for valid curves
 
 2015-03-18  Chris Kerr  <cjkerr@users.sourceforge.net>
 
