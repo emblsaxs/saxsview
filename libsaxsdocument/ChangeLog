@@ -1,5 +1,10 @@
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+	* src/atsas_dat.c: Check for memory allocation errors etc
+	* src/malvern_txt.c: Check for memory allocation errors etc
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
 	* src/saxsdocument.c: Check for memory allocation errors etc
 	* src/saxsdocument.h: Add int return code to saxs_curve_add_data
 

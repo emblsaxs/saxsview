@@ -35,7 +35,7 @@
   #define MIN(a,b) ((a) < (b) ? (a) : (b))
 #endif
 
-static void
+static int
 parse_basic_information(struct saxs_document *doc, struct line *l) {
   /*
    * Basic Information:
@@ -66,7 +66,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
 
     if (colon_pos)
       strncpy(desc, colon_pos + 1,
-              MIN(conc_pos - colon_pos - 1, 64));
+              MIN(conc_pos - colon_pos - 1, 63));
 
     /* Skip "c=". */
     strncpy(conc, conc_pos + 2, 63);
@@ -112,10 +112,11 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
         saxs_document_add_property(doc, "sample-description", p);
     }
   }
+  return 0;
 }
 
 
-static void
+static int
 parse_key_value_pair(struct saxs_document *doc, struct line *l) {
   /*
    * Keys and values are separated by ':' and a key may be any string.
@@ -125,6 +126,9 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
     char *key, *value;
 
     key = malloc(l->line_length);
+    if (!key)
+      return ENOMEM;
+
     memset(key, 0, l->line_length);
     strncpy(key, l->line_buffer, colon_pos - l->line_buffer);
 
@@ -132,9 +136,8 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
     while (isspace(*colon_pos))
       colon_pos += 1;
 
-    value = malloc(l->line_length);
-    memset(value, 0, l->line_length);
-    strncpy(value, colon_pos, l->line_buffer + l->line_length - colon_pos);
+    /* no need to copy the value because saxs_property_create calls strdup */
+    value = colon_pos;
 
     saxs_document_add_property(doc, key, value);
 
@@ -145,7 +148,6 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
     if (strcmp(key, "Code") == 0)
       saxs_document_add_property(doc, "sample-code", value);
 
-    free(value);
     free(key);
   }
 
@@ -161,15 +163,16 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
     char *equal_pos = strchr(l->line_buffer, '=') + 1;
 
     if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
-      char buffer[64] = { '\0' };
+      char buffer[64];
 
-      sprintf(buffer, "%d", averaged);
+      snprintf(buffer, 63, "%d", averaged);
       saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
 
-      sprintf(buffer, "%d", total);
+      snprintf(buffer, 63, "%d", total);
       saxs_document_add_property(doc, "total-number-of-frames", buffer);
     }
   }
+  return 0;
 }
 
 
@@ -178,6 +181,7 @@ static int
 atsas_dat_parse_header(struct saxs_document *doc,
                        struct line *firstline, struct line *lastline) {
 
+  int res;
   /*
    * The first non-empty line may contain the 'description' of the data.
    * Examples:
@@ -221,7 +225,9 @@ atsas_dat_parse_header(struct saxs_document *doc,
     firstline = firstline->next;
 
   if (firstline != lastline) {
-    parse_basic_information(doc, firstline);
+    res = parse_basic_information(doc, firstline);
+    if (res)
+      return res;
     firstline = firstline->next;
   }
 
@@ -229,7 +235,9 @@ atsas_dat_parse_header(struct saxs_document *doc,
    * Following, here may be key-value pairs of some kind. 
    */
   while (firstline != lastline) {
-    parse_key_value_pair(doc, firstline);
+    res = parse_key_value_pair(doc, firstline);
+    if (res)
+      return res;
     firstline = firstline->next;
   }
 
@@ -271,6 +279,8 @@ atsas_dat_parse_footer(struct saxs_document *doc,
 
 
 /**************************************************************************/
+/* N.B. Error handling here aims only to avoid crashes; outputting malformed
+ * data in the event of running out of memory is OK */
 static int
 atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   struct line *line;
@@ -284,6 +294,8 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
 
   /* First line, if no description is available, this line is empty. */
   line = lines_create();
+  if (!line)
+    return ENOMEM;
   if (description)
     lines_printf(line, "Sample description: %s", saxs_property_value(description));
   lines_append(lines, line);
@@ -292,6 +304,8 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
      are available, this line is skipped. */
   if (code || concentration) {
     line = lines_create();
+    if (!line)
+      return ENOMEM;
 
     lines_printf(line, "Sample: %.15s  c= %s mg/ml  Code: %.8s",
                  description ? saxs_property_value(description) : "",
@@ -305,9 +319,14 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   parent = saxs_document_property_find_first(doc, "parent");
   if (parent) {
     line = lines_create();
+    if (!line)
+      return ENOMEM;
+
     lines_printf(line, "Parent(s):");
     while (parent) {
       char *oldline = strdup(line->line_buffer);
+      if (!oldline)
+        break;
       lines_printf(line, "%s %s", oldline, saxs_property_value(parent));
       free(oldline);
       parent = saxs_property_find_next(parent, "parent");
@@ -326,12 +345,15 @@ atsas_dat_write_footer(struct saxs_document *doc, struct line **lines) {
   while (property) {
     const char *name  = saxs_property_name(property);
     const char *value = saxs_property_value(property);
-  
+
     if (strcmp(name, "sample-description")
          && strcmp(name, "sample-code")
          && strcmp(name, "sample-concentration")) {
 
       line = lines_create();
+      if (!line)
+        return ENOMEM;
+
       /* FIXME: columns should be aligned on output */
       lines_printf(line, "%s: %s", name, value);
       lines_append(lines, line);

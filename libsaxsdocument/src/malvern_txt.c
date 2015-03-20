@@ -57,16 +57,22 @@ malvern_txt_count_columns(struct line *l) {
  * Build a list of column names. The labels may contain spaces,
  * but the columns are TAB separated.
  */
-static void
+static int
 malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
   int i = 0;
   char *c, *buffer, *p;
 
   *n = malvern_txt_count_columns(l);
   *columns = (char**)malloc(*n * sizeof(char*));
+  if (*columns == NULL)
+    return ENOMEM;
 
   /* No column label is larger than the whole header string. */
   buffer = (char*)malloc((l->line_length + 1) * sizeof(char));
+  if (buffer == NULL) {
+    free(*columns);
+    return ENOMEM;
+  }
 
   c = l->line_buffer;
   for (i = 0; i < *n; ++i, ++c) {
@@ -77,15 +83,26 @@ malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
       *p++ = *c++;
 
     (*columns)[i] = strdup(buffer);
+    if ((*columns)[i] == NULL) {
+      for(;i>=0;--i) { /* i is signed so this is OK */
+        free((*columns)[i]);
+      }
+      free(*columns);
+      free(buffer);
+      return ENOMEM;
+    }
   }
 
   free(buffer);
+  return 0;
 }
 
-static void
+static int
 malvern_txt_parse_column_values(struct line *l, double **values, int *n) {
   *n = malvern_txt_count_columns(l);
   *values = (double*)malloc(*n * sizeof(double));
+  if (*values == NULL)
+    return ENOMEM;
 
   if (*n > 0) {
     int k = 0;
@@ -107,6 +124,7 @@ malvern_txt_parse_column_values(struct line *l, double **values, int *n) {
       while (*p && isspace(*p)) ++p;
     }
   }
+  return 0;
 }
 
 
@@ -126,7 +144,9 @@ malvern_txt_parse_data(struct saxs_document *doc,
 
   int i, j, n;
   char **headers = NULL;
-  double *values;
+  double *values = NULL;
+
+  int res;
 
   /*
    * Read everything into a temporary document first.
@@ -137,11 +157,13 @@ malvern_txt_parse_data(struct saxs_document *doc,
    * and copy unique ones into the actual document with the correct
    * header title.
    */
-  struct saxs_document *tmpdoc;
-  struct saxs_curve **curves;
+  struct saxs_document *tmpdoc = NULL;
+  struct saxs_curve **curves = NULL;
 
   /* The list of column names. */
-  malvern_txt_parse_column_headers(firstline, &headers, &n);
+  res = malvern_txt_parse_column_headers(firstline, &headers, &n);
+  if (res)
+    return res;
   firstline = firstline->next;
 
   /*
@@ -149,11 +171,22 @@ malvern_txt_parse_data(struct saxs_document *doc,
    * (with temporary titles).
    */
   tmpdoc = saxs_document_create();
+  if (!tmpdoc) {
+    res = ENOMEM;
+    goto exit;
+  }
   curves = (struct saxs_curve **) malloc(2 * n * sizeof(struct saxs_curve*));
+  if (!curves) {
+    res = ENOMEM;
+    goto exit;
+  }
   for (i = 0; i < 2*n; ++i)
     curves[i] = saxs_document_add_curve(tmpdoc, "tmp",
                                         SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
-
+    if (!curves[i]) {
+      res = ENOMEM;
+      goto exit;
+    }
   /*
    * There may be missing values in the columns, but only on the right
    * hand side, i.e. not "VALUE N/A VALUE", but "VALUE VALUE N/A" only.
@@ -163,7 +196,9 @@ malvern_txt_parse_data(struct saxs_document *doc,
    * it should be the retention volume.
    */
   while (firstline != lastline) {
-    malvern_txt_parse_column_values(firstline, &values, &n);
+    res = malvern_txt_parse_column_values(firstline, &values, &n);
+    if (res)
+      goto exit;
     for (i = 1; i < n; ++i)
       saxs_curve_add_data(curves[i], values[0], 0.0, values[i], 0.0);
 
@@ -188,10 +223,16 @@ malvern_txt_parse_data(struct saxs_document *doc,
 
     if (!duplicate && saxs_curve_data_count(curves[i]) > 0) {
       c = saxs_document_copy_curve(doc, curves[i]);
+      if (!c) {
+        res = ENOMEM;
+        goto exit;
+      }
       saxs_curve_set_title(c, headers[j++]);
     }
   }
+  res = 0;
 
+exit:
   saxs_document_free(tmpdoc);
 
   for (i = 0; i < n; ++i)
@@ -200,7 +241,7 @@ malvern_txt_parse_data(struct saxs_document *doc,
   free(headers);
   free(curves);
 
-  return 0;
+  return res;
 }
 
 int
@@ -215,6 +256,8 @@ malvern_txt_read(struct saxs_document *doc,
   const char **col;
 
   struct line *header, *data, *footer;
+
+  int res;
 
   /*
    * The header starts at the first line and ends when the data begins with
@@ -246,8 +289,12 @@ malvern_txt_read(struct saxs_document *doc,
   if (!data)
     return ENOTSUP;
 
-  malvern_txt_parse_header(doc, header, data);
-  malvern_txt_parse_data(doc, data, footer);
+  res = malvern_txt_parse_header(doc, header, data);
+  if (res)
+    return res;
+  res = malvern_txt_parse_data(doc, data, footer);
+  if (res)
+    return res;
 
   return 0;
 }
