@@ -161,7 +161,7 @@ saxs_reader_columns_parse(struct saxs_document *doc,
 /**
  * @brief Count the number of data values in a given line.
  * @param l
- * @returns The number of data values in line @a l.
+ * @returns The number of data values in line @a l, or -1 on error.
  */
 int
 saxs_reader_columns_count(struct line *l);
@@ -169,7 +169,7 @@ saxs_reader_columns_count(struct line *l);
 /**
  * @brief Get the data values in a given line.
  * @param l
- * @returns The data values in line @a l.
+ * @returns The data values in line @a l, or NULL on error.
  */
 double* saxs_reader_columns_values(struct line *l);
 

@@ -1,5 +1,10 @@
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+        * src/columns.c (saxs_reader_columns_(count|values)): Check for memory allocation errors and return an error code on failure
+        * src/columns.h: Document these changes in the Doxygen comments
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
 	* src/saxsdocument.[ch]: Added const qualifiers to functions which do not modify their arguments
 	* src/saxsdocument_format.[ch]: ditto
 	* src/saxsproperty.[ch]: ditto

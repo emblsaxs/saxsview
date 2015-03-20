@@ -318,18 +318,20 @@ void lines_free(struct line *lines) {
 }
 
 
-static void columns_tokenize(struct line *l) {
-  assert_valid_line_or_null(l);
+static int columns_tokenize(struct line *l) {
+  assert_valid_line(l);
   int cnt = 0;
   char *p;
   double value;
   double *values = NULL;
 
-  if (!l || strlen(l->line_buffer) == 0)
-    return;
+  if (strlen(l->line_buffer) == 0) {
+    assert(l->line_column_count <= 0);
+    return 0;
+  }
 
   if (l->line_column_count >= 0)
-    return;
+    return 0;
 
   p = l->line_buffer;
   while (*p) {
@@ -342,7 +344,13 @@ static void columns_tokenize(struct line *l) {
      */
     if (!isnan(value) && !isinf(value)) {
       cnt += 1;
-      values = realloc(values, cnt * sizeof(double));
+      double *newvalues = realloc(values, cnt * sizeof(double));
+      if (!newvalues) {
+        free(values);
+        return ENOMEM;
+      } else {
+        values = newvalues;
+      }
       values[cnt-1] = value;
 
     } else {
@@ -379,13 +387,17 @@ static void columns_tokenize(struct line *l) {
     l->line_column_values = values;
   }
   assert_valid_line(l);
+  return 0;
 }
 
 
 int saxs_reader_columns_count(struct line *l) {
   assert_valid_line(l);
-  if (l->line_column_count < 0)
-    columns_tokenize(l);
+  if (l->line_column_count < 0) {
+    int res = columns_tokenize(l);
+    if (res)
+      return -1;
+  }
 
   return l->line_column_count;
 }
@@ -393,8 +405,11 @@ int saxs_reader_columns_count(struct line *l) {
 
 double* saxs_reader_columns_values(struct line *l) {
   assert_valid_line(l);
-  if (l->line_column_count < 0)
-    columns_tokenize(l);
+  if (l->line_column_count < 0) {
+    int res = columns_tokenize(l);
+    if (res)
+      return NULL;
+  }
 
   return l->line_column_values;
 }
