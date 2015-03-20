@@ -1,11 +1,16 @@
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
-        * src/saxsproperty.c: Check for memory allocation errors, add assertions that property lists are valid
+	* src/saxsdocument.c: Check for memory allocation errors etc
+	* src/saxsdocument.h: Add int return code to saxs_curve_add_data
 
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
-        * src/columns.c (saxs_reader_columns_(count|values)): Check for memory allocation errors and return an error code on failure
-        * src/columns.h: Document these changes in the Doxygen comments
+	* src/saxsproperty.c: Check for memory allocation errors, add assertions that property lists are valid
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/columns.c (saxs_reader_columns_(count|values)): Check for memory allocation errors and return an error code on failure
+	* src/columns.h: Document these changes in the Doxygen comments
 
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 

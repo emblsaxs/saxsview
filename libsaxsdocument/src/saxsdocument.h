@@ -260,7 +260,7 @@ saxs_curve_set_title(saxs_curve *curve, const char *title);
 int
 saxs_curve_type(const saxs_curve *curve);
 
-void
+int
 saxs_curve_add_data(saxs_curve *curve,
                     double x, double x_err,
                     double y, double y_err);

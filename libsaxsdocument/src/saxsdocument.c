@@ -132,6 +132,22 @@ static void assert_valid_curve(const struct saxs_curve *curve) {
 
 #endif
 
+static void saxs_curve_free(struct saxs_curve *curve) {
+  assert_valid_curve_or_null(curve);
+  
+  if (curve) {
+    while (curve->curve_data_head) {
+      saxs_data *d = curve->curve_data_head;
+      curve->curve_data_head = curve->curve_data_head->next;
+      free(d);
+    }
+
+    if (curve->curve_title)
+      free(curve->curve_title);
+    free(curve);
+  }
+}
+
 /*************************************************************************/
 saxs_document* saxs_document_create() {
   saxs_document *doc = malloc(sizeof(saxs_document));
@@ -143,6 +159,10 @@ saxs_document* saxs_document_create() {
     doc->doc_curve_count = 0;
     doc->doc_curves_head = NULL;
     doc->doc_curves_tail = NULL;
+    if (doc->doc_properties == NULL) {
+      free(doc);
+      doc = NULL;
+    }
   }
 
   return doc;
@@ -280,18 +300,8 @@ void saxs_document_free(saxs_document *doc) {
 
   while (doc->doc_curves_head) {
     saxs_curve *curve = doc->doc_curves_head;
-    assert_valid_curve(curve);
-
-    while (curve->curve_data_head) {
-      saxs_data *d = curve->curve_data_head;
-      curve->curve_data_head = curve->curve_data_head->next;
-      free(d);
-    }
-
     doc->doc_curves_head = doc->doc_curves_head->next;
-    if (curve->curve_title)
-      free(curve->curve_title);
-    free(curve);
+    saxs_curve_free(curve);
   }
 
   free(doc);
@@ -475,6 +485,8 @@ saxs_document_add_property(saxs_document *doc,
 saxs_curve*
 saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
   saxs_curve *curve = malloc(sizeof(saxs_curve));
+  if (!curve)
+    return curve;
 
   curve->curve_title        = title ? strdup(title) : NULL;
   curve->curve_type         = type;
@@ -498,30 +510,39 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
 saxs_curve*
 saxs_document_copy_curve(saxs_document *doc, const saxs_curve *in) {
   assert_valid_curve_or_null(in);
-  
+
+  int res = 0;
   saxs_curve *out = NULL;
 
   if (in) {
     out = saxs_document_add_curve(doc, in->curve_title, in->curve_type);
+    if (!out)
+      return NULL;
 
     saxs_data *data = saxs_curve_data(in);
     while (data) {
-      saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
+      res = saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
+      /* If adding data fails then the copied curve will be incomplete.
+       * We could cancel adding the curve but that would require going back over
+       * the document's curves list to remove it. 
+       * So we just ignore the return value. */
       data = data->next;
     }
   }
 
-  assert_valid_curve_or_null(out);
+  assert_valid_curve(out);
   return out;
 }
 
-void saxs_curve_add_data(saxs_curve *curve,
+int saxs_curve_add_data(saxs_curve *curve,
                          double x, double x_err,
                          double y, double y_err) {
-  
+
   assert_valid_curve(curve);
 
   saxs_data *data = malloc(sizeof(saxs_data));
+  if (!data)
+    return ENOMEM;
 
   data->x     = x;
   data->x_err = x_err;
@@ -536,8 +557,9 @@ void saxs_curve_add_data(saxs_curve *curve,
 
   curve->curve_data_tail = data;
   curve->curve_data_count += 1;
-  
+
   assert_valid_curve(curve);
+  return 0;
 }
 
 int
