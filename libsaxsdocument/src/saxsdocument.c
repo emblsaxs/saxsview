@@ -76,11 +76,16 @@ struct saxs_data {
 
 #else
 
-//static void assert_valid_data(const saxs_data *data) {
-#define assert_valid_data(data) { \
-  assert((data) != NULL); \
-  assert((data)->x_err >= 0); \
-  assert((data)->y_err >= 0); \
+static void assert_valid_data(const saxs_data *data) {
+  assert((data) != NULL);
+  assert(!isinf((data)->x) && !isnan((data)->x));
+  assert(!isinf((data)->y) && !isnan((data)->y));
+  assert(!isinf((data)->x_err) && !isnan((data)->x_err));
+  assert(!isinf((data)->y_err) && !isnan((data)->y_err));
+#ifdef DO_NOT_ALLOW_NEGATIVE_ERRORS
+  assert((data)->x_err >= 0);
+  assert((data)->y_err >= 0);
+#endif
 }
 
 #define assert_valid_data_or_null(data) { \

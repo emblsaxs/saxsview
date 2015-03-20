@@ -29,6 +29,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
+#include <math.h>
 
 /* Size of the static buffers used in extract() and extract_line() */
 #define EXTRACT_BUFFER_SIZE 1024
@@ -270,22 +271,36 @@ static int parse_scattering_data(struct saxs_document *doc,
    * found. The data block generally is 5 columns wide, but
    * at the beginning, the extrapolated part is 2 columns only.
    */
-  while (firstline != lastline) {
+  for (;firstline != lastline;firstline = firstline->next) {
     double s, jexp, err, jreg, ireg;
 
     if (sscanf(firstline->line_buffer, "%lf %lf %lf %lf %lf",
                &s, &jexp, &err, &jreg, &ireg) == 5) {
+      if (isinf(s) || isnan(s))
+        continue;
+      if (isinf(jexp) || isnan(jexp)
+#ifdef DO_NOT_ALLOW_NEGATIVE_ERRORS
+        || (err < 0)
+#endif
+        || isinf(err) || isnan(err))
+        continue;
+      if (isinf(jreg) || isnan(jreg))
+        continue;
+      if (isinf(ireg) || isnan(ireg))
+        continue;
       saxs_curve_add_data(curve_exp, s, 0.0, jexp, err);
       saxs_curve_add_data(curve_reg, s, 0.0, jreg, 0.0);
       saxs_curve_add_data(curve_des, s, 0.0, ireg, 0.0);
 
     } else if (sscanf(firstline->line_buffer, "%lf %lf",
                       &s, &ireg) == 2) {
+      if (isinf(s) || isnan(s))
+        continue;
+      if (isinf(ireg) || isnan(ireg))
+        continue;
       saxs_curve_add_data(curve_des, s, 0.0, ireg, 0.0);
 
     }
-
-    firstline = firstline->next;
   }
 
   return 0;

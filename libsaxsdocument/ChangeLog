@@ -1,8 +1,13 @@
-2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c: Allow x_err and y_err to be negative, but don't allow Infinity or NaN
+	* src/atsas_out.c: Skip data lines with infinity or NaN
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/columns.c: Fixed mistaken assertion
 
-2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/columns.c: Fixed off-by-one error
 
