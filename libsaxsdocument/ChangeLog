@@ -1,5 +1,9 @@
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+        * src/saxsproperty.c: Check for memory allocation errors, add assertions that property lists are valid
+
+2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
+
         * src/columns.c (saxs_reader_columns_(count|values)): Check for memory allocation errors and return an error code on failure
         * src/columns.h: Document these changes in the Doxygen comments
 
