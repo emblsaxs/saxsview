@@ -497,7 +497,7 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   if (xcol < 0
       || ycol < 0
-      || (colcnt < xcol || colcnt < ycol || colcnt < y_errcol))
+      || (colcnt <= xcol || colcnt <= ycol || colcnt <= y_errcol))
     return EINVAL;
 
   curve = saxs_document_add_curve(doc, title, type);
