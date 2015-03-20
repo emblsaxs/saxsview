@@ -1,5 +1,9 @@
 2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+	* src/columns.c: Fixed mistaken assertion
+
+2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
+
 	* src/columns.c: Fixed off-by-one error
 
 2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>

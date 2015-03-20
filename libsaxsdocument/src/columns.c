@@ -104,7 +104,7 @@ struct line* lines_create() {
 void
 lines_append(struct line **lines, struct line *l) {
   assert_valid_lineset_or_null(*lines);
-  assert_valid_line(l);
+  assert_valid_line_or_null(l);
   if (l) {
     if (*lines) {
       struct line *tail = *lines;
@@ -116,8 +116,8 @@ lines_append(struct line **lines, struct line *l) {
     } else {
       *lines = l;
     }
+    assert_valid_lineset(*lines, l);
   }
-  assert_valid_lineset(*lines, l);
 }
 
 
