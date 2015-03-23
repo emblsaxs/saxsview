@@ -130,6 +130,17 @@ saxs_document_free(saxs_document *doc);
 const char*
 saxs_document_filename(const saxs_document *doc);
 
+/**
+ * @brief The format string describing the document's format
+ *
+ * @param doc A non-NULL document-pointer created by @ref saxs_document_create.
+ *
+ * @returns NULL if no file was read with @ref saxs_document_read or written with
+ *          @ref saxs_document_write, the corresponding format ID otherwise.
+ */
+const char*
+saxs_document_format_id(const saxs_document *doc);
+
 
 /**
  * @brief Add a new property to a document.

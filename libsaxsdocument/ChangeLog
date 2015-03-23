@@ -1,3 +1,8 @@
+2015-03-23  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c: Add a member to the saxs_document struct recording the format used
+	* src/saxsdocument.h: Add a function to read out the name of the format used
+
 2015-03-20  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/atsas_dat.c: Check for memory allocation errors etc

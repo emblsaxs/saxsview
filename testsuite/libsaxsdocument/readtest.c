@@ -13,6 +13,7 @@ int main(int argc, char** argv){
   int result = saxs_document_read(doc, input, format);
   printf("Result: %d (%s)\n", result, strerror(result));
   if (result == 0) {
+    printf("Format ID: '%s'", saxs_document_format_id(doc));
     printf("Number of properties: %d\n", saxs_document_property_count(doc));
     printf("Number of curves: %d\n", saxs_document_curve_count(doc));
   }

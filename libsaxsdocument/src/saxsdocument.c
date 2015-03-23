@@ -47,6 +47,8 @@ struct saxs_document {
   int doc_curve_count;
   saxs_curve *doc_curves_head;
   saxs_curve *doc_curves_tail;
+
+  const saxs_document_format *doc_format;
 };
 
 struct saxs_curve {
@@ -154,6 +156,7 @@ saxs_document* saxs_document_create() {
 
   if (doc) {
     doc->doc_filename    = NULL;
+    doc->doc_format      = NULL;
     doc->doc_lines       = NULL;
     doc->doc_properties  = saxs_property_list_create();
     doc->doc_curve_count = 0;
@@ -231,6 +234,8 @@ int saxs_document_read(saxs_document *doc, const char *filename,
 
     if (doc->doc_filename) free(doc->doc_filename);
     doc->doc_filename = strdup(filename);
+
+    doc->doc_format = handler;
   }
 
   lines_free(l);
@@ -283,6 +288,8 @@ int saxs_document_write(saxs_document *doc, const char *filename,
 
       if (doc->doc_filename) free(doc->doc_filename);
       doc->doc_filename = strdup(filename);
+
+      doc->doc_format = handler;
     }
   }
 
@@ -326,6 +333,11 @@ saxs_document_property_count(const saxs_document *doc) {
 const char *
 saxs_document_filename(const saxs_document *doc) {
   return doc ? doc->doc_filename : NULL;
+}
+
+const char *
+saxs_document_format_id(const saxs_document *doc) {
+  return doc ? doc->doc_format->name : NULL;
 }
 
 int

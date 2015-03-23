@@ -1,3 +1,7 @@
+2015-03-23  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* libsaxsdocument/readtest.c: Write out the format that was used to read the document
+
 2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* libsaxsdocument/readtest.c: Allow specifying a format in the second argument
