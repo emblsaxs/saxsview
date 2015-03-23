@@ -446,10 +446,10 @@ int atsas_out_read(struct saxs_document *doc,
   }
 
   /*
-   * If any of the sections was not found, the lines do not
-   * come from a GNOM .out file.
+   * If any of the sections (except the footer) was not found, 
+   * the lines do not come from a GNOM .out file.
    */
-  if (!header || !scattering_begin || !probability_begin || !footer)
+  if (!header || !scattering_begin || !probability_begin)
     return ENOTSUP;
 
   /*
@@ -464,7 +464,8 @@ int atsas_out_read(struct saxs_document *doc,
   res = parse_probability_data(doc, probability_begin, footer);
   if (res)
     return res;
-  res = parse_footer(doc, footer, lastline);
+  if (footer)
+    res = parse_footer(doc, footer, lastline);
   return res;
 }
 

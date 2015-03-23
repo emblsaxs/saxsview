@@ -1,5 +1,11 @@
 2015-03-23  Chris Kerr  <cjkerr@users.sourceforge.net>
 
+	* libsaxsdocument/CMakeLists.txt: New test for recognising ATSAS out files without a footer
+	* libsaxsdocument/gi-sasdak6.out: Test file - GNOM version 5.0 output
+	* libsaxsdocument/readtest.c: Fixed typo
+
+2015-03-23  Chris Kerr  <cjkerr@users.sourceforge.net>
+
 	* libsaxsdocument/readtest.c: Write out the format that was used to read the document
 
 2015-03-19  Chris Kerr  <cjkerr@users.sourceforge.net>
