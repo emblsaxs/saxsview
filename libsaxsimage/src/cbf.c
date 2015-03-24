@@ -40,7 +40,7 @@ saxs_image_cbf_read_high_level(cbf_handle cbf,
   if (cbf_get_image_size(cbf, 0, 0, height, width) != 0)
     return -1;
 
-  *data = malloc((*width) * (*height) * sizeof(size_t));
+  *data = malloc((*width) * (*height) * sizeof(int));
   return cbf_get_image(cbf, 0, 0,
                        *data,
                        sizeof(int),
