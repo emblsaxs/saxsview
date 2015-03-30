@@ -62,7 +62,7 @@ static int is_utf32_be(const unsigned char *data) {
   return data[0] == 0xFF && data[1] == 0xFE && data[2] == 0x00 && data[3] == 0x00;
 }
 
-#ifndef NDEBUG
+#ifdef LIBSAXSDOCUMENT_HEAVY_ASSERTS
 
 void assert_valid_lineset(const struct line* first, const struct line* last) {
   assert_valid_line(first);

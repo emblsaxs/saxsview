@@ -224,7 +224,7 @@ saxs_writer_columns_write_lines(struct saxs_document *doc, struct line **l,
                                                     struct line **));
 
 
-#ifdef NDEBUG
+#ifndef LIBSAXSDOCUMENT_HEAVY_ASSERTS
 
 #define assert_valid_line(l)
 #define assert_valid_line_or_null(l)

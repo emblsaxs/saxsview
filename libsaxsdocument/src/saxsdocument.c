@@ -69,7 +69,7 @@ struct saxs_data {
   struct saxs_data *next;
 };
 
-#ifdef NDEBUG
+#ifndef LIBSAXSDOCUMENT_HEAVY_ASSERTS
 
 #define assert_valid_data(data)
 #define assert_valid_data_or_null(data)

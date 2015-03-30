@@ -5,6 +5,10 @@ if (NOT LIBXML2_FOUND)
   message (STATUS "Optional package libxml2 not found, CANSAS-XML document format disabled.")
 endif (NOT LIBXML2_FOUND)
 
+if (LIBSAXSDOCUMENT_HEAVY_ASSERTS)
+  add_definitions(-DLIBSAXSDOCUMENT_HEAVY_ASSERTS)
+endif(LIBSAXSDOCUMENT_HEAVY_ASSERTS)
+
 set (SOURCES saxsproperty.c
              saxsdocument.c
              saxsdocument_format.c

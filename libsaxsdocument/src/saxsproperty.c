@@ -37,7 +37,7 @@ struct saxs_property_list {
   struct saxs_property *head, *tail;
 };
 
-#ifdef NDEBUG
+#ifndef LIBSAXSDOCUMENT_HEAVY_ASSERTS
 
 #define assert_valid_property(p)
 #define assert_valid_property_or_null(p)
