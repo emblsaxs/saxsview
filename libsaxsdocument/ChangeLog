@@ -1,3 +1,7 @@
+2015-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (parse_basic_information): Fixed parsing of concentration.
+
 2015-03-30  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* CMakeLists.txt: New option LIBSAXSDOCUMENT_HEAVY_ASSERTS to control expensive assertions

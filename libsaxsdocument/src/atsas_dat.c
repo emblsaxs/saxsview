@@ -68,8 +68,8 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
       strncpy(desc, colon_pos + 1,
               MIN(conc_pos - colon_pos - 1, 63));
 
-    /* Skip "c=". */
-    strncpy(conc, conc_pos + 2, 63);
+    /* Skip "c=", read the concentration string up to the next whitespace. */
+    sscanf(conc_pos + 2, "%s", conc);
     /* TODO: read concentration units */
 
     colon_pos = strstr(conc_pos, ":");
