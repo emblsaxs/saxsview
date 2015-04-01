@@ -76,6 +76,12 @@ function (add_python_module)
       target_link_libraries (${MOD_UNPARSED_ARGUMENTS} ${MOD_LIBRARIES} ${PYTHON_LIBRARIES})
     endif (MOD_LIBRARIES)
 
+	if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+	  # Workaround for http://bugs.python.org/issue11722
+      set_target_properties (${MOD_UNPARSED_ARGUMENTS} PROPERTIES
+	                                                   COMPILE_DEFINITIONS "MS_WIN64")
+	endif (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+
     set_target_properties(${MOD_UNPARSED_ARGUMENTS} PROPERTIES
                                                     PREFIX "${PYTHON_MODULE_PREFIX}"
                                                     SUFFIX "${PYTHON_MODULE_SUFFIX}")
