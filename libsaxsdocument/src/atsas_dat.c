@@ -143,9 +143,11 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
 
     /*
      * There may be files, e.g. from BM29, that specify the code only
-     * in a key-value pair.
+     * in a key-value pair, use that if no other code has already been
+     * identified.
      */
-    if (strcmp(key, "Code") == 0)
+    if (strcmp(key, "Code") == 0
+         && saxs_document_property_find_first(doc, "sample-code") == NULL)
       saxs_document_add_property(doc, "sample-code", value);
 
     free(key);

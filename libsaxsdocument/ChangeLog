@@ -1,3 +1,7 @@
+2015-05-01  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (parse_key_value_pair): Add sample-code only if not defined yet.
+
 2015-03-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_dat.c (parse_basic_information): Fixed parsing of concentration.
