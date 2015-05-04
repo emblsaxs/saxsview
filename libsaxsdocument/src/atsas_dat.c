@@ -309,7 +309,7 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
     if (!line)
       return ENOMEM;
 
-    lines_printf(line, "Sample: %.15s  c= %s mg/ml  Code: %.8s",
+    lines_printf(line, "Sample: %.15s  c= %s mg/ml  Code: %s",
                  description ? saxs_property_value(description) : "",
                  concentration ? saxs_property_value(concentration): "0.0",
                  code ? saxs_property_value(code) : "");
