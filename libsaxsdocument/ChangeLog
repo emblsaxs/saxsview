@@ -1,3 +1,7 @@
+2015-05-11  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c: Add code to set, check and unset the locale when reading a document
+
 2015-05-04  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_dat.c (atsas_dat_write_header): Removed limitation on

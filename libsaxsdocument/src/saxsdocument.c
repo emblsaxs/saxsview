@@ -31,6 +31,9 @@
 #include <errno.h>
 #include <math.h>
 #include <assert.h>
+#include <locale.h>
+#include <stdio.h>
+#include <malloc.h>
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-16
@@ -150,6 +153,24 @@ static void saxs_curve_free(struct saxs_curve *curve) {
   }
 }
 
+static int test_locale() {
+  float d;
+  char s[64];
+  int n;
+
+  /* making sure to use numbers which have an exact 
+   * floating-point representation */
+  n = sscanf("5.25", "%f", &d);
+  if (n != 1) return 1;
+  if (d != 5.25) return 2;
+
+  n = snprintf(s, 64, "%f", 3.5);
+  if (n != 3) return 3;
+  if (strcmp(s, "3.5")) return 4;
+
+  return 0;
+}
+
 /*************************************************************************/
 saxs_document* saxs_document_create() {
   saxs_document *doc = malloc(sizeof(saxs_document));
@@ -187,6 +208,15 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   if (res != 0)
     return res;
 
+  /* Set the locale to "C" and check that numbers are read correctly */
+  const char *oldlocale = setlocale(LC_NUMERIC, "C");
+  if (!oldlocale) {
+    fprintf(stderr, "Could not set numeric locale to 'C', this may result in incorrect data being read");
+  }
+
+  if (test_locale()) {
+    fprintf(stderr, "Input/output of floating point numbers is not working as expected, this may result in incorrect data");
+  }
   /*
    * First we shall try to determine the file type according to the
    * specified format or the file extension. If that doesn't work,
@@ -239,6 +269,7 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   }
 
   lines_free(l);
+  setlocale(LC_NUMERIC, oldlocale);
   return res;
 }
 
@@ -248,6 +279,15 @@ int saxs_document_write(saxs_document *doc, const char *filename,
   struct line *l = NULL;
   int res = ENOTSUP;
 
+  /* Set the locale to "C" and check that numbers are read correctly */
+  const char *oldlocale = setlocale(LC_NUMERIC, "C");
+  if (!oldlocale) {
+    fprintf(stderr, "Could not set numeric locale to 'C', this may result in incorrect data being read");
+  }
+
+  if (test_locale()) {
+    fprintf(stderr, "Input/output of floating point numbers is not working as expected, this may result in incorrect data");
+  }
   /*
    * First we shall try to determine the file type according to the
    * specified format or the file extension. If that doesn't work,
@@ -294,6 +334,7 @@ int saxs_document_write(saxs_document *doc, const char *filename,
   }
 
   lines_free(l);
+  setlocale(LC_NUMERIC, oldlocale);
   return res;
 }
 
