@@ -164,7 +164,7 @@ static int test_locale() {
   if (n != 1) return 1;
   if (d != 5.25) return 2;
 
-  n = snprintf(s, 64, "%f", 3.5);
+  n = snprintf(s, 64, "%.1f", 3.5);
   if (n != 3) return 3;
   if (strcmp(s, "3.5")) return 4;
 
@@ -211,11 +211,11 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   /* Set the locale to "C" and check that numbers are read correctly */
   const char *oldlocale = setlocale(LC_NUMERIC, "C");
   if (!oldlocale) {
-    fprintf(stderr, "Could not set numeric locale to 'C', this may result in incorrect data being read");
+    fprintf(stderr, "Warning: Could not set numeric locale to 'C', this may result in incorrect data being read\n");
   }
 
   if (test_locale()) {
-    fprintf(stderr, "Input/output of floating point numbers is not working as expected, this may result in incorrect data");
+    fprintf(stderr, "Warning: Input/output of floating point numbers is not working as expected, this may result in incorrect data\n");
   }
   /*
    * First we shall try to determine the file type according to the

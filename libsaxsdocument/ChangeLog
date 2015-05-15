@@ -1,3 +1,7 @@
+2015-05-15  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c: Fixed locale checks and formatting of warning messages
+
 2015-05-11  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/saxsdocument.c: Add code to set, check and unset the locale when reading a document
