@@ -122,9 +122,9 @@ static void tiff_initialize(void) {
 /**************************************************************************/
 static void saxs_image_tiff_read_header(saxs_image *image, TIFF *tiff,
                                         const TIFFFieldInfo *info) {
-  char *c;
-  long l;
-  float f;
+  char *c = NULL;
+  long  l = 0;
+  float f = 0.0;
 
   while (info && info->field_tag > 0) {
     switch (info->field_type) {
