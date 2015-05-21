@@ -32,6 +32,7 @@ MODULE saxsimage
   PUBLIC saxs_image
   PUBLIC saxs_image_create
   PUBLIC saxs_image_read
+  PUBLIC saxs_image_read_frame
   PUBLIC saxs_image_write
   PUBLIC saxs_image_free
   PUBLIC saxs_image_width
@@ -78,6 +79,33 @@ CONTAINS
       result = c_saxs_image_read(img%c_ptr, TRIM(filename) // C_NULL_CHAR, TRIM(fmt) // C_NULL_CHAR)
     ELSE
       result = c_saxs_image_read(img%c_ptr, TRIM(filename) // C_NULL_CHAR, C_NULL_CHAR)
+    END IF
+
+    IF (PRESENT(status)) status = result
+  END SUBROUTINE
+
+  SUBROUTINE saxs_image_read_frame(img, filename, fmt, frame, status)
+    TYPE(saxs_image), INTENT(inout)        :: img
+    CHARACTER(len=*), INTENT(in)           :: filename
+    CHARACTER(len=*), INTENT(in), OPTIONAL :: fmt
+    INTEGER, INTENT(in), OPTIONAL          :: frame
+    INTEGER, INTENT(out), OPTIONAL         :: status
+
+    INTERFACE
+      FUNCTION c_saxs_image_read_frame(img, frame) &
+               BIND(C, NAME="saxs_image_read_frame")
+        IMPORT C_PTR, C_INT, C_CHAR
+        INTEGER(C_INT)                :: c_saxs_image_read_frame
+        TYPE(C_PTR), VALUE            :: img
+        INTEGER(C_INT), VALUE         :: frame
+      END FUNCTION
+    END INTERFACE
+
+    INTEGER :: result
+
+    CALL saxs_image_read(img, filename, fmt, result)
+    IF (result == 0) THEN
+      result = c_saxs_image_read_frame(img%c_ptr, frame)
     END IF
 
     IF (PRESENT(status)) status = result

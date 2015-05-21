@@ -1,5 +1,9 @@
 2015-05-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
+	* fortran/fsaxsimage.f90 (saxs_image_read_frame): New.
+
+2015-05-21  Daniel Franke  <dfranke@users.sourceforge.net>
+
 	* src/tiff.c (saxs_image_tiff_read_header): Initialize variables to
 	make valgrind happy.
 
