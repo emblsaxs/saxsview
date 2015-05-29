@@ -33,7 +33,6 @@
 #include <assert.h>
 #include <locale.h>
 #include <stdio.h>
-#include <malloc.h>
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-16

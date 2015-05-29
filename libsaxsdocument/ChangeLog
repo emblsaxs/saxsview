@@ -1,3 +1,7 @@
+2015-05-29  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/saxsdocument.c: Removing #include <malloc.h> as malloc is guaranteed to be in stdlib.h
+
 2015-05-15  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/saxsdocument.c: Fixed locale checks and formatting of warning messages
