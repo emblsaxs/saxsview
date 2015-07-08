@@ -1,3 +1,7 @@
+2015-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/CMakeLists.txt: Add hdf5 support only if the LZ4 plugin has been built.
+
 2015-05-21  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* fortran/fsaxsimage.f90 (saxs_image_read_frame): New.

@@ -1,7 +1,6 @@
 
 find_package (HDF5)
 if (HDF5_FOUND)
-
   project (H5ZLZ4 C)
 
   set (H5ZLZ4_HEADERS lz4.h)
@@ -10,7 +9,7 @@ if (HDF5_FOUND)
   add_definitions (-DHAVE_HDF5 -std=gnu99)
   add_shared_library (h5zlz4
                       SOURCES ${H5ZLZ4_HEADERS} ${H5ZLZ4_SOURCES}
-                      LIBRARIES 
+                      LIBRARIES ${HDF5_LIBRARIES}
                       VERSION 0.2)
 
   install_library (TARGETS h5zlz4)

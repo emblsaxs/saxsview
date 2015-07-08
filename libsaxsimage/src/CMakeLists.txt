@@ -30,13 +30,12 @@ if (TARGET edf)
   set (SOURCES ${SOURCES} edf.c)
 endif (TARGET edf)
 
-find_package (HDF5)
-if (HDF5_FOUND)
+if (TARGET h5zlz4)
   add_definitions (-DHAVE_HDF5)
   include_directories (${HDF5_SOURCE_DIR})
   set (LIBRARIES ${LIBRARIES} ${HDF5_LIBRARIES})
   set (SOURCES ${SOURCES} hdf5.c)
-endif (HDF5_FOUND)
+endif (TARGET h5zlz4)
 
 
 add_shared_library (saxsimage
