@@ -43,7 +43,8 @@ int saxs_image_hdf5_read(saxs_image *image, const char *filename, size_t frame) 
   file_id = H5Fopen(filename, H5F_ACC_RDWR, H5P_DEFAULT);
 
   /* Open an existing dataset. */
-  dataset_id = H5Dopen2(file_id, "/entry/data", H5P_DEFAULT);
+  /* FIXME: read this path out of the actual master file! */
+  dataset_id = H5Dopen2(file_id, "/entry/data/data/", H5P_DEFAULT);
 
   /* Obtain the dataspace for whole dataset */
   filespace = H5Dget_space(dataset_id);
@@ -51,7 +52,7 @@ int saxs_image_hdf5_read(saxs_image *image, const char *filename, size_t frame) 
   /* Get rank and dimension of dataset */
   rank = H5Sget_simple_extent_ndims(filespace);
   H5Sget_simple_extent_dims(filespace, dim, NULL);
-
+printf("%ld %ld %ld\n", dim[0], dim[1], dim[2]);
   mem = (int*)malloc(dim[1] * dim[2] * sizeof(int));
   if (!mem)
     return -1;
@@ -70,16 +71,18 @@ int saxs_image_hdf5_read(saxs_image *image, const char *filename, size_t frame) 
   offset[0] = frame - 1;   /* this frame (zero-offset) */
   offset[1] = 0;           /* beginning at (0,0) */
   offset[2] = 0;
-  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, NULL /* stride */ , size /* count */, NULL /* block */);
+  H5Sselect_hyperslab(filespace, H5S_SELECT_SET, offset, 
+                      NULL /* stride */ , size, NULL /* block */);
 
   res = H5Dread(dataset_id, H5T_NATIVE_INT, memspace, filespace, H5P_DEFAULT, mem);
 
   if (res >= 0) {
-    saxs_image_set_size(image, dim[1], dim[2], dim[0], frame);
+    saxs_image_set_size(image, dim[2], dim[1], dim[0], frame);
 
-    for(x = 0; x < dim[1]; x++)
-       for(y = 0; y < dim[2]; y++)
-         saxs_image_set_value(image, x, y, *(mem + x * dim[2] + y));
+    /* Data in "mem" is stored in row-major. */
+    for(y = 0; y < dim[1]; y++)
+      for(x = 0; x < dim[2]; x++)
+         saxs_image_set_value(image, x, dim[1] - y - 1, *(mem + y * dim[2] + x));
   }
 
   H5Sclose(memspace);

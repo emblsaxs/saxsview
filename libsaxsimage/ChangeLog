@@ -1,3 +1,8 @@
+2015-07-13  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/hdf5.c (saxs_image_hdf5_read): Orient dimensions to match the
+	overall coordinate system, i.e. (0,0) in the lower left.
+
 2015-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/CMakeLists.txt: Re-find HDF5?
