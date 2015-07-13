@@ -31,8 +31,9 @@ if (TARGET edf)
 endif (TARGET edf)
 
 if (TARGET h5zlz4)
-  # No idea why another find_package is required here,
-  # it should have been already found in external?!
+  # find_package is needed again because the find_package
+  # in external/h5zlz4 does not set variables in its
+  # parent directories
   find_package (HDF5)
   add_definitions (-DHAVE_HDF5)
   include_directories (${HDF5_SOURCE_DIR})

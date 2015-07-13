@@ -1,6 +1,12 @@
 
 find_package (HDF5)
-if (HDF5_FOUND)
+# Check for a sufficiently recent version of HDF5
+# i.e. with the H5PLextern.h header file
+find_file (HDF5_PLUGIN_HEADER
+           "H5PLextern.h"
+           PATHS ${HDF5_INCLUDE_DIRS}
+           NO_DEFAULT_PATH)
+if (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
   project (H5ZLZ4 C)
 
   set (H5ZLZ4_HEADERS lz4.h)
@@ -13,4 +19,4 @@ if (HDF5_FOUND)
                       VERSION 0.2)
 
   install_library (TARGETS h5zlz4)
-endif (HDF5_FOUND)
+endif (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
