@@ -124,36 +124,53 @@ lines_append(struct line **lines, struct line *l) {
 int lines_printf(struct line *l, const char *fmt, ...) {
   assert_valid_line(l);
   int n;
+  char *buffer;
+  unsigned int bufsize;
 
-  /*
-   * In case the line buffer is also used in the argument list,
-   * write to a temporary location to avoid messing up the
-   * original line buffer.
-   */
-  char *buffer = malloc(l->line_length);
-  if (!buffer) return -errno;
+
 
   va_list va;
-  va_start(va, fmt);
 
-  n = vsnprintf(buffer, l->line_length, fmt, va);
-  if (n >= (signed)l->line_length) {
-    va_end(va);
-
-    l->line_length = n + 1;
-    char *newbuffer = realloc(buffer, l->line_length);
-    if (!newbuffer) {
-      free(buffer);
-      return -errno;
-    } else {
-      buffer = newbuffer;
-    }
+  bufsize = l->line_length;
+  while (1){
+    /*
+     * In case the line buffer is also used in the argument list,
+     * write to a temporary location to avoid messing up the
+     * original line buffer. */
+    buffer = malloc(bufsize);
+    if (!buffer) return -errno;
 
     va_start(va, fmt);
-    n = vsnprintf(buffer, l->line_length, fmt, va);
-  }
-  va_end(va);
+    n = vsnprintf(buffer, bufsize, fmt, va);
+    va_end(va);
 
+    if (n >= 0 && n < bufsize) {
+      break; /* success */
+    }
+    /* On UNIX, n >= bufsize means 'a bufsize of at least n+1 is needed */
+    else if (n >= bufsize) {
+      free(buffer);
+      bufsize = n + 1;
+      continue;
+    }
+    /* A negative number means an error
+     * However, on Windows, -1 means "buffer is too small"
+     * but with no indication of how big it needs to be
+     */
+#ifdef _WIN32
+    else if (n == -1) {
+      free(buffer);
+      bufsize = bufsize * 2 + 1;
+      continue;
+    }
+#endif
+    else {
+      free(buffer);
+      return n;
+    }
+  }
+
+  l->line_length = bufsize;
   free(l->line_buffer);
   l->line_buffer       = buffer;
 

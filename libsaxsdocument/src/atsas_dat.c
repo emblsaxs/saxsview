@@ -326,11 +326,10 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
 
     lines_printf(line, "Parent(s):");
     while (parent) {
-      char *oldline = strdup(line->line_buffer);
-      if (!oldline)
-        break;
-      lines_printf(line, "%s %s", oldline, saxs_property_value(parent));
-      free(oldline);
+      /* N.B. lines_printf reallocates memory internally in
+       * case the line buffer is passed as an argument so
+       * there is no need to duplicate the line buffer here */
+      lines_printf(line, "%s %s", line->line_buffer, saxs_property_value(parent));
       parent = saxs_property_find_next(parent, "parent");
     }
     lines_append(lines, line);

@@ -1,3 +1,8 @@
+2015-07-15  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/columns.c (lines_printf): Fixed printing of long lines on Windows
+	* src/atsas_dat.c: Removed unnecessary copy
+
 2015-05-29  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/saxsdocument.c: Removing #include <malloc.h> as malloc is guaranteed to be in stdlib.h
