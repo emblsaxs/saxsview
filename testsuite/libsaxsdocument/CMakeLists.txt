@@ -33,7 +33,7 @@ set_property (TEST read-notsaxsdata-force PROPERTY PASS_REGULAR_EXPRESSION "Resu
 # Trying to read a file which is obviously not SAXS data -- forcing the use of a particular format
 add_test (NAME read-atsas-out-nofooter
           COMMAND $<TARGET_FILE:readtest> ${CMAKE_CURRENT_SOURCE_DIR}/gi-sasdak6.out)
-set_property (TEST read-atsas-out-nofooter PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 \\(Success\\)\nFormat ID: 'atsas-out'\nNumber of properties: 12\nNumber of curves: 4")
+set_property (TEST read-atsas-out-nofooter PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 \\((Success|No error)\\)\nFormat ID: 'atsas-out'\nNumber of properties: 12\nNumber of curves: 4")
 
 # read-only tests for .dat-files
 set (DATTESTS "empty;whitespace;columns;bsa;bsa-sub;long-lines")

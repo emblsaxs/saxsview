@@ -1,3 +1,7 @@
+2015-07-15  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* libsaxsdocument/CMakeLists.txt: Return value 0 is 'Success' on Linux but 'No error' on Windows...
+
 2015-03-23  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* libsaxsdocument/CMakeLists.txt: New test for recognising ATSAS out files without a footer
