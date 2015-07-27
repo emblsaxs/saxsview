@@ -125,9 +125,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
   assert_valid_line(l);
   int n;
   char *buffer;
-  unsigned int bufsize;
-
-
+  size_t bufsize;
 
   va_list va;
 
@@ -144,11 +142,11 @@ int lines_printf(struct line *l, const char *fmt, ...) {
     n = vsnprintf(buffer, bufsize, fmt, va);
     va_end(va);
 
-    if (n >= 0 && n < bufsize) {
+    if (n >= 0 && n < (signed) bufsize) {
       break; /* success */
     }
     /* On UNIX, n >= bufsize means 'a bufsize of at least n+1 is needed */
-    else if (n >= bufsize) {
+    else if (n >= (signed) bufsize) {
       free(buffer);
       bufsize = n + 1;
       continue;
@@ -165,6 +163,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
     }
 #endif
     else {
+      /* Error, return the error code */
       free(buffer);
       return n;
     }

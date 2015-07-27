@@ -1,3 +1,7 @@
+2015-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* src/columns.c (lines_printf): Really fixed printing of long lines on Windows (thanks -Wsign-compare)
+
 2015-07-15  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/columns.c (lines_printf): Fixed printing of long lines on Windows
