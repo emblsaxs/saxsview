@@ -81,3 +81,4 @@ endforeach (test)
 # endforeach (test)
 
 add_subdirectory(crashtests)
+add_subdirectory(unittests)

@@ -1,3 +1,9 @@
+2015-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* libsaxsdocument/unittests/test_columns.c: New file with unittests for lines_printf
+	* libsaxsdocument/unittests/CMakeLists.txt: Add the new test executable
+	* libsaxsdocument/CMakeLists.txt: Add the new unittests/ subdirectory
+
 2015-07-15  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* libsaxsdocument/CMakeLists.txt: Return value 0 is 'Success' on Linux but 'No error' on Windows...
