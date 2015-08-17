@@ -124,59 +124,51 @@ lines_append(struct line **lines, struct line *l) {
 int lines_printf(struct line *l, const char *fmt, ...) {
   assert_valid_line(l);
   int n;
-  char *buffer;
-  size_t bufsize;
+  char *line_buffer = 0L;
+  size_t line_length = l->line_length;
 
   va_list va;
 
-  bufsize = l->line_length;
-  while (1){
+  while (1) {
     /*
      * In case the line buffer is also used in the argument list,
      * write to a temporary location to avoid messing up the
-     * original line buffer. */
-    buffer = malloc(bufsize);
-    if (!buffer) return -errno;
+     * original line buffer.
+     */
+    line_buffer = realloc(line_buffer, line_length);
+    if (!line_buffer)
+      return ENOMEM;
 
     va_start(va, fmt);
-    n = vsnprintf(buffer, bufsize, fmt, va);
+    n = vsnprintf(line_buffer, line_length, fmt, va);
     va_end(va);
 
-    if (n >= 0 && n < (signed) bufsize) {
-      break; /* success */
-    }
-    /* On UNIX, n >= bufsize means 'a bufsize of at least n+1 is needed */
-    else if (n >= (signed) bufsize) {
-      free(buffer);
-      bufsize = n + 1;
-      continue;
-    }
-    /* A negative number means an error
-     * However, on Windows, -1 means "buffer is too small"
-     * but with no indication of how big it needs to be
+    if (n >= 0 && n < (signed) line_length)
+      break;
+
+    /*
+     * The meaning of the return value depends on the underlying, platform
+     * dependent, C runtime:
+     *  - on UNIX, n >= line_length means 'a line_length of at least n+1 is
+     *    needed'
+     *  - on WINDOWS, n < 0 indicates 'buffer too small' without any further
+     *    indication of the required size.
+     *
+     * Instead of doing any platform specifc things, simply double keep
+     * doubling the line_length until it is either large enough or we
+     * run out of memory.
      */
-#ifdef _WIN32
-    else if (n == -1) {
-      free(buffer);
-      bufsize = bufsize * 2 + 1;
-      continue;
-    }
-#endif
-    else {
-      /* Error, return the error code */
-      free(buffer);
-      return n;
-    }
+    line_length = line_length * 2;
   }
 
-  l->line_length = bufsize;
+  l->line_length = line_length;
   free(l->line_buffer);
-  l->line_buffer       = buffer;
+  l->line_buffer = line_buffer;
 
   l->line_column_count = -1;
   if (l->line_column_values) {
     free(l->line_column_values);
-    l-> line_column_values = NULL;
+    l->line_column_values = NULL;
   }
 
   assert_valid_line(l);
@@ -336,10 +328,10 @@ void lines_free(struct line *lines) {
 
 static int columns_tokenize(struct line *l) {
   assert_valid_line(l);
-  int cnt = 0;
   char *p;
   double value;
   double *values = NULL;
+  int nreserved = 0, nvalues = 0;
 
   if (strlen(l->line_buffer) == 0) {
     assert(l->line_column_count <= 0);
@@ -359,15 +351,20 @@ static int columns_tokenize(struct line *l) {
      * anything can deal with those anyway.
      */
     if (!isnan(value) && !isinf(value)) {
-      cnt += 1;
-      double *newvalues = realloc(values, cnt * sizeof(double));
-      if (!newvalues) {
-        free(values);
-        return ENOMEM;
-      } else {
-        values = newvalues;
+      /*
+       * This possibly reserves more memory than needed for a given
+       * line, but the benefit is a severely reduced number of
+       * malloc/free compared to an increase-length-by-one approach.
+       */
+      if (nvalues + 1 > nreserved) {
+        nreserved = nreserved + 4;
+        values = realloc(values, nreserved * sizeof(double));
+        if (!values)
+          return ENOMEM;
       }
-      values[cnt-1] = value;
+
+      values[nvalues] = value;
+      nvalues += 1;
 
     } else {
       /* Reset the line, cleanup done below. */
@@ -399,7 +396,7 @@ static int columns_tokenize(struct line *l) {
     free(values);
 
   } else {
-    l->line_column_count  = cnt;
+    l->line_column_count  = nvalues;
     l->line_column_values = values;
   }
   assert_valid_line(l);

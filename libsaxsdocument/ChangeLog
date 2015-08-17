@@ -1,3 +1,9 @@
+2015-08-17  Daniel Franke  <dfranke@users.sourceforge.net>
+
+	* src/atsas_dat.c (columns_tokenize): Significantely reduce the
+	number of calls to malloc/free.
+	(lines_printf): Simplified, fixed whitespace.
+
 2015-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* src/columns.c (lines_printf): Really fixed printing of long lines on Windows (thanks -Wsign-compare)
