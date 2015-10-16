@@ -64,7 +64,7 @@ saxsdocument_init(PySaxsDocumentObject *self, PyObject *args, PyObject *kwargs) 
 
 static PyObject *
 saxsdocument_repr(PySaxsDocumentObject *self) {
-  return PyString_FromFormat("saxsdocument: %u properties, %u curve(s)",
+  return PyString_FromFormat("saxsdocument: %zd properties, %zd curve(s)",
                              PyDict_Size(self->properties), PyList_Size(self->curves));
 }
 

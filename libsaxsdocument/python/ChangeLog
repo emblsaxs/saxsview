@@ -1,3 +1,7 @@
+2015-10-16  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+	* pysaxsdocument.c: Using "%zd" format specifier for Py_ssize_t
+
 2012-07-06  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* pysaxsdocument.h: Removed.
