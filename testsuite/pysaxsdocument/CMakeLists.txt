@@ -1,0 +1,10 @@
+if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+
+  set(ENV{PYTHONPATH} "${SAXSVIEW_BINARY_DIR}/libsaxsdocument/python:$ENV{PYTHONPATH}")
+
+  add_test(NAME "pysaxsdocument"
+           WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+           COMMAND "${PYTHON_EXECUTABLE}" test_pysaxsdocument.py
+  )
+
+endif (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
