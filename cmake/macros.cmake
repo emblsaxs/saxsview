@@ -1,3 +1,4 @@
+set(Python_ADDITIONAL_VERSIONS "2.7" "2.6")
 
 find_package (PythonLibs)
 find_package (PythonInterp)
