@@ -395,42 +395,50 @@ void saxs_document_free(saxs_document *doc) {
 saxs_property*
 saxs_document_property_first(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
   return saxs_property_list_first(doc->doc_properties);
 }
 
 saxs_property*
 saxs_document_property_find_first(const saxs_document *doc, const char *name) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
   return saxs_property_list_find_first(doc->doc_properties, name);
 }
 
 int
 saxs_document_property_count(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return 0; // Maintain compatibility with old code that expects this undocumented behaviour
   return saxs_property_list_count(doc->doc_properties);
 }
 
 const char *
 saxs_document_filename(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
   return doc->doc_filename;
 }
 
 const char *
 saxs_document_format_id(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  if (doc->doc_format == NULL) return NULL;
   return doc->doc_format->name;
 }
 
 int
 saxs_document_curve_count(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return 0; // Maintain compatibility with old code that expects this undocumented behaviour
   return doc->doc_curve_count;
 }
 
 saxs_curve*
 saxs_document_curve(const saxs_document *doc) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
   return doc->doc_curves_head;
 }
 
@@ -443,6 +451,7 @@ saxs_curve_next(const saxs_curve *curve) {
 saxs_curve*
 saxs_document_curve_find(const saxs_document *doc, int type) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
   saxs_curve *curve = doc->doc_curves_head;
 
   while (curve && !(curve->curve_type & type))
@@ -565,6 +574,7 @@ saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value) {
   assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
 
   if (!name || strlen(name) == 0
       || !value || strlen(value) == 0)
