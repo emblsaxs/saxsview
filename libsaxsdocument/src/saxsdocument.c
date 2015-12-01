@@ -534,11 +534,11 @@ saxs_document_add_property(saxs_document *doc,
   return property;
 }
 
-saxs_curve*
-saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
+
+static saxs_curve* saxs_curve_init(const char *title, int type) {
   saxs_curve *curve = malloc(sizeof(saxs_curve));
   if (!curve)
-    return curve;
+    return NULL;
 
   curve->curve_title        = title ? strdup(title) : NULL;
   curve->curve_type         = type;
@@ -547,6 +547,15 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
   curve->curve_data_tail    = NULL;
   curve->next               = NULL;
 
+  assert_valid_curve(curve);
+  return curve;
+}
+
+/* Append the curve to the document. Cannot fail.
+ * Takes over ownership of the saxs_curve object */
+static void saxs_document_append_curve(saxs_document *doc, saxs_curve *curve) {
+  assert_valid_curve(curve);
+
   if (doc->doc_curves_head == NULL)
     doc->doc_curves_head = curve;
   else
@@ -554,8 +563,12 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
 
   doc->doc_curves_tail = curve;
   doc->doc_curve_count += 1;
+}
 
-  assert_valid_curve(curve);
+saxs_curve*
+saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
+  saxs_curve *curve = saxs_curve_init(title, type);
+  saxs_document_append_curve(doc, curve);
   return curve;
 }
 
@@ -563,24 +576,24 @@ saxs_curve*
 saxs_document_copy_curve(saxs_document *doc, const saxs_curve *in) {
   assert_valid_curve_or_null(in);
 
-  int res = 0;
   saxs_curve *out = NULL;
 
   if (in) {
-    out = saxs_document_add_curve(doc, in->curve_title, in->curve_type);
+    out = saxs_curve_init(in->curve_title, in->curve_type);
     if (!out)
       return NULL;
 
     saxs_data *data = saxs_curve_data(in);
     while (data) {
-      res = saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
-      /* If adding data fails then the copied curve will be incomplete.
-       * We could cancel adding the curve but that would require going back over
-       * the document's curves list to remove it. 
-       * So we just ignore the return value. */
+      int res = saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
+      if (res != 0) {
+        saxs_curve_free(out);
+        return NULL;
+      }
       data = data->next;
     }
   }
+  saxs_document_append_curve(doc, out);
 
   assert_valid_curve(out);
   return out;
