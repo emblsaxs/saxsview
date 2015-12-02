@@ -237,8 +237,13 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) 
 #undef SET_VALUE
 
   } else if (spp == 3) {
-    unsigned char *rgb = (char *)(data) + (y * width + x)*3;
-    saxs_image_set_value(image, x, height - y - 1, (rgb[0]*11 + rgb[1]*16 + rgb[2]*5)/32);
+    for (x = 0; x < width; ++x) {
+      for (y = 0; y < height; ++y) {
+        unsigned char *rgb = ((unsigned char *)data) + (y * width + x)*3;
+        int r=rgb[0], g=rgb[1], b=rgb[2];
+        saxs_image_set_value(image, x, height - y - 1, (r*11 + g*16 + b*5)/32.0);
+      }
+    }
   }
 
   TIFFClose(tiff);
