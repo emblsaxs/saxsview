@@ -31,6 +31,7 @@
 #include <limits.h>
 #include <float.h>
 #include <errno.h>
+#include <assert.h>
 
 struct saxs_image {
   char *image_filename;
@@ -210,33 +211,29 @@ saxs_image_read_frame(saxs_image *image, size_t frame) {
 
 double
 saxs_image_value(saxs_image *image, int x, int y) {
-  //
-  // FIXME: This check is useful, but has an impact on performance.
-  //        Maybe a second version of this function without checks?
-  //
-  if (image && image->image_data
-      && x >= 0 && x < (signed)image->image_width
-      && y >= 0 && y < (signed)image->image_height) {
-    return *(image->image_data + y * image->image_width + x);
+  assert(image != NULL);
+  assert(image->image_data != NULL);
+  assert(x >= 0);
+  assert(x < (signed)image->image_width);
+  assert(y >= 0);
+  assert(y < (signed)image->image_height);
 
-  } else
-    return 0.0;
+  return *(image->image_data + y * image->image_width + x);
 }
 
 void
 saxs_image_set_value(saxs_image *image, int x, int y, double value) {
-  //
-  // FIXME: This check is useful, but has an impact on performance.
-  //        Maybe a second version of this function without checks?
-  //
-  if (image && image->image_data
-      && x >= 0 && x < (signed)image->image_width
-      && y >= 0 && y < (signed)image->image_height) {
-    *(image->image_data + y * image->image_width + x) = value;
+  assert(image != NULL);
+  assert(image->image_data != NULL);
+  assert(x >= 0);
+  assert(x < (signed)image->image_width);
+  assert(y >= 0);
+  assert(y < (signed)image->image_height);
 
-    if (image->cache_valid)
-      image->cache_valid = 0;
-  }
+  *(image->image_data + y * image->image_width + x) = value;
+
+  if (image->cache_valid)
+    image->cache_valid = 0;
 }
 
 
