@@ -159,8 +159,8 @@ CONTAINS
     INTERFACE
       FUNCTION c_saxs_image_width(img) &
                  BIND(C, NAME="saxs_image_width")
-        IMPORT C_LONG, C_PTR
-        INTEGER(C_LONG)    :: c_saxs_image_width
+        IMPORT C_SIZE_T, C_PTR
+        INTEGER(C_SIZE_T)  :: c_saxs_image_width
         TYPE(C_PTR), VALUE :: img
       END FUNCTION
     END INTERFACE
@@ -174,8 +174,8 @@ CONTAINS
     INTERFACE
       FUNCTION c_saxs_image_height(img) &
                  BIND(C, NAME="saxs_image_height")
-        IMPORT C_LONG, C_PTR
-        INTEGER(C_LONG)    :: c_saxs_image_height
+        IMPORT C_SIZE_T, C_PTR
+        INTEGER(C_SIZE_T)  :: c_saxs_image_height
         TYPE(C_PTR), VALUE :: img
       END FUNCTION
     END INTERFACE
