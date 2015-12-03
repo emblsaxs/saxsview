@@ -77,6 +77,7 @@ struct saxs_data {
 #define assert_valid_data_or_null(data)
 #define assert_valid_curve(curve)
 #define assert_valid_curve_or_null(curve)
+#define assert_valid_document(doc)
 
 #else
 
@@ -134,6 +135,37 @@ static void assert_valid_curve(const struct saxs_curve *curve) {
   if (curve) assert_valid_curve(curve); \
 }
 
+static void assert_valid_document(const saxs_document *doc) {
+  assert(doc != NULL);
+
+  /* TODO: check filename is either NULL or shorter than PATH_MAX */
+
+  assert_valid_line_or_null(doc->doc_lines);
+
+  /* TODO: check doc_properties */
+
+  assert(doc->doc_curve_count >= 0);
+  if (doc->doc_curve_count > 0) {
+    assert_valid_curve(doc->doc_curves_head);
+    assert_valid_curve(doc->doc_curves_tail);
+    int check_count = 0;
+    const saxs_curve *curve;
+    for(curve = doc->doc_curves_head; curve != NULL; curve = curve->next) {
+      assert_valid_curve(curve);
+      ++check_count;
+      if (curve->next == NULL){
+        assert(curve == doc->doc_curves_tail);
+      }
+    }
+    assert(check_count == doc->doc_curve_count);
+  } else {
+    assert(doc->doc_curves_head == NULL);
+    assert(doc->doc_curves_tail == NULL);
+  }
+
+  /* TODO: Check doc_format */
+}
+
 #endif
 
 static void saxs_curve_free(struct saxs_curve *curve) {
@@ -188,11 +220,13 @@ saxs_document* saxs_document_create() {
     }
   }
 
+  assert_valid_document(doc);
   return doc;
 }
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
+  assert_valid_document(doc);
   struct line *l;
   int res = ENOTSUP;
 
@@ -269,12 +303,13 @@ int saxs_document_read(saxs_document *doc, const char *filename,
 
   lines_free(l);
   setlocale(LC_NUMERIC, oldlocale);
+  assert_valid_document(doc);
   return res;
 }
 
 int saxs_document_write(saxs_document *doc, const char *filename,
                         const char *format) {
-
+  assert_valid_document(doc);
   struct line *l = NULL;
   int res = ENOTSUP;
 
@@ -334,10 +369,12 @@ int saxs_document_write(saxs_document *doc, const char *filename,
 
   lines_free(l);
   setlocale(LC_NUMERIC, oldlocale);
+  assert_valid_document(doc);
   return res;
 }
 
 void saxs_document_free(saxs_document *doc) {
+  assert_valid_document(doc);
   if (doc->doc_filename)
     free(doc->doc_filename);
 
@@ -357,37 +394,52 @@ void saxs_document_free(saxs_document *doc) {
 
 saxs_property*
 saxs_document_property_first(const saxs_document *doc) {
-  return doc ? saxs_property_list_first(doc->doc_properties) : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  return saxs_property_list_first(doc->doc_properties);
 }
 
 saxs_property*
 saxs_document_property_find_first(const saxs_document *doc, const char *name) {
-  return doc ? saxs_property_list_find_first(doc->doc_properties, name) : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  return saxs_property_list_find_first(doc->doc_properties, name);
 }
 
 int
 saxs_document_property_count(const saxs_document *doc) {
-  return doc ? saxs_property_list_count(doc->doc_properties) : 0;
+  assert_valid_document(doc);
+  if (!doc) return 0; // Maintain compatibility with old code that expects this undocumented behaviour
+  return saxs_property_list_count(doc->doc_properties);
 }
 
 const char *
 saxs_document_filename(const saxs_document *doc) {
-  return doc ? doc->doc_filename : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  return doc->doc_filename;
 }
 
 const char *
 saxs_document_format_id(const saxs_document *doc) {
-  return doc ? doc->doc_format->name : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  if (doc->doc_format == NULL) return NULL;
+  return doc->doc_format->name;
 }
 
 int
 saxs_document_curve_count(const saxs_document *doc) {
-  return doc ? doc->doc_curve_count : 0;
+  assert_valid_document(doc);
+  if (!doc) return 0; // Maintain compatibility with old code that expects this undocumented behaviour
+  return doc->doc_curve_count;
 }
 
 saxs_curve*
 saxs_document_curve(const saxs_document *doc) {
-  return doc ? doc->doc_curves_head : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  return doc->doc_curves_head;
 }
 
 saxs_curve*
@@ -398,7 +450,9 @@ saxs_curve_next(const saxs_curve *curve) {
 
 saxs_curve*
 saxs_document_curve_find(const saxs_document *doc, int type) {
-  saxs_curve *curve = doc ? doc->doc_curves_head : NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
+  saxs_curve *curve = doc->doc_curves_head;
 
   while (curve && !(curve->curve_type & type))
     curve = curve->next;
@@ -519,8 +573,8 @@ double saxs_data_y_err(const saxs_data *data) {
 saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value) {
-  if (!doc)
-    return NULL;
+  assert_valid_document(doc);
+  if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
 
   if (!name || strlen(name) == 0
       || !value || strlen(value) == 0)
@@ -534,11 +588,11 @@ saxs_document_add_property(saxs_document *doc,
   return property;
 }
 
-saxs_curve*
-saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
+
+static saxs_curve* saxs_curve_init(const char *title, int type) {
   saxs_curve *curve = malloc(sizeof(saxs_curve));
   if (!curve)
-    return curve;
+    return NULL;
 
   curve->curve_title        = title ? strdup(title) : NULL;
   curve->curve_type         = type;
@@ -547,6 +601,16 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
   curve->curve_data_tail    = NULL;
   curve->next               = NULL;
 
+  assert_valid_curve(curve);
+  return curve;
+}
+
+/* Append the curve to the document. Cannot fail.
+ * Takes over ownership of the saxs_curve object */
+static void saxs_document_append_curve(saxs_document *doc, saxs_curve *curve) {
+  assert_valid_document(doc);
+  assert_valid_curve(curve);
+
   if (doc->doc_curves_head == NULL)
     doc->doc_curves_head = curve;
   else
@@ -554,34 +618,46 @@ saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
 
   doc->doc_curves_tail = curve;
   doc->doc_curve_count += 1;
+  assert_valid_document(doc);
+}
 
+saxs_curve*
+saxs_document_add_curve(saxs_document *doc, const char *title, int type) {
+  assert_valid_document(doc);
+  saxs_curve *curve = saxs_curve_init(title, type);
+  if (!curve)
+    return NULL;
+  saxs_document_append_curve(doc, curve);
+  assert_valid_document(doc);
   assert_valid_curve(curve);
   return curve;
 }
 
 saxs_curve*
 saxs_document_copy_curve(saxs_document *doc, const saxs_curve *in) {
+  assert_valid_document(doc);
   assert_valid_curve_or_null(in);
 
-  int res = 0;
   saxs_curve *out = NULL;
 
   if (in) {
-    out = saxs_document_add_curve(doc, in->curve_title, in->curve_type);
+    out = saxs_curve_init(in->curve_title, in->curve_type);
     if (!out)
       return NULL;
 
     saxs_data *data = saxs_curve_data(in);
     while (data) {
-      res = saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
-      /* If adding data fails then the copied curve will be incomplete.
-       * We could cancel adding the curve but that would require going back over
-       * the document's curves list to remove it. 
-       * So we just ignore the return value. */
+      int res = saxs_curve_add_data(out, data->x, data->x_err, data->y, data->y_err);
+      if (res != 0) {
+        saxs_curve_free(out);
+        return NULL;
+      }
       data = data->next;
     }
   }
+  saxs_document_append_curve(doc, out);
 
+  assert_valid_document(doc);
   assert_valid_curve(out);
   return out;
 }
