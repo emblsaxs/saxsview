@@ -40,6 +40,10 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   int width, height, padding;
   int row, col, bit;
 
+  /* msk images have only one frame */
+  if (frame != 1)
+    return -2;
+
   FILE *fd = fopen(filename, "rb");
   if (!fd)
     return errno;

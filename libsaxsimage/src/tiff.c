@@ -166,6 +166,10 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) 
   uint16 bpp, spp, format;
   uint32 width, height, x, y;
 
+  /* TIFF images have only one frame */
+  if (frame != 1)
+    return -2;
+
   tiff_initialize();
 
   tiff = TIFFOpen(filename, "r");

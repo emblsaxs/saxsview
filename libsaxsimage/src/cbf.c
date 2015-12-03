@@ -96,6 +96,10 @@ int saxs_image_cbf_read(saxs_image *image, const char *filename, size_t frame) {
   cbf_handle cbf;
   FILE *fd;
 
+  /* CBF images have only one frame */
+  if (frame != 1)
+    return -2;
+
   /* The 'b' is required for windows, overwise reading fails. */
   fd = fopen(filename, "rb");
   if (!fd)
