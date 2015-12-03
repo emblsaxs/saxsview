@@ -281,7 +281,7 @@ saxs_image_read_frame(saxs_image *image, size_t frame) {
   assert(image);
   assert(frame >= 1);
 
-  if (frame > saxs_image_frame_count(image))
+  if (frame > image->image_frame_count)
     return EINVAL;
 
   if (frame == image->image_current_frame)
