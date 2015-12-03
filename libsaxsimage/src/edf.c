@@ -38,6 +38,10 @@ int saxs_image_edf_read(saxs_image *image, const char *filename, size_t frame) {
                           holds number of elements to follow */
   size_t size;         /* number of data elements */
 
+  /* EDF images have only one frame */
+  if (frame != 1)
+    return -2;
+
   fd = edf_open_data_file(filename, "old", &edf_errno, &status);
   if (status) {
     fd = -1;
