@@ -122,25 +122,52 @@ saxs_image_copy(saxs_image *image) {
 
 int
 saxs_image_read(saxs_image *image, const char *filename, const char *format) {
+  assert(image);
+  assert(filename);
+
   saxs_image_format* handler = saxs_image_format_find(filename, format);
-  if (!handler || !handler->read)
+  if (!handler)
     return -1;
+  if (!handler->read)
+    return -2;
 
   free(image->image_filename);
   image->image_filename = strdup(filename);
+  if (!image->image_filename)
+    return -3;
   image->image_format   = handler;
 
-  return image->image_format->read(image, filename, 1);
+  int res = image->image_format->read(image, filename, 1);
+
+  if (res == 0) {
+    assert(image->image_data);
+    assert(image->image_frame_count > 0);
+    assert(image->image_current_frame == 1);
+    assert(image->image_height > 0);
+    assert(image->image_width > 0);
+  }
+  return res;
 }
 
 int
 saxs_image_write(saxs_image *image, const char *filename, const char *format) {
+  assert(image);
+  assert(filename);
+  assert(image->image_data);
+  assert(image->image_frame_count > 0);
+  assert(image->image_height > 0);
+  assert(image->image_width > 0);
+
   saxs_image_format* handler = saxs_image_format_find(filename, format);
-  if (!handler || !handler->write)
+  if (!handler)
     return -1;
+  if (!handler->write)
+    return -2;
 
   free(image->image_filename);
   image->image_filename = strdup(filename);
+  if (!image->image_filename)
+    return -3;
   image->image_format   = handler;
 
   return image->image_format->write(image, filename);
@@ -202,13 +229,20 @@ saxs_image_set_size(saxs_image *image, size_t width, size_t height,
 
 int
 saxs_image_read_frame(saxs_image *image, size_t frame) {
+  assert(image);
+  assert(frame >= 1);
+
   if (frame > saxs_image_frame_count(image))
     return EINVAL;
 
   if (frame == image->image_current_frame)
     return 0;
 
-  return image->image_format->read(image, image->image_filename, frame);
+  int res = image->image_format->read(image, image->image_filename, frame);
+
+  assert(image->image_data);
+  assert(frame == image->image_current_frame);
+  return res;
 }
 
 
