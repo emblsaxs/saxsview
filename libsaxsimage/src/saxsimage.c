@@ -44,7 +44,7 @@ struct saxs_image {
   size_t image_current_frame;
 
   /* Callback functions to deal with the current format. */
-  saxs_image_format *image_format;
+  const saxs_image_format *image_format;
 
   saxs_property_list *image_properties;
 
@@ -82,6 +82,8 @@ saxs_image_update_cache(saxs_image *image) {
 saxs_image*
 saxs_image_create() {
   saxs_image *image = malloc(sizeof(saxs_image));
+  if (!image)
+    return NULL;
 
   image->image_filename      = NULL;
   image->image_width         = 0;
@@ -94,15 +96,30 @@ saxs_image_create() {
   image->cache_max_value     = DBL_MIN;
   image->image_format        = NULL;
   image->image_properties    = saxs_property_list_create();
+  if (!image->image_properties) {
+    free(image);
+    return NULL;
+  }
 
   return image;
 }
 
 saxs_image*
 saxs_image_copy(saxs_image *image) {
-  saxs_image *copy = malloc(sizeof(saxs_image));
+  if (!image)
+    return NULL;
 
-  copy->image_filename      = strdup(image->image_filename);
+  saxs_image *copy = malloc(sizeof(saxs_image));
+  if (!copy)
+    return NULL;
+
+  if (image->image_filename) {
+    copy->image_filename      = strdup(image->image_filename);
+    if (!copy->image_filename) {
+      saxs_image_free(copy);
+      return NULL;
+    }
+  }
   copy->image_data          = NULL;
   copy->image_format        = NULL;
   copy->image_frame_count   = image->image_frame_count;
@@ -110,37 +127,95 @@ saxs_image_copy(saxs_image *image) {
   copy->cache_valid         = image->cache_valid;
   copy->cache_min_value     = image->cache_min_value;
   copy->cache_max_value     = image->cache_max_value;
+
   copy->image_properties    = saxs_property_list_create();
+  if (!copy->image_properties) {
+    saxs_image_free(copy);
+    return NULL;
+  }
+  for (const saxs_property *prop = saxs_property_list_first(image->image_properties);
+       prop != NULL;
+       prop = saxs_property_next(prop)) {
+    saxs_property *prop_copy = saxs_property_create(saxs_property_name(prop), saxs_property_value(prop));
+    if (!prop_copy) {
+      saxs_image_free(copy);
+      return NULL;
+    }
+    saxs_property_list_insert(copy->image_properties, prop_copy);
+  }
 
-  saxs_image_set_size(copy, image->image_width, image->image_height,
-                      image->image_frame_count, image->image_current_frame);
-  memcpy(copy->image_data, image->image_data,
-         image->image_width * image->image_height * sizeof(double));
+  if (image->image_data) {
+    saxs_image_set_size(copy, image->image_width, image->image_height,
+                        image->image_frame_count, image->image_current_frame);
+    if (!copy->image_data) {
+      saxs_image_free(copy);
+      return NULL;
+    }
 
+    memcpy(copy->image_data, image->image_data,
+           image->image_width * image->image_height * sizeof(double));
+  }
+
+  assert(copy);
+  if(image->image_filename){
+    assert(copy->image_filename);
+    assert(!strcmp(image->image_filename, copy->image_filename));
+  }
+  assert(copy->image_properties);
+  assert(saxs_property_list_count(copy->image_properties) == saxs_property_list_count(image->image_properties));
+  if (image->image_data)
+    assert(copy->image_data);
   return copy;
 }
 
 int
 saxs_image_read(saxs_image *image, const char *filename, const char *format) {
-  saxs_image_format* handler = saxs_image_format_find(filename, format);
-  if (!handler || !handler->read)
+  assert(image);
+  assert(filename);
+
+  const saxs_image_format* handler = saxs_image_format_find(filename, format);
+  if (!handler)
     return -1;
+  if (!handler->read)
+    return -2;
 
   free(image->image_filename);
   image->image_filename = strdup(filename);
+  if (!image->image_filename)
+    return -3;
   image->image_format   = handler;
 
-  return image->image_format->read(image, filename, 1);
+  int res = image->image_format->read(image, filename, 1);
+
+  if (res == 0) {
+    assert(image->image_data);
+    assert(image->image_frame_count > 0);
+    assert(image->image_current_frame == 1);
+    assert(image->image_height > 0);
+    assert(image->image_width > 0);
+  }
+  return res;
 }
 
 int
 saxs_image_write(saxs_image *image, const char *filename, const char *format) {
-  saxs_image_format* handler = saxs_image_format_find(filename, format);
-  if (!handler || !handler->write)
+  assert(image);
+  assert(filename);
+  assert(image->image_data);
+  assert(image->image_frame_count > 0);
+  assert(image->image_height > 0);
+  assert(image->image_width > 0);
+
+  const saxs_image_format* handler = saxs_image_format_find(filename, format);
+  if (!handler)
     return -1;
+  if (!handler->write)
+    return -2;
 
   free(image->image_filename);
   image->image_filename = strdup(filename);
+  if (!image->image_filename)
+    return -3;
   image->image_format   = handler;
 
   return image->image_format->write(image, filename);
@@ -202,13 +277,20 @@ saxs_image_set_size(saxs_image *image, size_t width, size_t height,
 
 int
 saxs_image_read_frame(saxs_image *image, size_t frame) {
+  assert(image);
+  assert(frame >= 1);
+
   if (frame > saxs_image_frame_count(image))
     return EINVAL;
 
   if (frame == image->image_current_frame)
     return 0;
 
-  return image->image_format->read(image, image->image_filename, frame);
+  int res = image->image_format->read(image, image->image_filename, frame);
+
+  assert(image->image_data);
+  assert(frame == image->image_current_frame);
+  return res;
 }
 
 
@@ -221,7 +303,7 @@ saxs_image_value(saxs_image *image, int x, int y) {
   assert(y >= 0);
   assert(y < (signed)image->image_height);
 
-  return *(image->image_data + y * image->image_width + x);
+  return image->image_data[y * image->image_width + x];
 }
 
 void
@@ -233,7 +315,7 @@ saxs_image_set_value(saxs_image *image, int x, int y, double value) {
   assert(y >= 0);
   assert(y < (signed)image->image_height);
 
-  *(image->image_data + y * image->image_width + x) = value;
+  image->image_data[y * image->image_width + x] = value;
 
   if (image->cache_valid)
     image->cache_valid = 0;

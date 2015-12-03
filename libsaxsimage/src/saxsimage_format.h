@@ -39,7 +39,7 @@ struct saxs_image_format {
 typedef struct saxs_image_format saxs_image_format;
 
 
-saxs_image_format*
+const saxs_image_format*
 saxs_image_format_find(const char *filename, const char *format);
 
 
