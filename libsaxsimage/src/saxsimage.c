@@ -44,7 +44,7 @@ struct saxs_image {
   size_t image_current_frame;
 
   /* Callback functions to deal with the current format. */
-  saxs_image_format *image_format;
+  const saxs_image_format *image_format;
 
   saxs_property_list *image_properties;
 
@@ -173,7 +173,7 @@ saxs_image_read(saxs_image *image, const char *filename, const char *format) {
   assert(image);
   assert(filename);
 
-  saxs_image_format* handler = saxs_image_format_find(filename, format);
+  const saxs_image_format* handler = saxs_image_format_find(filename, format);
   if (!handler)
     return -1;
   if (!handler->read)
@@ -206,7 +206,7 @@ saxs_image_write(saxs_image *image, const char *filename, const char *format) {
   assert(image->image_height > 0);
   assert(image->image_width > 0);
 
-  saxs_image_format* handler = saxs_image_format_find(filename, format);
+  const saxs_image_format* handler = saxs_image_format_find(filename, format);
   if (!handler)
     return -1;
   if (!handler->write)
