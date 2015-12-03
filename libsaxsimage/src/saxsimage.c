@@ -82,6 +82,8 @@ saxs_image_update_cache(saxs_image *image) {
 saxs_image*
 saxs_image_create() {
   saxs_image *image = malloc(sizeof(saxs_image));
+  if (!image)
+    return NULL;
 
   image->image_filename      = NULL;
   image->image_width         = 0;
@@ -94,15 +96,30 @@ saxs_image_create() {
   image->cache_max_value     = DBL_MIN;
   image->image_format        = NULL;
   image->image_properties    = saxs_property_list_create();
+  if (!image->image_properties) {
+    free(image);
+    return NULL;
+  }
 
   return image;
 }
 
 saxs_image*
 saxs_image_copy(saxs_image *image) {
-  saxs_image *copy = malloc(sizeof(saxs_image));
+  if (!image)
+    return NULL;
 
-  copy->image_filename      = strdup(image->image_filename);
+  saxs_image *copy = malloc(sizeof(saxs_image));
+  if (!copy)
+    return NULL;
+
+  if (image->image_filename) {
+    copy->image_filename      = strdup(image->image_filename);
+    if (!copy->image_filename) {
+      saxs_image_free(copy);
+      return NULL;
+    }
+  }
   copy->image_data          = NULL;
   copy->image_format        = NULL;
   copy->image_frame_count   = image->image_frame_count;
@@ -110,13 +127,44 @@ saxs_image_copy(saxs_image *image) {
   copy->cache_valid         = image->cache_valid;
   copy->cache_min_value     = image->cache_min_value;
   copy->cache_max_value     = image->cache_max_value;
+
   copy->image_properties    = saxs_property_list_create();
+  if (!copy->image_properties) {
+    saxs_image_free(copy);
+    return NULL;
+  }
+  for (const saxs_property *prop = saxs_property_list_first(image->image_properties);
+       prop != NULL;
+       prop = saxs_property_next(prop)) {
+    saxs_property *prop_copy = saxs_property_create(saxs_property_name(prop), saxs_property_value(prop));
+    if (!prop_copy) {
+      saxs_image_free(copy);
+      return NULL;
+    }
+    saxs_property_list_insert(copy->image_properties, prop_copy);
+  }
 
-  saxs_image_set_size(copy, image->image_width, image->image_height,
-                      image->image_frame_count, image->image_current_frame);
-  memcpy(copy->image_data, image->image_data,
-         image->image_width * image->image_height * sizeof(double));
+  if (image->image_data) {
+    saxs_image_set_size(copy, image->image_width, image->image_height,
+                        image->image_frame_count, image->image_current_frame);
+    if (!copy->image_data) {
+      saxs_image_free(copy);
+      return NULL;
+    }
 
+    memcpy(copy->image_data, image->image_data,
+           image->image_width * image->image_height * sizeof(double));
+  }
+
+  assert(copy);
+  if(image->image_filename){
+    assert(copy->image_filename);
+    assert(!strcmp(image->image_filename, copy->image_filename));
+  }
+  assert(copy->image_properties);
+  assert(saxs_property_list_count(copy->image_properties) == saxs_property_list_count(image->image_properties));
+  if (image->image_data)
+    assert(copy->image_data);
   return copy;
 }
 
