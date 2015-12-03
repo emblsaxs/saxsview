@@ -29,16 +29,25 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-16
 #endif
 
+typedef uint32_t msk_word;
+#define MSK_WORD_SIZE (sizeof(msk_word))
+#define MSK_WORD_BITS 32
 
 int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
-  int magic[4] = { 0 }, datasize, *data = NULL, *tmp;
-  int width, height, padding;
-  int row, col, bit;
+  msk_word magic[4] = { 0 };
+  msk_word *data = NULL, *tmp;
+  msk_word width, height, padding;
+  unsigned int row, col, bit;
+
+  /* msk images have only one frame */
+  if (frame != 1)
+    return -2;
 
   FILE *fd = fopen(filename, "rb");
   if (!fd)
@@ -70,7 +79,8 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   if (fseek(fd, 1024, SEEK_SET) != 0)
     goto error;
 
-  datasize = ceil(width / (double)(sizeof(int) * CHAR_BIT)) * sizeof(int) * height;
+  const size_t rowsize = ceil(width / (float)MSK_WORD_BITS) * MSK_WORD_SIZE;
+  const size_t datasize = rowsize * height;
   data     = malloc(datasize);
   if (fread(data, datasize, 1, fd) != 1)
     goto error;
@@ -86,8 +96,8 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
 
   tmp = data;
   for (row = 0; row < height; ++row)
-    for (col = 0; col < width; col += sizeof(int) * CHAR_BIT) {
-      for (bit = 0; (unsigned)bit < sizeof(int) * CHAR_BIT && col + bit < width; ++bit)
+    for (col = 0; col < width; col += MSK_WORD_BITS) {
+      for (bit = 0; bit < MSK_WORD_BITS && col + bit < width; ++bit)
         saxs_image_set_value(image, col + bit, row, ((*tmp) & (1 << bit)) ? 1.0 : 0.0);
 
       ++tmp;
@@ -106,9 +116,9 @@ error:
 
 
 int saxs_image_msk_write(saxs_image *image, const char *filename) {
-  const int magic[4] = { 'M', 'A', 'S', 'K' };
+  static const msk_word magic[4] = { 'M', 'A', 'S', 'K' };
 
-  int width, height, padding;
+  msk_word width, height, padding;
   int row, col, bit;
 
   FILE *fd = fopen(filename, "wb");
@@ -117,7 +127,7 @@ int saxs_image_msk_write(saxs_image *image, const char *filename) {
 
   width   = saxs_image_width(image);
   height  = saxs_image_height(image);
-  padding = sizeof(int) * (width / sizeof(int) + 1) - width;
+  padding = MSK_WORD_SIZE * (width / MSK_WORD_SIZE + 1) - width;
 
   /* Header: any endianess issues here? */
   fwrite(magic, sizeof(magic), 1, fd);
@@ -129,10 +139,10 @@ int saxs_image_msk_write(saxs_image *image, const char *filename) {
   fseek(fd, 1024, SEEK_SET);
 
   for (row = 0; row < height; ++row)
-    for (col = 0; col < width; col += sizeof(int) * CHAR_BIT) {
-      int tmp = 0;
+    for (col = 0; col < width; col += MSK_WORD_BITS) {
+      msk_word tmp = 0;
 
-      for (bit = 0; (unsigned)bit < sizeof(tmp) * CHAR_BIT && col + bit < width; ++bit) {
+      for (bit = 0; (unsigned)bit < MSK_WORD_BITS && col + bit < width; ++bit) {
         double value = saxs_image_value(image, col + bit, row);
         if (fabs(value) > DBL_EPSILON)
           tmp |= (1 << bit);
