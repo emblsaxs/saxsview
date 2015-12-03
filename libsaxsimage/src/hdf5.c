@@ -103,7 +103,11 @@ saxs_image_format_hdf5(const char *filename, const char *format) {
                                           NULL };
 
   if (!compare_format(format, "h5")
-      || !compare_format(suffix(filename), "h5"))
+      || !compare_format(suffix(filename), "h5")
+      || !compare_format(format, "HDF5")
+      || !compare_format(suffix(filename), "hdf5")
+      || !compare_format(format, "NeXus")
+      || !compare_format(suffix(filename), "nxs"))
     return &image_hdf5;
 
   return NULL;
