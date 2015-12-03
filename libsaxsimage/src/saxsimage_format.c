@@ -47,7 +47,7 @@ saxs_image_format*
 saxs_image_format_hdf5(const char*, const char*);
 #endif
 
-saxs_image_format*
+const saxs_image_format*
 saxs_image_format_find(const char *filename, const char *format) {
 
   format_handler known_formats[] = {
