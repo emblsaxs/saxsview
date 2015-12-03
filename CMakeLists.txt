@@ -2,7 +2,10 @@ cmake_minimum_required (VERSION 2.8.3 FATAL_ERROR)
 project (SAXSVIEW C CXX)
 
 set (CMAKE_VERBOSE_MAKEFILE         OFF)
-set (CMAKE_BUILD_TYPE               DEBUG)
+
+if (NOT CMAKE_BUILD_TYPE)
+  set (CMAKE_BUILD_TYPE "Debug" CACHE STRING "Build type (Debug or Release)" FORCE)
+endif (NOT CMAKE_BUILD_TYPE)
 
 set (CMAKE_MODULE_PATH              ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
