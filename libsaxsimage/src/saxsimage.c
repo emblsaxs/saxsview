@@ -303,7 +303,7 @@ saxs_image_value(saxs_image *image, int x, int y) {
   assert(y >= 0);
   assert(y < (signed)image->image_height);
 
-  return *(image->image_data + y * image->image_width + x);
+  return image->image_data[y * image->image_width + x];
 }
 
 void
@@ -315,7 +315,7 @@ saxs_image_set_value(saxs_image *image, int x, int y, double value) {
   assert(y >= 0);
   assert(y < (signed)image->image_height);
 
-  *(image->image_data + y * image->image_width + x) = value;
+  image->image_data[y * image->image_width + x] = value;
 
   if (image->cache_valid)
     image->cache_valid = 0;
