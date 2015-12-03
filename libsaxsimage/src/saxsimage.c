@@ -204,6 +204,9 @@ saxs_image_read_frame(saxs_image *image, size_t frame) {
   if (frame > saxs_image_frame_count(image))
     return EINVAL;
 
+  if (frame == image->image_current_frame)
+    return 0;
+
   return image->image_format->read(image, image->image_filename, frame);
 }
 
