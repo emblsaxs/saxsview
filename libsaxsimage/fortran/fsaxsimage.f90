@@ -165,7 +165,9 @@ CONTAINS
       END FUNCTION
     END INTERFACE
 
-    saxs_image_width = c_saxs_image_width(img%c_ptr)
+    ! Explicit conversion from size_t to default integer kind
+    ! avoids -Wconversion warnings
+    saxs_image_width = INT(c_saxs_image_width(img%c_ptr))
   END FUNCTION
 
   PURE INTEGER FUNCTION saxs_image_height(img)
@@ -180,7 +182,9 @@ CONTAINS
       END FUNCTION
     END INTERFACE
 
-    saxs_image_height = c_saxs_image_height(img%c_ptr)
+    ! Explicit conversion from size_t to default integer kind
+    ! avoids -Wconversion warnings
+    saxs_image_height = INT(c_saxs_image_height(img%c_ptr))
   END FUNCTION
 
   PURE FUNCTION saxs_image_value(img, x, y)
