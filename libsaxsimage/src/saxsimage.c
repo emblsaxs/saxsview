@@ -133,7 +133,8 @@ saxs_image_copy(saxs_image *image) {
     saxs_image_free(copy);
     return NULL;
   }
-  for (const saxs_property *prop = saxs_property_list_first(image->image_properties);
+  const saxs_property *prop;
+  for (prop = saxs_property_list_first(image->image_properties);
        prop != NULL;
        prop = saxs_property_next(prop)) {
     saxs_property *prop_copy = saxs_property_create(saxs_property_name(prop), saxs_property_value(prop));
