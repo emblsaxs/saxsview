@@ -153,11 +153,11 @@ CONTAINS
     CALL c_saxs_image_free(img%c_ptr)
   END SUBROUTINE
 
-  INTEGER FUNCTION saxs_image_width(img)
-    TYPE(saxs_image), INTENT(inout) :: img
+  PURE INTEGER FUNCTION saxs_image_width(img)
+    TYPE(saxs_image), INTENT(in) :: img
 
     INTERFACE
-      FUNCTION c_saxs_image_width(img) &
+      PURE FUNCTION c_saxs_image_width(img) &
                  BIND(C, NAME="saxs_image_width")
         IMPORT C_SIZE_T, C_PTR
         INTEGER(C_SIZE_T)  :: c_saxs_image_width
@@ -165,14 +165,16 @@ CONTAINS
       END FUNCTION
     END INTERFACE
 
-    saxs_image_width = c_saxs_image_width(img%c_ptr)
+    ! Explicit conversion from size_t to default integer kind
+    ! avoids -Wconversion warnings
+    saxs_image_width = INT(c_saxs_image_width(img%c_ptr))
   END FUNCTION
 
-  INTEGER FUNCTION saxs_image_height(img)
-    TYPE(saxs_image), INTENT(inout) :: img
+  PURE INTEGER FUNCTION saxs_image_height(img)
+    TYPE(saxs_image), INTENT(in) :: img
 
     INTERFACE
-      FUNCTION c_saxs_image_height(img) &
+      PURE FUNCTION c_saxs_image_height(img) &
                  BIND(C, NAME="saxs_image_height")
         IMPORT C_SIZE_T, C_PTR
         INTEGER(C_SIZE_T)  :: c_saxs_image_height
@@ -180,16 +182,18 @@ CONTAINS
       END FUNCTION
     END INTERFACE
 
-    saxs_image_height = c_saxs_image_height(img%c_ptr)
+    ! Explicit conversion from size_t to default integer kind
+    ! avoids -Wconversion warnings
+    saxs_image_height = INT(c_saxs_image_height(img%c_ptr))
   END FUNCTION
 
-  FUNCTION saxs_image_value(img, x, y)
-    TYPE(saxs_image), INTENT(inout) :: img
-    INTEGER, INTENT(in)             :: x, y
-    REAL(DBL)                       :: saxs_image_value
+  PURE FUNCTION saxs_image_value(img, x, y)
+    TYPE(saxs_image), INTENT(in) :: img
+    INTEGER, INTENT(in)          :: x, y
+    REAL(DBL)                    :: saxs_image_value
 
     INTERFACE
-      FUNCTION c_saxs_image_value(img, x, y) &
+      PURE FUNCTION c_saxs_image_value(img, x, y) &
                  BIND(C, NAME="saxs_image_value")
         IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
         REAL(C_DOUBLE)        :: c_saxs_image_value
@@ -201,13 +205,13 @@ CONTAINS
     saxs_image_value = c_saxs_image_value(img%c_ptr, x, y)
   END FUNCTION
 
-  SUBROUTINE saxs_image_set_value(img, x, y, value)
+  PURE SUBROUTINE saxs_image_set_value(img, x, y, value)
     TYPE(saxs_image), INTENT(inout) :: img
     INTEGER, INTENT(in)             :: x, y
     REAL(DBL), INTENT(in)           :: value
 
     INTERFACE
-      SUBROUTINE c_saxs_image_set_value(img, x, y, value) &
+      PURE SUBROUTINE c_saxs_image_set_value(img, x, y, value) &
                  BIND(C, NAME="saxs_image_set_value")
         IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
         INTEGER(C_LONG)       :: c_saxs_image_value
@@ -220,8 +224,8 @@ CONTAINS
     CALL c_saxs_image_set_value(img%c_ptr, x, y, value)
   END SUBROUTINE
 
-  SUBROUTINE saxs_image_data(img, data)
-    TYPE(saxs_image), INTENT(inout)     :: img
+  PURE SUBROUTINE saxs_image_data(img, data)
+    TYPE(saxs_image), INTENT(in)        :: img
     REAL(DBL), ALLOCATABLE, INTENT(out) :: data(:,:)
 
     INTEGER :: i, j, width, height

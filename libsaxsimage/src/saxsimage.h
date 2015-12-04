@@ -39,6 +39,13 @@ extern "C" {
 #endif
 
 
+#if (defined(__GNUC__) || defined(__clang__))
+#  define SAXSIMAGE_PURE __attribute__((pure))
+#else
+#  define SAXSIMAGE_PURE
+#endif
+
+
 struct saxs_property;
 
 struct saxs_image;
@@ -63,16 +70,16 @@ void
 saxs_image_free(saxs_image *image);
 
 size_t
-saxs_image_width(saxs_image *image);
+saxs_image_width(saxs_image *image) SAXSIMAGE_PURE;
 
 size_t
-saxs_image_height(saxs_image *image);
+saxs_image_height(saxs_image *image) SAXSIMAGE_PURE;
 
 int
-saxs_image_frame_count(saxs_image *image);
+saxs_image_frame_count(saxs_image *image) SAXSIMAGE_PURE;
 
 int
-saxs_image_current_frame(saxs_image *image);
+saxs_image_current_frame(saxs_image *image) SAXSIMAGE_PURE;
 
 void
 saxs_image_set_size(saxs_image *image,
@@ -84,7 +91,7 @@ saxs_image_set_size(saxs_image *image,
  * Filters out values below 0.
  */
 double
-saxs_image_value(saxs_image *image, int x, int y);
+saxs_image_value(saxs_image *image, int x, int y) SAXSIMAGE_PURE;
 
 void
 saxs_image_set_value(saxs_image *image, int x, int y, double value);
@@ -100,14 +107,15 @@ struct saxs_property*
 saxs_image_add_property(saxs_image *image, const char *name, const char *value);
 
 int
-saxs_image_property_count(saxs_image *image);
+saxs_image_property_count(saxs_image *image) SAXSIMAGE_PURE;
 
 struct saxs_property*
-saxs_image_property_first(saxs_image *image);
+saxs_image_property_first(saxs_image *image) SAXSIMAGE_PURE;
 
 struct saxs_property*
-saxs_image_property_find_first(saxs_image *image, const char *name);
+saxs_image_property_find_first(saxs_image *image, const char *name) SAXSIMAGE_PURE;
 
+#undef SAXSIMAGE_PURE
 
 #ifdef __cplusplus
 }
