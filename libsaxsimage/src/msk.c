@@ -29,16 +29,29 @@
 #include <errno.h>
 #include <string.h>
 #include <math.h>
+#include <stdint.h>
+#include <endian.h>
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-16
 #endif
 
+typedef uint32_t msk_word;
+#define MSK_WORD_SIZE (sizeof(msk_word))
+#define MSK_WORD_BITS 32
+#define MSK_PUT(x) htole32(x)
+#define MSK_GET(x) le32toh(x)
 
 int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
-  int magic[4] = { 0 }, datasize, *data = NULL, *tmp;
-  int width, height, padding;
-  int row, col, bit;
+  msk_word magic[4] = { 0 };
+  msk_word *data = NULL, *tmp;
+  msk_word lewidth, leheight, lepadding;
+  unsigned int width, height;
+  unsigned int row, col, bit;
+
+  /* msk images have only one frame */
+  if (frame != 1)
+    return -2;
 
   /* msk images have only one frame */
   if (frame != 1)
@@ -49,24 +62,32 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
     return errno;
 
   /* Check the magic header. */
-  if (fread(magic, sizeof(magic), 1, fd) != 1)
+  if (fread(magic, MSK_WORD_SIZE, 4, fd) != 4)
     goto error;
 
   /*
    * The first four times four bytes shall contain
    * the characters 'MASK':
    */
-  if (magic[0] != 'M' || magic[1] != 'A' || magic[2] != 'S' || magic[3] != 'K')
+  if (MSK_GET(magic[0]) != 'M'
+   || MSK_GET(magic[1]) != 'A'
+   || MSK_GET(magic[2]) != 'S'
+   || MSK_GET(magic[3]) != 'K')
     goto error;
 
   /*
    * Next three four-byte blocks are width, height
    * and (probably) the number of bits of padding.
    */
-  if (    fread(&width, sizeof(width), 1, fd) != 1
-       || fread(&height, sizeof(height), 1, fd) != 1
-       || fread(&padding, sizeof(padding), 1, fd) != 1)
+  if (fread(&lewidth, MSK_WORD_SIZE, 1, fd) != 1)
     goto error;
+  width = MSK_GET(lewidth);
+  if (fread(&leheight, MSK_WORD_SIZE, 1, fd) != 1)
+    goto error;
+  height = MSK_GET(leheight);
+  if (fread(&lepadding, MSK_WORD_SIZE, 1, fd) != 1)
+    goto error;
+  // Ignore the padding number
 
   /*
    * Data starts with an offset of 1024 bytes.
@@ -74,7 +95,8 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   if (fseek(fd, 1024, SEEK_SET) != 0)
     goto error;
 
-  datasize = ceil(width / (double)(sizeof(int) * CHAR_BIT)) * sizeof(int) * height;
+  const size_t rowsize = ceil(width / (float)MSK_WORD_BITS) * MSK_WORD_SIZE;
+  const size_t datasize = rowsize * height;
   data     = malloc(datasize);
   if (fread(data, datasize, 1, fd) != 1)
     goto error;
@@ -90,9 +112,11 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
 
   tmp = data;
   for (row = 0; row < height; ++row)
-    for (col = 0; col < width; col += sizeof(int) * CHAR_BIT) {
-      for (bit = 0; (unsigned)bit < sizeof(int) * CHAR_BIT && col + bit < width; ++bit)
-        saxs_image_set_value(image, col + bit, row, ((*tmp) & (1 << bit)) ? 1.0 : 0.0);
+    for (col = 0; col < width; col += MSK_WORD_BITS) {
+      const msk_word leword = *tmp;
+      const msk_word word = MSK_GET(leword);
+      for (bit = 0; bit < MSK_WORD_BITS && col + bit < width; ++bit)
+        saxs_image_set_value(image, col + bit, row, (word & (1 << bit)) ? 1.0 : 0.0);
 
       ++tmp;
     }
@@ -110,9 +134,13 @@ error:
 
 
 int saxs_image_msk_write(saxs_image *image, const char *filename) {
-  const int magic[4] = { 'M', 'A', 'S', 'K' };
+  static const msk_word magic[4] = { MSK_PUT('M'),
+                                     MSK_PUT('A'),
+                                     MSK_PUT('S'),
+                                     MSK_PUT('K') };
 
-  int width, height, padding;
+  unsigned int width, height, padding;
+  msk_word lewidth, leheight, lepadding;
   int row, col, bit;
 
   FILE *fd = fopen(filename, "wb");
@@ -121,34 +149,52 @@ int saxs_image_msk_write(saxs_image *image, const char *filename) {
 
   width   = saxs_image_width(image);
   height  = saxs_image_height(image);
-  padding = sizeof(int) * (width / sizeof(int) + 1) - width;
+  padding = MSK_WORD_SIZE * (width / MSK_WORD_SIZE + 1) - width;
 
+  lewidth = MSK_PUT(width);
+  leheight = MSK_PUT(height);
+  lepadding = MSK_PUT(padding);
   /* Header: any endianess issues here? */
-  fwrite(magic, sizeof(magic), 1, fd);
-  fwrite(&width, sizeof(width), 1, fd);
-  fwrite(&height, sizeof(height), 1, fd);
-  fwrite(&padding, sizeof(padding), 1, fd);
+  if (fwrite(magic, MSK_WORD_SIZE, 4, fd) != 4)
+    goto error;
+  if (fwrite(&lewidth, MSK_WORD_SIZE, 1, fd) != 1)
+    goto error;
+  if (fwrite(&leheight, MSK_WORD_SIZE, 1, fd) != 1)
+    goto error;
+  if (fwrite(&lepadding, MSK_WORD_SIZE, 1, fd) != 1)
+    goto error;
 
   /* Data starts with an offset of 1024 bytes. */
-  fseek(fd, 1024, SEEK_SET);
+  if (fseek(fd, 1024, SEEK_SET) != 0)
+    goto error;
 
   for (row = 0; row < height; ++row)
-    for (col = 0; col < width; col += sizeof(int) * CHAR_BIT) {
-      int tmp = 0;
+    for (col = 0; col < width; col += MSK_WORD_BITS) {
+      msk_word word = 0;
 
-      for (bit = 0; (unsigned)bit < sizeof(tmp) * CHAR_BIT && col + bit < width; ++bit) {
+      for (bit = 0; (unsigned)bit < MSK_WORD_BITS && col + bit < width; ++bit) {
         double value = saxs_image_value(image, col + bit, row);
         if (fabs(value) > DBL_EPSILON)
-          tmp |= (1 << bit);
+          word |= (1 << bit);
       }
 
-      fwrite(&tmp, sizeof(tmp), 1, fd);
+      const msk_word leword = MSK_PUT(word);
+      if (fwrite(&leword, MSK_WORD_SIZE, 1, fd) != 1)
+        goto error;
     }
 
   /* Any footer? */
 
   fclose(fd);
   return 0;
+
+error:
+  fclose(fd);
+
+  if (errno)
+    return errno;
+  else
+    return ENOTSUP;
 }
 
 
