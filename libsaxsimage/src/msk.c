@@ -46,7 +46,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   msk_word magic[4] = { 0 };
   msk_word *data = NULL, *tmp;
   msk_word lewidth, leheight, lepadding;
-  unsigned int width, height, padding;
+  unsigned int width, height;
   unsigned int row, col, bit;
 
   /* msk images have only one frame */
@@ -83,7 +83,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   height = MSK_GET(leheight);
   if (fread(&lepadding, MSK_WORD_SIZE, 1, fd) != 1)
     goto error;
-  padding = MSK_GET(lepadding);
+  // Ignore the padding number
 
   /*
    * Data starts with an offset of 1024 bytes.
