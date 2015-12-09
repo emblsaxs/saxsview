@@ -30,7 +30,12 @@
 #include <string.h>
 #include <math.h>
 #include <stdint.h>
+/* endian.h is not present on some platforms
+ * Instead declare htole32 and le32toh myself
 #include <endian.h>
+#define MSK_PUT(x) htole32(x)
+#define MSK_GET(x) le32toh(x)
+*/
 
 #ifndef DBL_EPSILON
 #define DBL_EPSILON 1e-16
@@ -39,8 +44,38 @@
 typedef uint32_t msk_word;
 #define MSK_WORD_SIZE (sizeof(msk_word))
 #define MSK_WORD_BITS 32
-#define MSK_PUT(x) htole32(x)
-#define MSK_GET(x) le32toh(x)
+
+static msk_word MSK_PUT(msk_word hword) {
+  union {
+    msk_word leword;
+    uint8_t lechars[4];
+  } mskput;
+
+  mskput.lechars[0] = (hword & 0x000000FF) >>  0;
+  mskput.lechars[1] = (hword & 0x0000FF00) >>  8;
+  mskput.lechars[2] = (hword & 0x00FF0000) >> 16;
+  mskput.lechars[3] = (hword & 0xFF000000) >> 24;
+
+  return mskput.leword;
+}
+
+static msk_word MSK_GET(msk_word leword) {
+  union {
+    msk_word leword;
+    uint8_t lechars[4];
+  } mskget;
+  msk_word hword;
+
+  mskget.leword = leword;
+  hword = 0;
+
+  hword |= ((msk_word) mskget.lechars[0]) <<  0;
+  hword |= ((msk_word) mskget.lechars[1]) <<  8;
+  hword |= ((msk_word) mskget.lechars[2]) << 16;
+  hword |= ((msk_word) mskget.lechars[3]) << 24;
+
+  return hword;
+}
 
 int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
   msk_word magic[4] = { 0 };
@@ -134,10 +169,10 @@ error:
 
 
 int saxs_image_msk_write(saxs_image *image, const char *filename) {
-  static const msk_word magic[4] = { MSK_PUT('M'),
-                                     MSK_PUT('A'),
-                                     MSK_PUT('S'),
-                                     MSK_PUT('K') };
+  const msk_word magic[4] = { MSK_PUT('M'),
+                              MSK_PUT('A'),
+                              MSK_PUT('S'),
+                              MSK_PUT('K') };
 
   unsigned int width, height, padding;
   msk_word lewidth, leheight, lepadding;
