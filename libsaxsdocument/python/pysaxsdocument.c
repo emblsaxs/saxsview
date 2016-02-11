@@ -100,28 +100,44 @@ PySaxsDocument_Read(const char *filename, const char *format,
   saxs_curve *curve;
   saxs_data *data;
   saxs_property *property;
+  int res;
 
   doc = saxs_document_create();
-  int res = saxs_document_read(doc, filename, format);
-  if (res != 0)
+  res = saxs_document_read(doc, filename, format);
+  if (res != 0) {
+    saxs_document_free(doc);
     return PyErr_Format(PyExc_IOError, "%s: %s", filename, strerror(res));
+  }
 
   curve = saxs_document_curve(doc);
   while (curve) {
     PyObject *pycurve = PyList_New(0);
+    if (!pycurve) {
+      saxs_document_free(doc);
+      return  NULL;  // Exception is already set by PyList_New
+    }
 
     data = saxs_curve_data(curve);
     while (data) {
       PyObject *pt = Py_BuildValue("(ddd)", saxs_data_x(data),
                                             saxs_data_y(data),
                                             saxs_data_y_err(data));
+      if (!pt) {
+        Py_DECREF(pycurve);
+        saxs_document_free(doc);
+        return NULL;  // Exception is already set by Py_BuildValue
+      }
       PyList_Append(pycurve, pt);
       Py_DECREF(pt);
 
       data = saxs_data_next(data);
     }
-    PyList_Append(curves, pycurve);
+    res = PyList_Append(curves, pycurve);
     Py_DECREF(pycurve);
+    if (res != 0) {
+      saxs_document_free(doc);
+      return NULL;  // Exception is already set by PyList_Append
+    }
 
     curve = saxs_curve_next(curve);
   }
@@ -130,11 +146,21 @@ PySaxsDocument_Read(const char *filename, const char *format,
   while (property) {
     PyObject *name = PyString_FromString(saxs_property_name(property));
     PyObject *value = PyString_FromString(saxs_property_value(property));
+    if (!name || !value) {
+      Py_XDECREF(name);
+      Py_XDECREF(value);
+      saxs_document_free(doc);
+      return  NULL;  // Exception is already set by PyString_FromString
+    }
 
-    PyDict_SetItem(properties, name, value);
+    res = PyDict_SetItem(properties, name, value);
 
     Py_DECREF(value);
     Py_DECREF(name);
+    if (res != 0) {
+      saxs_document_free(doc);
+      return NULL;  // Exception is already set by PyDict_SetItem
+    }
 
     property = saxs_property_next(property);
   }
@@ -154,6 +180,9 @@ saxsdocument_read(PyObject *self, PyObject *args) {
     return NULL;
 
   doc = (PySaxsDocumentObject*)PySaxsDocument_New();
+  if (!doc) {
+    return PyErr_NoMemory();
+  }
 
   res = PySaxsDocument_Read(filename, format, doc->curves, doc->properties);
   if (!res) {
