@@ -57,7 +57,7 @@ saxsdocument_dealloc(PySaxsDocumentObject *self) {
 
 static PyObject*
 saxsdocument_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
-  PySaxsDocumentObject *self = subtype->tp_alloc(subtype, 0);
+  PySaxsDocumentObject *self = (PySaxsDocumentObject*)(subtype->tp_alloc(subtype, 0));
   if (!self) {
     return PyErr_NoMemory();
   }
@@ -69,7 +69,7 @@ saxsdocument_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
     subtype->tp_free(self);
     return NULL;
   }
-  return self;
+  return (PyObject*)self;
 }
 
 static PyObject *
