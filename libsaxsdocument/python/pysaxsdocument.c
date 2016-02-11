@@ -55,11 +55,21 @@ saxsdocument_dealloc(PySaxsDocumentObject *self) {
   Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-static int
-saxsdocument_init(PySaxsDocumentObject *self, PyObject *args, PyObject *kwargs) {
+static PyObject*
+saxsdocument_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
+  PySaxsDocumentObject *self = subtype->tp_alloc(subtype, 0);
+  if (!self) {
+    return PyErr_NoMemory();
+  }
   self->curves     = PyList_New(0);
   self->properties = PyDict_New();
-  return 0;
+  if (!self->curves || !self->properties) {
+    Py_XDECREF(self->curves);
+    Py_XDECREF(self->properties);
+    subtype->tp_free(self);
+    return NULL;
+  }
+  return self;
 }
 
 static PyObject *
@@ -215,8 +225,8 @@ PyMODINIT_FUNC initsaxsdocument(void) {
   PySaxsDocument_Type.tp_methods   = saxsdocument_methods;
   PySaxsDocument_Type.tp_members   = saxsdocument_members;
   PySaxsDocument_Type.tp_repr      = (reprfunc)saxsdocument_repr;
-  PySaxsDocument_Type.tp_new       = PyType_GenericNew;
-  PySaxsDocument_Type.tp_init      = (initproc)saxsdocument_init;
+  PySaxsDocument_Type.tp_new       = saxsdocument_new;
+  PySaxsDocument_Type.tp_init      = NULL;
   PySaxsDocument_Type.tp_base      = &PyBaseObject_Type;
   if (PyType_Ready(&PySaxsDocument_Type) < 0)
     return;
