@@ -204,7 +204,15 @@ saxsdocument_read(PyObject *self, PyObject *args) {
   return (PyObject*) doc;
 }
 
-PyDoc_STRVAR(saxsdocument_read_doc, "");
+PyDoc_STRVAR(saxsdocument_read_doc,
+             "Read a file using libsaxsdocument\n"
+             "\n"
+             "The returned object does not keep any handle to the\n"
+             "file, so there is no need to call close()\n"
+             "\n"
+             "Params:\n"
+             "\tfilename: Name of the file to read\n"
+             "\tformat: (optional) Expected format");
 
 static PyMethodDef saxsdocument_functions[] = {
   { "read", saxsdocument_read, METH_VARARGS, saxsdocument_read_doc },
@@ -215,7 +223,10 @@ static PyMethodDef saxsdocument_functions[] = {
 /*
  * Module Init function.
  */
-PyDoc_STRVAR(saxsdocument_module_doc, "saxsdocument module");
+PyDoc_STRVAR(saxsdocument_module_doc,
+             "saxsdocument module\n"
+             "\n"
+             "Use saxsdocument.read() to read a document");
 
 PyMODINIT_FUNC initsaxsdocument(void) {
   PySaxsDocument_Type.tp_name      = "saxsdocument.saxsdocument";
