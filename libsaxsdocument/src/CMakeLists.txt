@@ -1,9 +1,13 @@
 project (LIBSAXSDOCUMENT C)
 
-find_package (LibXml2 QUIET)
-if (NOT LIBXML2_FOUND)
-  message (STATUS "Optional package libxml2 not found, CANSAS-XML document format disabled.")
-endif (NOT LIBXML2_FOUND)
+if (MINGW)
+  message (STATUS "Linking to libxml2 fails on MinGW, disabling CANSAS-XML support")
+else (MINGW)
+  find_package (LibXml2 QUIET)
+  if (NOT LIBXML2_FOUND)
+    message (STATUS "Optional package libxml2 not found, CANSAS-XML document format disabled.")
+  endif (NOT LIBXML2_FOUND)
+endif (MINGW)
 
 if (LIBSAXSDOCUMENT_HEAVY_ASSERTS)
   add_definitions(-DLIBSAXSDOCUMENT_HEAVY_ASSERTS)

@@ -1,3 +1,7 @@
+2016-02-24  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * src/CMakeLists.txt: Disable libxml2 on Windows
+
 2015-08-17  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/atsas_dat.c (columns_tokenize): Significantely reduce the
