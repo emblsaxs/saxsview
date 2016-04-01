@@ -196,7 +196,6 @@ int lines_read(struct line **lines, const char *filename) {
   while (!feof(fd)) {
     c = fgetc(fd);
     switch (c) {
-      case '\r':
       case EOF:
         break;
 
@@ -211,6 +210,18 @@ int lines_read(struct line **lines, const char *filename) {
           *line_ptr++ = (char)c;
         break;
 
+      case '\r':
+        /* Check if the next character is '\n'
+         * If so, this is a \r\n line ending
+         * so the \n should be ignored 
+         */
+        c = fgetc(fd);
+        if (c != '\n') {
+          ungetc(c, fd);
+        }
+        /* Deliberate fall-through (no break):
+         * Handle the newline as if a '\n' had been found
+         */
       case '\n':
         /*
          * Filling the current position with a 'space' instead of '\0'

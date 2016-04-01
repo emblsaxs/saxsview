@@ -82,3 +82,4 @@ endforeach (test)
 
 add_subdirectory(crashtests)
 add_subdirectory(unittests)
+add_subdirectory(line-endings)

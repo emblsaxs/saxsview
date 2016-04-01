@@ -264,8 +264,12 @@ static int verify(saxs_document *doc, struct expect *exp) {
   struct saxs_property *sp;
   int cnt;
 
-  /* Filename not checked due to path components */
-  VERIFY(strstr(saxs_document_filename(doc), exp->exp_filename) != NULL);
+  if (exp->exp_filename && strcmp("*", exp->exp_filename) != 0) {
+    /* Document filename may have path components
+     * Check that expected filename is a substring of document filename
+     */
+    VERIFY(strstr(saxs_document_filename(doc), exp->exp_filename) != NULL);
+  }
 
   printf("expected curve count: '%d', actual: '%d'\n",
          exp->exp_curve_count, saxs_document_curve_count(doc));
