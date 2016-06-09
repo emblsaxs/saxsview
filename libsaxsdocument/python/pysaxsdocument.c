@@ -55,11 +55,21 @@ saxsdocument_dealloc(PySaxsDocumentObject *self) {
   Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
-static int
-saxsdocument_init(PySaxsDocumentObject *self, PyObject *args, PyObject *kwargs) {
+static PyObject*
+saxsdocument_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
+  PySaxsDocumentObject *self = (PySaxsDocumentObject*)(subtype->tp_alloc(subtype, 0));
+  if (!self) {
+    return PyErr_NoMemory();
+  }
   self->curves     = PyList_New(0);
   self->properties = PyDict_New();
-  return 0;
+  if (!self->curves || !self->properties) {
+    Py_XDECREF(self->curves);
+    Py_XDECREF(self->properties);
+    subtype->tp_free(self);
+    return NULL;
+  }
+  return (PyObject*)self;
 }
 
 static PyObject *
@@ -100,28 +110,44 @@ PySaxsDocument_Read(const char *filename, const char *format,
   saxs_curve *curve;
   saxs_data *data;
   saxs_property *property;
+  int res;
 
   doc = saxs_document_create();
-  int res = saxs_document_read(doc, filename, format);
-  if (res != 0)
+  res = saxs_document_read(doc, filename, format);
+  if (res != 0) {
+    saxs_document_free(doc);
     return PyErr_Format(PyExc_IOError, "%s: %s", filename, strerror(res));
+  }
 
   curve = saxs_document_curve(doc);
   while (curve) {
     PyObject *pycurve = PyList_New(0);
+    if (!pycurve) {
+      saxs_document_free(doc);
+      return  NULL;  // Exception is already set by PyList_New
+    }
 
     data = saxs_curve_data(curve);
     while (data) {
       PyObject *pt = Py_BuildValue("(ddd)", saxs_data_x(data),
                                             saxs_data_y(data),
                                             saxs_data_y_err(data));
+      if (!pt) {
+        Py_DECREF(pycurve);
+        saxs_document_free(doc);
+        return NULL;  // Exception is already set by Py_BuildValue
+      }
       PyList_Append(pycurve, pt);
       Py_DECREF(pt);
 
       data = saxs_data_next(data);
     }
-    PyList_Append(curves, pycurve);
+    res = PyList_Append(curves, pycurve);
     Py_DECREF(pycurve);
+    if (res != 0) {
+      saxs_document_free(doc);
+      return NULL;  // Exception is already set by PyList_Append
+    }
 
     curve = saxs_curve_next(curve);
   }
@@ -130,11 +156,21 @@ PySaxsDocument_Read(const char *filename, const char *format,
   while (property) {
     PyObject *name = PyString_FromString(saxs_property_name(property));
     PyObject *value = PyString_FromString(saxs_property_value(property));
+    if (!name || !value) {
+      Py_XDECREF(name);
+      Py_XDECREF(value);
+      saxs_document_free(doc);
+      return  NULL;  // Exception is already set by PyString_FromString
+    }
 
-    PyDict_SetItem(properties, name, value);
+    res = PyDict_SetItem(properties, name, value);
 
     Py_DECREF(value);
     Py_DECREF(name);
+    if (res != 0) {
+      saxs_document_free(doc);
+      return NULL;  // Exception is already set by PyDict_SetItem
+    }
 
     property = saxs_property_next(property);
   }
@@ -154,6 +190,9 @@ saxsdocument_read(PyObject *self, PyObject *args) {
     return NULL;
 
   doc = (PySaxsDocumentObject*)PySaxsDocument_New();
+  if (!doc) {
+    return PyErr_NoMemory();
+  }
 
   res = PySaxsDocument_Read(filename, format, doc->curves, doc->properties);
   if (!res) {
@@ -165,7 +204,15 @@ saxsdocument_read(PyObject *self, PyObject *args) {
   return (PyObject*) doc;
 }
 
-PyDoc_STRVAR(saxsdocument_read_doc, "");
+PyDoc_STRVAR(saxsdocument_read_doc,
+             "Read a file using libsaxsdocument\n"
+             "\n"
+             "The returned object does not keep any handle to the\n"
+             "file, so there is no need to call close()\n"
+             "\n"
+             "Params:\n"
+             "\tfilename: Name of the file to read\n"
+             "\tformat: (optional) Expected format");
 
 static PyMethodDef saxsdocument_functions[] = {
   { "read", saxsdocument_read, METH_VARARGS, saxsdocument_read_doc },
@@ -176,7 +223,10 @@ static PyMethodDef saxsdocument_functions[] = {
 /*
  * Module Init function.
  */
-PyDoc_STRVAR(saxsdocument_module_doc, "saxsdocument module");
+PyDoc_STRVAR(saxsdocument_module_doc,
+             "saxsdocument module\n"
+             "\n"
+             "Use saxsdocument.read() to read a document");
 
 PyMODINIT_FUNC initsaxsdocument(void) {
   PySaxsDocument_Type.tp_name      = "saxsdocument.saxsdocument";
@@ -186,8 +236,8 @@ PyMODINIT_FUNC initsaxsdocument(void) {
   PySaxsDocument_Type.tp_methods   = saxsdocument_methods;
   PySaxsDocument_Type.tp_members   = saxsdocument_members;
   PySaxsDocument_Type.tp_repr      = (reprfunc)saxsdocument_repr;
-  PySaxsDocument_Type.tp_new       = PyType_GenericNew;
-  PySaxsDocument_Type.tp_init      = (initproc)saxsdocument_init;
+  PySaxsDocument_Type.tp_new       = saxsdocument_new;
+  PySaxsDocument_Type.tp_init      = NULL;
   PySaxsDocument_Type.tp_base      = &PyBaseObject_Type;
   if (PyType_Ready(&PySaxsDocument_Type) < 0)
     return;

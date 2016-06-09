@@ -1,3 +1,15 @@
+2016-02-11  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * pysaxsdocument.c: Added/improved docstrings
+
+2016-02-11  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * pysaxsdocument.c: Allocate curve and property in tp_new not tp_init, because tp_init is not always called
+
+2016-02-11  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * pysaxsdocument.c: Handle more error cases
+
 2015-10-16  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* pysaxsdocument.c: Using "%zd" format specifier for Py_ssize_t
