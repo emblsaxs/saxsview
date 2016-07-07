@@ -1,21 +1,15 @@
 
-set (svimage_headers svimagemainwindow.h
-                     svimagesubwindow.h
-                     svimagepropertydockwidget.h
-                     svimagemaskthresholdsdialog.h)
-
 set (svimage_sources main.cpp
                      svimagemainwindow.cpp
                      svimagesubwindow.cpp
                      svimagepropertydockwidget.cpp
                      svimagemaskthresholdsdialog.cpp)
 
-qt4_wrap_cpp (svimage_moc ${svimage_headers})
-
 add_application (svimage
-                 SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
+                 SOURCES ${svimage_sources}
                  LIBRARIES saxsview ${QT_LIBRARIES} m
                  GUI)
+set_target_properties(svimage PROPERTIES AUTOMOC On)
 
 install_application (TARGETS svimage)
 install_dependencies (svimage)
