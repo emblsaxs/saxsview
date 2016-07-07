@@ -6,5 +6,6 @@ if (CMAKE_Fortran_COMPILER_WORKS)
                       SOURCES fsaxsdocument.f90
                       LIBRARIES saxsdocument)
 
+  target_include_directories(fsaxsdocument INTERFACE "${CMAKE_Fortran_MODULE_DIRECTORY}")
 endif (CMAKE_Fortran_COMPILER_WORKS)
 
