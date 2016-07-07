@@ -1,5 +1,9 @@
 2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
 
+        * src/CMakeLists.txt: No need to add LIBTIFF to include_directories()
+
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
         * fortran/CMakeLists.txt: Add INTERFACE_INCLUDE_DIRECTORY for the Fortran module output directory
 
 2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>

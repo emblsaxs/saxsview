@@ -33,7 +33,6 @@ add_shared_library (saxsimage
                     SOURCES ${SOURCES}
                     LIBRARIES ${LIBRARIES}
                     VERSION 1)
-target_include_directories(saxsimage PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}"
-                                     PRIVATE ${LIBTIFF_INCLUDE_DIR})
+target_include_directories(saxsimage PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 install_library (TARGETS saxsimage)
