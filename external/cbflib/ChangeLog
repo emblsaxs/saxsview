@@ -1,3 +1,7 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Use target_include_directories etc
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Use saxsview-convenience macros.
