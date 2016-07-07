@@ -24,20 +24,15 @@ qt4_wrap_cpp (MOC ${HEADERS})
 
 qt4_add_resources (RES resources/saxsview.qrc)
 
-# out-of-source builds need to include the ${CMAKE_CURRENT_*_DIR}
-include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
-                     ${LIBSAXSIMAGE_SOURCE_DIR}
-                     ${CMAKE_CURRENT_SOURCE_DIR}
-                     ${CMAKE_CURRENT_BINARY_DIR}
-                     ${QWT_SOURCE_DIR}
-                     ${QTPROPERTYBROWSER_SOURCE_DIR}
-                     ${MUPARSER_SOURCE_DIR})
+
 
 add_shared_library (saxsview
-                    SOURCES ${SOURCES} ${HEADERS} ${MOC} ${RES}
+                    SOURCES ${SOURCES}  ${MOC} ${RES}
                     LIBRARIES saxsdocument saxsimage muparser
                               qwt qtpropertybrowser ${QT_LIBRARIES}
                     VERSION 1)
+target_include_directories(saxsview PUBLIC  ${CMAKE_CURRENT_SOURCE_DIR}
+                                    PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 install_library (TARGETS saxsview)
 
