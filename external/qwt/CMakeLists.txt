@@ -11,40 +11,6 @@ qt4_wrap_cpp (MOC qwt_abstract_slider.h qwt_analog_clock.h qwt_compass.h
                   qwt_abstract_legend.h qwt_legend_label.h
                   qwt_abstract_scale.h)
 
-set (HEADERS qwt.h qwt_dial_needle.h qwt_plot_magnifier.h
-             qwt_scale_div.h qwt_abstract_scale.h qwt_plot_abstract_barchart.h
-             qwt_painter.h qwt_plot_marker.h qwt_scale_draw.h
-             qwt_abstract_scale_draw.h qwt_panner.h
-             qwt_plot_panner.h qwt_scale_engine.h qwt_abstract_slider.h
-             qwt_picker.h qwt_plot_picker.h qwt_scale_map.h
-             qwt_analog_clock.h qwt_dyngrid_layout.h qwt_picker_machine.h
-             qwt_scale_widget.h 
-             qwt_event_pattern.h qwt_plot.h qwt_plot_rasteritem.h
-             qwt_series_data.h qwt_arrow_button.h qwt_global.h
-             qwt_plot_canvas.h qwt_plot_rescaler.h qwt_slider.h qwt_clipper.h
-             qwt_interval_symbol.h qwt_plot_curve.h qwt_plot_scaleitem.h
-             qwt_spline.h qwt_color_map.h qwt_knob.h qwt_plot_dict.h
-             qwt_plot_seriesitem.h qwt_symbol.h qwt_column_symbol.h
-             qwt_plot_directpainter.h
-             qwt_plot_spectrogram.h qwt_text.h qwt_compass.h qwt_legend.h
-             qwt_plot_grid.h qwt_plot_svgitem.h qwt_text_engine.h
-             qwt_compass_rose.h qwt_plot_histogram.h
-             qwt_plot_zoomer.h qwt_text_label.h qwt_counter.h
-             qwt_plot_intervalcurve.h
-             qwt_thermo.h qwt_curve_fitter.h qwt_magnifier.h qwt_plot_item.h
-             qwt_raster_data.h qwt_dial.h qwt_math.h
-             qwt_plot_layout.h qwt_round_scale_draw.h qwt_wheel.h
-             qwt_plot_renderer.h qwt_sampling_thread.h 
-             qwt_plot_spectrocurve.h qwt_system_clock.h qwt_compat.h
-             qwt_abstract_legend.h qwt_graphic.h qwt_interval.h qwt_legend_data.h
-             qwt_legend_label.h qwt_matrix_raster_data.h qwt_null_paintdevice.h
-             qwt_painter_command.h qwt_pixel_matrix.h qwt_plot_barchart.h
-             qwt_plot_legenditem.h qwt_plot_multi_barchart.h qwt_plot_tradingcurve.h
-             qwt_point_3d.h qwt_point_data.h qwt_point_mapper.h qwt_point_polar.h
-             qwt_samples.h qwt_series_store.h qwt_date.h qwt_date_scale_engine.h
-             qwt_widget_overlay.h qwt_plot_zoneitem.h qwt_transform.h
-             qwt_plot_shapeitem.h qwt_date_scale_draw.h qwt_plot_textlabel.h)
-
 
 set (SOURCES qwt_abstract_scale.cpp qwt qwt_plot_abstract_barchart.cpp
              qwt_picker_machine.cpp qwt_plot_picker.cpp qwt_scale_engine.cpp
@@ -81,11 +47,11 @@ set (SOURCES qwt_abstract_scale.cpp qwt qwt_plot_abstract_barchart.cpp
              qwt_date_scale_draw.cpp qwt_date_scale_engine.cpp
              qwt_transform.cpp qwt_date.cpp qwt_plot_textlabel.cpp)
 
-add_definitions (-DQWT_NO_OPENGL)
-
 add_shared_library(qwt
-                   SOURCES ${HEADERS} ${SOURCES} ${MOC}
+                   SOURCES ${SOURCES} ${MOC}
                    LIBRARIES ${QT_LIBRARIES}
                    VERSION 6.1.0)
+target_compile_definitions(qwt PRIVATE QWT_NO_OPENGL)
+target_include_directories(qwt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 install_library(TARGETS qwt)
