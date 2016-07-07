@@ -1,3 +1,7 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * src/CMakeLists.txt: Use target_include_directories etc
+
 2016-02-24  Chris Kerr  <ckerr@embl-hamburg.de>
 
         * src/CMakeLists.txt: Disable libxml2 on Windows
