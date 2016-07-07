@@ -3,7 +3,6 @@ find_package (TIFF)
 
 if (TIFF_FOUND)
   set (LIBTIFF_LIBRARIES   ${TIFF_LIBRARY}     CACHE FILEPATH "")
-  set (LIBTIFF_INCLUDE_DIR ${TIFF_INCLUDE_DIR} CACHE PATH     "")
 
 else (TIFF_FOUND)
 
@@ -21,9 +20,6 @@ else (TIFF_FOUND)
                        tif_extension.c tif_error.c tif_dumpmode.c tif_dirwrite.c
                        tif_dirread.c tif_dirinfo.c tif_dir.c tif_compress.c
                        tif_color.c tif_codec.c tif_close.c tif_aux.c)
-
-  set (LIBTIFF_HEADERS t4.h	tif_dir.h tiff.h tiffio.h uvcode.h
-                       tif_fax3.h tiffiop.h tif_predict.h tiffvers.h)
 
   set (LIBTIFF_EXTRA_LIBS)
 
@@ -52,17 +48,14 @@ else (TIFF_FOUND)
     configure_file (tif_config.apple.h tif_config.h COPYONLY)
     configure_file (tiffconf.apple.h tiffconf.h COPYONLY)
 
-	# Use tif_unix.c, not tif_apple.c, the latter results in
-	# some strange compile errors?! Works anyway.
+    # Use tif_unix.c, not tif_apple.c, the latter results in
+    # some strange compile errors?! Works anyway.
     set(LIBTIFF_SOURCES ${LIBTIFF_SOURCES} tif_unix.c)
     set (LIBTIFF_HEADERS ${LIBTIFF_HEADERS} tif_config.h)
 
   elseif (UNIX)
     set (LIBTIFF_SOURCES ${LIBTIFF_SOURCES} tif_unix.c)
   endif(WIN32)
-
-
-  include_directories (${LIBTIFF_BINARY_DIR})
 
   #
   # This target should be called 'tiff', but on MacOS, while there is no system
@@ -72,14 +65,15 @@ else (TIFF_FOUND)
   # this libtiff libtiff3 instead and all works.
   #
   add_shared_library (tiff3
-                      SOURCES ${LIBTIFF_HEADERS} ${LIBTIFF_SOURCES}
+                      SOURCES   ${LIBTIFF_SOURCES}
                       LIBRARIES ${LIBTIFF_EXTRA_LIBS}
                       VERSION 3.9.6)
+  target_include_directories(tiff3 PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}"
+                                   PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
   install_library (TARGETS tiff3)
 
-  set (LIBTIFF_LIBRARIES   tiff3                                       CACHE FILEPATH "")
-  set (LIBTIFF_INCLUDE_DIR ${LIBTIFF_SOURCE_DIR} ${LIBTIFF_BINARY_DIR} CACHE PATH     "")
+  set (LIBTIFF_LIBRARIES   tiff3               CACHE FILEPATH "")
 
 endif (TIFF_FOUND)
 
