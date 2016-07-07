@@ -1,5 +1,5 @@
 
-if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+if (PYTHONLIBS_FOUND)
 
   add_python_module (pysaxsdocument
                      SOURCES pysaxsdocument.c
@@ -15,7 +15,7 @@ if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
 
   install_python_module (TARGETS pysaxsdocument)
 
-else (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+else (PYTHONLIBS_FOUND)
   message (STATUS "Note: Python not found, extension module 'saxsdocument' will not be built.")
 
-endif (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+endif (PYTHONLIBS_FOUND)
