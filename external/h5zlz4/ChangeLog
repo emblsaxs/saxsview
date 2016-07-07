@@ -1,3 +1,7 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Set target_link_libraries appropriately
+
 2015-07-13  Chris Kerr  <cjkerr@users.sourceforge.net>
 
 	* CMakeLists.txt: Check for a sufficiently recent version of HDF5
