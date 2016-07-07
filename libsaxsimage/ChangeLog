@@ -1,3 +1,9 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * src/CMakeLists.txt: Use target_include_directories etc.
+                              Don't call include_directories for libraries which 
+                              have INTERFACE_INCLUDE_DIRECTORIES set
+
 2015-07-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/hdf5.c (saxs_image_hdf5_read): Orient dimensions to match the
