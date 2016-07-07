@@ -1,16 +1,5 @@
 project (QWT CXX)
 
-qt4_wrap_cpp (MOC qwt_abstract_slider.h qwt_analog_clock.h qwt_compass.h
-                  qwt_counter.h qwt_dial.h qwt_dyngrid_layout.h qwt_knob.h
-                  qwt_legend.h qwt_magnifier.h
-                  qwt_panner.h qwt_picker.h qwt_plot.h qwt_plot_canvas.h
-                  qwt_plot_magnifier.h qwt_plot_panner.h qwt_plot_picker.h
-                  qwt_plot_zoomer.h qwt_scale_widget.h qwt_slider.h
-                  qwt_text_label.h qwt_thermo.h qwt_wheel.h
-                  qwt_plot_renderer.h qwt_sampling_thread.h
-                  qwt_abstract_legend.h qwt_legend_label.h
-                  qwt_abstract_scale.h)
-
 
 set (SOURCES qwt_abstract_scale.cpp qwt qwt_plot_abstract_barchart.cpp
              qwt_picker_machine.cpp qwt_plot_picker.cpp qwt_scale_engine.cpp
@@ -48,9 +37,10 @@ set (SOURCES qwt_abstract_scale.cpp qwt qwt_plot_abstract_barchart.cpp
              qwt_transform.cpp qwt_date.cpp qwt_plot_textlabel.cpp)
 
 add_shared_library(qwt
-                   SOURCES ${SOURCES} ${MOC}
+                   SOURCES ${SOURCES}
                    LIBRARIES ${QT_LIBRARIES}
                    VERSION 6.1.0)
+set_target_properties(qwt PROPERTIES AUTOMOC On)
 target_compile_definitions(qwt PRIVATE QWT_NO_OPENGL)
 target_include_directories(qwt PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
