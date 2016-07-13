@@ -112,8 +112,11 @@ PySaxsDocument_Read(const char *filename, const char *format,
   saxs_property *property;
   int res;
 
+  Py_BEGIN_ALLOW_THREADS
   doc = saxs_document_create();
   res = saxs_document_read(doc, filename, format);
+  Py_END_ALLOW_THREADS
+
   if (res != 0) {
     saxs_document_free(doc);
     return PyErr_Format(PyExc_IOError, "%s: %s", filename, strerror(res));

@@ -1,3 +1,7 @@
+2016-07-13  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * pysaxsdocument.c: Release the GIL while calling the C library functions
+
 2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
 
         * CMakeLists.txt: include_directories() no longer needed
