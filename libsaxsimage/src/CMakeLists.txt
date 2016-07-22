@@ -36,7 +36,7 @@ if (TARGET h5zlz4)
   # parent directories
   find_package (HDF5)
   add_definitions (-DHAVE_HDF5)
-  include_directories (${HDF5_SOURCE_DIR})
+  include_directories (${HDF5_SOURCE_DIR} ${HDF5_INCLUDE_DIRS})
   set (LIBRARIES ${LIBRARIES} ${HDF5_LIBRARIES})
   set (SOURCES ${SOURCES} hdf5.c)
 endif (TARGET h5zlz4)

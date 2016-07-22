@@ -8,6 +8,7 @@ find_file (HDF5_PLUGIN_HEADER
            NO_DEFAULT_PATH)
 if (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
   project (H5ZLZ4 C)
+  include_directories(${HDF5_INCLUDE_DIRS})
 
   set (H5ZLZ4_HEADERS lz4.h)
   set (H5ZLZ4_SOURCES lz4.c h5zlz4.c)

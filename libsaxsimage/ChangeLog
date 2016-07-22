@@ -1,3 +1,7 @@
+2016-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+        * src/CMakeLists.txt: Add HDF5_INCLUDE_DIRS to include_directories() if HDF5 is enabled
+
 2015-07-13  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* src/hdf5.c (saxs_image_hdf5_read): Orient dimensions to match the
