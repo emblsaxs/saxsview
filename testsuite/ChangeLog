@@ -1,3 +1,8 @@
+2016-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
+
+        * pysaxsdocument/CMakeLists.txt: Set test environment with set_tests_properties(ENVIRONMENT)
+                                         rather than with set($ENV{})
+
 2016-02-11  Chris Kerr  <cjkerr@users.sourceforge.net>
 
         * pysaxsdocument/test_pysaxsdocument.py: Test reading of curves and properties
