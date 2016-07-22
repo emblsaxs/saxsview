@@ -1,3 +1,7 @@
+2016-07-22  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Set target_include_directories appropriately
+
 2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
 
         * CMakeLists.txt: Set target_link_libraries appropriately

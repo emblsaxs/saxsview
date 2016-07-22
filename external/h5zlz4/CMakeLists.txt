@@ -18,8 +18,9 @@ if (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND
   else()
     set_target_properties(h5zlz4 PROPERTIES C_STANDARD 99)
   endif()
-  # PUBLIC link_libraries means:
-  # targets linking to h5zlz4 will automatically include_directories(${HDF5_INCLUDE_DIRS})
+
   target_link_libraries(h5zlz4 PUBLIC ${HDF5_LIBRARIES})
+  target_include_directories(h5zlz4 PUBLIC ${HDF5_INCLUDE_DIRS})
+
   install_library (TARGETS h5zlz4)
 endif (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
