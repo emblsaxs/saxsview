@@ -66,9 +66,9 @@ CONTAINS
     INTEGER, INTENT(out), OPTIONAL  :: status
 
     INTERFACE
-      FUNCTION strlen(string) BIND(C, NAME="strlen")
+      PURE FUNCTION strlen(string) BIND(C, NAME="strlen")
         IMPORT C_PTR, C_INT
-        TYPE(C_PTR), VALUE :: string
+        TYPE(C_PTR), INTENT(in), VALUE :: string
         INTEGER(C_INT) :: strlen
       END FUNCTION
     END INTERFACE
@@ -141,7 +141,7 @@ CONTAINS
                BIND(C, NAME="saxs_document_write")
         IMPORT C_PTR, C_INT, C_CHAR
         INTEGER(C_INT)                :: c_saxs_document_write
-        TYPE(C_PTR), VALUE            :: doc
+        TYPE(C_PTR), INTENT(in), VALUE  :: doc
         CHARACTER(len=1, kind=C_CHAR) :: filename
         CHARACTER(len=1, kind=C_CHAR) :: fmt
       END FUNCTION
@@ -159,7 +159,7 @@ CONTAINS
       SUBROUTINE c_saxs_document_free(doc) &
                  BIND(C, NAME="saxs_document_free")
         IMPORT C_PTR
-        TYPE(C_PTR), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
       END SUBROUTINE
     END INTERFACE
 
@@ -174,8 +174,8 @@ CONTAINS
       SUBROUTINE c_saxs_document_filename(doc, filename) &
                  BIND(C, NAME="saxs_document_filename")
         IMPORT C_PTR
-        TYPE(C_PTR), VALUE :: doc
-        TYPE(C_PTR), VALUE :: filename
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: filename
       END SUBROUTINE
     END INTERFACE
 
@@ -194,7 +194,7 @@ CONTAINS
                BIND(C, NAME="saxs_document_property_count")
         IMPORT C_INT, C_PTR
         INTEGER(C_INT) :: c_saxs_document_property_count
-        TYPE(C_PTR), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
       END FUNCTION
     END INTERFACE
 
@@ -203,7 +203,7 @@ CONTAINS
                BIND(C, NAME="saxs_document_property_first")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_document_property_first
-        TYPE(C_PTR), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
       END FUNCTION
     END INTERFACE
 
@@ -212,7 +212,7 @@ CONTAINS
                BIND(C, NAME="saxs_property_next")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_property_next
-        TYPE(C_PTR), VALUE :: prop
+        TYPE(C_PTR), INTENT(in), VALUE :: prop
       END FUNCTION
     END INTERFACE
 
@@ -221,7 +221,7 @@ CONTAINS
                BIND(C, NAME="saxs_property_name")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_property_name
-        TYPE(C_PTR), VALUE :: prop
+        TYPE(C_PTR), INTENT(in), VALUE :: prop
       END FUNCTION
     END INTERFACE
 
@@ -230,7 +230,7 @@ CONTAINS
                BIND(C, NAME="saxs_property_value")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_property_value
-        TYPE(C_PTR), VALUE :: prop
+        TYPE(C_PTR), INTENT(in), VALUE :: prop
       END FUNCTION
     END INTERFACE
 
@@ -263,7 +263,7 @@ CONTAINS
                BIND(C, NAME="saxs_document_curve")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_document_curve
-        TYPE(C_PTR), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
       END FUNCTION
     END INTERFACE
 
@@ -272,8 +272,8 @@ CONTAINS
                BIND(C, NAME="saxs_document_curve_find")
         IMPORT C_INT, C_PTR
         TYPE(C_PTR) :: c_saxs_document_curve_find
-        TYPE(C_PTR), VALUE :: doc
-        INTEGER(C_INT), VALUE :: type
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
+        INTEGER(C_INT), INTENT(in), VALUE :: type
       END FUNCTION
     END INTERFACE
 
@@ -282,7 +282,7 @@ CONTAINS
                BIND(C, NAME="saxs_curve_next")
         IMPORT C_INT, C_PTR
         TYPE(C_PTR) :: c_saxs_curve_next
-        TYPE(C_PTR), VALUE :: curve
+        TYPE(C_PTR), INTENT(in), VALUE :: curve
       END FUNCTION
     END INTERFACE
 
@@ -291,7 +291,7 @@ CONTAINS
                BIND(C, NAME="saxs_curve_data_count")
         IMPORT C_INT, C_PTR
         INTEGER(C_INT) :: c_saxs_curve_data_count
-        TYPE(C_PTR), VALUE :: curve
+        TYPE(C_PTR), INTENT(in), VALUE :: curve
       END FUNCTION
     END INTERFACE
 
@@ -300,7 +300,7 @@ CONTAINS
                BIND(C, NAME="saxs_curve_data")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_curve_data
-        TYPE(C_PTR), VALUE :: curve
+        TYPE(C_PTR), INTENT(in), VALUE :: curve
       END FUNCTION
     END INTERFACE
 
@@ -309,7 +309,7 @@ CONTAINS
                BIND(C, NAME="saxs_data_next")
         IMPORT C_PTR
         TYPE(C_PTR) :: c_saxs_data_next
-        TYPE(C_PTR), VALUE :: data
+        TYPE(C_PTR), INTENT(in), VALUE :: data
       END FUNCTION
     END INTERFACE
 
@@ -318,7 +318,7 @@ CONTAINS
                BIND(C, NAME="saxs_data_x")
         IMPORT C_DOUBLE, C_PTR
         REAL(C_DOUBLE)     :: c_saxs_data_x
-        TYPE(C_PTR), VALUE :: data
+        TYPE(C_PTR), INTENT(in), VALUE :: data
       END FUNCTION
     END INTERFACE
 
@@ -327,7 +327,7 @@ CONTAINS
                BIND(C, NAME="saxs_data_y")
         IMPORT C_DOUBLE, C_PTR
         REAL(C_DOUBLE)     :: c_saxs_data_y
-        TYPE(C_PTR), VALUE :: data
+        TYPE(C_PTR), INTENT(in), VALUE :: data
       END FUNCTION
     END INTERFACE
 
@@ -336,7 +336,7 @@ CONTAINS
                BIND(C, NAME="saxs_data_y_err")
         IMPORT C_DOUBLE, C_PTR
         REAL(C_DOUBLE)     :: c_saxs_data_y_err
-        TYPE(C_PTR), VALUE :: data
+        TYPE(C_PTR), INTENT(in), VALUE :: data
       END FUNCTION
     END INTERFACE
 
@@ -398,7 +398,7 @@ CONTAINS
       SUBROUTINE c_saxs_document_add_property(doc, name, value) &
                  BIND(C, NAME="saxs_document_add_property")
         IMPORT C_PTR, C_CHAR
-        TYPE(C_PTR), VALUE            :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
         CHARACTER(len=1, kind=C_CHAR) :: name, value
       END SUBROUTINE
     END INTERFACE
@@ -419,9 +419,9 @@ CONTAINS
                  BIND(C, NAME="saxs_document_add_curve")
         IMPORT C_CHAR, C_INT, C_PTR
         TYPE(C_PTR) :: c_saxs_document_add_curve
-        TYPE(C_PTR), VALUE :: doc
+        TYPE(C_PTR), INTENT(in), VALUE :: doc
         CHARACTER(len=1, kind=C_CHAR) :: title
-        INTEGER(C_INT), VALUE :: type
+        INTEGER(C_INT), INTENT(in), VALUE :: type
       END FUNCTION
     END INTERFACE
 
@@ -429,8 +429,8 @@ CONTAINS
       SUBROUTINE c_saxs_curve_add_data(curve, x, x_err, y, y_err) &
                  BIND(C, NAME="saxs_curve_add_data")
         IMPORT C_PTR, C_DOUBLE
-        TYPE(C_PTR),    VALUE :: curve
-        REAL(C_DOUBLE), VALUE :: x, x_err, y, y_err
+        TYPE(C_PTR), INTENT(in),    VALUE :: curve
+        REAL(C_DOUBLE), INTENT(in), VALUE :: x, x_err, y, y_err
       END SUBROUTINE
     END INTERFACE
 
