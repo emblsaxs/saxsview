@@ -74,7 +74,18 @@ void assert_valid_lineset(const struct line* first, const struct line* last) {
   }
 }
 
+#define assert_valid_tokenised_line(l) { \
+  assert_valid_line(l); \
+  assert(l->line_column_count >= 0); \
+}
+
+#else
+
+#define assert_valid_tokenised_line(l)
+
 #endif
+
+static int columns_tokenize(struct line *l);
 
 struct line* lines_create() {
   struct line *line;
@@ -178,6 +189,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
 int lines_read(struct line **lines, const char *filename) {
   struct line *head, *tail;
   int c;
+  int res;
   char *line_ptr;
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
@@ -234,6 +246,13 @@ int lines_read(struct line **lines, const char *filename) {
         while (line_ptr > tail->line_buffer && isspace(*line_ptr))
           *line_ptr-- = '\0';
 
+        /* Tokenise the line here so it can later be used as const */
+        res = columns_tokenize(tail);
+        if (res != 0) {
+          lines_free(head);
+          return res;
+        }
+
         tail->next = lines_create();
         tail = tail->next;
         line_ptr = tail->line_buffer;
@@ -247,7 +266,7 @@ int lines_read(struct line **lines, const char *filename) {
     if (line_ptr - tail->line_buffer == (signed)tail->line_length) {
       char *old_line = tail->line_buffer;
       int old_line_length = tail->line_length;
-     
+
       /*
        * One could use realloc() here, but that leaves the trailing bytes uninitialized
        * (which may throw off string searches later).
@@ -266,6 +285,12 @@ int lines_read(struct line **lines, const char *filename) {
 
       line_ptr = tail->line_buffer + old_line_length;
     }
+  }
+  /* Tokenise the line here so it can later be used as const */
+  res = columns_tokenize(tail);
+  if (res != 0) {
+    lines_free(head);
+    return res;
   }
 
   if (strcmp(filename, "-"))
@@ -344,11 +369,6 @@ static int columns_tokenize(struct line *l) {
   double *values = NULL;
   int nreserved = 0, nvalues = 0;
 
-  if (strlen(l->line_buffer) == 0) {
-    assert(l->line_column_count <= 0);
-    return 0;
-  }
-
   if (l->line_column_count >= 0)
     return 0;
 
@@ -410,30 +430,20 @@ static int columns_tokenize(struct line *l) {
     l->line_column_count  = nvalues;
     l->line_column_values = values;
   }
-  assert_valid_line(l);
+  assert_valid_tokenised_line(l);
   return 0;
 }
 
 
 int saxs_reader_columns_count(struct line *l) {
-  assert_valid_line(l);
-  if (l->line_column_count < 0) {
-    int res = columns_tokenize(l);
-    if (res)
-      return -1;
-  }
+  assert_valid_tokenised_line(l);
 
   return l->line_column_count;
 }
 
 
 double* saxs_reader_columns_values(struct line *l) {
-  assert_valid_line(l);
-  if (l->line_column_count < 0) {
-    int res = columns_tokenize(l);
-    if (res)
-      return NULL;
-  }
+  assert_valid_tokenised_line(l);
 
   return l->line_column_values;
 }
