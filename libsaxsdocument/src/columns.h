@@ -151,7 +151,8 @@ saxs_reader_columns_scan(struct line *lines,
  */
 int
 saxs_reader_columns_parse(struct saxs_document *doc,
-                          struct line *firstline, struct line *lastline,
+                          const struct line *firstline,
+                          const struct line *lastline,
                           int scol, double sfactor,
                           int icol, double ifactor,
                           int errcol,
@@ -164,14 +165,14 @@ saxs_reader_columns_parse(struct saxs_document *doc,
  * @returns The number of data values in line @a l, or -1 on error.
  */
 int
-saxs_reader_columns_count(struct line *l);
+saxs_reader_columns_count(const struct line *l);
 
 /**
  * @brief Get the data values in a given line.
  * @param l
  * @returns The data values in line @a l, or NULL on error.
  */
-double* saxs_reader_columns_values(struct line *l);
+const double* saxs_reader_columns_values(const struct line *l);
 
 /**
  * @brief Count the number of data values in a file.

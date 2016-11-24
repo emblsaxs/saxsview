@@ -435,14 +435,14 @@ static int columns_tokenize(struct line *l) {
 }
 
 
-int saxs_reader_columns_count(struct line *l) {
+int saxs_reader_columns_count(const struct line *l) {
   assert_valid_tokenised_line(l);
 
   return l->line_column_count;
 }
 
 
-double* saxs_reader_columns_values(struct line *l) {
+const double* saxs_reader_columns_values(const struct line *l) {
   assert_valid_tokenised_line(l);
 
   return l->line_column_values;
@@ -526,7 +526,8 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
 }
 
 int saxs_reader_columns_parse(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline,
+                              const struct line *firstline,
+                              const struct line *lastline,
                               int xcol, double xfactor,
                               int ycol, double yfactor,
                               int y_errcol,
@@ -534,7 +535,7 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   assert_valid_lineset(firstline, lastline);
   int colcnt;
-  double *values;
+  const double *values;
   struct saxs_curve *curve;
 
   if (firstline == lastline)
