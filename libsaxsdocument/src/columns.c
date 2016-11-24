@@ -189,18 +189,18 @@ int lines_printf(struct line *l, const char *fmt, ...) {
 int lines_read(struct line **lines, const char *filename) {
   struct line *head, *tail;
   int c;
-  int res;
+  int retcode = 0;
   char *line_ptr;
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
-  if (!fd)
+  if (!fd) {
     return errno;
+  }
 
-  head = tail =  lines_create();
+  head = tail = lines_create();
   if (!head) {
-    if (strcmp(filename, "-"))
-      fclose(fd);
-    return errno;
+    retcode = ENOMEM;
+    goto read_fail;
   }
 
   line_ptr = tail->line_buffer;
@@ -247,13 +247,16 @@ int lines_read(struct line **lines, const char *filename) {
           *line_ptr-- = '\0';
 
         /* Tokenise the line here so it can later be used as const */
-        res = columns_tokenize(tail);
-        if (res != 0) {
-          lines_free(head);
-          return res;
+        retcode = columns_tokenize(tail);
+        if (retcode != 0) {
+          goto read_fail;
         }
 
         tail->next = lines_create();
+        if (tail->next == NULL) {
+          retcode = ENOMEM;
+          goto read_fail;
+        }
         tail = tail->next;
         line_ptr = tail->line_buffer;
         break;
@@ -274,11 +277,9 @@ int lines_read(struct line **lines, const char *filename) {
       tail->line_length *= 2;
       tail->line_buffer = calloc(sizeof(char), tail->line_length);
       if (!(tail->line_buffer)){
-        lines_free(head);
         free(old_line);
-        if (strcmp(filename, "-"))
-          fclose(fd);
-        return errno;
+        retcode = errno;
+        goto read_fail;
       }
       strncpy(tail->line_buffer, old_line, old_line_length);
       free(old_line);
@@ -287,14 +288,10 @@ int lines_read(struct line **lines, const char *filename) {
     }
   }
   /* Tokenise the line here so it can later be used as const */
-  res = columns_tokenize(tail);
-  if (res != 0) {
-    lines_free(head);
-    return res;
+  retcode = columns_tokenize(tail);
+  if (retcode != 0) {
+    goto read_fail;
   }
-
-  if (strcmp(filename, "-"))
-    fclose(fd);
 
   /*
    * Check if we have a unicode file. We can deal with UTF-8,
@@ -308,16 +305,29 @@ int lines_read(struct line **lines, const char *filename) {
        || is_utf32_le((unsigned char*)head->line_buffer)
        || is_utf32_be((unsigned char*)head->line_buffer)) {
 
-    lines_free(head);
-    return EILSEQ;
+    retcode = EILSEQ;
+    goto read_fail;
 
   } else if (is_utf8((unsigned char*)head->line_buffer)) {
     /* Do nothing? */
   }
 
+  if (strcmp(filename, "-"))
+    fclose(fd);
+
   *lines = head;
   assert_valid_lineset(*lines, NULL);
   return 0;
+
+read_fail:
+  lines_free(head);
+  if (strcmp(filename, "-")) {
+    fclose(fd);
+  }
+  if (retcode == 0) {
+    retcode = errno;
+  }
+  return retcode;
 }
 
 int lines_write(const struct line *lines, const char *filename) {
