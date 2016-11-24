@@ -36,7 +36,7 @@
 #endif
 
 static int
-parse_basic_information(struct saxs_document *doc, struct line *l) {
+parse_basic_information(struct saxs_document *doc, const struct line *l) {
   /*
    * Basic Information:
    *
@@ -117,7 +117,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
 
 
 static int
-parse_key_value_pair(struct saxs_document *doc, struct line *l) {
+parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
   /*
    * Keys and values are separated by ':' and a key may be any string.
    */
@@ -181,7 +181,8 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
 /**************************************************************************/
 static int
 atsas_dat_parse_header(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
 
   int res;
   /*
@@ -248,7 +249,8 @@ atsas_dat_parse_header(struct saxs_document *doc,
 
 static int
 atsas_dat_parse_footer(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
 
   /*
    * In subtracted files, the "real" information is in the footer.
@@ -369,7 +371,8 @@ atsas_dat_write_footer(struct saxs_document *doc, struct line **lines) {
 /**************************************************************************/
 static int
 atsas_dat_3_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 3)
     return ENOTSUP;
 
@@ -427,7 +430,8 @@ atsas_dat_3_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_dat_4_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 4)
     return ENOTSUP;
 
@@ -498,7 +502,8 @@ atsas_dat_4_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_dat_n_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   /* Catch all version. Accept anything with at least two columns. */
 

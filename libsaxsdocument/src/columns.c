@@ -572,20 +572,21 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
 
 int saxs_reader_columns_parse_lines(struct saxs_document *doc,
-                                    struct line *firstline, struct line *lastline,
+                                    const struct line *firstline,
+                                    const struct line *lastline,
                                     int (*parse_header)(struct saxs_document*,
-                                                        struct line *,
-                                                        struct line *),
+                                                        const struct line *,
+                                                        const struct line *),
                                     int (*parse_data)(struct saxs_document*,
-                                                      struct line *,
-                                                      struct line *),
+                                                      const struct line *,
+                                                      const struct line *),
                                     int (*parse_footer)(struct saxs_document*,
-                                                        struct line *,
-                                                        struct line *)) {
+                                                        const struct line *,
+                                                        const struct line *)) {
 
   assert_valid_lineset(firstline, lastline);
   int res;
-  struct line *header = NULL, *data = NULL, *footer = NULL;
+  const struct line *header = NULL, *data = NULL, *footer = NULL;
 
   if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     return res;

@@ -36,7 +36,8 @@
 /**************************************************************************/
 static int
 atsas_fir_fit_parse_header(struct saxs_document *doc,
-                           struct line *firstline, struct line *lastline) {
+                           const struct line *firstline,
+                           const struct line *lastline) {
   /*
    * .fir-files may have a 'title', but we simply ignore any
    * information that might be available for now ...
@@ -46,7 +47,8 @@ atsas_fir_fit_parse_header(struct saxs_document *doc,
 
 static int
 atsas_fir_fit_parse_footer(struct saxs_document *doc,
-                           struct line *firstline, struct line *lastline) {
+                           const struct line *firstline,
+                           const struct line *lastline) {
   /*
    * This should be empty?
    */
@@ -75,7 +77,8 @@ atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
 /**************************************************************************/
 static int
 atsas_fir_4_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 4)
     return ENOTSUP;
@@ -104,7 +107,8 @@ atsas_fir_4_column_read(struct saxs_document *doc,
 /**************************************************************************/
 static int
 atsas_fit_3_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 3)
     return ENOTSUP;
@@ -170,7 +174,8 @@ atsas_fit_3_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_fit_4_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   saxs_reader_columns_parse(doc, firstline, lastline,
                             0, 1.0, 1, 1.0, 2, "data",
@@ -185,10 +190,10 @@ atsas_fit_4_column_parse_data(struct saxs_document *doc,
 
 static int
 atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
-                                    struct line *header,
-                                    struct line *data,
-                                    struct line *footer) {
-  struct line *nextfit;
+                                    const struct line *header,
+                                    const struct line *data,
+                                    const struct line *footer) {
+  const struct line *nextfit;
 
   while (header) {
     char filename[PATH_MAX] = { '\0' }, *p, *q;
@@ -313,7 +318,8 @@ atsas_fit_4_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_fit_5_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   if (saxs_reader_columns_count(firstline) != 5)
     return ENOTSUP;

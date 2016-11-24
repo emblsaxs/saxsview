@@ -193,16 +193,17 @@ const double* saxs_reader_columns_values(const struct line *l);
  */
 int
 saxs_reader_columns_parse_lines(struct saxs_document *doc,
-                                struct line *firstline, struct line *lastline,
+                                const struct line *firstline,
+                                const struct line *lastline,
                                 int (*parse_header)(struct saxs_document*,
-                                                    struct line*,
-                                                    struct line*),
+                                                    const struct line*,
+                                                    const struct line*),
                                 int (*parse_data)(struct saxs_document*,
-                                                  struct line*,
-                                                  struct line*),
+                                                  const struct line*,
+                                                  const struct line*),
                                 int (*parse_footer)(struct saxs_document*,
-                                                    struct line*,
-                                                    struct line*));
+                                                    const struct line*,
+                                                    const struct line*));
 
 /**
  * @brief 

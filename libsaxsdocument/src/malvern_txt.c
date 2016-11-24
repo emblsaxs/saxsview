@@ -38,7 +38,7 @@
  * in a line.
  */
 static int
-malvern_txt_count_columns(struct line *l) {
+malvern_txt_count_columns(const struct line *l) {
   if (l && l->line_buffer) {
     int n = 1;
     char *c = l->line_buffer;
@@ -58,7 +58,7 @@ malvern_txt_count_columns(struct line *l) {
  * but the columns are TAB separated.
  */
 static int
-malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
+malvern_txt_parse_column_headers(const struct line *l, char ***columns, int *n) {
   int i = 0;
   char *c, *buffer, *p;
 
@@ -98,7 +98,7 @@ malvern_txt_parse_column_headers(struct line *l, char ***columns, int *n) {
 }
 
 static int
-malvern_txt_parse_column_values(struct line *l, double **values, int *n) {
+malvern_txt_parse_column_values(const struct line *l, double **values, int *n) {
   *n = malvern_txt_count_columns(l);
   *values = (double*)malloc(*n * sizeof(double));
   if (*values == NULL)
@@ -131,7 +131,8 @@ malvern_txt_parse_column_values(struct line *l, double **values, int *n) {
 /**************************************************************************/
 static int
 malvern_txt_parse_header(struct saxs_document *doc,
-                         struct line *firstline, struct line *lastline) {
+                         const struct line *firstline,
+                         const struct line *lastline) {
 
   /* TODO: Anything useful here? Ignore this for now. */
 
@@ -140,7 +141,8 @@ malvern_txt_parse_header(struct saxs_document *doc,
 
 static int
 malvern_txt_parse_data(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
 
   int i, j, n;
   char **headers = NULL;

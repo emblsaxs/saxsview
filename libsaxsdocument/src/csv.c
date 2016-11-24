@@ -31,7 +31,8 @@
 
 static int
 csv_parse_data(struct saxs_document *doc,
-               struct line *firstline, struct line *lastline) {
+               const struct line *firstline,
+               const struct line *lastline) {
 
   int i, n = saxs_reader_columns_count(firstline);
   if (n < 2)
