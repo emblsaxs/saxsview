@@ -124,10 +124,10 @@ lines_free(struct line *lines);
  * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
  */
 int
-saxs_reader_columns_scan(struct line *lines,
-                         struct line **header,
-                         struct line **data,
-                         struct line **footer);
+saxs_reader_columns_scan(const struct line *lines,
+                         const struct line **header,
+                         const struct line **data,
+                         const struct line **footer);
 
 /**
  * @brief Parse specified columns into a list of lines.

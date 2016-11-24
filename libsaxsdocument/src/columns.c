@@ -449,11 +449,13 @@ const double* saxs_reader_columns_values(const struct line *l) {
 }
 
 
-int saxs_reader_columns_scan(struct line *lines, struct line **header,
-                             struct line **data, struct line **footer) {
+int saxs_reader_columns_scan(const struct line *lines,
+                             const struct line **header,
+                             const struct line **data,
+                             const struct line **footer) {
 
   assert_valid_lineset(lines, NULL);
-  struct line *currentline, *tmpdata;
+  const struct line *currentline, *tmpdata;
 
   /*
    * Parse all the lines and try to determine the data format
