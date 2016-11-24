@@ -55,7 +55,7 @@ struct saxs_document_format {
    * @returns 0 if read successfully, an error code on error.
    *          Shall return ENOTSUP if the file can not be read.
    */
-  int (*read)(struct saxs_document *doc, struct line*, struct line*);
+  int (*read)(struct saxs_document *doc, const struct line*, const struct line*);
 
   /**
    * @returns 0 if written successfully, an error code on error.

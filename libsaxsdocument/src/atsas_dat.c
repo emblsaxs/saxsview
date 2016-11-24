@@ -385,7 +385,8 @@ atsas_dat_3_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_3_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_3_column_parse_data,
@@ -452,7 +453,8 @@ atsas_dat_4_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_4_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_4_column_parse_data,
@@ -523,7 +525,8 @@ atsas_dat_n_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_n_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_n_column_parse_data,
@@ -581,7 +584,8 @@ atsas_dat_n_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 int
 atsas_header_txt_read(struct saxs_document *doc,
-                      struct line *firstline, struct line *lastline) {
+                      const struct line *firstline,
+                      const struct line *lastline) {
 
   /*
    * A header text is special in the sense that each and every line
@@ -595,7 +599,7 @@ atsas_header_txt_read(struct saxs_document *doc,
    */
   int key_value_pairs = 0;
 
-  struct line *l = firstline;
+  const struct line *l = firstline;
   while (l && l != lastline) {
     if (strchr(l->line_buffer, ':'))
       key_value_pairs += 1;

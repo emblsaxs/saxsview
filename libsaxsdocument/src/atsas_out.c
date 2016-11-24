@@ -367,12 +367,13 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 int atsas_out_read(struct saxs_document *doc,
-                   struct line *firstline, struct line *lastline) {
+                   const struct line *firstline,
+                   const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
-  struct line *current;
-  struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
+  const struct line *current;
+  const struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
   int res;
 
   /*

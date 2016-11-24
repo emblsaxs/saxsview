@@ -96,7 +96,8 @@ atsas_fir_4_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_fir_4_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_fir_fit_parse_header,
                                          atsas_fir_4_column_parse_data,
@@ -126,7 +127,8 @@ atsas_fit_3_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_fit_3_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_fir_fit_parse_header,
                                          atsas_fit_3_column_parse_data,
@@ -250,10 +252,11 @@ atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
 
 int
 atsas_fit_4_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
 
   int res;
-  struct line *header = NULL, *data = NULL, *footer = NULL;
+  const struct line *header = NULL, *data = NULL, *footer = NULL;
 
   if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     goto error;
@@ -337,7 +340,8 @@ atsas_fit_5_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_fit_5_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_fir_fit_parse_header,
                                          atsas_fit_5_column_parse_data,

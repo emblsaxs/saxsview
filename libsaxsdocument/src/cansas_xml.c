@@ -35,7 +35,7 @@
 #include <libxml/xmlreader.h>
 
 static int
-cansas_read_callback(struct line **line, char *buffer, int len) {
+cansas_read_callback(const struct line **line, char *buffer, int len) {
   /*
    * The line reader strips off the '\n', here we need to add them
    * again as otherwise the XML parser will see run together lines
@@ -107,7 +107,9 @@ static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr rea
   }
 }
 
-int cansas_xml_1_0_read(saxs_document *doc, struct line *firstline, struct line *lastline) {
+int cansas_xml_1_0_read(saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
 
   /*
    * Work around an problem in cansas-1.0 and libxml2:

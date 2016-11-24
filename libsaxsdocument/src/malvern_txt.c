@@ -248,7 +248,8 @@ exit:
 
 int
 malvern_txt_read(struct saxs_document *doc,
-                 struct line *firstline, struct line *lastline) {
+                 const struct line *firstline,
+                 const struct line *lastline) {
 
   static const char* columns[] = {
     "Ret. Vol.", "RI", "RALS", "UV",
@@ -257,7 +258,7 @@ malvern_txt_read(struct saxs_document *doc,
   };
   const char **col;
 
-  struct line *header, *data, *footer;
+  const struct line *header, *data, *footer;
 
   int res;
 
