@@ -148,7 +148,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
      */
     line_buffer = realloc(line_buffer, line_length);
     if (!line_buffer)
-      return ENOMEM;
+      return -ENOMEM;
 
     va_start(va, fmt);
     n = vsnprintf(line_buffer, line_length, fmt, va);
@@ -165,7 +165,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
      *  - on WINDOWS, n < 0 indicates 'buffer too small' without any further
      *    indication of the required size.
      *
-     * Instead of doing any platform specifc things, simply double keep
+     * Instead of doing any platform specifc things, simply keep
      * doubling the line_length until it is either large enough or we
      * run out of memory.
      */
