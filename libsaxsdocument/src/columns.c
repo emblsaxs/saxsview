@@ -565,10 +565,12 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
     return EINVAL;
 
   curve = saxs_document_add_curve(doc, title, type);
+  if (!curve) {return ENOMEM;}
 
   while (firstline != lastline) {
     if (saxs_reader_columns_count(firstline) == colcnt) {
       values = saxs_reader_columns_values(firstline);
+      if (!values) {return ENOMEM;}
       saxs_curve_add_data (curve, values[xcol] * xfactor, 0.0,
                            values[ycol] * yfactor,
                            y_errcol >= 0 ? values[y_errcol] : 0.0);

@@ -94,6 +94,7 @@ static void cansas_xml_1_0_process_node(saxs_document *doc, xmlTextReaderPtr rea
         dy = strtod((const char *)text, NULL);
 
       } else if (xmlStrEqual(name, BAD_CAST("Idata"))) {
+        if (!curve) {return;} // No opportunity to return an error code here
         saxs_curve_add_data(curve, x, dx, y, dy);
       }
       xmlFree(name);
