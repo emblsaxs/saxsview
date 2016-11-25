@@ -182,13 +182,14 @@ malvern_txt_parse_data(struct saxs_document *doc,
     res = ENOMEM;
     goto exit;
   }
-  for (i = 0; i < 2*n; ++i)
+  for (i = 0; i < 2*n; ++i) {
     curves[i] = saxs_document_add_curve(tmpdoc, "tmp",
                                         SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
     if (!curves[i]) {
       res = ENOMEM;
       goto exit;
     }
+  }
   /*
    * There may be missing values in the columns, but only on the right
    * hand side, i.e. not "VALUE N/A VALUE", but "VALUE VALUE N/A" only.
