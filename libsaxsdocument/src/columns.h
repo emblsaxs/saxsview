@@ -124,10 +124,10 @@ lines_free(struct line *lines);
  * @returns 0 on success, a non-null error number (i.e. an @a errno) otherwise.
  */
 int
-saxs_reader_columns_scan(struct line *lines,
-                         struct line **header,
-                         struct line **data,
-                         struct line **footer);
+saxs_reader_columns_scan(const struct line *lines,
+                         const struct line **header,
+                         const struct line **data,
+                         const struct line **footer);
 
 /**
  * @brief Parse specified columns into a list of lines.
@@ -151,7 +151,8 @@ saxs_reader_columns_scan(struct line *lines,
  */
 int
 saxs_reader_columns_parse(struct saxs_document *doc,
-                          struct line *firstline, struct line *lastline,
+                          const struct line *firstline,
+                          const struct line *lastline,
                           int scol, double sfactor,
                           int icol, double ifactor,
                           int errcol,
@@ -164,14 +165,14 @@ saxs_reader_columns_parse(struct saxs_document *doc,
  * @returns The number of data values in line @a l, or -1 on error.
  */
 int
-saxs_reader_columns_count(struct line *l);
+saxs_reader_columns_count(const struct line *l);
 
 /**
  * @brief Get the data values in a given line.
  * @param l
  * @returns The data values in line @a l, or NULL on error.
  */
-double* saxs_reader_columns_values(struct line *l);
+const double* saxs_reader_columns_values(const struct line *l);
 
 /**
  * @brief Count the number of data values in a file.
@@ -192,16 +193,17 @@ double* saxs_reader_columns_values(struct line *l);
  */
 int
 saxs_reader_columns_parse_lines(struct saxs_document *doc,
-                                struct line *firstline, struct line *lastline,
+                                const struct line *firstline,
+                                const struct line *lastline,
                                 int (*parse_header)(struct saxs_document*,
-                                                    struct line*,
-                                                    struct line*),
+                                                    const struct line*,
+                                                    const struct line*),
                                 int (*parse_data)(struct saxs_document*,
-                                                  struct line*,
-                                                  struct line*),
+                                                  const struct line*,
+                                                  const struct line*),
                                 int (*parse_footer)(struct saxs_document*,
-                                                    struct line*,
-                                                    struct line*));
+                                                    const struct line*,
+                                                    const struct line*));
 
 /**
  * @brief 

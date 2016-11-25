@@ -36,7 +36,7 @@
 #endif
 
 static int
-parse_basic_information(struct saxs_document *doc, struct line *l) {
+parse_basic_information(struct saxs_document *doc, const struct line *l) {
   /*
    * Basic Information:
    *
@@ -57,9 +57,9 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
    * So, double check at least that the ":" comes before the "c=".
    */
 
-  char *colon_pos = strchr(l->line_buffer, ':');
-  char *conc_pos  = strstr(l->line_buffer, "c=");
-  char *p;
+  const char *colon_pos = strchr(l->line_buffer, ':');
+  const char *conc_pos  = strstr(l->line_buffer, "c=");
+  const char *p;
 
   if (conc_pos && conc_pos > colon_pos) {
     char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
@@ -69,7 +69,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
               MIN(conc_pos - colon_pos - 1, 63));
 
     /* Skip "c=", read the concentration string up to the next whitespace. */
-    sscanf(conc_pos + 2, "%s", conc);
+    sscanf(conc_pos, "c=%63s", conc);
     /* TODO: read concentration units */
 
     colon_pos = strstr(conc_pos, ":");
@@ -86,19 +86,19 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
     if (!saxs_document_property_find_first(doc, "sample-description")) {
       p = desc;
       while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-description", p);
+      if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
     }
 
     if (!saxs_document_property_find_first(doc, "sample-concentration")) {
       p = conc;
       while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-concentration", p);
+      if (!saxs_document_add_property(doc, "sample-concentration", p)) {return ENOMEM;}
     }
 
     if (!saxs_document_property_find_first(doc, "sample-code")) {
       p = code;
       while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-code", p);
+      if (!saxs_document_add_property(doc, "sample-code", p)) {return ENOMEM;}
 
       /*
        * There may be cases where the description is empty.
@@ -108,8 +108,9 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
        */
       if (saxs_document_property_find_first(doc, "sample-concentration")
            && saxs_document_property_find_first(doc, "sample-code")
-           && !saxs_document_property_find_first(doc, "sample-description"))
-        saxs_document_add_property(doc, "sample-description", p);
+           && !saxs_document_property_find_first(doc, "sample-description")) {
+        if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
+      }
     }
   }
   return 0;
@@ -117,13 +118,14 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
 
 
 static int
-parse_key_value_pair(struct saxs_document *doc, struct line *l) {
+parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
   /*
    * Keys and values are separated by ':' and a key may be any string.
    */
-  char *colon_pos = strchr(l->line_buffer, ':');
+  const char *colon_pos = strchr(l->line_buffer, ':');
   if (colon_pos) {
-    char *key, *value;
+    char *key;
+    const char *value;
 
     key = malloc(l->line_length);
     if (!key)
@@ -139,7 +141,10 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
     /* no need to copy the value because saxs_property_create calls strdup */
     value = colon_pos;
 
-    saxs_document_add_property(doc, key, value);
+    if (!saxs_document_add_property(doc, key, value)) {
+      free(key);
+      return ENOMEM;
+    }
 
     /*
      * There may be files, e.g. from BM29, that specify the code only
@@ -147,8 +152,12 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
      * identified.
      */
     if (strcmp(key, "Code") == 0
-         && saxs_document_property_find_first(doc, "sample-code") == NULL)
-      saxs_document_add_property(doc, "sample-code", value);
+         && saxs_document_property_find_first(doc, "sample-code") == NULL) {
+      if (!saxs_document_add_property(doc, "sample-code", value)) {
+        free(key);
+        return ENOMEM;
+      }
+    }
 
     free(key);
   }
@@ -162,16 +171,16 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
    */
   if (strstr(l->line_buffer, "frames averaged =")) {
     int averaged, total;
-    char *equal_pos = strchr(l->line_buffer, '=') + 1;
+    const char *equal_pos = strchr(l->line_buffer, '=') + 1;
 
     if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
       char buffer[64];
 
       snprintf(buffer, 63, "%d", averaged);
-      saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
+      if (!saxs_document_add_property(doc, "averaged-number-of-frames", buffer)) {return ENOMEM;}
 
       snprintf(buffer, 63, "%d", total);
-      saxs_document_add_property(doc, "total-number-of-frames", buffer);
+      if (!saxs_document_add_property(doc, "total-number-of-frames", buffer)) {return ENOMEM;}
     }
   }
   return 0;
@@ -181,7 +190,8 @@ parse_key_value_pair(struct saxs_document *doc, struct line *l) {
 /**************************************************************************/
 static int
 atsas_dat_parse_header(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
 
   int res;
   /*
@@ -200,20 +210,14 @@ atsas_dat_parse_header(struct saxs_document *doc,
 
   if (firstline != lastline) {
 
-    /* Trim trailing whitespaces */
-    char *q;
-    q = firstline->line_buffer + firstline->line_length - 1;
-    while (q >= firstline->line_buffer && !isalnum(*q))
-      *q-- = '\0';
-
     if (strstr(firstline->line_buffer, "Description:")
         || strstr(firstline->line_buffer, "Sample description:")) {
-      char *p = strchr(firstline->line_buffer, ':') + 1;
+      const char *p = strchr(firstline->line_buffer, ':') + 1;
       while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-description", p);
+      if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
 
     } else if (strchr(firstline->line_buffer, ':') == NULL) {
-      saxs_document_add_property(doc, "sample-description", firstline->line_buffer);
+      if (!saxs_document_add_property(doc, "sample-description", firstline->line_buffer)) {return ENOMEM;}
     }
 
     firstline = firstline->next;
@@ -248,7 +252,8 @@ atsas_dat_parse_header(struct saxs_document *doc,
 
 static int
 atsas_dat_parse_footer(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
 
   /*
    * In subtracted files, the "real" information is in the footer.
@@ -369,7 +374,8 @@ atsas_dat_write_footer(struct saxs_document *doc, struct line **lines) {
 /**************************************************************************/
 static int
 atsas_dat_3_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 3)
     return ENOTSUP;
 
@@ -382,7 +388,8 @@ atsas_dat_3_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_3_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_3_column_parse_data,
@@ -406,6 +413,7 @@ atsas_dat_3_column_write_data(struct saxs_document *doc,
   data = saxs_curve_data(curve);
   while (data) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e %14e %14e",
                  saxs_data_x(data), saxs_data_y(data), saxs_data_y_err(data));
     lines_append(lines, l);
@@ -427,7 +435,8 @@ atsas_dat_3_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_dat_4_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 4)
     return ENOTSUP;
 
@@ -448,7 +457,8 @@ atsas_dat_4_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_4_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_4_column_parse_data,
@@ -473,6 +483,7 @@ atsas_dat_4_column_write_data(struct saxs_document *doc, struct line **lines) {
 
   while (data1 && data2) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
 
     lines_printf(l, "%14e %14e %14e %14e",
                  saxs_data_x(data1), saxs_data_y(data1),
@@ -498,7 +509,8 @@ atsas_dat_4_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 static int
 atsas_dat_n_column_parse_data(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline) {
+                              const struct line *firstline,
+                              const struct line *lastline) {
 
   /* Catch all version. Accept anything with at least two columns. */
 
@@ -518,7 +530,8 @@ atsas_dat_n_column_parse_data(struct saxs_document *doc,
 
 int
 atsas_dat_n_column_read(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_dat_parse_header,
                                          atsas_dat_n_column_parse_data,
@@ -537,6 +550,7 @@ atsas_dat_n_column_write_data(struct saxs_document *doc, struct line **lines) {
   saxs_data *data = saxs_curve_data(curve);
   while (data) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e", saxs_data_x(data));
     lines_append(&firstline, l);
 
@@ -576,7 +590,8 @@ atsas_dat_n_column_write(struct saxs_document *doc, struct line **l) {
 /**************************************************************************/
 int
 atsas_header_txt_read(struct saxs_document *doc,
-                      struct line *firstline, struct line *lastline) {
+                      const struct line *firstline,
+                      const struct line *lastline) {
 
   /*
    * A header text is special in the sense that each and every line
@@ -590,7 +605,7 @@ atsas_header_txt_read(struct saxs_document *doc,
    */
   int key_value_pairs = 0;
 
-  struct line *l = firstline;
+  const struct line *l = firstline;
   while (l && l != lastline) {
     if (strchr(l->line_buffer, ':'))
       key_value_pairs += 1;

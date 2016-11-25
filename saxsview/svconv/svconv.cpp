@@ -128,8 +128,9 @@ int main(int argc, char **argv) {
       exit(EXIT_FAILURE);
     }
   }
-  
+
   saxs_document *doc = saxs_document_create();
+  if (!doc) {return EXIT_FAILURE;}
   int res = saxs_document_read(doc, infile, informat); 
   if (res != 0) {
     fprintf(stderr, "%s: parse error (%s)\n", infile, strerror(res));

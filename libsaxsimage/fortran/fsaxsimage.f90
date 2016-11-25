@@ -67,9 +67,9 @@ CONTAINS
                BIND(C, NAME="saxs_image_read")
         IMPORT C_PTR, C_INT, C_CHAR
         INTEGER(C_INT)                :: c_saxs_image_read
-        TYPE(C_PTR), VALUE            :: img
-        CHARACTER(len=1, kind=C_CHAR) :: filename
-        CHARACTER(len=1, kind=C_CHAR) :: fmt
+        TYPE(C_PTR), INTENT(in), VALUE            :: img
+        CHARACTER(len=1, kind=C_CHAR), INTENT(in) :: filename
+        CHARACTER(len=1, kind=C_CHAR), INTENT(in) :: fmt
       END FUNCTION
     END INTERFACE
 
@@ -96,8 +96,8 @@ CONTAINS
                BIND(C, NAME="saxs_image_read_frame")
         IMPORT C_PTR, C_INT, C_CHAR
         INTEGER(C_INT)                :: c_saxs_image_read_frame
-        TYPE(C_PTR), VALUE            :: img
-        INTEGER(C_INT), VALUE         :: frame
+        TYPE(C_PTR), INTENT(in), VALUE            :: img
+        INTEGER(C_INT), INTENT(in), VALUE         :: frame
       END FUNCTION
     END INTERFACE
 
@@ -122,9 +122,9 @@ CONTAINS
                BIND(C, NAME="saxs_image_write")
         IMPORT C_PTR, C_INT, C_CHAR
         INTEGER(C_INT)                :: c_saxs_image_write
-        TYPE(C_PTR), VALUE            :: img
-        CHARACTER(len=1, kind=C_CHAR) :: filename
-        CHARACTER(len=1, kind=C_CHAR) :: fmt
+        TYPE(C_PTR), INTENT(in), VALUE            :: img
+        CHARACTER(len=1, kind=C_CHAR), INTENT(in) :: filename
+        CHARACTER(len=1, kind=C_CHAR), INTENT(in) :: fmt
       END FUNCTION
     END INTERFACE
 
@@ -161,7 +161,7 @@ CONTAINS
                  BIND(C, NAME="saxs_image_width")
         IMPORT C_SIZE_T, C_PTR
         INTEGER(C_SIZE_T)  :: c_saxs_image_width
-        TYPE(C_PTR), VALUE :: img
+        TYPE(C_PTR), INTENT(in), VALUE :: img
       END FUNCTION
     END INTERFACE
 
@@ -178,7 +178,7 @@ CONTAINS
                  BIND(C, NAME="saxs_image_height")
         IMPORT C_SIZE_T, C_PTR
         INTEGER(C_SIZE_T)  :: c_saxs_image_height
-        TYPE(C_PTR), VALUE :: img
+        TYPE(C_PTR), INTENT(in), VALUE :: img
       END FUNCTION
     END INTERFACE
 
@@ -197,8 +197,8 @@ CONTAINS
                  BIND(C, NAME="saxs_image_value")
         IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
         REAL(C_DOUBLE)        :: c_saxs_image_value
-        TYPE(C_PTR), VALUE    :: img
-        INTEGER(C_INT), VALUE :: x, y
+        TYPE(C_PTR), INTENT(in), VALUE    :: img
+        INTEGER(C_INT), INTENT(in), VALUE :: x, y
       END FUNCTION
     END INTERFACE
 
@@ -215,9 +215,9 @@ CONTAINS
                  BIND(C, NAME="saxs_image_set_value")
         IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
         INTEGER(C_LONG)       :: c_saxs_image_value
-        TYPE(C_PTR), VALUE    :: img
-        INTEGER(C_INT), VALUE :: x, y
-        REAL(C_DOUBLE), VALUE :: value
+        TYPE(C_PTR), INTENT(in), VALUE    :: img
+        INTEGER(C_INT), INTENT(in), VALUE :: x, y
+        REAL(C_DOUBLE), INTENT(in), VALUE :: value
       END SUBROUTINE
     END INTERFACE
 

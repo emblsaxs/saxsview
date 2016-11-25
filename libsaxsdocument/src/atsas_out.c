@@ -41,7 +41,7 @@
  *
  * Note: not reentrant, uses static buffer for convenience.
  */
-static const char* extract(struct line *l, const char *delim) {
+static const char* extract(const struct line *l, const char *delim) {
   assert_valid_line(l);
   static char substr[EXTRACT_BUFFER_SIZE];
   char *p = substr, *q;
@@ -68,7 +68,7 @@ static const char* extract(struct line *l, const char *delim) {
  *
  * Note: not reentrant, uses static buffer for convenience.
  */
-static const char* extract_line(struct line *l, const char *delim) {
+static const char* extract_line(const struct line *l, const char *delim) {
   assert_valid_line(l);
 
   static char substr[EXTRACT_BUFFER_SIZE];
@@ -96,7 +96,8 @@ static const char* extract_line(struct line *l, const char *delim) {
 }
 
 static int parse_header(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
@@ -256,8 +257,8 @@ static int parse_header(struct saxs_document *doc,
 }
 
 static int parse_scattering_data(struct saxs_document *doc,
-                                 struct line *firstline,
-                                 struct line *lastline) {
+                                 const struct line *firstline,
+                                 const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
@@ -307,8 +308,8 @@ static int parse_scattering_data(struct saxs_document *doc,
 }
 
 static int parse_probability_data(struct saxs_document *doc,
-                                  struct line *firstline,
-                                  struct line *lastline) {
+                                  const struct line *firstline,
+                                  const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
@@ -328,7 +329,8 @@ static int parse_probability_data(struct saxs_document *doc,
 }
 
 static int parse_footer(struct saxs_document *doc,
-                        struct line *firstline, struct line *lastline) {
+                        const struct line *firstline,
+                        const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
@@ -365,12 +367,13 @@ static int parse_footer(struct saxs_document *doc,
 }
 
 int atsas_out_read(struct saxs_document *doc,
-                   struct line *firstline, struct line *lastline) {
+                   const struct line *firstline,
+                   const struct line *lastline) {
 
   assert_valid_lineset(firstline, lastline);
 
-  struct line *current;
-  struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
+  const struct line *current;
+  const struct line *header = NULL, *scattering_begin = NULL, *probability_begin = NULL, *footer = NULL;
   int res;
 
   /*
