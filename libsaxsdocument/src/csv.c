@@ -64,6 +64,7 @@ csv_write_header(struct saxs_document *doc, struct line **lines) {
 
   /* TODO: Add column headers?! */
   line = lines_create();
+  if (!line) {return ENOMEM;}
   lines_append(lines, line);
 
   return 0;
@@ -82,6 +83,7 @@ csv_write_data(struct saxs_document *doc, struct line **lines) {
   saxs_data *data = saxs_curve_data(curve);
   while (data) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e", saxs_data_x(data));
     lines_append(&firstline, l);
 

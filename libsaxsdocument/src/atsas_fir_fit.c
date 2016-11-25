@@ -66,6 +66,8 @@ atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
 
   /* First line, if no title is available, this line is empty. */
   line = lines_create();
+  if (!line) {return ENOMEM;}
+
   if (title)
     lines_printf(line, "%s", saxs_property_value(title));
   lines_append(lines, line);
@@ -153,6 +155,7 @@ atsas_fit_3_column_write_data(struct saxs_document *doc,
   fitdata = saxs_curve_data(fitcurve);
   while (expdata && fitdata) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e %14e %14e",
                  saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y(fitdata));
     lines_append(lines, l);
@@ -299,6 +302,7 @@ atsas_fit_4_column_write_data(struct saxs_document *doc,
   fitdata = saxs_curve_data(fitcurve);
   while (expdata && fitdata) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e %14e %14e %14e",
                  saxs_data_x(expdata), saxs_data_y(expdata), saxs_data_y_err(expdata), saxs_data_y(fitdata));
     lines_append(lines, l);
