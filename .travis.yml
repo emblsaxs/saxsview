@@ -1,3 +1,8 @@
+# We need a newer version of CMake than is installed on Ubuntu 12.04
+# Therefore request to use Ubuntu 14.04 instead
+dist: trusty
+sudo: false
+
 language: c
 
 compiler: gcc
