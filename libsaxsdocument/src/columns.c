@@ -243,7 +243,7 @@ int lines_read(struct line **lines, const char *filename) {
         *line_ptr = ' ';
 
         /* Trim trailing whitespace. */
-        while (line_ptr > tail->line_buffer && isspace(*line_ptr))
+        while (line_ptr >= tail->line_buffer && isspace(*line_ptr))
           *line_ptr-- = '\0';
 
         /* Tokenise the line here so it can later be used as const */
