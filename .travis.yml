@@ -7,11 +7,12 @@ language: c
 
 compiler: gcc
 
+# N.B. `gfortran` is not allowed but `gfortran-4.8` is ?!?
 addons:
   apt:
     packages:
     - cmake
-    - gfortran
+    - gfortran-4.8
 
 before_script:
     - mkdir build
