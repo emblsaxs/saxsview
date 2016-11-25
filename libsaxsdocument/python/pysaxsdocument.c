@@ -44,7 +44,7 @@ typedef struct {
 } PySaxsDocumentObject;
 
 PyTypeObject PySaxsDocument_Type  = {
-  PyObject_HEAD_INIT(NULL)
+  PyVarObject_HEAD_INIT(NULL, 0)
 };
 
 static void
