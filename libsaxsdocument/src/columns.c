@@ -135,7 +135,7 @@ lines_append(struct line **lines, struct line *l) {
 int lines_printf(struct line *l, const char *fmt, ...) {
   assert_valid_line(l);
   int n;
-  char *line_buffer = 0L;
+  char *line_buffer = NULL;
   size_t line_length = l->line_length;
 
   va_list va;
@@ -146,9 +146,12 @@ int lines_printf(struct line *l, const char *fmt, ...) {
      * write to a temporary location to avoid messing up the
      * original line buffer.
      */
-    line_buffer = realloc(line_buffer, line_length);
-    if (!line_buffer)
+    char *new_buffer = realloc(line_buffer, line_length);
+    if (!new_buffer) {
+      free(line_buffer);
       return -ENOMEM;
+    }
+    line_buffer = new_buffer;
 
     va_start(va, fmt);
     n = vsnprintf(line_buffer, line_length, fmt, va);
