@@ -57,9 +57,9 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
    * So, double check at least that the ":" comes before the "c=".
    */
 
-  char *colon_pos = strchr(l->line_buffer, ':');
-  char *conc_pos  = strstr(l->line_buffer, "c=");
-  char *p;
+  const char *colon_pos = strchr(l->line_buffer, ':');
+  const char *conc_pos  = strstr(l->line_buffer, "c=");
+  const char *p;
 
   if (conc_pos && conc_pos > colon_pos) {
     char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
@@ -69,7 +69,7 @@ parse_basic_information(struct saxs_document *doc, struct line *l) {
               MIN(conc_pos - colon_pos - 1, 63));
 
     /* Skip "c=", read the concentration string up to the next whitespace. */
-    sscanf(conc_pos + 2, "%s", conc);
+    sscanf(conc_pos + 2, "%63s", conc);
     /* TODO: read concentration units */
 
     colon_pos = strstr(conc_pos, ":");
