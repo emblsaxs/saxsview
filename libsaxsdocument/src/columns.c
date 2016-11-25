@@ -74,7 +74,18 @@ void assert_valid_lineset(const struct line* first, const struct line* last) {
   }
 }
 
+#define assert_valid_tokenised_line(l) { \
+  assert_valid_line(l); \
+  assert(l->line_column_count >= 0); \
+}
+
+#else
+
+#define assert_valid_tokenised_line(l)
+
 #endif
+
+static int columns_tokenize(struct line *l);
 
 struct line* lines_create() {
   struct line *line;
@@ -124,7 +135,7 @@ lines_append(struct line **lines, struct line *l) {
 int lines_printf(struct line *l, const char *fmt, ...) {
   assert_valid_line(l);
   int n;
-  char *line_buffer = 0L;
+  char *line_buffer = NULL;
   size_t line_length = l->line_length;
 
   va_list va;
@@ -135,9 +146,12 @@ int lines_printf(struct line *l, const char *fmt, ...) {
      * write to a temporary location to avoid messing up the
      * original line buffer.
      */
-    line_buffer = realloc(line_buffer, line_length);
-    if (!line_buffer)
-      return ENOMEM;
+    char *new_buffer = realloc(line_buffer, line_length);
+    if (!new_buffer) {
+      free(line_buffer);
+      return -ENOMEM;
+    }
+    line_buffer = new_buffer;
 
     va_start(va, fmt);
     n = vsnprintf(line_buffer, line_length, fmt, va);
@@ -154,7 +168,7 @@ int lines_printf(struct line *l, const char *fmt, ...) {
      *  - on WINDOWS, n < 0 indicates 'buffer too small' without any further
      *    indication of the required size.
      *
-     * Instead of doing any platform specifc things, simply double keep
+     * Instead of doing any platform specifc things, simply keep
      * doubling the line_length until it is either large enough or we
      * run out of memory.
      */
@@ -178,17 +192,18 @@ int lines_printf(struct line *l, const char *fmt, ...) {
 int lines_read(struct line **lines, const char *filename) {
   struct line *head, *tail;
   int c;
+  int retcode = 0;
   char *line_ptr;
 
   FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
-  if (!fd)
+  if (!fd) {
     return errno;
+  }
 
-  head = tail =  lines_create();
+  head = tail = lines_create();
   if (!head) {
-    if (strcmp(filename, "-"))
-      fclose(fd);
-    return errno;
+    retcode = ENOMEM;
+    goto read_fail;
   }
 
   line_ptr = tail->line_buffer;
@@ -231,10 +246,20 @@ int lines_read(struct line **lines, const char *filename) {
         *line_ptr = ' ';
 
         /* Trim trailing whitespace. */
-        while (line_ptr > tail->line_buffer && isspace(*line_ptr))
+        while (line_ptr >= tail->line_buffer && isspace(*line_ptr))
           *line_ptr-- = '\0';
 
+        /* Tokenise the line here so it can later be used as const */
+        retcode = columns_tokenize(tail);
+        if (retcode != 0) {
+          goto read_fail;
+        }
+
         tail->next = lines_create();
+        if (tail->next == NULL) {
+          retcode = ENOMEM;
+          goto read_fail;
+        }
         tail = tail->next;
         line_ptr = tail->line_buffer;
         break;
@@ -247,7 +272,7 @@ int lines_read(struct line **lines, const char *filename) {
     if (line_ptr - tail->line_buffer == (signed)tail->line_length) {
       char *old_line = tail->line_buffer;
       int old_line_length = tail->line_length;
-     
+
       /*
        * One could use realloc() here, but that leaves the trailing bytes uninitialized
        * (which may throw off string searches later).
@@ -255,11 +280,9 @@ int lines_read(struct line **lines, const char *filename) {
       tail->line_length *= 2;
       tail->line_buffer = calloc(sizeof(char), tail->line_length);
       if (!(tail->line_buffer)){
-        lines_free(head);
         free(old_line);
-        if (strcmp(filename, "-"))
-          fclose(fd);
-        return errno;
+        retcode = errno;
+        goto read_fail;
       }
       strncpy(tail->line_buffer, old_line, old_line_length);
       free(old_line);
@@ -267,9 +290,11 @@ int lines_read(struct line **lines, const char *filename) {
       line_ptr = tail->line_buffer + old_line_length;
     }
   }
-
-  if (strcmp(filename, "-"))
-    fclose(fd);
+  /* Tokenise the line here so it can later be used as const */
+  retcode = columns_tokenize(tail);
+  if (retcode != 0) {
+    goto read_fail;
+  }
 
   /*
    * Check if we have a unicode file. We can deal with UTF-8,
@@ -283,16 +308,29 @@ int lines_read(struct line **lines, const char *filename) {
        || is_utf32_le((unsigned char*)head->line_buffer)
        || is_utf32_be((unsigned char*)head->line_buffer)) {
 
-    lines_free(head);
-    return EILSEQ;
+    retcode = EILSEQ;
+    goto read_fail;
 
   } else if (is_utf8((unsigned char*)head->line_buffer)) {
     /* Do nothing? */
   }
 
+  if (strcmp(filename, "-"))
+    fclose(fd);
+
   *lines = head;
   assert_valid_lineset(*lines, NULL);
   return 0;
+
+read_fail:
+  lines_free(head);
+  if (strcmp(filename, "-")) {
+    fclose(fd);
+  }
+  if (retcode == 0) {
+    retcode = errno;
+  }
+  return retcode;
 }
 
 int lines_write(const struct line *lines, const char *filename) {
@@ -343,11 +381,6 @@ static int columns_tokenize(struct line *l) {
   double value;
   double *values = NULL;
   int nreserved = 0, nvalues = 0;
-
-  if (strlen(l->line_buffer) == 0) {
-    assert(l->line_column_count <= 0);
-    return 0;
-  }
 
   if (l->line_column_count >= 0)
     return 0;
@@ -410,40 +443,32 @@ static int columns_tokenize(struct line *l) {
     l->line_column_count  = nvalues;
     l->line_column_values = values;
   }
-  assert_valid_line(l);
+  assert_valid_tokenised_line(l);
   return 0;
 }
 
 
-int saxs_reader_columns_count(struct line *l) {
-  assert_valid_line(l);
-  if (l->line_column_count < 0) {
-    int res = columns_tokenize(l);
-    if (res)
-      return -1;
-  }
+int saxs_reader_columns_count(const struct line *l) {
+  assert_valid_tokenised_line(l);
 
   return l->line_column_count;
 }
 
 
-double* saxs_reader_columns_values(struct line *l) {
-  assert_valid_line(l);
-  if (l->line_column_count < 0) {
-    int res = columns_tokenize(l);
-    if (res)
-      return NULL;
-  }
+const double* saxs_reader_columns_values(const struct line *l) {
+  assert_valid_tokenised_line(l);
 
   return l->line_column_values;
 }
 
 
-int saxs_reader_columns_scan(struct line *lines, struct line **header,
-                             struct line **data, struct line **footer) {
+int saxs_reader_columns_scan(const struct line *lines,
+                             const struct line **header,
+                             const struct line **data,
+                             const struct line **footer) {
 
   assert_valid_lineset(lines, NULL);
-  struct line *currentline, *tmpdata;
+  const struct line *currentline, *tmpdata;
 
   /*
    * Parse all the lines and try to determine the data format
@@ -516,7 +541,8 @@ int saxs_reader_columns_scan(struct line *lines, struct line **header,
 }
 
 int saxs_reader_columns_parse(struct saxs_document *doc,
-                              struct line *firstline, struct line *lastline,
+                              const struct line *firstline,
+                              const struct line *lastline,
                               int xcol, double xfactor,
                               int ycol, double yfactor,
                               int y_errcol,
@@ -524,7 +550,7 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
   assert_valid_lineset(firstline, lastline);
   int colcnt;
-  double *values;
+  const double *values;
   struct saxs_curve *curve;
 
   if (firstline == lastline)
@@ -542,10 +568,12 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
     return EINVAL;
 
   curve = saxs_document_add_curve(doc, title, type);
+  if (!curve) {return ENOMEM;}
 
   while (firstline != lastline) {
     if (saxs_reader_columns_count(firstline) == colcnt) {
       values = saxs_reader_columns_values(firstline);
+      if (!values) {return ENOMEM;}
       saxs_curve_add_data (curve, values[xcol] * xfactor, 0.0,
                            values[ycol] * yfactor,
                            y_errcol >= 0 ? values[y_errcol] : 0.0);
@@ -559,20 +587,21 @@ int saxs_reader_columns_parse(struct saxs_document *doc,
 
 
 int saxs_reader_columns_parse_lines(struct saxs_document *doc,
-                                    struct line *firstline, struct line *lastline,
+                                    const struct line *firstline,
+                                    const struct line *lastline,
                                     int (*parse_header)(struct saxs_document*,
-                                                        struct line *,
-                                                        struct line *),
+                                                        const struct line *,
+                                                        const struct line *),
                                     int (*parse_data)(struct saxs_document*,
-                                                      struct line *,
-                                                      struct line *),
+                                                      const struct line *,
+                                                      const struct line *),
                                     int (*parse_footer)(struct saxs_document*,
-                                                        struct line *,
-                                                        struct line *)) {
+                                                        const struct line *,
+                                                        const struct line *)) {
 
   assert_valid_lineset(firstline, lastline);
   int res;
-  struct line *header = NULL, *data = NULL, *footer = NULL;
+  const struct line *header = NULL, *data = NULL, *footer = NULL;
 
   if ((res = saxs_reader_columns_scan(firstline, &header, &data, &footer)) != 0)
     return res;

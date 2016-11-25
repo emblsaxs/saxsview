@@ -30,7 +30,8 @@
 
 static int
 maxlab_rad_parse_data(struct saxs_document *doc,
-                      struct line *firstline, struct line *lastline) {
+                      const struct line *firstline,
+                      const struct line *lastline) {
   if (saxs_reader_columns_count(firstline) != 4)
     return ENOTSUP;
 
@@ -43,7 +44,8 @@ maxlab_rad_parse_data(struct saxs_document *doc,
 
 int
 maxlab_rad_read(struct saxs_document *doc,
-                struct line *firstline, struct line *lastline) {
+                const struct line *firstline,
+                const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          NULL,
                                          maxlab_rad_parse_data,

@@ -31,7 +31,8 @@
 
 static int
 csv_parse_data(struct saxs_document *doc,
-               struct line *firstline, struct line *lastline) {
+               const struct line *firstline,
+               const struct line *lastline) {
 
   int i, n = saxs_reader_columns_count(firstline);
   if (n < 2)
@@ -51,7 +52,7 @@ csv_parse_data(struct saxs_document *doc,
 }
 
 int
-csv_read(struct saxs_document *doc, struct line *firstline, struct line *lastline) {
+csv_read(struct saxs_document *doc, const struct line *firstline, const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          NULL, csv_parse_data, NULL);
 }
@@ -63,6 +64,7 @@ csv_write_header(struct saxs_document *doc, struct line **lines) {
 
   /* TODO: Add column headers?! */
   line = lines_create();
+  if (!line) {return ENOMEM;}
   lines_append(lines, line);
 
   return 0;
@@ -81,6 +83,7 @@ csv_write_data(struct saxs_document *doc, struct line **lines) {
   saxs_data *data = saxs_curve_data(curve);
   while (data) {
     struct line *l = lines_create();
+    if (!l) {return ENOMEM;}
     lines_printf(l, "%14e", saxs_data_x(data));
     lines_append(&firstline, l);
 

@@ -31,7 +31,8 @@
 /**************************************************************************/
 static int
 atsas_int_parse_header(struct saxs_document *doc,
-                       struct line *firstline, struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
   /*
    * .int-files may have a 'title', but we simply ignore any
    * information that might be available for now ...
@@ -41,7 +42,8 @@ atsas_int_parse_header(struct saxs_document *doc,
 
 static int
 atsas_int_parse_data(struct saxs_document *doc,
-                     struct line *firstline, struct line *lastline) {
+                     const struct line *firstline,
+                     const struct line *lastline) {
   int res;
 
   if (saxs_reader_columns_count(firstline) != 5)
@@ -76,8 +78,8 @@ atsas_int_parse_data(struct saxs_document *doc,
 
 static int
 atsas_int_parse_footer(struct saxs_document *doc,
-                       struct line *firstline,
-                       struct line *lastline) {
+                       const struct line *firstline,
+                       const struct line *lastline) {
   /*
    * This should be empty?
    */
@@ -86,7 +88,8 @@ atsas_int_parse_footer(struct saxs_document *doc,
 
 int
 atsas_int_read(struct saxs_document *doc,
-               struct line *firstline, struct line *lastline) {
+               const struct line *firstline,
+               const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          atsas_int_parse_header,
                                          atsas_int_parse_data,

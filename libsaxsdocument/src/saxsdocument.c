@@ -78,6 +78,7 @@ struct saxs_data {
 #define assert_valid_curve(curve)
 #define assert_valid_curve_or_null(curve)
 #define assert_valid_document(doc)
+#define assert_valid_document_or_null(doc)
 
 #else
 
@@ -166,6 +167,10 @@ static void assert_valid_document(const saxs_document *doc) {
   /* TODO: Check doc_format */
 }
 
+#define assert_valid_document_or_null(doc) { \
+  if (doc) assert_valid_document(doc); \
+}
+
 #endif
 
 static void saxs_curve_free(struct saxs_curve *curve) {
@@ -216,7 +221,7 @@ saxs_document* saxs_document_create() {
     doc->doc_curves_tail = NULL;
     if (doc->doc_properties == NULL) {
       free(doc);
-      doc = NULL;
+      return NULL;
     }
   }
 
@@ -573,7 +578,7 @@ double saxs_data_y_err(const saxs_data *data) {
 saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value) {
-  assert_valid_document(doc);
+  assert_valid_document_or_null(doc);
   if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
 
   if (!name || strlen(name) == 0
