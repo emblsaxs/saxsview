@@ -1,6 +1,8 @@
 libsaxsdocument and saxsview
 ============================
 
+[![Build Status](https://travis-ci.org/emblsaxs/saxsview.svg?branch=master)](https://travis-ci.org/emblsaxs/saxsview)
+
 Read, convert and view files related to Small Angle X-ray Scattering (SAXS).
 
 The libraries, libsaxsimage, libsaxsdocument and libsaxsview, are released
@@ -20,3 +22,4 @@ Without these, an earlier version should be fine.
 
 The code is plain C for libsaxsdocument and based on Qt/Qwt for saxsview. It
 has been successfully compiled for Linux, MacOSX 10.5 and MinGW.
+

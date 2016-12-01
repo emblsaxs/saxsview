@@ -5,6 +5,8 @@ sudo: false
 
 language: c
 
+cache: ccache
+
 compiler: gcc
 
 # N.B. `gfortran` is not allowed but `gfortran-4.8` is ?!?
