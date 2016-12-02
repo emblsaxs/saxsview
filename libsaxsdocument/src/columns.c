@@ -32,6 +32,7 @@
 #include <errno.h>
 #include <math.h>
 #include <assert.h>
+#include <fenv.h>
 
 /*
  * Similar to the POSIX "character classification routines";
@@ -190,15 +191,21 @@ int lines_printf(struct line *l, const char *fmt, ...) {
 }
 
 int lines_read(struct line **lines, const char *filename) {
-  struct line *head, *tail;
+  struct line *head = NULL;
+  struct line *tail;
   int c;
   int retcode = 0;
   char *line_ptr;
+  fenv_t saved_fp_env;
+  FILE *fd = NULL;
 
-  FILE *fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
-  if (!fd) {
-    return errno;
-  }
+  /* Block floating-point exceptions so that the program does not
+   * crash while reading 'nan' or 'inf'. */
+  retcode = feholdexcept(&saved_fp_env);
+  if (retcode) {return retcode;}
+
+  fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;
+  if (!fd) {goto read_fail;}
 
   head = tail = lines_create();
   if (!head) {
@@ -315,6 +322,8 @@ int lines_read(struct line **lines, const char *filename) {
     /* Do nothing? */
   }
 
+  fesetenv(&saved_fp_env); /* Go back to the previous SIGFPE settings */
+
   if (strcmp(filename, "-"))
     fclose(fd);
 
@@ -323,8 +332,9 @@ int lines_read(struct line **lines, const char *filename) {
   return 0;
 
 read_fail:
+  fesetenv(&saved_fp_env); /* Go back to the previous SIGFPE settings */
   lines_free(head);
-  if (strcmp(filename, "-")) {
+  if (fd && strcmp(filename, "-")) {
     fclose(fd);
   }
   if (retcode == 0) {
