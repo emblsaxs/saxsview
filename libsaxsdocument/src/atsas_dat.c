@@ -86,19 +86,19 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
     if (!saxs_document_property_find_first(doc, "sample-description")) {
       p = desc;
       while (isspace(*p)) ++p;
-      if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
+      saxs_document_add_property(doc, "sample-description", p);
     }
 
     if (!saxs_document_property_find_first(doc, "sample-concentration")) {
       p = conc;
       while (isspace(*p)) ++p;
-      if (!saxs_document_add_property(doc, "sample-concentration", p)) {return ENOMEM;}
+      saxs_document_add_property(doc, "sample-concentration", p);
     }
 
     if (!saxs_document_property_find_first(doc, "sample-code")) {
       p = code;
       while (isspace(*p)) ++p;
-      if (!saxs_document_add_property(doc, "sample-code", p)) {return ENOMEM;}
+      saxs_document_add_property(doc, "sample-code", p);
 
       /*
        * There may be cases where the description is empty.
@@ -109,7 +109,7 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
       if (saxs_document_property_find_first(doc, "sample-concentration")
            && saxs_document_property_find_first(doc, "sample-code")
            && !saxs_document_property_find_first(doc, "sample-description")) {
-        if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
+        saxs_document_add_property(doc, "sample-description", p);
       }
     }
   }
@@ -141,10 +141,7 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
     /* no need to copy the value because saxs_property_create calls strdup */
     value = colon_pos;
 
-    if (!saxs_document_add_property(doc, key, value)) {
-      free(key);
-      return ENOMEM;
-    }
+    saxs_document_add_property(doc, key, value);
 
     /*
      * There may be files, e.g. from BM29, that specify the code only
@@ -153,10 +150,7 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
      */
     if (strcmp(key, "Code") == 0
          && saxs_document_property_find_first(doc, "sample-code") == NULL) {
-      if (!saxs_document_add_property(doc, "sample-code", value)) {
-        free(key);
-        return ENOMEM;
-      }
+      saxs_document_add_property(doc, "sample-code", value);
     }
 
     free(key);
@@ -177,10 +171,10 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
       char buffer[64];
 
       snprintf(buffer, 63, "%d", averaged);
-      if (!saxs_document_add_property(doc, "averaged-number-of-frames", buffer)) {return ENOMEM;}
+      saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
 
       snprintf(buffer, 63, "%d", total);
-      if (!saxs_document_add_property(doc, "total-number-of-frames", buffer)) {return ENOMEM;}
+      saxs_document_add_property(doc, "total-number-of-frames", buffer);
     }
   }
   return 0;
@@ -214,10 +208,10 @@ atsas_dat_parse_header(struct saxs_document *doc,
         || strstr(firstline->line_buffer, "Sample description:")) {
       const char *p = strchr(firstline->line_buffer, ':') + 1;
       while (isspace(*p)) ++p;
-      if (!saxs_document_add_property(doc, "sample-description", p)) {return ENOMEM;}
+      saxs_document_add_property(doc, "sample-description", p);
 
     } else if (strchr(firstline->line_buffer, ':') == NULL) {
-      if (!saxs_document_add_property(doc, "sample-description", firstline->line_buffer)) {return ENOMEM;}
+      saxs_document_add_property(doc, "sample-description", firstline->line_buffer);
     }
 
     firstline = firstline->next;
