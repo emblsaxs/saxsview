@@ -36,9 +36,9 @@ add_test (NAME read-atsas-out-nofooter
 set_property (TEST read-atsas-out-nofooter PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 \\((Success|No error)\\)\nFormat ID: 'atsas-out'\nNumber of properties: 12\nNumber of curves: 4")
 
 # Test reading an ESRF .dat file
-add_test (NAME read-ESRF-dat
-          COMMAND $<TARGET_FILE:readtest> ${CMAKE_CURRENT_SOURCE_DIR}/SASDB76-cropped.dat)
-set_property (TEST read-ESRF-dat PROPERTY PASS_REGULAR_EXPRESSION "Number of curves: 1 *\n")
+add_test (NAME read-dat-ESRF
+          COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/SASDB76-cropped.dat
+                                         ${CMAKE_CURRENT_SOURCE_DIR}/SASDB76.exp)
 
 # read-only tests for .dat-files
 set (DATTESTS "empty;whitespace;columns;bsa;bsa-sub;long-lines")
