@@ -34,6 +34,9 @@
 #include <assert.h>
 #include <fenv.h>
 
+/* Standard pragma to allow fesetenv and feholdexcept */
+#pragma STDC FENV_ACCESS on
+
 /*
  * Similar to the POSIX "character classification routines";
  * check if the argument 'c' is a column separator.
@@ -196,12 +199,18 @@ int lines_read(struct line **lines, const char *filename) {
   int c;
   int retcode = 0;
   char *line_ptr;
-  fenv_t saved_fp_env;
   FILE *fd = NULL;
+  /* Saved floating-point environments. According to the standard `feholdexcept` should save
+   * the old environment in its `envp` argument, but on MinGW an invalid value is stored.
+   * Instead we save the environment with `fegetenv` and pass a dummy structure to `feholdexcept` */
+  fenv_t saved_fp_env;
+  fenv_t dummy_fp_env;
 
   /* Block floating-point exceptions so that the program does not
    * crash while reading 'nan' or 'inf'. */
-  retcode = feholdexcept(&saved_fp_env);
+  retcode = fegetenv(&saved_fp_env);
+  if (retcode) {return retcode;}
+  retcode = feholdexcept(&dummy_fp_env);
   if (retcode) {return retcode;}
 
   fd = strcmp(filename, "-") ? fopen(filename, "r") : stdin;

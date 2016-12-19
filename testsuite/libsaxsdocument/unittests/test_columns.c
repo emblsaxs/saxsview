@@ -19,7 +19,8 @@ static void test_lines_printf(){
 
   lines_printf(l, "a = %.1f, b=%.2e", 1.234, 56.789);
   assert_valid_line(l);
-  assert(0 == strcmp(l->line_buffer, "a = 1.2, b=5.68e+01"));
+  assert(0 == strcmp(l->line_buffer, "a = 1.2, b=5.68e+01") ||
+         0 == strcmp(l->line_buffer, "a = 1.2, b=5.68e+001") );
 
   lines_printf(l, "%s %s %s",
                "A very long line with lots of characters",
