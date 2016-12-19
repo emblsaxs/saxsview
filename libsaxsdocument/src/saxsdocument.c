@@ -266,8 +266,13 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   while (handler) {
     if (handler->read) {
       res = handler->read(doc, l, NULL);
-      if (res == 0)
+      if (res == 0) {
         break;
+      } else if (res == ENOMEM) {
+        /* Error out immediately if there is a memory allocation failure
+         * rather than trying to read with a different file format */
+        break;
+      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
@@ -288,6 +293,10 @@ int saxs_document_read(saxs_document *doc, const char *filename,
             break;
           else 
             res = ENOTSUP;
+        } else if (res == ENOMEM) {
+          /* Error out immediately if there is a memory allocation failure
+           * rather than trying to read with a different file format */
+          break;
         }
       }
       handler = saxs_document_format_next(handler);
@@ -336,8 +345,13 @@ int saxs_document_write(saxs_document *doc, const char *filename,
   while (handler) {
     if (handler->write) {
       res = handler->write(doc, &l);
-      if (res == 0)
+      if (res == 0){
         break;
+      } else if (res == ENOMEM) {
+        /* Error out immediately if there is a memory allocation failure
+          * rather than trying to write with a different file format */
+        break;
+      }
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
@@ -351,8 +365,13 @@ int saxs_document_write(saxs_document *doc, const char *filename,
     while (handler) {
       if (handler->write) {
         res = handler->write(doc, &l);
-        if (res == 0)
+        if (res == 0) {
           break;
+        } else if (res == ENOMEM) {
+          /* Error out immediately if there is a memory allocation failure
+           * rather than trying to write with a different file format */
+          break;
+        }
       }
       handler = saxs_document_format_next(handler);
     }

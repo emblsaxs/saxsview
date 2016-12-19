@@ -1,0 +1,13 @@
+document; SASDB76-cropped.dat; 1; 11;
+curve; data; 1; 33;
+property; sample-description; [17] protein;
+property; sample-concentration; 1.39;
+property; AutoRg; Rg   =   3.8982 +/- 0.15 ( 3.8%);
+property; AutoRg; I(0) =   39.81 +/- 0.1145;
+property; AutoRg; Points   26 to 52 ( 27 total);
+property; AutoRg; Quality: 83.8%;
+property; Storage Temperature (degrees C); 20.0;
+property; Measurement Temperature (degrees C); 20.04;
+property; Concentration; 1.39;
+property; Code; M17;
+property; sample-code; M17;
