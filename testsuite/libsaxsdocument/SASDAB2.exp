@@ -1,0 +1,5 @@
+document; SASDAB2.dat; 1; 3;
+curve; data; 1; 2168;
+property; sample-description; Cytochrome c;
+property; sample-concentration; 25.000;
+property; sample-code; cytC;
