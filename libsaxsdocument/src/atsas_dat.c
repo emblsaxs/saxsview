@@ -182,7 +182,7 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
       return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 
@@ -240,9 +240,8 @@ atsas_dat_parse_header(struct saxs_document *doc,
    * Following, here may be key-value pairs of some kind. 
    */
   while (firstline != lastline) {
-    res = parse_key_value_pair(doc, firstline);
-    if (res)
-      return res;
+    parse_key_value_pair(doc, firstline);
+    /* Ignore return value if no key-value pair can be found */
     firstline = firstline->next;
   }
 
@@ -758,7 +757,8 @@ autosub_dat_parse_footer(struct saxs_document *doc,
     if (is_equals_marker_line(currline))
       {break;}
     if (strchr(currline->line_buffer, ':')) {
-      parse_key_value_pair(doc, currline);
+      int res = parse_key_value_pair(doc, currline);
+      if (res) return res;
       continue;
     }
     if (!strncmp(currline->line_buffer, "Channels from ", 14)) {
