@@ -1,4 +1,4 @@
-document; SASDAB2.dat; 1; 16;
+document; SASDAB2.dat; 1; 17;
 curve; data; 1; 2168;
 property; date; 20-Sep-2012;
 property; autosub-operation; (dar_125.dat - 1.0*Aver(dar_124.dat,dar_126.dat) / 25.0000;
@@ -10,7 +10,8 @@ property; Averaged from raw files; dar_125_001.tiff dar_125_002.tiff dar_125_003
 property; Processed by; cbf-primus Thu Sep 20 12:00:22 2012;
 property; channels; 1 to 2440;
 property; Angular axis file; /data/x33/Users2012/Darja.0912/aux/saxs-0/axis_saxs_20120404.;
-property; BeamCenter_X; 2426.000  BeamCenter_Y:   128.000;
+property; BeamCenter_X; 2426.000;
+property; BeamCenter_Y; 128.000;
 property; Mask file (beamstop); /data/x33/Users2012/Darja.0912/aux/saxs-0/mask_saxs_201203;
 property; Exposure time (sec); 15.000;
 property; Pin diode (mean); 0.749;

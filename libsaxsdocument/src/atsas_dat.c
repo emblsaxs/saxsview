@@ -119,6 +119,15 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
 
 static int
 parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
+
+  char buf1[31], buf2[31];
+  /* Special case for a line containing both Beamstop_X and Beamstop_Y */
+  if (2 == sscanf(l->line_buffer, "BeamCenter_X: %20[.0-9] BeamCenter_Y: %20[.0-9]", buf1, buf2)) {
+    saxs_document_add_property(doc, "BeamCenter_X", buf1);
+    saxs_document_add_property(doc, "BeamCenter_Y", buf2);
+    return 0;
+  }
+
   /*
    * Keys and values are separated by ':' and a key may be any string.
    */
@@ -154,6 +163,7 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
     }
 
     free(key);
+    return 0;
   }
 
   /*
@@ -164,17 +174,12 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
    *   Channels from 1 to 2449 Number of frames averaged =    8 from total    8 frames
    */
   if (strstr(l->line_buffer, "frames averaged =")) {
-    int averaged, total;
     const char *equal_pos = strchr(l->line_buffer, '=') + 1;
 
-    if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
-      char buffer[64];
-
-      snprintf(buffer, 63, "%d", averaged);
-      saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
-
-      snprintf(buffer, 63, "%d", total);
-      saxs_document_add_property(doc, "total-number-of-frames", buffer);
+    if (2 == sscanf(equal_pos, "%20[0-9] from total %20[0-9] frames", buf1, buf2)) {
+      saxs_document_add_property(doc, "averaged-number-of-frames", buf1);
+      saxs_document_add_property(doc, "total-number-of-frames", buf2);
+      return 0;
     }
   }
   return 0;

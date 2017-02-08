@@ -1,4 +1,4 @@
-document; bsa-sub.dat; 1; 17;
+document; bsa-sub.dat; 1; 18;
 curve; data; 1; 2178;
 property; date; 23-Mar-2011;
 property; autosub-operation; (xxxxxx_012.dat - 1.0*Aver(xxxxxx_011.dat,xxxxxx_013.dat) /  0;
@@ -11,7 +11,8 @@ property; Averaged from raw files; xxxxxx_012_001.tiff xxxxxx_012_002.tiff xxxxx
 property; Processed by; cbf-primus Wed Mar 23 21:01:44 2011;
 property; channels; 1 to 2449;
 property; Angular axis file; axis_saxs_20110302.dat;
-property; BeamCenter_X; 2432.500  BeamCenter_Y:   110.500;
+property; BeamCenter_X; 2432.500;
+property; BeamCenter_Y; 110.500;
 property; Mask file (beamstop); mask_saxs_20110302.msk;
 property; Exposure time (sec); 15.000;
 property; Pin diode (mean); 0.725;
