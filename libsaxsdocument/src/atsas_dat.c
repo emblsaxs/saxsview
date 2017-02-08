@@ -671,16 +671,25 @@ autosub_dat_parse_header(struct saxs_document *doc,
 
   saxs_document_add_property(doc, "autosub-operation", rest_of_line);
 
-  while((firstline = firstline->next) && (firstline != lastline)) {
+  const struct line *currline = firstline;
+  while((currline = currline->next) && (currline != lastline)) {
     /* All subsequent lines should look like:
      * [filename]  Conc = [conc]  N1 =    [n]  N2 = [n]
      * 
      * The concentration sometimes contains fortran-style '1.0d+2' which is not parsed by %f
      */
     unsigned int n1, n2;
-    int nscan = sscanf(firstline->line_buffer, "%*s Conc = %*[-+.0-9dDeE] N1 = %u N2 = %u", &n1, &n2);
-    if (nscan != 2)
-      { return errno?errno:ENOTSUP; }
+    nscan = sscanf(currline->line_buffer, "%*s Conc = %*[-+.0-9dDeE] N1 = %u N2 = %u", &n1, &n2);
+    if (nscan != 2) {
+      /* Some files contain a Chi value here */
+      if ((currline->next == lastline) &&
+          !strncmp(currline->line_buffer, "Chi(from original file)=     ", 29)) {
+        saxs_document_add_property(doc, "Chi(from original file)", currline->line_buffer+29);
+        break;
+      } else {
+        return ENOTSUP;
+      }
+    }
     if (n2 <= n1)
       { return ENOTSUP; }
     /* TODO - get the list of parents and the concentration from here */
