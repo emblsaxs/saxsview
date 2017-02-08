@@ -40,6 +40,11 @@ add_test (NAME read-dat-ESRF
           COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/SASDB76-cropped.dat
                                          ${CMAKE_CURRENT_SOURCE_DIR}/SASDB76.exp)
 
+# Test reading an autosub .dat file (old pipeline at X33)
+add_test (NAME read-dat-autosub
+          COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/SASDAB2.dat
+                                         ${CMAKE_CURRENT_SOURCE_DIR}/SASDAB2.exp)
+
 # read-only tests for .dat-files
 set (DATTESTS "empty;whitespace;columns;bsa;bsa-sub;long-lines")
 foreach (test ${DATTESTS})

@@ -119,6 +119,15 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
 
 static int
 parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
+
+  char buf1[31], buf2[31];
+  /* Special case for a line containing both Beamstop_X and Beamstop_Y */
+  if (2 == sscanf(l->line_buffer, "BeamCenter_X: %20[.0-9] BeamCenter_Y: %20[.0-9]", buf1, buf2)) {
+    saxs_document_add_property(doc, "BeamCenter_X", buf1);
+    saxs_document_add_property(doc, "BeamCenter_Y", buf2);
+    return 0;
+  }
+
   /*
    * Keys and values are separated by ':' and a key may be any string.
    */
@@ -154,6 +163,7 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
     }
 
     free(key);
+    return 0;
   }
 
   /*
@@ -164,20 +174,15 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
    *   Channels from 1 to 2449 Number of frames averaged =    8 from total    8 frames
    */
   if (strstr(l->line_buffer, "frames averaged =")) {
-    int averaged, total;
     const char *equal_pos = strchr(l->line_buffer, '=') + 1;
 
-    if (sscanf(equal_pos, "%d from total %d frames", &averaged, &total) == 2) {
-      char buffer[64];
-
-      snprintf(buffer, 63, "%d", averaged);
-      saxs_document_add_property(doc, "averaged-number-of-frames", buffer);
-
-      snprintf(buffer, 63, "%d", total);
-      saxs_document_add_property(doc, "total-number-of-frames", buffer);
+    if (2 == sscanf(equal_pos, "%20[0-9] from total %20[0-9] frames", buf1, buf2)) {
+      saxs_document_add_property(doc, "averaged-number-of-frames", buf1);
+      saxs_document_add_property(doc, "total-number-of-frames", buf2);
+      return 0;
     }
   }
-  return 0;
+  return 1;
 }
 
 
@@ -235,9 +240,8 @@ atsas_dat_parse_header(struct saxs_document *doc,
    * Following, here may be key-value pairs of some kind. 
    */
   while (firstline != lastline) {
-    res = parse_key_value_pair(doc, firstline);
-    if (res)
-      return res;
+    parse_key_value_pair(doc, firstline);
+    /* Ignore return value if no key-value pair can be found */
     firstline = firstline->next;
   }
 
@@ -621,6 +625,164 @@ atsas_header_txt_read(struct saxs_document *doc,
   return 0;
 }
 
+/**************************************************************************/
+
+static int
+autosub_dat_parse_header(struct saxs_document *doc,
+                         const struct line *firstline,
+                         const struct line *lastline) {
+  /*
+   * Old .dat file format from AUTOSUB
+   * The first line has the date and the parent file names
+   * Following lines have more information about the parent files
+   *
+   * This parser is deliberately restrictive in the files it accepts.
+   * Those which do not fit the AUTOSUB format will be parsed as atsas_dat.
+   */
+  int nscan;
+
+  if (!firstline) { return ENOTSUP; }
+
+  /* I would use strptime here, but apparently it is only available on POSIX systems */
+  unsigned int day, year;
+  char month[4];
+  nscan = sscanf(firstline->line_buffer, "%2u-%3[A-Za-z]-%4u ", &day, month, &year);
+  if (nscan != 3)
+    { return errno?errno:ENOTSUP; }
+  char datebuf[21];
+  nscan = sscanf(firstline->line_buffer, "%20s ", datebuf);
+  if (nscan != 1) { return errno?errno:ENOTSUP; }
+  saxs_document_add_property(doc, "date", datebuf);
+
+  const char *rest_of_line = firstline->line_buffer + strlen(datebuf);
+  while(isspace(*rest_of_line)) {++rest_of_line;}
+  /* only accept it as an AUTOSUB line if it contains at three mathematical special characters */
+  int nmathchars = 0;
+  if (strchr(rest_of_line, '+'))
+    { ++nmathchars; }
+  if (strchr(rest_of_line, '-'))
+    { ++nmathchars; }
+  if (strchr(rest_of_line, '*'))
+    { ++nmathchars; }
+  if (strchr(rest_of_line, '/'))
+    { ++nmathchars; }
+  if (strchr(rest_of_line, '('))
+    { ++nmathchars; }
+  if (strchr(rest_of_line, ')'))
+    { ++nmathchars; }
+  if (nmathchars < 3)
+    { return ENOTSUP; }
+
+  saxs_document_add_property(doc, "autosub-operation", rest_of_line);
+
+  const struct line *currline = firstline;
+  while((currline = currline->next) && (currline != lastline)) {
+    /* All subsequent lines should look like:
+     * [filename]  Conc = [conc]  N1 =    [n]  N2 = [n]
+     * 
+     * The concentration sometimes contains fortran-style '1.0d+2' which is not parsed by %f
+     */
+    unsigned int n1, n2;
+    nscan = sscanf(currline->line_buffer, "%*s Conc = %*[-+.0-9dDeE] N1 = %u N2 = %u", &n1, &n2);
+    if (nscan != 2) {
+      /* Some files contain a Chi value here */
+      if ((currline->next == lastline) &&
+          !strncmp(currline->line_buffer, "Chi(from original file)=     ", 29)) {
+        saxs_document_add_property(doc, "Chi(from original file)", currline->line_buffer+29);
+        break;
+      } else {
+        return ENOTSUP;
+      }
+    }
+    if (n2 <= n1)
+      { return ENOTSUP; }
+    /* TODO - get the list of parents and the concentration from here */
+  }
+  return 0;
+}
+
+static int is_equals_marker_line(const struct line *l) {
+  int nequals = 0;  /* number of '=' characters, need at least 3 */
+  const char *c;
+  for (c = l->line_buffer; *c; ++c) {
+    if (*c == '=') {
+      ++nequals;
+    } else if (!isspace(*c)) {
+      return 0;
+    }
+  }
+  return (nequals >= 3);
+}
+
+static int
+autosub_dat_parse_footer(struct saxs_document *doc,
+                         const struct line *firstline,
+                         const struct line *lastline) {
+  if (!firstline) {return ENOTSUP;}
+  if (firstline == lastline) {return ENOTSUP;}
+  if (!is_equals_marker_line(firstline))
+    { return ENOTSUP; }
+
+  /* Get the sample description */
+  const struct line *currline = firstline;
+
+  if (! ((currline = currline->next) && (currline != lastline)))
+    { return ENOTSUP; }
+  if (0 != strncmp(currline->line_buffer, "Description:                            ", 40)) {
+    return ENOTSUP;
+  }
+  saxs_document_add_property(doc, "sample-description", currline->line_buffer+40);
+
+  /* Get the sample code and concentration */
+  if (! ((currline = currline->next) && (currline != lastline)))
+    { return ENOTSUP; }
+  char sample_code[31], conc[21], code[21];
+  float fconc = 0;
+  int nscan = sscanf(currline->line_buffer, "Sample: %30s c= %20s mg/ml Code: %20s", sample_code, conc, code);
+  if (nscan != 3) {
+    return errno?errno:ENOTSUP;
+  }
+  nscan = sscanf(conc, "%f", &fconc);
+  if (nscan != 1 || fconc < 0) {
+    return errno?errno:ENOTSUP;
+  }
+  saxs_document_add_property(doc, "sample-code", sample_code);
+  saxs_document_add_property(doc, "sample-concentration", conc);
+  saxs_document_add_property(doc, "code", code);
+
+  /* Read any more properties up until the next equals marker line */
+  while (currline = currline->next) {
+    if (currline == lastline)
+      {break;}
+    if (is_equals_marker_line(currline))
+      {break;}
+    if (strchr(currline->line_buffer, ':')) {
+      int res = parse_key_value_pair(doc, currline);
+      if (res) return res;
+      continue;
+    }
+    if (!strncmp(currline->line_buffer, "Channels from ", 14)) {
+      saxs_document_add_property(doc, "channels", currline->line_buffer+14);
+      continue;
+    }
+    return ENOTSUP;
+  }
+  return 0;
+}
+
+int
+autosub_dat_read(struct saxs_document *doc,
+                 const struct line *firstline,
+                 const struct line *lastline) {
+  /*
+   * Old .dat file format from AUTOSUB
+   */
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         autosub_dat_parse_header,
+                                         atsas_dat_3_column_parse_data,
+                                         autosub_dat_parse_footer);
+}
+
 
 /**************************************************************************/
 void
@@ -634,6 +796,12 @@ saxs_document_format_register_atsas_dat() {
    * The N-column case is often used as input file for programs
    * like OLIGOMER.
    */
+  saxs_document_format autosub_dat = {
+     "dat", "autosub-dat",
+     "Experimental data from AUTOSUB",
+     autosub_dat_read, NULL, NULL
+  };
+
   saxs_document_format atsas_dat_3_column = {
      "dat", "atsas-dat-3-column",
      "ATSAS experimental data, one data set with Poisson errors",
@@ -662,6 +830,7 @@ saxs_document_format_register_atsas_dat() {
      atsas_header_txt_read, NULL, NULL
   };
 
+  saxs_document_format_register(&autosub_dat);
   saxs_document_format_register(&atsas_dat_3_column);
   saxs_document_format_register(&atsas_dat_4_column);
   saxs_document_format_register(&atsas_dat_n_column);
