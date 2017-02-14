@@ -114,9 +114,9 @@ atsas_fir_fit_parse_header(struct saxs_document *doc,
                            const struct line *firstline,
                            const struct line *lastline) {
   int rc = 0;
-  const struct line *currline = firstline;
+  const struct line *currline;
 
-  while ((currline = currline->next) && (currline != lastline)) {
+  for (currline = firstline; currline != lastline; currline = currline->next) {
     rc = try_parse_OUTDNUM(doc, currline->line_buffer);
     if (0 == rc) continue;
 
