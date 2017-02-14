@@ -34,14 +34,46 @@
 #include <limits.h>
 
 /**************************************************************************/
+
+/* Parse a line that has been printed by OUTDNUM or a similar routine
+ * 
+ * Assumes that there are at least three dots between the key and the value
+ */
+static int
+try_parse_OUTDNUM(struct saxs_document *doc, const struct line *l) {
+  const char *dotdotcolon = strstr(l->line_buffer, ".. : ");
+  if (!dotdotcolon)
+    return -1;
+
+  const char *spacedotdot = strstr(l->line_buffer, " ...");
+  if (!spacedotdot)
+    return -2;
+
+  const char *value = dotdotcolon + strlen(".. : ");
+  size_t keylen = spacedotdot - l->line_buffer;
+  char *key = malloc(keylen+1);
+  if (!key)
+    return ENOMEM;
+  strncpy(key, l->line_buffer, keylen);
+  key[keylen] = '\0';
+
+  saxs_document_add_property(doc, key, value);
+  free(key);
+  return 0;
+}
+
 static int
 atsas_fir_fit_parse_header(struct saxs_document *doc,
                            const struct line *firstline,
                            const struct line *lastline) {
-  /*
-   * .fir-files may have a 'title', but we simply ignore any
-   * information that might be available for now ...
-   */
+  int rc = 0;
+  const struct line *currline = firstline;
+
+  while ((currline = currline->next) && (currline != lastline)) {
+    rc = try_parse_OUTDNUM(doc, currline);
+    if (!rc) continue;
+
+  }
   return 0;
 }
 
