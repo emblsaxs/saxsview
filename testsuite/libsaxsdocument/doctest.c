@@ -44,6 +44,15 @@
     exit(EXIT_FAILURE);                           \
   }
 
+#define VERIFY_STRING(a, b)                          \
+  if (strcmp(a, b)) {                                   \
+    fprintf(stderr, "%s:%d: check '%s == %s' failed\n", \
+                                         __FILE__, __LINE__, #a, #b);  \
+    fprintf(stderr, "%s:%d: %s == '%s'\n", __FILE__, __LINE__, #a, a);   \
+    fprintf(stderr, "%s:%d: %s == '%s'\n", __FILE__, __LINE__, #b, b);   \
+    exit(EXIT_FAILURE);                           \
+  }
+
 
 /* move forward to next line */
 static void skip_comment(FILE *fd) {
@@ -290,7 +299,7 @@ static int verify(saxs_document *doc, struct expect *exp) {
   while (c && sc) {
     VERIFY_INT(saxs_curve_type(sc), c->exp_curve_type);
     VERIFY_INT(saxs_curve_data_count(sc), c->exp_curve_data_count);
-    VERIFY(strstr(saxs_curve_title(sc), c->exp_curve_title) != NULL);
+    VERIFY_STRING(saxs_curve_title(sc), c->exp_curve_title);
 
     c = c->next;
     sc = saxs_curve_next(sc);
@@ -310,11 +319,11 @@ static int verify(saxs_document *doc, struct expect *exp) {
   while (p && sp) {
     printf("expected property name: '%s', actual: '%s'\n",
            p->exp_property_name, saxs_property_name(sp));
-    VERIFY(strcmp(saxs_property_name(sp), p->exp_property_name) == 0);
+    VERIFY_STRING(saxs_property_name(sp), p->exp_property_name);
 
     printf("expected property value: '%s', actual: '%s'\n",
            p->exp_property_value, saxs_property_value(sp));
-    VERIFY(strstr(saxs_property_value(sp), p->exp_property_value) != NULL);
+    VERIFY_STRING(saxs_property_value(sp), p->exp_property_value);
 
     p = p->next;
     sp = saxs_property_next(sp);
