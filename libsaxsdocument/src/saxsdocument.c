@@ -597,14 +597,31 @@ double saxs_data_y_err(const saxs_data *data) {
 saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value) {
+  return saxs_document_add_property_strn(doc, name, -1, value, -1);
+}
+
+saxs_property*
+saxs_document_add_property_strn(saxs_document *doc,
+                                const char *name, int namelen,
+                                const char *value, int valuelen) {
   assert_valid_document_or_null(doc);
   if (!doc) return NULL; // Maintain compatibility with old code that expects this undocumented behaviour
 
-  if (!name || strlen(name) == 0
-      || !value || strlen(value) == 0)
+  if (!name)
+    return NULL;
+  if (namelen == 0)
+    return NULL;
+  if ((namelen < 0) && (strlen(name) == 0))
     return NULL;
 
-  saxs_property *property = saxs_property_create(name, value);
+  /* According to the comments in saxsdocument.h, value is allowed to be NULL
+   * Replacing NULL here with the empty string */
+  if (!value) {
+    value = "";
+    valuelen = 0;
+  }
+
+  saxs_property *property = saxs_property_create_strn(name, namelen, value, valuelen);
   if (!property)
     return NULL;
 

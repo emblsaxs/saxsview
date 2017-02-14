@@ -35,6 +35,14 @@ typedef struct saxs_property saxs_property;
 saxs_property*
 saxs_property_create(const char *name, const char *value);
 
+/* Same as saxs_property_create, but giving the length of the strings as if to strnFUN
+ *
+ * length == -1 means "read until the NUL terminator"
+ */
+saxs_property*
+saxs_property_create_strn(const char *name, int namelen,
+                          const char *value, int valuelen);
+
 void
 saxs_property_free(saxs_property *property);
 
