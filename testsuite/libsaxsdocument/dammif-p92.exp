@@ -1,0 +1,3 @@
+document; dammif-p92.fit; 2; 0;
+curve; data; 1; 500;
+curve; fit; 2; 500;

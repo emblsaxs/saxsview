@@ -1,0 +1,4 @@
+document; gasbori-abcdef.fir; 2; 1;
+curve; data; 1; 433;
+curve; fit; 2; 433;
+property; Chi^2; NaN;

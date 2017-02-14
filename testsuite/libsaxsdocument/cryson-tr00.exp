@@ -1,0 +1,10 @@
+document; cryson-tr00.fit; 2; 7;
+curve; data; 1; 99;
+curve; fit; 2; 99;
+property; pdbnam; tr.pdb;
+property; Dro; 0.390;
+property; Bck; 0.50;
+property; RgE; 27.43;
+property; RgT; 25.43;
+property; Vol; 78035;
+property; Chi^2; 7.612;

@@ -1,0 +1,7 @@
+document; sasrefmx-mical1mx15.fit; 2; 4;
+curve; data; 1; 2048;
+curve; fit; 2; 2048;
+property; Experimental data; mical65_buffer65_0085mc.dat;
+property; Constant adjusted; -0.7433;
+property; Volume fraction;  0.3329;
+property; Chi^2; 13.78;

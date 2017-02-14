@@ -1,0 +1,8 @@
+document; gajoe-profiles_001.fit; 2; 5;
+curve; data; 1; 433;
+curve; fit; 2; 433;
+property; CYCLE; 1;
+property; Chi^2; 20.157;
+property; GENER.; 1000;
+property; ENSEMBLES; 50;
+property; CURVES; 6;

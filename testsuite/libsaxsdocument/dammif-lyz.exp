@@ -1,0 +1,4 @@
+document; dammif-lyz.fir; 2; 1;
+curve; data; 1; 196;
+curve; fit; 2; 196;
+property; Chi^2; 0.207;

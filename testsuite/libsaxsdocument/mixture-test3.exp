@@ -1,0 +1,9 @@
+document; mixture-test3.fit; 2; 6;
+curve; data; 1; 75;
+curve; fit; 2; 75;
+property; phase; 1;
+property; body; ELLIPSOID;
+property; fraction; 1.00;
+property; HalfEllAxis; 95.02;
+property; EllRatioAxis; 2.03;
+property; Chi^2; 0.7614;
