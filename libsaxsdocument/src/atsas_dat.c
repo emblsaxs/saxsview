@@ -751,7 +751,7 @@ autosub_dat_parse_footer(struct saxs_document *doc,
   saxs_document_add_property(doc, "code", code);
 
   /* Read any more properties up until the next equals marker line */
-  while (currline = currline->next) {
+  while ((currline = currline->next)) {
     if (currline == lastline)
       {break;}
     if (is_equals_marker_line(currline))
