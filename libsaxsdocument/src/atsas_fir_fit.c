@@ -37,28 +37,75 @@
 
 /* Parse a line that has been printed by OUTDNUM or a similar routine
  * 
+ * Example line:
+ * Constant adjusted ...................................... : 0.6556
+ * 
  * Assumes that there are at least three dots between the key and the value
  */
 static int
-try_parse_OUTDNUM(struct saxs_document *doc, const struct line *l) {
-  const char *dotdotcolon = strstr(l->line_buffer, ".. : ");
+try_parse_OUTDNUM(struct saxs_document *doc, const char *line) {
+  const char *dotdotcolon = strstr(line, ".. : ");
   if (!dotdotcolon)
     return -1;
 
-  const char *spacedotdot = strstr(l->line_buffer, " ...");
+  const char *spacedotdot = strstr(line, " ...");
   if (!spacedotdot)
     return -2;
 
   const char *value = dotdotcolon + strlen(".. : ");
-  size_t keylen = spacedotdot - l->line_buffer;
+  size_t keylen = spacedotdot - line;
   char *key = malloc(keylen+1);
   if (!key)
     return ENOMEM;
-  strncpy(key, l->line_buffer, keylen);
+  strncpy(key, line, keylen);
   key[keylen] = '\0';
 
   saxs_document_add_property(doc, key, value);
   free(key);
+  return 0;
+}
+
+/* Parse a line with column headers and chi-squared
+ * 
+ * Example line:
+ * sExp  |  iExp |  Err | iFit(+Const) | Chi^2=   0.207
+ */
+static int
+try_parse_colhdrs_chi2(struct saxs_document *doc, const char *line) {
+  const char *sExp_pos = strstr(line, "sExp");
+  if (!sExp_pos)
+    return -1;
+  const char *iExp_pos = strstr(sExp_pos, "iExp");
+  if (!iExp_pos)
+    return -2;
+  const char *Err_pos = strstr(iExp_pos, "Err");
+  if (!Err_pos)
+    return -3;
+  const char *iFit_pos = strstr(sExp_pos, "iFit");
+  if (!iFit_pos)
+    return -4;
+  const char *Chi2_pos = strstr(line, "Chi^2");
+  if (!Chi2_pos)
+    return -5;
+
+  if ((Chi2_pos <= iFit_pos) || (Chi2_pos <= Err_pos))
+    return -6;
+
+  const char *equals_pos = strchr(Chi2_pos, '=');
+  if (!equals_pos)
+    return -7;
+
+  const char *value = equals_pos + 1;
+  while (*value == ' ') {++value;}
+
+  /* Handle cases where the Chi^2 is too large to fit, so asterisks are written */
+  if (strstr(value, "***")) {
+    saxs_document_add_property(doc, "Chi^2", "NaN");
+    return 0;
+  }
+
+  /* TODO check that the value can be parsed as a float */
+  saxs_document_add_property(doc, "Chi^2", value);
   return 0;
 }
 
@@ -70,9 +117,14 @@ atsas_fir_fit_parse_header(struct saxs_document *doc,
   const struct line *currline = firstline;
 
   while ((currline = currline->next) && (currline != lastline)) {
-    rc = try_parse_OUTDNUM(doc, currline);
-    if (!rc) continue;
+    rc = try_parse_OUTDNUM(doc, currline->line_buffer);
+    if (0 == rc) continue;
 
+    /* Some lines can only occur as the final header line */
+    if (currline->next == lastline) {
+      rc = try_parse_colhdrs_chi2(doc, currline->line_buffer);
+      if (0 == rc) continue;
+    }
   }
   return 0;
 }
