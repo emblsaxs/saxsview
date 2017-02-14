@@ -54,14 +54,8 @@ try_parse_OUTDNUM(struct saxs_document *doc, const char *line) {
 
   const char *value = dotdotcolon + strlen(".. : ");
   size_t keylen = spacedotdot - line;
-  char *key = malloc(keylen+1);
-  if (!key)
-    return ENOMEM;
-  strncpy(key, line, keylen);
-  key[keylen] = '\0';
 
-  saxs_document_add_property(doc, key, value);
-  free(key);
+  saxs_document_add_property_strn(doc, line, keylen, value, -1);
   return 0;
 }
 
@@ -96,7 +90,7 @@ try_parse_colhdrs_chi2(struct saxs_document *doc, const char *line) {
     return -7;
 
   const char *value = equals_pos + 1;
-  while (*value == ' ') {++value;}
+  while (isspace(*value)) {++value;}
 
   /* Handle cases where the Chi^2 is too large to fit, so asterisks are written */
   if (strstr(value, "***")) {

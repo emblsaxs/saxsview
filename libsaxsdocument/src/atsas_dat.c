@@ -59,46 +59,58 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
 
   const char *colon_pos = strchr(l->line_buffer, ':');
   const char *conc_pos  = strstr(l->line_buffer, "c=");
-  const char *p;
 
   if (conc_pos && conc_pos > colon_pos) {
-    char desc[64] = { '\0' }, code[64] = { '\0' }, conc[64] = { '\0' };
 
-    if (colon_pos)
-      strncpy(desc, colon_pos + 1,
-              MIN(conc_pos - colon_pos - 1, 63));
+    const char *desc_pos = NULL;
+    int desc_len = 0;
+    if (colon_pos) {
+            desc_pos = colon_pos + 1;
+      while (isspace(*desc_pos)) {++desc_pos;}
+      const char *desc_end = conc_pos - 1;
+      while (isspace(*desc_end)) {--desc_end;}
+      /* N.B. --desc_end cannot overrun the beginning of the buffer,
+       * because it will stop at the colon if not before. */
+      desc_len = desc_end - desc_pos + 1;
+    }
 
     /* Skip "c=", read the concentration string up to the next whitespace. */
-    sscanf(conc_pos, "c=%63s", conc);
+    conc_pos += 2;
+    int conc_len = 0;
+    while(isspace(*conc_pos)) {++conc_pos;}
+    while((conc_pos[conc_len] != '\0') &&
+          (!isspace(conc_pos[conc_len]))) {++conc_len;}
     /* TODO: read concentration units */
 
     colon_pos = strstr(conc_pos, ":");
-    if (colon_pos)
-      strncpy(code, colon_pos + 1,
-              MIN(63, l->line_length -
-                  (colon_pos - l->line_buffer - 1)));
+    const char *code_pos = NULL;
+    int code_len = 0;
+    if (colon_pos) {
+      code_pos = colon_pos + 1;
+      while (isspace(*code_pos)) {++code_pos;}
+      /* code should not contain any whitespace */
+      while((code_pos[code_len] != '\0') &&
+            (!isspace(code_pos[code_len]))) {++code_len;}
+    }
 
 
     /*
      * If there is a description in line 1, do not add a (possibly truncated)
      * second description here.
      */
-    if (!saxs_document_property_find_first(doc, "sample-description")) {
-      p = desc;
-      while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-description", p);
+    if ((desc_len > 0) &&
+        !saxs_document_property_find_first(doc, "sample-description")) {
+      saxs_document_add_property_strn(doc, "sample-description", -1, desc_pos, desc_len);
     }
 
-    if (!saxs_document_property_find_first(doc, "sample-concentration")) {
-      p = conc;
-      while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-concentration", p);
+    if ((conc_len > 0) &&
+        !saxs_document_property_find_first(doc, "sample-concentration")) {
+      saxs_document_add_property_strn(doc, "sample-concentration", -1, conc_pos, conc_len);
     }
 
-    if (!saxs_document_property_find_first(doc, "sample-code")) {
-      p = code;
-      while (isspace(*p)) ++p;
-      saxs_document_add_property(doc, "sample-code", p);
+    if ((code_len > 0) &&
+        !saxs_document_property_find_first(doc, "sample-code")) {
+      saxs_document_add_property_strn(doc, "sample-code", -1, code_pos, code_len);
 
       /*
        * There may be cases where the description is empty.
@@ -109,7 +121,7 @@ parse_basic_information(struct saxs_document *doc, const struct line *l) {
       if (saxs_document_property_find_first(doc, "sample-concentration")
            && saxs_document_property_find_first(doc, "sample-code")
            && !saxs_document_property_find_first(doc, "sample-description")) {
-        saxs_document_add_property(doc, "sample-description", p);
+        saxs_document_add_property(doc, "sample-description", code_pos);
       }
     }
   }
@@ -133,36 +145,32 @@ parse_key_value_pair(struct saxs_document *doc, const struct line *l) {
    */
   const char *colon_pos = strchr(l->line_buffer, ':');
   if (colon_pos) {
-    char *key;
-    const char *value;
+    const char *key = l->line_buffer;
+    int keylen = colon_pos - l->line_buffer;
 
-    key = malloc(l->line_length);
-    if (!key)
-      return ENOMEM;
+    const char *value = colon_pos+1;
+    while (isspace(*value)) {++value;}
 
-    memset(key, 0, l->line_length);
-    strncpy(key, l->line_buffer, colon_pos - l->line_buffer);
+    if (strlen(value) == 0) {
+      /* saxs_document_add_property is documented to accept empty values
+       * but previously did not do so. The test cases for .dat files relied
+       * on this undocumented and did not include properties with empty
+       * values. To keep compatibility, skip empty values here. */
+      return 0;
+    }
 
-    colon_pos += 1;
-    while (isspace(*colon_pos))
-      colon_pos += 1;
-
-    /* no need to copy the value because saxs_property_create calls strdup */
-    value = colon_pos;
-
-    saxs_document_add_property(doc, key, value);
+    saxs_document_add_property_strn(doc, key, keylen, value, -1);
 
     /*
      * There may be files, e.g. from BM29, that specify the code only
      * in a key-value pair, use that if no other code has already been
      * identified.
      */
-    if (strcmp(key, "Code") == 0
+    if ((keylen == 4) && (strncmp(key, "Code", keylen) == 0)
          && saxs_document_property_find_first(doc, "sample-code") == NULL) {
       saxs_document_add_property(doc, "sample-code", value);
     }
 
-    free(key);
     return 0;
   }
 
