@@ -1,6 +1,6 @@
 document; em2dam-rubisco.fit; 2; 3;
-curve; data; 1; 213;
-curve; fit; 2; 213;
+curve; data; 1; 201;
+curve; fit; 2; 201;
 property; datnam; rubisco.dat;
 property; pdbnam; rubisco.pdb;
 property; chi^2; 0.77E+14;

@@ -2,4 +2,4 @@ document; bunch-gstdh2.fit; 2; 2;
 curve; data; 1; 257;
 curve; fit; 2; 257;
 property; Constant adjusted; 0.6556;
-property; chi-squared; 7.46;
+property; Chi^2; 7.46;
