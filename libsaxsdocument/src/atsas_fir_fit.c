@@ -36,10 +36,10 @@
 /**************************************************************************/
 
 /* Parse a line that has been printed by OUTDNUM or a similar routine
- * 
+ *
  * Example line:
  * Constant adjusted ...................................... : 0.6556
- * 
+ *
  * Assumes that there are at least three dots between the key and the value
  */
 static int
@@ -60,7 +60,7 @@ try_parse_OUTDNUM(struct saxs_document *doc, const char *line) {
 }
 
 /* Parse a line with column headers and chi-squared
- * 
+ *
  * Example line:
  * sExp  |  iExp |  Err | iFit(+Const) | Chi^2=   0.207
  */
@@ -103,6 +103,69 @@ try_parse_colhdrs_chi2(struct saxs_document *doc, const char *line) {
   return 0;
 }
 
+/* Parse a line with several "key: value" or "key = value" pairs
+ *
+ * Example line:
+ * T= 0.300E-03 Rf =0.13565  Los: 0.1744 DisCog: 0.0909 Scale =  0.249E-07
+ *
+ * Require at least three key-value pairs
+ */
+static int
+try_parse_many_key_value(struct saxs_document *doc, const char *line) {
+  if (strlen(line) < 11) /* absolute minimum "k:v k:v k:v" */
+    return -1;
+
+  const char *sep_pos = line;
+  int nseparators = 0;
+  while ((sep_pos = strpbrk(sep_pos+1, ":="))) {++nseparators;}
+  if (nseparators < 3)
+    return -2;
+
+  const char *curr_pos = line;
+  while(*curr_pos) {
+    while (isspace(*curr_pos)) {++curr_pos;}
+    const char *key = curr_pos;
+    int key_len = 0;
+    while ((key[key_len] != '\0') &&
+           !isspace(key[key_len]) &&
+           !strchr(":=", key[key_len])) {
+      ++key_len;
+    }
+    if (key_len <= 0) {
+      return -3;
+    }
+    sep_pos = key + key_len; /* one after the end of the key */
+    while (isspace(*sep_pos)) {++sep_pos;}
+    if ((*sep_pos == '\0') ||
+        !strchr(":=", *sep_pos)) {
+      /* this character must be a delimiter */
+      return -4;
+    }
+
+    const char *value = sep_pos + 1;
+    while (isspace(*value)) {++value;}
+    int value_len = 0;
+    while ((value[value_len] != '\0') &&
+           !isspace(value[value_len]) &&
+           (value[value_len] != ',')) {
+      if (strchr(":=", value[value_len])) {
+        /* The value should not be followed by another k:v delimiter */
+        return -5;
+      }
+      ++value_len;
+    }
+    if (value_len <= 0) {
+      return -6;
+    }
+    curr_pos = value + value_len;
+    if (*curr_pos == ',') {++curr_pos;}
+    while (isspace(*curr_pos)) {++curr_pos;}
+
+    saxs_document_add_property_strn(doc, key, key_len, value, value_len);
+  }
+  return 0;
+}
+
 static int
 atsas_fir_fit_parse_header(struct saxs_document *doc,
                            const struct line *firstline,
@@ -117,6 +180,9 @@ atsas_fir_fit_parse_header(struct saxs_document *doc,
     /* Some lines can only occur as the final header line */
     if (currline->next == lastline) {
       rc = try_parse_colhdrs_chi2(doc, currline->line_buffer);
+      if (0 == rc) continue;
+
+      rc = try_parse_many_key_value(doc, currline->line_buffer);
       if (0 == rc) continue;
     }
   }
