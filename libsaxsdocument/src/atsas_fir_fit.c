@@ -49,9 +49,10 @@ static int
 atsas_fir_fit_parse_footer(struct saxs_document *doc,
                            const struct line *firstline,
                            const struct line *lastline) {
-  /*
-   * This should be empty?
-   */
+  /* .fit and .fir files never have a footer */
+  if (firstline != lastline)
+    return ENOTSUP;
+
   return 0;
 }
 
