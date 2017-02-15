@@ -1,0 +1,5 @@
+document; oligomer-m01.fit; 2; 2;
+curve; data; 1; 204;
+curve; fit; 2; 204;
+property; program; OLIGOMER;
+property; Chi^2; 594.97;

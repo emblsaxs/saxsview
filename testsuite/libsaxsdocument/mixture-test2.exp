@@ -1,0 +1,15 @@
+document; mixture-test2.fit; 2; 12;
+curve; data; 1; 75;
+curve; fit; 2; 75;
+property; phase; 1;
+property; body; SPHERE;
+property; fraction; 1.00;
+property; Rin; 0.00;
+property; roin; 0.00;
+property; Rout; 72.34;
+property; roout; 1.00;
+property; deltaR; 5.00;
+property; Rhs; 75.00;
+property; TauParam; 0.00;
+property; TypeDistr; 2;
+property; Chi^2; 1.2194;

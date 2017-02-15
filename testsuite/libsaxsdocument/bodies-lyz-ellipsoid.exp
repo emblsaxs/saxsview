@@ -1,0 +1,8 @@
+document; bodies-lyz-ellipsoid.fir; 2; 5;
+curve; data; 1; 197;
+curve; fit; 2; 197;
+property; bodies-body; ellipsoid;
+property; a; 17.4786;
+property; b; 26.2449;
+property; c; 12.1831;
+property; scale; 0.119012E-007;

@@ -84,6 +84,12 @@ static void assert_valid_property_list(const struct saxs_property_list *plist) {
 
 saxs_property*
 saxs_property_create(const char *name, const char *value) {
+  return saxs_property_create_strn(name, -1, value, -1);
+}
+
+saxs_property*
+saxs_property_create_strn(const char *name, int namelen,
+                          const char *value, int valuelen) {
   saxs_property *property;
 
   if (!name || !value)
@@ -91,8 +97,16 @@ saxs_property_create(const char *name, const char *value) {
 
   property = malloc(sizeof(saxs_property));
   if (property) {
-    property->name = strdup(name);
-    property->value = strdup(value);
+    if (namelen < 0) {
+      property->name = strdup(name);
+    } else {
+      property->name = strndup(name, namelen);
+    }
+    if (valuelen < 0) {
+      property->value = strdup(value);
+    } else {
+      property->value = strndup(value, valuelen);
+    }
     property->next = NULL;
     if (property->name == NULL || property->value == NULL) {
       free(property->name);

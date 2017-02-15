@@ -34,14 +34,163 @@
 #include <limits.h>
 
 /**************************************************************************/
+
+/* Parse a line that has been printed by OUTDNUM or a similar routine
+ *
+ * Example line:
+ * Constant adjusted ...................................... : 0.6556
+ *
+ * Assumes that there are at least three dots between the key and the value
+ */
+static int
+try_parse_OUTDNUM(struct saxs_document *doc, const char *line) {
+  const char *dotdotcolon = strstr(line, ".. : ");
+  if (!dotdotcolon)
+    return -1;
+
+  const char *spacedotdot = strstr(line, " ...");
+  if (!spacedotdot)
+    return -2;
+
+  const char *value = dotdotcolon + strlen(".. : ");
+  size_t keylen = spacedotdot - line;
+
+  saxs_document_add_property_strn(doc, line, keylen, value, -1);
+  return 0;
+}
+
+/* Parse a line with column headers and chi-squared
+ *
+ * Example line:
+ * sExp  |  iExp |  Err | iFit(+Const) | Chi^2=   0.207
+ */
+static int
+try_parse_colhdrs_chi2(struct saxs_document *doc, const char *line) {
+  const char *sExp_pos = strstr(line, "sExp");
+  if (!sExp_pos)
+    return -1;
+  const char *iExp_pos = strstr(sExp_pos, "iExp");
+  if (!iExp_pos)
+    return -2;
+  const char *Err_pos = strstr(iExp_pos, "Err");
+  if (!Err_pos)
+    return -3;
+  const char *iFit_pos = strstr(sExp_pos, "iFit");
+  if (!iFit_pos)
+    return -4;
+  const char *Chi2_pos = strstr(line, "Chi^2");
+  if (!Chi2_pos)
+    return -5;
+
+  if ((Chi2_pos <= iFit_pos) || (Chi2_pos <= Err_pos))
+    return -6;
+
+  const char *equals_pos = strchr(Chi2_pos, '=');
+  if (!equals_pos)
+    return -7;
+
+  const char *value = equals_pos + 1;
+  while (isspace(*value)) {++value;}
+
+  /* Handle cases where the Chi^2 is too large to fit, so asterisks are written */
+  if (strstr(value, "***")) {
+    saxs_document_add_property(doc, "Chi^2", "NaN");
+    return 0;
+  }
+
+  /* TODO check that the value can be parsed as a float */
+  saxs_document_add_property(doc, "Chi^2", value);
+  return 0;
+}
+
+/* Parse a line with several "key: value" or "key = value" pairs
+ *
+ * Example line:
+ * T= 0.300E-03 Rf =0.13565  Los: 0.1744 DisCog: 0.0909 Scale =  0.249E-07
+ *
+ * Require at least three key-value pairs
+ */
+static int
+try_parse_many_key_value(struct saxs_document *doc, const char *line) {
+  if (strlen(line) < 11) /* absolute minimum "k:v k:v k:v" */
+    return -1;
+
+  const char *sep_pos = line;
+  int nseparators = 0;
+  while ((sep_pos = strpbrk(sep_pos+1, ":="))) {++nseparators;}
+  if (nseparators < 3)
+    return -2;
+
+  const char *curr_pos = line;
+  while(*curr_pos) {
+    while (isspace(*curr_pos)) {++curr_pos;}
+    const char *key = curr_pos;
+    int key_len = 0;
+    while ((key[key_len] != '\0') &&
+           !isspace(key[key_len]) &&
+           !strchr(":=", key[key_len])) {
+      ++key_len;
+    }
+    if (key_len <= 0) {
+      return -3;
+    }
+    sep_pos = key + key_len; /* one after the end of the key */
+    while (isspace(*sep_pos)) {++sep_pos;}
+    if ((*sep_pos == '\0') ||
+        !strchr(":=", *sep_pos)) {
+      /* this character must be a delimiter */
+      return -4;
+    }
+
+    const char *value = sep_pos + 1;
+    while (isspace(*value)) {++value;}
+    int value_len = 0;
+    while ((value[value_len] != '\0') &&
+           !isspace(value[value_len]) &&
+           (value[value_len] != ',')) {
+      if (strchr(":=", value[value_len])) {
+        /* The value should not be followed by another k:v delimiter */
+        return -5;
+      }
+      ++value_len;
+    }
+    if (value_len <= 0) {
+      return -6;
+    }
+    curr_pos = value + value_len;
+    if (*curr_pos == ',') {++curr_pos;}
+    while (isspace(*curr_pos)) {++curr_pos;}
+
+    /* Check for strings of asterisks caused by overfilling the space available */
+    if (strspn(value, "*") == value_len) {
+      value = "NaN";
+      value_len = 3;
+    }
+    saxs_document_add_property_strn(doc, key, key_len, value, value_len);
+  }
+  return 0;
+}
+
 static int
 atsas_fir_fit_parse_header(struct saxs_document *doc,
                            const struct line *firstline,
                            const struct line *lastline) {
-  /*
-   * .fir-files may have a 'title', but we simply ignore any
-   * information that might be available for now ...
-   */
+  int rc = 0;
+  const struct line *currline;
+
+  for (currline = firstline; currline != lastline; currline = currline->next) {
+    rc = try_parse_OUTDNUM(doc, currline->line_buffer);
+    if (0 == rc) continue;
+
+    /* Some lines can only occur as the final header line */
+    if (currline->next == lastline) {
+      rc = try_parse_colhdrs_chi2(doc, currline->line_buffer);
+      if (0 == rc) continue;
+
+      rc = try_parse_many_key_value(doc, currline->line_buffer);
+      if (0 == rc) continue;
+    }
+  }
   return 0;
 }
 
@@ -49,9 +198,10 @@ static int
 atsas_fir_fit_parse_footer(struct saxs_document *doc,
                            const struct line *firstline,
                            const struct line *lastline) {
-  /*
-   * This should be empty?
-   */
+  /* .fit and .fir files never have a footer */
+  if (firstline != lastline)
+    return ENOTSUP;
+
   return 0;
 }
 
@@ -75,6 +225,95 @@ atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
   return 0;
 }
 
+/**************************************************************************/
+/* Special-case header parsing for programs' own esoteric formats */
+
+/* BODIES output
+ *
+ * Example:
+ * hollow-sphere: ro=133.901, ri=0.287176E-002, scale=0.883244E-008
+ */
+static int
+bodies_fir_parse_header(struct saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
+
+  if (lastline != firstline->next) {
+    return ENOTSUP;  // header must be a single line
+  }
+
+  const char *line = firstline->line_buffer;
+  const char *colon_pos = strchr(line, ':');
+  if (!colon_pos)
+    return ENOTSUP;
+
+  size_t btypelen = colon_pos - line;
+  // If all of the strncmp calls return non-zero, it is not a bodies file
+  if (strncmp("ellipsoid", line, btypelen) &&
+      strncmp("rotation-ellipsoid", line, btypelen) &&
+      strncmp("cylinder", line, btypelen) &&
+      strncmp("elliptic-cylinder", line, btypelen) &&
+      strncmp("hollow-cylinder", line, btypelen) &&
+      strncmp("parallelepiped", line, btypelen) &&
+      strncmp("hollow-sphere", line, btypelen) &&
+      strncmp("dumbbell", line, btypelen)) {
+    return ENOTSUP;
+  }
+
+  saxs_document_add_property_strn(doc, "bodies-body", -1,  line, btypelen);
+  if (0 == try_parse_many_key_value(doc, colon_pos+1)) {
+    return 0;
+  }
+  // Ignore the return value of try_parse_many_key_value, just give ENOTSUP
+  return ENOTSUP;
+}
+
+/* .fit files from CRYSOL and CRYSON 
+ *
+ * Example:
+ * 4mld.pdb  Dro:0.075  Ra:1.400  RGT:28.10  Vol: 86422.  Chi^2:******
+ */
+static int
+crysol_fit_parse_header(struct saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
+
+  if (lastline != firstline->next) {
+    return ENOTSUP;  // header must be a single line
+  }
+
+  const char *line = firstline->line_buffer;
+
+  const char *Dro_pos = strstr(line, "Dro:");
+  if (!Dro_pos)
+    return ENOTSUP;
+
+  // "Dro:" should be the first key:value pair
+  if (strchr(line, ':') != Dro_pos+3)
+    return ENOTSUP;
+
+  const char *Chi2_pos = strstr(line, "Chi^2:");
+  if (!Chi2_pos)
+    return ENOTSUP;
+
+  // "Chi^2:" should be the last key:value pair
+  if (strchr(Chi2_pos+6, ':'))
+    return ENOTSUP;
+
+  // Beginning of the line is a file name
+  int pdbnam_len = Dro_pos - line;
+  while ((pdbnam_len > 0) && (isspace(line[pdbnam_len-1]))) {--pdbnam_len;}
+  if (pdbnam_len <= 0)
+    return ENOTSUP;
+
+  saxs_document_add_property_strn(doc, "pdbnam", -1, line, pdbnam_len);
+
+  if (0 == try_parse_many_key_value(doc, Dro_pos)) {
+    return 0;
+  }
+  // Ignore the return value of try_parse_many_key_value, just give ENOTSUP
+  return ENOTSUP;
+}
 
 /**************************************************************************/
 static int
@@ -352,6 +591,29 @@ atsas_fit_5_column_read(struct saxs_document *doc,
                                          atsas_fir_fit_parse_footer);
 }
 
+/**************************************************************************/
+/* Special-case formats */
+
+int
+bodies_fir_read(struct saxs_document *doc,
+                const struct line *firstline,
+                const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         bodies_fir_parse_header,
+                                         atsas_fit_4_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
+int
+crysol_fit_read(struct saxs_document *doc,
+                const struct line *firstline,
+                const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         crysol_fit_parse_header,
+                                         atsas_fit_4_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
 
 /**************************************************************************/
 void
@@ -394,6 +656,20 @@ saxs_document_format_register_atsas_fir_fit() {
      atsas_fit_5_column_read, NULL, NULL
   };
 
+  saxs_document_format bodies_fir = {
+     "fir", "bodies_fir",
+     ".fir file from bodies --fit",
+     bodies_fir_read, NULL, NULL
+  };
+
+  saxs_document_format crysol_fit = {
+     "fit", "crysol_fit",
+     ".fit files from CRYSOL or CRYSON fit mode",
+     crysol_fit_read, NULL, NULL
+  };
+
+  saxs_document_format_register(&bodies_fir);
+  saxs_document_format_register(&crysol_fit);
   saxs_document_format_register(&atsas_fir_4_column);
   saxs_document_format_register(&atsas_fit_3_column);
   saxs_document_format_register(&atsas_fit_4_column);

@@ -71,6 +71,28 @@ foreach (test ${OUTTESTS})
                                            ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
 endforeach (test)
 
+SET (FIRTESTS "bodies-0196-hollow-sphere;bodies-lyz-ellipsoid;dammif-lyz;gasbori-abcdef;gasborp-gnlyzfu")
+SET (FITTESTS "bunch-gstdh2;crysol-4mld00;cryson-tr00;dammif-p92;dammin-lyz;em2dam-rubisco;gajoe-profiles_001;gasbormx-gts;globsymm-pdc01;mixture-test2;mixture-test3;oligomer-m01;sasrefmx-mical1mx15")
+foreach (test ${FIRTESTS})
+  add_test (NAME read-fir-${test}
+            COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.fir
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+endforeach (test)
+foreach (test ${FITTESTS})
+  add_test (NAME read-fit-${test}
+            COMMAND $<TARGET_FILE:doctest> ${CMAKE_CURRENT_SOURCE_DIR}/${test}.fit
+                                           ${CMAKE_CURRENT_SOURCE_DIR}/${test}.exp)
+endforeach (test)
+
+# For the time being, expect these tests to fail
+# TODO: add code to read these headers too
+set_tests_properties(read-fir-gasborp-gnlyzfu
+                     read-fit-em2dam-rubisco
+                     read-fit-globsymm-pdc01
+                     read-fit-mixture-test2
+                     read-fit-mixture-test3
+                     read-fit-oligomer-m01
+                     PROPERTIES WILL_FAIL 1)
 
 #
 # Test Fortran bindings
