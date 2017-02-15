@@ -203,8 +203,11 @@ malvern_txt_parse_data(struct saxs_document *doc,
     res = malvern_txt_parse_column_values(firstline, &values, &ndata);
     if (res)
       goto exit;
-    if (ndata > 2*nhdr)
+    if (ndata > 2*nhdr) {
+      free(values);
+      res = ENOTSUP;
       goto exit;
+    }
 
     for (i = 1; i < ndata; ++i)
       saxs_curve_add_data(curves[i], values[0], 0.0, values[i], 0.0);
