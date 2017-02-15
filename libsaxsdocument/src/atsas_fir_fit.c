@@ -220,6 +220,43 @@ atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
   return 0;
 }
 
+/**************************************************************************/
+/* Special-case header parsing for programs' own esoteric formats */
+
+static int
+bodies_fir_parse_header(struct saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
+
+  if (lastline != firstline->next) {
+    return ENOTSUP;  // header must be a single line
+  }
+
+  const char *line = firstline->line_buffer;
+  const char *colon_pos = strchr(line, ':');
+  if (!colon_pos)
+    return ENOTSUP;
+
+  size_t btypelen = colon_pos - line;
+  // If all of the strncmp calls return non-zero, it is not a bodies file
+  if (strncmp("ellipsoid", line, btypelen) &&
+      strncmp("rotation-ellipsoid", line, btypelen) &&
+      strncmp("cylinder", line, btypelen) &&
+      strncmp("elliptic-cylinder", line, btypelen) &&
+      strncmp("hollow-cylinder", line, btypelen) &&
+      strncmp("parallelepiped", line, btypelen) &&
+      strncmp("hollow-sphere", line, btypelen) &&
+      strncmp("dumbbell", line, btypelen)) {
+    return ENOTSUP;
+  }
+
+  saxs_document_add_property_strn(doc, "bodies-body", -1,  line, btypelen);
+  if (0 == try_parse_many_key_value(doc, colon_pos+1)) {
+    return 0;
+  }
+  // Ignore the return value of try_parse_many_key_value, just give ENOTSUP
+  return ENOTSUP;
+}
 
 /**************************************************************************/
 static int
@@ -497,6 +534,19 @@ atsas_fit_5_column_read(struct saxs_document *doc,
                                          atsas_fir_fit_parse_footer);
 }
 
+/**************************************************************************/
+/* Special-case formats */
+
+int
+bodies_fir_read(struct saxs_document *doc,
+                const struct line *firstline,
+                const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         bodies_fir_parse_header,
+                                         atsas_fit_4_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
 
 /**************************************************************************/
 void
@@ -539,6 +589,13 @@ saxs_document_format_register_atsas_fir_fit() {
      atsas_fit_5_column_read, NULL, NULL
   };
 
+  saxs_document_format bodies_fir = {
+     "fir", "bodies_fir",
+     ".fir file from bodies --fit",
+     bodies_fir_read, NULL, NULL
+  };
+
+  saxs_document_format_register(&bodies_fir);
   saxs_document_format_register(&atsas_fir_4_column);
   saxs_document_format_register(&atsas_fit_3_column);
   saxs_document_format_register(&atsas_fit_4_column);
