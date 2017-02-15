@@ -144,7 +144,8 @@ malvern_txt_parse_data(struct saxs_document *doc,
                        const struct line *firstline,
                        const struct line *lastline) {
 
-  int i, j, n;
+  int i, j;
+  int nhdr, ndata;
   char **headers = NULL;
   double *values = NULL;
 
@@ -163,7 +164,7 @@ malvern_txt_parse_data(struct saxs_document *doc,
   struct saxs_curve **curves = NULL;
 
   /* The list of column names. */
-  res = malvern_txt_parse_column_headers(firstline, &headers, &n);
+  res = malvern_txt_parse_column_headers(firstline, &headers, &nhdr);
   if (res)
     return res;
   firstline = firstline->next;
@@ -177,12 +178,12 @@ malvern_txt_parse_data(struct saxs_document *doc,
     res = ENOMEM;
     goto exit;
   }
-  curves = (struct saxs_curve **) malloc(2 * n * sizeof(struct saxs_curve*));
+  curves = (struct saxs_curve **) malloc(2 * nhdr * sizeof(struct saxs_curve*));
   if (!curves) {
     res = ENOMEM;
     goto exit;
   }
-  for (i = 0; i < 2*n; ++i) {
+  for (i = 0; i < 2*nhdr; ++i) {
     curves[i] = saxs_document_add_curve(tmpdoc, "tmp",
                                         SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
     if (!curves[i]) {
@@ -199,10 +200,16 @@ malvern_txt_parse_data(struct saxs_document *doc,
    * it should be the retention volume.
    */
   while (firstline != lastline) {
-    res = malvern_txt_parse_column_values(firstline, &values, &n);
+    res = malvern_txt_parse_column_values(firstline, &values, &ndata);
     if (res)
       goto exit;
-    for (i = 1; i < n; ++i)
+    if (ndata > 2*nhdr) {
+      free(values);
+      res = ENOTSUP;
+      goto exit;
+    }
+
+    for (i = 1; i < ndata; ++i)
       saxs_curve_add_data(curves[i], values[0], 0.0, values[i], 0.0);
 
     free(values);
@@ -238,7 +245,7 @@ malvern_txt_parse_data(struct saxs_document *doc,
 exit:
   saxs_document_free(tmpdoc);
 
-  for (i = 0; i < n; ++i)
+  for (i = 0; i < nhdr; ++i)
     free(headers[i]);
 
   free(headers);
