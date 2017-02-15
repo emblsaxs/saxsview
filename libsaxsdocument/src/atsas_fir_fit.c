@@ -161,6 +161,11 @@ try_parse_many_key_value(struct saxs_document *doc, const char *line) {
     if (*curr_pos == ',') {++curr_pos;}
     while (isspace(*curr_pos)) {++curr_pos;}
 
+    /* Check for strings of asterisks caused by overfilling the space available */
+    if (strspn(value, "*") == value_len) {
+      value = "NaN";
+      value_len = 3;
+    }
     saxs_document_add_property_strn(doc, key, key_len, value, value_len);
   }
   return 0;
@@ -223,6 +228,11 @@ atsas_fit_write_header(struct saxs_document *doc, struct line **lines) {
 /**************************************************************************/
 /* Special-case header parsing for programs' own esoteric formats */
 
+/* BODIES output
+ *
+ * Example:
+ * hollow-sphere: ro=133.901, ri=0.287176E-002, scale=0.883244E-008
+ */
 static int
 bodies_fir_parse_header(struct saxs_document *doc,
                         const struct line *firstline,
@@ -252,6 +262,53 @@ bodies_fir_parse_header(struct saxs_document *doc,
 
   saxs_document_add_property_strn(doc, "bodies-body", -1,  line, btypelen);
   if (0 == try_parse_many_key_value(doc, colon_pos+1)) {
+    return 0;
+  }
+  // Ignore the return value of try_parse_many_key_value, just give ENOTSUP
+  return ENOTSUP;
+}
+
+/* .fit files from CRYSOL and CRYSON 
+ *
+ * Example:
+ * 4mld.pdb  Dro:0.075  Ra:1.400  RGT:28.10  Vol: 86422.  Chi^2:******
+ */
+static int
+crysol_fit_parse_header(struct saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
+
+  if (lastline != firstline->next) {
+    return ENOTSUP;  // header must be a single line
+  }
+
+  const char *line = firstline->line_buffer;
+
+  const char *Dro_pos = strstr(line, "Dro:");
+  if (!Dro_pos)
+    return ENOTSUP;
+
+  // "Dro:" should be the first key:value pair
+  if (strchr(line, ':') != Dro_pos+3)
+    return ENOTSUP;
+
+  const char *Chi2_pos = strstr(line, "Chi^2:");
+  if (!Chi2_pos)
+    return ENOTSUP;
+
+  // "Chi^2:" should be the last key:value pair
+  if (strchr(Chi2_pos+6, ':'))
+    return ENOTSUP;
+
+  // Beginning of the line is a file name
+  int pdbnam_len = Dro_pos - line;
+  while ((pdbnam_len > 0) && (isspace(line[pdbnam_len-1]))) {--pdbnam_len;}
+  if (pdbnam_len <= 0)
+    return ENOTSUP;
+
+  saxs_document_add_property_strn(doc, "pdbnam", -1, line, pdbnam_len);
+
+  if (0 == try_parse_many_key_value(doc, Dro_pos)) {
     return 0;
   }
   // Ignore the return value of try_parse_many_key_value, just give ENOTSUP
@@ -547,6 +604,16 @@ bodies_fir_read(struct saxs_document *doc,
                                          atsas_fir_fit_parse_footer);
 }
 
+int
+crysol_fit_read(struct saxs_document *doc,
+                const struct line *firstline,
+                const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         crysol_fit_parse_header,
+                                         atsas_fit_4_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
 
 /**************************************************************************/
 void
@@ -595,7 +662,14 @@ saxs_document_format_register_atsas_fir_fit() {
      bodies_fir_read, NULL, NULL
   };
 
+  saxs_document_format crysol_fit = {
+     "fit", "crysol_fit",
+     ".fit files from CRYSOL or CRYSON fit mode",
+     crysol_fit_read, NULL, NULL
+  };
+
   saxs_document_format_register(&bodies_fir);
+  saxs_document_format_register(&crysol_fit);
   saxs_document_format_register(&atsas_fir_4_column);
   saxs_document_format_register(&atsas_fit_3_column);
   saxs_document_format_register(&atsas_fit_4_column);
