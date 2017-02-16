@@ -18,12 +18,12 @@ target_link_libraries (readtest saxsdocument)
 # a non-existant file should be flagged as such
 add_test (NAME read-nosuchfile
           COMMAND $<TARGET_FILE:readtest> nosuchfile)
-set_property (TEST read-nosuchfile PROPERTY PASS_REGULAR_EXPRESSION "Result: 2 ")
+set_property (TEST read-nosuchfile PROPERTY PASS_REGULAR_EXPRESSION "lines_read returned 2 ")
 
 # Trying to read a file which is obviously not SAXS data should fail (but not crash)
 add_test (NAME read-notsaxsdata
           COMMAND $<TARGET_FILE:readtest> ${CMAKE_CURRENT_SOURCE_DIR}/doctest.c)
-set_property (TEST read-notsaxsdata PROPERTY FAIL_REGULAR_EXPRESSION "Result: 0 ")
+set_property (TEST read-notsaxsdata PROPERTY FAIL_REGULAR_EXPRESSION "Number of curves: [1-9]")
 
 # Trying to read a file which is obviously not SAXS data -- forcing the use of a particular format
 add_test (NAME read-notsaxsdata-force
@@ -33,7 +33,7 @@ set_property (TEST read-notsaxsdata-force PROPERTY PASS_REGULAR_EXPRESSION "Resu
 # Test reading a GNOM .out file with no footer
 add_test (NAME read-atsas-out-nofooter
           COMMAND $<TARGET_FILE:readtest> ${CMAKE_CURRENT_SOURCE_DIR}/gi-sasdak6.out)
-set_property (TEST read-atsas-out-nofooter PROPERTY PASS_REGULAR_EXPRESSION "Result: 0 \\((Success|No error)\\)\nFormat ID: 'atsas-out'\nNumber of properties: 12\nNumber of curves: 4")
+set_property (TEST read-atsas-out-nofooter PROPERTY PASS_REGULAR_EXPRESSION "Trying format 'atsas-out'\\.\\.\\.\nResult: 0 \\((Success|No error)\\)\nNumber of properties: 12\nNumber of curves: 4")
 
 # Test reading an ESRF .dat file
 add_test (NAME read-dat-ESRF
