@@ -657,13 +657,13 @@ saxs_document_format_register_atsas_fir_fit() {
   };
 
   saxs_document_format bodies_fir = {
-     "fir", "bodies_fir",
+     "fir", "bodies-fir",
      ".fir file from bodies --fit",
      bodies_fir_read, NULL, NULL
   };
 
   saxs_document_format crysol_fit = {
-     "fit", "crysol_fit",
+     "fit", "crysol-fit",
      ".fit files from CRYSOL or CRYSON fit mode",
      crysol_fit_read, NULL, NULL
   };
