@@ -99,31 +99,31 @@ malvern_txt_parse_column_headers(const struct line *l, char ***columns, int *n) 
 
 static int
 malvern_txt_parse_column_values(const struct line *l, double **values, int *n) {
-  *n = malvern_txt_count_columns(l);
-  *values = (double*)malloc(*n * sizeof(double));
+  int ncols = malvern_txt_count_columns(l);
+  *values = (double*)malloc(ncols * sizeof(double));
   if (*values == NULL)
     return ENOMEM;
 
-  if (*n > 0) {
-    int k = 0;
-    char *p = l->line_buffer;
+  int k = 0;
+  char *p = l->line_buffer;
 
-    while (*p) {
-      if (sscanf(p, "%lf", &(*values)[k]) != 1)
-        break;
+  for (k=0; k<ncols; ++k) {
+    if (sscanf(p, "%lf", &(*values)[k]) != 1)
+      break;
+    if (isinf((*values)[k]) || isnan((*values)[k]))
+      break;
 
-      k += 1;
+    /* Skip leading whitespace, if any. */
+    while (*p && isspace(*p)) ++p;
 
-      /* Skip leading whitespace, if any. */
-      while (*p && isspace(*p)) ++p;
+    /* Skip the floating point value until the next separator is found. */
+    while (*p && !isspace(*p)) ++p;
 
-      /* Skip the floating point value until the next separator is found. */
-      while (*p && !isspace(*p)) ++p;
-
-      /* Skip all consecutive separators up to the next value (think " , "). */
-      while (*p && isspace(*p)) ++p;
-    }
+    /* Skip all consecutive separators up to the next value (think " , "). */
+    while (*p && isspace(*p)) ++p;
   }
+
+  *n = k;
   return 0;
 }
 
