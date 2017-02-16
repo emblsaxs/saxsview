@@ -440,45 +440,53 @@ atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
   const struct line *nextfit;
 
   while (header) {
-    char filename[PATH_MAX] = { '\0' }, *p, *q;
-    char label[PATH_MAX + 6] = { '\0' };
 
     /*
      * The first header has at least two lines, every following only one.
      */
-    while (header->next != data)
+    while (header->next != data) {
       header = header->next;
+      if (!header)
+        return ENOTSUP;
+    }
 
     /*
      * Sections are preceded by
      *   "File arc1p_mer.dat   Chi:   3.470 Weight: 1.000 RelSca: 0.396"
      */
-    p = strstr(header->line_buffer, "File");
-    q = strstr(header->line_buffer, "Chi");
+    const char *p = strstr(header->line_buffer, "File");
+    const char *q = strstr(header->line_buffer, "Chi");
     if (!p || !q)
-      break;
+      return ENOTSUP;
+    const char *filename = p + 4;
 
     /* Grab the filename ... */
-    strncpy(filename, p + 4, q - p - 4);
+    /* ... trim leading space ... */
+    while (isspace(*filename)) {++filename;}
+    /* ... and trailing space. */
+    int filelen = (q - 1) - filename;
+    while (filelen > 0 && isspace(filename[filelen])) {--filelen;}
+    if (filelen <= 0)
+      return ENOTSUP;
+    if (filelen > PATH_MAX)
+      return ENOTSUP;
 
-    /* ... and trim leading ... */
-    p = filename;
-    while (isspace(*p)) ++p;
+    char *label = malloc(filelen+7);
+    if (!label)
+      return ENOMEM;
 
-    /* ... and trailing whitespace. */
-    q = filename + sizeof(filename) - 1;
-    while (q > p && !isalnum(*q))
-      *q-- = '\0';
-
-    sprintf(label, "%s, data", p);
+    strncpy(label, filename, filelen);
+    strcpy(label+filelen, ", data");
     saxs_reader_columns_parse(doc, data, footer,
                               0, 1.0, 1, 1.0, 2, label,
                               SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
 
-    sprintf(label, "%s, fit", p);
+    strcpy(label+filelen, ", fit");
     saxs_reader_columns_parse(doc, data, footer,
                               0, 1.0, 3, 1.0, -1, label,
                               SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+
+    free(label);
 
     /* Additional fits are listed in the "footer". */
     if (!footer)
