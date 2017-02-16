@@ -15,3 +15,6 @@ add_test (NAME libsaxsdocument-crashtest-04
 
 add_test (NAME libsaxsdocument-crashtest-05
           COMMAND $<TARGET_FILE:readtest> "${CMAKE_CURRENT_SOURCE_DIR}/crash05.txt")
+
+add_test (NAME libsaxsdocument-crashtest-06
+          COMMAND $<TARGET_FILE:readtest> "${CMAKE_CURRENT_SOURCE_DIR}/crash06.txt")
