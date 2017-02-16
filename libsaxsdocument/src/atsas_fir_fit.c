@@ -446,8 +446,11 @@ atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
     /*
      * The first header has at least two lines, every following only one.
      */
-    while (header->next != data)
+    while (header->next != data) {
       header = header->next;
+      if (!header)
+        return ENOTSUP;
+    }
 
     /*
      * Sections are preceded by
