@@ -1,0 +1,9 @@
+document; gasbormx-gts.fit; 2; 6;
+curve; data; 1; 439;
+curve; fit; 2; 439;
+property; T; 0.464E-03;
+property; Rf; 0.03919;
+property; Los; 20.07;
+property; Bnd; 1.062;
+property; Dis; 0.6310;
+property; Per; 0.288;

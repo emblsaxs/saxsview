@@ -1,0 +1,8 @@
+document; dammin-lyz.fit; 2; 5;
+curve; data; 1; 213;
+curve; fit; 2; 213;
+property; T; 0.300E-03;
+property; Rf; 0.13565;
+property; Los; 0.1744;
+property; DisCog; 0.0909;
+property; Scale; 0.249E-07;

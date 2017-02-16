@@ -1,0 +1,7 @@
+document; bodies-0196-hollow-sphere.fir; 2; 4;
+curve; data; 1; 1812;
+curve; fit; 2; 1812;
+property; bodies-body; hollow-sphere;
+property; ro; 133.901;
+property; ri; 0.287176E-002;
+property; scale; 0.883244E-008;

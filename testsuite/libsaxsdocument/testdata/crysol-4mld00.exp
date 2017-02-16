@@ -1,0 +1,9 @@
+document; crysol-4mld00.fit; 2; 6;
+curve; data; 1; 706;
+curve; fit; 2; 706;
+property; pdbnam; 4mld.pdb;
+property; Dro; 0.075;
+property; Ra; 1.400;
+property; RGT; 28.10;
+property; Vol; 86422.;
+property; Chi^2; NaN;

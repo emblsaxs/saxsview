@@ -1,0 +1,8 @@
+document; globsymm-pdc01.fit; 2; 5;
+curve; data; 1; 51;
+curve; fit; 2; 51;
+property; alpha1; 274.514;
+property; beta1; 46.981;
+property; gamma1; 10.052;
+property; Cen; 10.052  15.579  20.032;
+property; rfac; 0.482;

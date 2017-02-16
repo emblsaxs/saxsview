@@ -171,6 +171,15 @@ saxs_property*
 saxs_document_add_property(saxs_document *doc,
                            const char *name, const char *value);
 
+/* Same as saxs_document_add_property, but giving the length of the strings as if to strnFUN
+ *
+ * length == -1 means "read until the NUL terminator"
+ */
+saxs_property*
+saxs_document_add_property_strn(saxs_document *doc,
+                                const char *name, int namelen,
+                                const char *value, int valuelen);
+
 /**
  * @brief The number of properties of a document.
  *

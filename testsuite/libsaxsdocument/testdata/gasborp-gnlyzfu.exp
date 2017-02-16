@@ -1,0 +1,5 @@
+document; gasborp-gnlyzfu.fir; 2; 2;
+curve; data; 1; 220;
+curve; fit; 2; 220;
+property; chisq1; 2.81;
+property; chisq; 1.07;
