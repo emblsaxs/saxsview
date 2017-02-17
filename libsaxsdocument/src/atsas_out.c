@@ -31,68 +31,58 @@
 #include <errno.h>
 #include <math.h>
 
-/* Size of the static buffers used in extract() and extract_line() */
-#define EXTRACT_BUFFER_SIZE 1024
-
-/**************************************************************************/
-/*
- * Find VALUE in "DELIM__VALUE__" where '__' is one or more
- * whitespace or newline characters.
- *
- * Note: not reentrant, uses static buffer for convenience.
- */
-static const char* extract(const struct line *l, const char *delim) {
-  assert_valid_line(l);
-  static char substr[EXTRACT_BUFFER_SIZE];
-  char *p = substr, *q;
-
-  memset(p, 0, EXTRACT_BUFFER_SIZE);
-  q = strstr(l->line_buffer, delim);
-  if (q) {
-    q += strlen(delim);
-
-    while (isspace(*q))
-      ++q;
-
-    while (*q && !isspace(*q) && ((p - substr) < EXTRACT_BUFFER_SIZE))
-      *p++ = *q++;
-  }
-
-  return substr;
-}
-
 /**************************************************************************/
 /*
  * Find TEXT in "DELIM__TEXT__" where '__' is one or more whitespace
  * or newline characters, but TEXT may contain whitespaces itself.
  *
- * Note: not reentrant, uses static buffer for convenience.
+ * Add the TEXT as a property with the given name
  */
-static const char* extract_line(const struct line *l, const char *delim) {
+static int
+extract_property(struct saxs_document *doc,
+                 const char *name,
+                 const struct line *l,
+                 const char *delim) {
   assert_valid_line(l);
 
-  static char substr[EXTRACT_BUFFER_SIZE];
-  char *p = substr, *q;
+  const char *line = l->line_buffer;
 
-  memset(p, 0, EXTRACT_BUFFER_SIZE);
-  q = strstr(l->line_buffer, delim);
-  if (q) {
-    q += strlen(delim);
+  const char *value = strstr(line, delim);
+  if (!value)
+    return ENOTSUP;
+  value += strlen(delim);
 
-    /* Trim leading whitespace ... */
-    while (isspace(*q))
-      ++q;
+  while (isspace(*value)) {++value;}
 
-    while (*q && ((p - substr) < EXTRACT_BUFFER_SIZE))
-      *p++ = *q++;
+  const char *valueend = value;
+  while (*valueend && !isspace(*valueend)) {++valueend;}
 
-    /* ... and trailing whitespace. */
-    q = p + 1;
-    while ((q >= substr) && (isspace(*q) || *q == '\0'))
-      *q-- = '\0';
-  }
+  const saxs_property *p = saxs_document_add_property_strn(doc, name, -1, value, valueend-value);
+  return (p)?0:ENOTSUP;
+}
 
-  return substr;
+/* like `extract_property`, but take all text up to the end of the line */
+static int
+extract_property_line(struct saxs_document *doc,
+                      const char *name,
+                      const struct line *l,
+                      const char *delim) {
+  assert_valid_line(l);
+
+  const char *line = l->line_buffer;
+
+  const char *value = strstr(line, delim);
+  if (!value)
+    return ENOTSUP;
+  value += strlen(delim);
+
+  while (isspace(*value)) {++value;}
+
+  const char *valueend = value + strlen(value);
+  while ((valueend > value) && isspace(*(valueend-1))) {--valueend;}
+
+  const saxs_property *p = saxs_document_add_property_strn(doc, name, -1, value, valueend-value);
+  return (p)?0:ENOTSUP;
 }
 
 static int parse_header(struct saxs_document *doc,
@@ -109,8 +99,7 @@ static int parse_header(struct saxs_document *doc,
      */
     if (strstr(firstline->line_buffer, "G N O M")) {
       saxs_document_add_property(doc, "creator", "GNOM");
-      saxs_document_add_property(doc, "creator-version",
-                                 extract(firstline, "Version"));
+      extract_property(doc, "creator-version", firstline, "Version");
     }
 
     /*
@@ -123,7 +112,7 @@ static int parse_header(struct saxs_document *doc,
        * Contrary to any other place, here we want everything after the delimiter,
        * not just the token up to the next whitespace.
        */
-      saxs_document_add_property(doc, "title", extract_line(firstline, ":"));
+      extract_property_line(doc, "title", firstline, ":");
 
     /*
      * Example lines:
@@ -134,12 +123,10 @@ static int parse_header(struct saxs_document *doc,
      * These lines are not present if '0' points are omitted.
      */
     else if (strstr(firstline->line_buffer, "omitted at the beginning"))
-      saxs_document_add_property(doc, "leading-points-omitted",
-                                 extract(firstline, ":"));
+      extract_property(doc, "leading-points-omitted", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "omitted at the end"))
-      saxs_document_add_property(doc, "trailing-points-omitted",
-                                 extract(firstline, ":"));
+      extract_property(doc, "trailing-points-omitted", firstline, ":");
 
     /*
      * Example line:
@@ -147,8 +134,7 @@ static int parse_header(struct saxs_document *doc,
      *                                ^^^^^^^^^^^
      */
     else if (strstr(firstline->line_buffer, "Input file"))
-      saxs_document_add_property(doc, "parent",
-                                 extract(firstline, ":"));
+      extract_property(doc, "parent", firstline, ":");
 
     /*
      * Example lines:
@@ -171,8 +157,7 @@ static int parse_header(struct saxs_document *doc,
      * If the number of points was not modified, no line is printed.
      */
     else if (strstr(firstline->line_buffer, "Number of real space points"))
-      saxs_document_add_property(doc, "real-space-points",
-                                 extract(firstline, "="));
+      extract_property(doc, "real-space-points", firstline, "=");
 
     /*
      * Example line:
@@ -189,8 +174,7 @@ static int parse_header(struct saxs_document *doc,
      * Assumption: 'from' is always 0.0, then 'to' denotes Dmax.
      */
     else if (strstr(firstline->line_buffer, "Real space range"))
-      saxs_document_add_property(doc, "real-space-range",
-                                 extract(firstline, "to"));
+      extract_property(doc, "real-space-range", firstline, "to");
 
     /*
      * Example line:
@@ -198,8 +182,7 @@ static int parse_header(struct saxs_document *doc,
      *                              ^^^^^^^^^
      */
     else if (strstr(firstline->line_buffer, "Highest ALPHA (theor)"))
-      saxs_document_add_property(doc, "highest-alpha-theor",
-                                 extract(firstline, ":"));
+      extract_property(doc, "highest-alpha-theor", firstline, ":");
 
     /*
      * Example line:
@@ -207,8 +190,7 @@ static int parse_header(struct saxs_document *doc,
      *                              ^^^^^^^^^
      */
     else if (strstr(firstline->line_buffer, "Current ALPHA"))
-      saxs_document_add_property(doc, "current-alpha",
-                                 extract(firstline, ":"));
+      extract_property(doc, "current-alpha", firstline, ":");
 
     /*
      * Example line:
@@ -216,39 +198,31 @@ static int parse_header(struct saxs_document *doc,
      *                               ^^^^^
      */
     else if (strstr(firstline->line_buffer, "Total  estimate"))
-      saxs_document_add_property(doc, "total-estimate",
-                                 extract(firstline, ":"));
+      extract_property(doc, "total-estimate", firstline, ":");
 
 // FIXME-1: properly handle 4.6 and 5.0 file versions.
 // FIXME-2: first-point, last-point only work if there was only one input file,
 //          if there are multiple, things get messy.
     else if (strstr(firstline->line_buffer, "First data point used"))
-      saxs_document_add_property(doc, "first-point",
-                                 extract(firstline, ":"));
+      extract_property(doc, "first-point", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Last data point used"))
-      saxs_document_add_property(doc, "last-point",
-                                 extract(firstline, ":"));
+      extract_property(doc, "last-point", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Reciprocal space Rg"))
-      saxs_document_add_property(doc, "reciprocal-space-rg",
-                                 extract(firstline, ":"));
+      extract_property(doc, "reciprocal-space-rg", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Reciprocal space I(0)"))
-      saxs_document_add_property(doc, "reciprocal-space-I0",
-                                 extract(firstline, ":"));
+      extract_property(doc, "reciprocal-space-I0", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Real space Rg"))
-      saxs_document_add_property(doc, "real-space-rg",
-                                 extract(firstline, ":"));
+      extract_property(doc, "real-space-rg", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Real space I(0)"))
-      saxs_document_add_property(doc, "real-space-I0",
-                                 extract(firstline, ":"));
+      extract_property(doc, "real-space-I0", firstline, ":");
 
     else if (strstr(firstline->line_buffer, "Total Estimate"))
-      saxs_document_add_property(doc, "total-estimate",
-                                 extract(firstline, ":"));
+      extract_property(doc, "total-estimate", firstline, ":");
 
     firstline = firstline->next;
   }
@@ -345,10 +319,8 @@ static int parse_footer(struct saxs_document *doc,
      *                                      ^^^^                ^^^^^^^^^^
      */
     if (strstr(firstline->line_buffer, "Reciprocal space")) {
-      saxs_document_add_property(doc, "reciprocal-space-rg",
-                                 extract(firstline, "Rg ="));
-      saxs_document_add_property(doc, "reciprocal-space-I0",
-                                 extract(firstline, "I(0) ="));
+      extract_property(doc, "reciprocal-space-rg", firstline, "Rg =");
+      extract_property(doc, "reciprocal-space-I0", firstline, "I(0) =");
     }
 
     /*
@@ -357,10 +329,8 @@ static int parse_footer(struct saxs_document *doc,
      *                           ^^^^                    ^^^^^^^^^^
      */
     else if (strstr(firstline->line_buffer, "Real space")) {
-      saxs_document_add_property(doc, "real-space-rg",
-                                 extract(firstline, "Rg ="));
-      saxs_document_add_property(doc, "real-space-I0",
-                                 extract(firstline, "I(0) ="));
+      extract_property(doc, "real-space-rg", firstline, "Rg =");
+      extract_property(doc, "real-space-I0", firstline, "I(0) =");
     }
 
     firstline = firstline->next;
