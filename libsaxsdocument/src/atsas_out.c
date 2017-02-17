@@ -88,7 +88,7 @@ static const char* extract_line(const struct line *l, const char *delim) {
 
     /* ... and trailing whitespace. */
     q = p + 1;
-    while ((isspace(*q) || *q == '\0') && (q >= substr))
+    while ((q >= substr) && (isspace(*q) || *q == '\0'))
       *q-- = '\0';
   }
 
