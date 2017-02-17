@@ -320,6 +320,10 @@ static int parse_probability_data(struct saxs_document *doc,
           && saxs_reader_columns_count(firstline) != 3)
     firstline = firstline->next;
 
+  /* Ensure there is at least one line remaining */
+  if (firstline == lastline)
+    return ENOTSUP;
+
   /* distance distribution (r vs. p(r), r vs GammaC(r)) */
   saxs_reader_columns_parse(doc, firstline, lastline,
                             0, 1.0, 1, 1.0, 2, "p(r)",
