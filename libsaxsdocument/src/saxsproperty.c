@@ -97,16 +97,18 @@ saxs_property_create_strn(const char *name, int namelen,
 
   property = malloc(sizeof(saxs_property));
   if (property) {
-    if (namelen < 0) {
-      property->name = strdup(name);
-    } else {
-      property->name = strndup(name, namelen);
+    if (namelen < 0) namelen = strlen(name);
+    if ((property->name = malloc(namelen+1) )) {
+      strncpy(property->name, name, namelen);
+      property->name[namelen] = '\0';
     }
-    if (valuelen < 0) {
-      property->value = strdup(value);
-    } else {
-      property->value = strndup(value, valuelen);
+
+    if (valuelen < 0) valuelen = strlen(value);
+    if ((property->value = malloc(valuelen+1) )) {
+      strncpy(property->value, value, valuelen);
+      property->value[valuelen] = '\0';
     }
+
     property->next = NULL;
     if (property->name == NULL || property->value == NULL) {
       free(property->name);

@@ -232,6 +232,10 @@ malvern_txt_parse_data(struct saxs_document *doc,
     }
 
     if (!duplicate && saxs_curve_data_count(curves[i]) > 0) {
+      if (j >= nhdr) {
+        res = ENOTSUP;
+        goto exit;
+      }
       c = saxs_document_copy_curve(doc, curves[i]);
       if (!c) {
         res = ENOMEM;
