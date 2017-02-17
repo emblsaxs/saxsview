@@ -1,7 +1,7 @@
 # This directory contains files that caused previous versions of libsaxsdocument to crash
 # when trying to read them
 
-foreach(i RANGE 1 10)
+foreach(i RANGE 1 11)
   if (${i} LESS 10)
     set(i "0${i}")
   endif()
