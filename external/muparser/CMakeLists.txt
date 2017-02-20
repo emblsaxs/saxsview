@@ -1,20 +1,6 @@
 
 project (MUPARSER CXX)
 
-set (MUPARSER_HEADERS muParserBase.h
-                      muParserBytecode.h
-                      muParserCallback.h
-                      muParserDef.h
-                      muParserDLL.h
-                      muParserError.h
-                      muParserFixes.h
-                      muParser.h
-                      muParserInt.h
-                      muParserStack.h
-                      muParserTemplateMagic.h
-                      muParserToken.h
-                      muParserTokenReader.h)
-
 set (MUPARSER_SOURCES muParserBase.cpp
                       muParserBytecode.cpp
                       muParserCallback.cpp
@@ -24,10 +10,12 @@ set (MUPARSER_SOURCES muParserBase.cpp
                       muParserInt.cpp
                       muParserTokenReader.cpp)
 
-add_definitions (-DMUPARSERLIB_EXPORTS -DMUPARSER_DLL)
 
 add_shared_library (muparser
-                    SOURCES ${MUPARSER_SOURCES} ${MUPARSER_HEADERS}
+                    SOURCES ${MUPARSER_SOURCES}
                     VERSION 2.2.2)
+
+target_compile_definitions (muparser PRIVATE MUPARSERLIB_EXPORTS MUPARSER_DLL)
+target_include_directories (muparser PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 install_library (TARGETS muparser)

@@ -1,3 +1,9 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Use target_include_directories etc.
+                          Don't call include_directories for libraries which 
+                          have INTERFACE_INCLUDE_DIRECTORIES set
+
 2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_image.cpp (SaxsviewFrameData): Updated set_size call.

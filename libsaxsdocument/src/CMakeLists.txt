@@ -25,11 +25,6 @@ set (SOURCES saxsproperty.c
              maxlab_rad.c
              malvern_txt.c)
 
-set (HEADERS saxsproperty.h
-             saxsdocument.h
-             saxsdocument_format.h
-             columns.h)
-
 # conditional sources
 if (LIBXML2_FOUND)
   add_definitions (-DHAVE_LIBXML2 ${LIBXML2_DEFINITIONS})
@@ -38,8 +33,9 @@ if (LIBXML2_FOUND)
 endif (LIBXML2_FOUND)
 
 add_shared_library (saxsdocument
-                    SOURCES ${HEADERS} ${SOURCES}
+                    SOURCES ${SOURCES}
                     LIBRARIES m ${LIBXML2_LIBRARIES}
                     VERSION 1)
+target_include_directories(saxsdocument PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 install_library (TARGETS saxsdocument)

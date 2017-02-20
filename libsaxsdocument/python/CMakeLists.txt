@@ -1,6 +1,5 @@
 
 if (PYTHONLIBS_FOUND)
-  include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR})
 
   add_python_module (pysaxsdocument
                      SOURCES pysaxsdocument.c

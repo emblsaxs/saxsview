@@ -1,3 +1,11 @@
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Use AUTOMOC
+
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: include_directories() no longer needed
+
 2013-04-19  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* svimagesubwindow.cpp (ImagePicker): Updated to match changes in qwt.

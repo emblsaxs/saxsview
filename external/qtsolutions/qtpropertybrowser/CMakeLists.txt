@@ -1,16 +1,5 @@
 project (QTPROPERTYBROWSER CXX)
 
-include_directories (${QTPROPERTYBROWSER_BINARY_DIR})
-
-set (HEADERS qtbuttonpropertybrowser.h
-             qtpropertybrowser.h
-             qttreepropertybrowser.h
-             qteditorfactory.h
-             qtpropertybrowserutils_p.h
-             qtvariantproperty.h
-             qtgroupboxpropertybrowser.h
-             qtpropertymanager.h)
-
 set (SOURCES qtbuttonpropertybrowser.cpp
              qtpropertybrowser.cpp
              qttreepropertybrowser.cpp
@@ -62,9 +51,11 @@ qt4_add_resources (RES qtpropertybrowser.qrc)
 
 
 add_shared_library (qtpropertybrowser
-                    SOURCES ${HEADERS} ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp
+                    SOURCES ${SOURCES} ${RES} moc_qtpropertybrowserutils_p.cpp
                     LIBRARIES ${QT_LIBRARIES}
                     VERSION 2.5.1)
+target_include_directories(qtpropertybrowser PUBLIC  "${CMAKE_CURRENT_SOURCE_DIR}"
+                                             PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 install_library (TARGETS qtpropertybrowser)
 

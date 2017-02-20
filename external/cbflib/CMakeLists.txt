@@ -1,13 +1,5 @@
 project (CBFLIB C)
 
-set (CBFLIB_HEADERS cbf.h cbf_alloc.h cbf_ascii.h cbf_binary.h
-                    cbf_byte_offset.h cbf_canonical.h cbf_codes.h
-                    cbf_compress.h cbf_context.h cbf_file.h cbf_lex.h
-                    cbf_packed.h cbf_predictor.h cbf_read_binary.h
-                    cbf_read_mime.h cbf_simple.h cbf_string.h cbf_stx.h
-                    cbf_tree.h cbf_uncompressed.h cbf_write.h
-                    cbf_write_binary.h global.h md5.h)
-
 set (CBFLIB_SOURCES cbf.c cbf_alloc.c cbf_ascii.c cbf_binary.c
                     cbf_byte_offset.c cbf_canonical.c cbf_codes.c
                     cbf_compress.c cbf_context.c cbf_file.c cbf_lex.c
@@ -17,9 +9,10 @@ set (CBFLIB_SOURCES cbf.c cbf_alloc.c cbf_ascii.c cbf_binary.c
                     cbf_write_binary.c md5c.c)
 
 add_shared_library (cbf
-                    SOURCES ${CBFLIB_HEADERS} ${CBFLIB_SOURCES}
+                    SOURCES ${CBFLIB_SOURCES}
                     LIBRARIES m
                     VERSION 0.7.9.1)
+target_include_directories(cbf PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 
 install_library (TARGETS cbf)
 

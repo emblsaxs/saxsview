@@ -1,10 +1,14 @@
-2016-07-22  Chris Kerr  <cjkerr@users.sourceforge.net>
+2016-07-22  Chris Kerr  <ckerr@embl-hamburg.de>
 
-        * CMakeLists.txt: Add HDF5_INCLUDE_DIRS to include_directories()
+        * CMakeLists.txt: Set target_include_directories appropriately
+
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
+        * CMakeLists.txt: Set target_link_libraries appropriately
 
 2015-07-13  Chris Kerr  <cjkerr@users.sourceforge.net>
 
-        * CMakeLists.txt: Check for a sufficiently recent version of HDF5
+	* CMakeLists.txt: Check for a sufficiently recent version of HDF5
 
 2015-07-08  Daniel Franke  <dfranke@users.sourceforge.net>
 

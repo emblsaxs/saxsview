@@ -4,6 +4,10 @@
 
 2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
 
+        * CMakeLists.txt: include_directories() no longer needed
+
+2016-07-07  Chris Kerr  <ckerr@embl-hamburg.de>
+
         * CMakeLists.txt: Python executable is not necessary to build python modules
 
 2016-02-11  Chris Kerr  <ckerr@embl-hamburg.de>

@@ -8,16 +8,19 @@ find_file (HDF5_PLUGIN_HEADER
            NO_DEFAULT_PATH)
 if (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
   project (H5ZLZ4 C)
-  include_directories(${HDF5_INCLUDE_DIRS})
 
-  set (H5ZLZ4_HEADERS lz4.h)
   set (H5ZLZ4_SOURCES lz4.c h5zlz4.c)
 
-  add_definitions (-DHAVE_HDF5 -std=gnu99)
-  add_shared_library (h5zlz4
-                      SOURCES ${H5ZLZ4_HEADERS} ${H5ZLZ4_SOURCES}
-                      LIBRARIES ${HDF5_LIBRARIES}
-                      VERSION 0.2)
+  add_library(h5zlz4 SHARED ${H5ZLZ4_SOURCES})
+  set_target_properties(h5zlz4 PROPERTIES VERSION 0.2)
+  if (CMAKE_VERSION VERSION_LESS 3.1)
+    target_compile_options(h5zlz4 PRIVATE --std=gnu99)
+  else()
+    set_target_properties(h5zlz4 PROPERTIES C_STANDARD 99)
+  endif()
+
+  target_link_libraries(h5zlz4 PUBLIC ${HDF5_LIBRARIES})
+  target_include_directories(h5zlz4 PUBLIC ${HDF5_INCLUDE_DIRS})
 
   install_library (TARGETS h5zlz4)
 endif (HDF5_FOUND AND (NOT HDF5_PLUGIN_HEADER STREQUAL "HDF5_PLUGIN_HEADER-NOTFOUND"))
