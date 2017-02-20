@@ -441,6 +441,10 @@ atsas_fit_4_column_parse_monsa_data(struct saxs_document *doc,
 
   while (header) {
 
+    /* Error out if there are no data lines */
+    if ((!data) || (data == footer))
+      return ENOTSUP;
+
     /*
      * The first header has at least two lines, every following only one.
      */
