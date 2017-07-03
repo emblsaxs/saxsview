@@ -1,3 +1,8 @@
+2017-07-03  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/atsas_fir_fit.c (saxs_document_format_register_atsas_fir_fit): Handle 3-column
+	crysol fit files.
+
 2016-02-24  Chris Kerr  <ckerr@embl-hamburg.de>
 
         * src/CMakeLists.txt: Disable libxml2 on Windows

@@ -617,9 +617,19 @@ bodies_fir_read(struct saxs_document *doc,
 }
 
 int
-crysol_fit_read(struct saxs_document *doc,
-                const struct line *firstline,
-                const struct line *lastline) {
+crysol_fit_3_column_read(struct saxs_document *doc,
+                         const struct line *firstline,
+                         const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         crysol_fit_parse_header,
+                                         atsas_fit_3_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
+int
+crysol_fit_4_column_read(struct saxs_document *doc,
+                         const struct line *firstline,
+                         const struct line *lastline) {
   return saxs_reader_columns_parse_lines(doc, firstline, lastline,
                                          crysol_fit_parse_header,
                                          atsas_fit_4_column_parse_data,
@@ -674,14 +684,21 @@ saxs_document_format_register_atsas_fir_fit() {
      bodies_fir_read, NULL, NULL
   };
 
-  saxs_document_format crysol_fit = {
+  saxs_document_format crysol_fit_3_column= {
      "fit", "crysol-fit",
-     ".fit files from CRYSOL or CRYSON fit mode",
-     crysol_fit_read, NULL, NULL
+     ".fit files from CRYSOL or CRYSON fit mode (3 column)",
+     crysol_fit_3_column_read, NULL, NULL
+  };
+
+  saxs_document_format crysol_fit_4_column = {
+     "fit", "crysol-fit",
+     ".fit files from CRYSOL or CRYSON fit mode (4 column)",
+     crysol_fit_4_column_read, NULL, NULL
   };
 
   saxs_document_format_register(&bodies_fir);
-  saxs_document_format_register(&crysol_fit);
+  saxs_document_format_register(&crysol_fit_3_column);
+  saxs_document_format_register(&crysol_fit_4_column);
   saxs_document_format_register(&atsas_fir_4_column);
   saxs_document_format_register(&atsas_fit_3_column);
   saxs_document_format_register(&atsas_fit_4_column);
