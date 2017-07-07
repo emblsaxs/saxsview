@@ -394,12 +394,14 @@ int atsas_out_read(struct saxs_document *doc,
     /*
      * Scattering data ends with:
      *     "Distance distribution  function of particle"       (gnom jobtype 0)
+     *     "Volume distribution function of hard spheres"      (gnom jobtype 1)
      *     "Characteristic function of particle thickness"     (gnom jobtype 3)
      *     "Distance distribution function of cross-section"   (gnom jobtype 4)
      *     "Length distribution function of long cylinders"    (gnom jobtype 5)
      *     "Surface distribution function of spherical shells" (gnom jobtype 6)
      */
     if (strstr(current->line_buffer, "function of particle")
+         || strstr(current->line_buffer, "function of hard spheres")
          || strstr(current->line_buffer, "particle thickness")
          || strstr(current->line_buffer, "function of cross-section")
          || strstr(current->line_buffer, "function of long cylinders")
@@ -407,7 +409,7 @@ int atsas_out_read(struct saxs_document *doc,
       probability_begin = current;
       footer = NULL;
     }
-  
+
     /*
      * Probability data ends with (v4.x):
      *     "Reciprocal space: Rg =   xx.xx     , I(0) =   x.xxxxxx"

@@ -1,3 +1,8 @@
+2017-07-07  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/atsas_out.c (atsas_out_read): Recognize volume distribution functions
+	of hard spheres.
+
 2017-07-03  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/atsas_fir_fit.c (saxs_document_format_register_atsas_fir_fit): Handle 3-column
