@@ -137,11 +137,17 @@ static int parse_header(struct saxs_document *doc,
       extract_property(doc, "parent", firstline, ":");
 
     /*
-     * Example lines:
+     * Example lines (v4):
      * "           Condition P(rmin) = 0 is used. "
      * "           Condition P(rmax) = 0 is used. "
      *
      * No need to extract anything, the lines are omitted if not used.
+     *
+     * Example lines (v5):
+     * "Force 0.0 at r = rmin:                  yes"
+     * "Force 0.0 at r = rmax:                  yes"
+     *
+     * These lines are always present.
      */
     else if (strstr(firstline->line_buffer, "Condition P(rmin)"))
       saxs_document_add_property(doc, "condition-r-min-zero", "true");
@@ -149,15 +155,26 @@ static int parse_header(struct saxs_document *doc,
     else if (strstr(firstline->line_buffer, "Condition P(rmax)"))
       saxs_document_add_property(doc, "condition-r-max-zero", "true");
 
+    else if (strstr(firstline->line_buffer, "Force 0.0 at r = rmin"))
+      extract_property(doc, "condition-r-min-zero", firstline, ":");
+
+    else if (strstr(firstline->line_buffer, "Force 0.0 at r = rmax"))
+      extract_property(doc, "condition-r-max-zero", firstline, ":");
 
     /*
-     * Example lines:
+     * Example lines (v4):
      * "Number of real space points  is too large! Modified to NR = 215"
      *                                                              ^^^
      * If the number of points was not modified, no line is printed.
+     *
+     * Example line (v5)
+     * "Points in real space:                   256"
      */
     else if (strstr(firstline->line_buffer, "Number of real space points"))
       extract_property(doc, "real-space-points", firstline, "=");
+
+    else if (strstr(firstline->line_buffer, "Points in real space"))
+      extract_property(doc, "real-space-points", firstline, ":");
 
     /*
      * Example line:
@@ -175,6 +192,17 @@ static int parse_header(struct saxs_document *doc,
      */
     else if (strstr(firstline->line_buffer, "Real space range"))
       extract_property(doc, "real-space-range", firstline, "to");
+
+    /*
+     * Example lines (v5):
+     * "Minimum characteristic size:         0.0000"
+     * "Maximum characteristic size:        11.0000"
+     */
+    else if (strstr(firstline->line_buffer, "Minimum characteristic size"))
+      extract_property(doc, "real-space-rmin", firstline, ":");
+
+    else if (strstr(firstline->line_buffer, "Maximum characteristic size"))
+      extract_property(doc, "real-space-rmax", firstline, ":");
 
     /*
      * Example line:
