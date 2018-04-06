@@ -235,6 +235,8 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) 
       SET_VALUE(uint32);
     else if (format == SAMPLEFORMAT_INT && bpp == 32)     /* PILATUS */
       SET_VALUE(int32);
+    else if (format == SAMPLEFORMAT_IEEEFP && bpp == 32)
+      SET_VALUE(float);
     else
       return ENOENT;
 
@@ -291,6 +293,7 @@ int saxs_image_tiff_write(saxs_image *image, const char *filename) {
    */
   TIFFSetField(tiff, TIFFTAG_IMAGEWIDTH, width);
   TIFFSetField(tiff, TIFFTAG_IMAGELENGTH, height);
+  TIFFSetField(tiff, TIFFTAG_SAMPLEFORMAT, SAMPLEFORMAT_INT);
   TIFFSetField(tiff, TIFFTAG_BITSPERSAMPLE, 32);
   TIFFSetField(tiff, TIFFTAG_SAMPLESPERPIXEL, 1);
   TIFFSetField(tiff, TIFFTAG_ROWSPERSTRIP, height);
