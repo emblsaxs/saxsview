@@ -40,6 +40,7 @@ MODULE saxsimage
   PUBLIC saxs_image_value
   PUBLIC saxs_image_set_value
   PUBLIC saxs_image_data
+  PUBLIC saxs_image_set_size
 
 CONTAINS
   SUBROUTINE saxs_image_create(img)
@@ -239,5 +240,24 @@ CONTAINS
         data(i,j) = saxs_image_value(img, i-1, j-1)
       END DO
     END DO
+  END SUBROUTINE
+
+  SUBROUTINE saxs_image_set_size(img, x, y, n, m)
+    TYPE(saxs_image), INTENT(inout) :: img
+    INTEGER, INTENT(in)             :: x, y
+    INTEGER, INTENT(in)             :: n, m
+
+    INTERFACE
+      PURE SUBROUTINE c_saxs_image_set_size(img, x, y, framecount, currentframe) &
+                 BIND(C, NAME="saxs_image_set_size")
+        IMPORT                :: C_DOUBLE, C_INT, C_LONG, C_PTR
+        INTEGER(C_LONG)       :: c_saxs_image_value
+        TYPE(C_PTR), VALUE    :: img
+        INTEGER(C_INT), VALUE :: x, y
+        INTEGER(C_INT), VALUE :: framecount, currentframe
+      END SUBROUTINE
+    END INTERFACE
+
+    CALL c_saxs_image_set_size(img%c_ptr, x, y, n, m)
   END SUBROUTINE
 END MODULE

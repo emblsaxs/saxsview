@@ -1,5 +1,9 @@
 2018-04-06  Daniel Franke <dfranke@users.sourceforge.net>
 
+        * fortran/fsaxsimage.f90 (saxs_image_set_size): New.
+
+2018-04-06  Daniel Franke <dfranke@users.sourceforge.net>
+
         * src/tiff.c (saxs_image_tiff_read): Allow readinf of float-point TIFFs.
         (saxs_image_tiff_write): Set TIFFTAG_SAMPLEFORMAT.
 
