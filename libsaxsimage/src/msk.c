@@ -151,7 +151,7 @@ int saxs_image_msk_read(saxs_image *image, const char *filename, size_t frame) {
       const msk_word leword = *tmp;
       const msk_word word = MSK_GET(leword);
       for (bit = 0; bit < MSK_WORD_BITS && col + bit < width; ++bit)
-        saxs_image_set_value(image, col + bit, row, (word & (1 << bit)) ? 1.0 : 0.0);
+        saxs_image_set_value(image, col + bit, row, (word & (1u << bit)) ? 1.0 : 0.0);
 
       ++tmp;
     }
