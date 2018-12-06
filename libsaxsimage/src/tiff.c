@@ -203,7 +203,13 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) 
       format = SAMPLEFORMAT_VOID;
   }
 
-  data = _TIFFmalloc(width * height * bpp/CHAR_BIT * spp);
+  /*
+   * bpp/CHAR_BIT turns the product into a signed value;
+   * memory requests for (very) large images may then be
+   * misrepresented, resulting in SEGFAULT. Thus, we have
+   * to make sure that the value stays unsigned.
+   */
+  data = _TIFFmalloc(width * height * (tsize_t)(bpp/CHAR_BIT) * spp);
 
   for (strip = 0; strip < TIFFNumberOfStrips(tiff); ++strip)
     TIFFReadEncodedStrip(tiff,
