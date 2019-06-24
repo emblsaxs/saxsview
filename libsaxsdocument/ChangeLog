@@ -1,3 +1,7 @@
+2019-06-24  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/CMakeLists.txt: Employ automatic INCLUDE_DIRECTORIES.
+
 2018-02-21  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/atsas_out.c (atsas_out_read): Improved reading of v5 files.

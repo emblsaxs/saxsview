@@ -42,4 +42,5 @@ add_shared_library (saxsdocument
                     LIBRARIES m ${LIBXML2_LIBRARIES}
                     VERSION 1)
 
+target_include_directories(saxsdocument PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 install_library (TARGETS saxsdocument)
