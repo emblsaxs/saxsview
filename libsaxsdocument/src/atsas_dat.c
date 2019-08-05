@@ -305,12 +305,18 @@ atsas_dat_write_header(struct saxs_document *doc, struct line **lines) {
   code          = saxs_document_property_find_first(doc, "sample-code");
   concentration = saxs_document_property_find_first(doc, "sample-concentration");
 
-  /* First line, if no description is available, this line is empty. */
+  /*
+   * First line, if no description is available, this line used to be empty.
+   * However, since parse_header expects a non-empty description line, simply
+   * write the key with an empty value to stay in sync.
+   */
   line = lines_create();
   if (!line)
     return ENOMEM;
   if (description)
     lines_printf(line, "Sample description: %s", saxs_property_value(description));
+  else
+    lines_printf(line, "Sample description: ");
   lines_append(lines, line);
 
   /* Second line, if neither code nor concentration
