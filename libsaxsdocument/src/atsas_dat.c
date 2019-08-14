@@ -262,7 +262,7 @@ atsas_dat_parse_footer(struct saxs_document *doc,
                        const struct line *lastline) {
 
   /*
-   * In subtracted files, the "real" information is in the footer.
+   * In ancient subtracted files, the "real" information is in the footer.
    * Try to read the basic information from there, the sample usually
    * comes first.
    */
@@ -270,12 +270,13 @@ atsas_dat_parse_footer(struct saxs_document *doc,
        || !saxs_document_property_find_first(doc, "sample-code")
        || !saxs_document_property_find_first(doc, "sample-concentration")) {
 
-    while (firstline != lastline) {
-      parse_basic_information(doc, firstline);
-      firstline = firstline->next;
+    const struct line *currentline = firstline;
+    while (currentline != lastline) {
+      parse_basic_information(doc, currentline);
+      currentline = currentline->next;
     }
 
-    return 0;
+    /* Fall through in case there are other key-value pairs here. */
   }
 
   /*
