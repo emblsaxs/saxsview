@@ -1,5 +1,10 @@
 2019-08-14  Daniel Franke  <franke@embl-hamburg.de>
 
+	* src/atsas_fir_fit.c (gasborp_fir_5_column): New. Handle 5-column .fir files
+	created by gasborp.
+
+2019-08-14  Daniel Franke  <franke@embl-hamburg.de>
+
 	* src/atsas_dat.c (atsas_dat_parse_footer): After looking for "basic_information",
 	re-iterate and check for any key-value pairs.
 

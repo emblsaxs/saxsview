@@ -345,6 +345,40 @@ atsas_fir_4_column_read(struct saxs_document *doc,
                                          atsas_fir_fit_parse_footer);
 }
 
+/**************************************************************************/
+static int
+atsas_fir_5_column_parse_data(struct saxs_document *doc,
+                              const struct line *firstline,
+                              const struct line *lastline) {
+
+  if (saxs_reader_columns_count(firstline) != 5)
+    return ENOTSUP;
+
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 1, 1.0, 2, "data",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 3, 1.0, -1, "corrected",
+                            SAXS_CURVE_EXPERIMENTAL_SCATTERING_DATA);
+
+  saxs_reader_columns_parse(doc, firstline, lastline,
+                            0, 1.0, 4, 1.0, -1, "fit",
+                            SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+
+  return 0;
+}
+
+int
+atsas_fir_5_column_read(struct saxs_document *doc,
+                        const struct line *firstline,
+                        const struct line *lastline) {
+  return saxs_reader_columns_parse_lines(doc, firstline, lastline,
+                                         atsas_fir_fit_parse_header,
+                                         atsas_fir_5_column_parse_data,
+                                         atsas_fir_fit_parse_footer);
+}
+
 
 /**************************************************************************/
 static int
@@ -653,6 +687,9 @@ saxs_document_format_register_atsas_fir_fit() {
    * Further, OLIGOMER seems to write files with a fifth column (the
    * difference of I and Ifit). Also, the column order is different
    * (s, I, Ifit, err, diff).
+   *
+   * Further, GASBORP (but not GASBORI), writes a five column .fir file
+   * with (s, I, err, I*, Ifit) where I* are "corrected intensities".
    */
   saxs_document_format atsas_fir_4_column = {
      "fir", "atsas-fir-4-column",
@@ -696,9 +733,16 @@ saxs_document_format_register_atsas_fir_fit() {
      crysol_fit_4_column_read, NULL, NULL
   };
 
+  saxs_document_format gasborp_fir_5_column = {
+     "fir", "atsas-fir-4-column",
+     "ATSAS fit against experimental data (GASBORP)",
+     atsas_fir_5_column_read, NULL, NULL
+  };
+
   saxs_document_format_register(&bodies_fir);
   saxs_document_format_register(&crysol_fit_3_column);
   saxs_document_format_register(&crysol_fit_4_column);
+  saxs_document_format_register(&gasborp_fir_5_column);
   saxs_document_format_register(&atsas_fir_4_column);
   saxs_document_format_register(&atsas_fit_3_column);
   saxs_document_format_register(&atsas_fit_4_column);
