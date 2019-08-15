@@ -44,36 +44,61 @@ static int
 atsas_int_parse_data(struct saxs_document *doc,
                      const struct line *firstline,
                      const struct line *lastline) {
-  int res;
 
-  if (saxs_reader_columns_count(firstline) != 5)
-    return ENOTSUP;
+  int column_count = saxs_reader_columns_count(firstline);
 
-  /* s vs I_final */
-  res = saxs_reader_columns_parse(doc, firstline, lastline,
-                                  0, 1.0, 1, 1.0, -1, "final",
-                                  SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
-  if (res != 0) return res;
+  if (column_count == 5 || column_count == 7) {
+    int res;
 
-  /* s vs I_atomic */
-  res = saxs_reader_columns_parse(doc, firstline, lastline,
-                                  0, 1.0, 2, 1.0, -1, "atomic",
-                                  SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
-  if (res != 0) return res;
+    /* s vs I_final */
+    res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                    0, 1.0, 1, 1.0, -1, "final",
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+    if (res != 0) return res;
 
-  /* s vs I_excluded_volume */
-  res = saxs_reader_columns_parse(doc, firstline, lastline,
-                                  0, 1.0, 3, 1.0, -1, "excluded volume",
-                                  SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
-  if (res != 0) return res;
+    /* s vs I_atomic */
+    res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                    0, 1.0, 2, 1.0, -1, "atomic",
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+    if (res != 0) return res;
 
-  /* s vs I_hydration_shell */
-  res = saxs_reader_columns_parse(doc, firstline, lastline,
-                                  0, 1.0, 4, 1.0, -1, "hydration shell",
-                                  SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
-  if (res != 0) return res;
+    /* s vs I_excluded_volume */
+    res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                    0, 1.0, 3, 1.0, -1, "excluded volume",
+                                    SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+    if (res != 0) return res;
 
-  return 0;
+    if (column_count == 5) {
+      /* s vs I_hydration_shell (total) */
+      res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                      0, 1.0, 4, 1.0, -1, "hydration shell",
+                                      SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+      if (res != 0) return res;
+
+    } else if (column_count == 7) {
+      /* s vs I_hydration_shell (convex) */
+      res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                      0, 1.0, 4, 1.0, -1, "hydration shell (convex)",
+                                      SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+      if (res != 0) return res;
+
+      /* s vs I_hydration_shell (concave) */
+      res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                      0, 1.0, 5, 1.0, -1, "hydration shell (concave)",
+                                      SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+      if (res != 0) return res;
+
+      /* s vs I_hydration_shell (inner) */
+      res = saxs_reader_columns_parse(doc, firstline, lastline,
+                                      0, 1.0, 6, 1.0, -1, "hydration shell (inner)",
+                                      SAXS_CURVE_THEORETICAL_SCATTERING_DATA);
+      if (res != 0) return res;
+    }
+  
+    return 0;
+  }
+  
+  return ENOTSUP;
 }
 
 static int
