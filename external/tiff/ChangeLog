@@ -1,3 +1,7 @@
+2019-08-15  Daniel Franke  <franke@embl-hamburg.de>
+
+	* LICENSE: New.
+
 2012-07-09  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* tif_config.win32.h: New.
