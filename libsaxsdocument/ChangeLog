@@ -1,5 +1,9 @@
 2019-08-15  Daniel Franke  <franke@embl-hamburg.de>
 
+	* src/saxsdocument.c (saxs_document_read): Properly clean up partially read data.
+
+2019-08-15  Daniel Franke  <franke@embl-hamburg.de>
+
 	* src/atsas_int.c (atsas_int_parse_data): Handle CRYSOL-3 type 7 column int files.
 
 2019-08-14  Daniel Franke  <franke@embl-hamburg.de>

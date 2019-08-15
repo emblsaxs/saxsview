@@ -231,9 +231,11 @@ saxs_document* saxs_document_create() {
 
 int saxs_document_read(saxs_document *doc, const char *filename,
                        const char *format) {
-  assert_valid_document(doc);
+  saxs_document *tmpdoc = NULL;
   struct line *l;
   int res = ENOTSUP;
+
+  assert_valid_document(doc);
 
   /*
    * Read in the file contents and cache that in the document buffer.
@@ -255,6 +257,7 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   if (test_locale()) {
     fprintf(stderr, "Warning: Input/output of floating point numbers is not working as expected, this may result in incorrect data\n");
   }
+
   /*
    * First we shall try to determine the file type according to the
    * specified format or the file extension. If that doesn't work,
@@ -265,7 +268,16 @@ int saxs_document_read(saxs_document *doc, const char *filename,
   saxs_document_format* handler = saxs_document_format_find_first(filename, format);
   while (handler) {
     if (handler->read) {
-      res = handler->read(doc, l, NULL);
+      /*
+       * On read we want to avoid keeping any partial data,
+       * therefor, each handler shall read into a new temporary
+       * document. Once we found a handler that can read the data
+       * all the way, merge the temporary document into the actual
+       * data.
+       */
+      tmpdoc = saxs_document_create();
+
+      res = handler->read(tmpdoc, l, NULL);
       if (res == 0) {
         break;
       } else if (res == ENOMEM) {
@@ -273,6 +285,8 @@ int saxs_document_read(saxs_document *doc, const char *filename,
          * rather than trying to read with a different file format */
         break;
       }
+
+      saxs_document_free(tmpdoc);
     }
     handler = saxs_document_format_find_next(handler, filename, format);
   }
@@ -285,11 +299,13 @@ int saxs_document_read(saxs_document *doc, const char *filename,
     handler = saxs_document_format_first();
     while (handler) {
       if (handler->read) {
-        res = handler->read(doc, l, NULL);
+        tmpdoc = saxs_document_create();
+
+        res = handler->read(tmpdoc, l, NULL);
         if (res == 0) {
           /* When looping through all handlers, only consider it a success
            * if at least one curve can be read */
-          if (saxs_document_curve_count(doc) > 0)
+          if (saxs_document_curve_count(tmpdoc) > 0)
             break;
           else 
             res = ENOTSUP;
@@ -298,21 +314,42 @@ int saxs_document_read(saxs_document *doc, const char *filename,
            * rather than trying to read with a different file format */
           break;
         }
+
+        saxs_document_free(tmpdoc);
       }
       handler = saxs_document_format_next(handler);
     }
   }
 
   if (res == 0) {
-    /* Here everything was read in successfully, keep the info around. */
-    if (doc->doc_lines) lines_free(doc->doc_lines);
+    /*
+     * Here everything was read in successfully to the temporary document,
+     * now swap the information.
+     */
+    saxs_document swap_helper;
+
+    tmpdoc->doc_filename = doc->doc_filename;
+    doc->doc_filename = strdup(filename);
+
+    tmpdoc->doc_lines = doc->doc_lines;
     doc->doc_lines = l;
     l = NULL;
 
-    if (doc->doc_filename) free(doc->doc_filename);
-    doc->doc_filename = strdup(filename);
+    swap_helper.doc_properties = doc->doc_properties;
+    doc->doc_properties = tmpdoc->doc_properties;
+    tmpdoc->doc_properties = swap_helper.doc_properties;
+
+    doc->doc_curve_count = tmpdoc->doc_curve_count;
+    swap_helper.doc_curves_head = doc->doc_curves_head;
+    doc->doc_curves_head = tmpdoc->doc_curves_head;
+    tmpdoc->doc_curves_head = swap_helper.doc_curves_head;
+    swap_helper.doc_curves_tail = doc->doc_curves_tail;
+    doc->doc_curves_tail = tmpdoc->doc_curves_tail;
+    tmpdoc->doc_curves_tail = swap_helper.doc_curves_tail;
 
     doc->doc_format = handler;
+
+    saxs_document_free(tmpdoc);
   }
 
   lines_free(l);
