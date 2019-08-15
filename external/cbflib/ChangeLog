@@ -1,3 +1,7 @@
+2019-08-15  Daniel Franke  <franke@embl-hamburg.de>
+
+        * COPYING: New.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* CMakeLists.txt: Use saxsview-convenience macros.
