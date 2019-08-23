@@ -1,3 +1,8 @@
+2019-08-21  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/atsas_fir_fit.c (atsas_fir_fit_parse_footer): Allow for, but currently ignore,
+	any potential footer key-value pairs.
+
 2019-08-15  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/saxsdocument.c (saxs_document_read): Properly clean up partially read data.
