@@ -1,3 +1,7 @@
+2019-09-05  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/python/pysaxsdocument.cpp: Conditionally handle Python 2 and 3.
+
 2019-08-21  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/atsas_fir_fit.c (atsas_fir_fit_parse_footer): Allow for, but currently ignore,

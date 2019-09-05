@@ -74,8 +74,8 @@ saxsdocument_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
 
 static PyObject *
 saxsdocument_repr(PySaxsDocumentObject *self) {
-  return PyString_FromFormat("saxsdocument: %zd properties, %zd curve(s)",
-                             PyDict_Size(self->properties), PyList_Size(self->curves));
+  return PyUnicode_FromFormat("saxsdocument: %zd properties, %zd curve(s)",
+                              PyDict_Size(self->properties), PyList_Size(self->curves));
 }
 
 static PyMethodDef saxsdocument_methods[] = {
@@ -157,8 +157,8 @@ PySaxsDocument_Read(const char *filename, const char *format,
 
   property = saxs_document_property_first(doc);
   while (property) {
-    PyObject *name = PyString_FromString(saxs_property_name(property));
-    PyObject *value = PyString_FromString(saxs_property_value(property));
+    PyObject *name = PyUnicode_FromString(saxs_property_name(property));
+    PyObject *value = PyUnicode_FromString(saxs_property_value(property));
     if (!name || !value) {
       Py_XDECREF(name);
       Py_XDECREF(value);
@@ -222,16 +222,26 @@ static PyMethodDef saxsdocument_functions[] = {
   { NULL, NULL, 0, NULL }
 };
 
-
-/*
- * Module Init function.
- */
 PyDoc_STRVAR(saxsdocument_module_doc,
              "saxsdocument module\n"
              "\n"
              "Use saxsdocument.read() to read a document");
 
+#if PY_MAJOR_VERSION == 3
+static struct PyModuleDef saxsdocument_module_def = {
+  PyModuleDef_HEAD_INIT,
+  "saxsdocument",
+  saxsdocument_module_doc,
+  0,
+  saxsdocument_functions
+};
+#endif
+
+#if PY_MAJOR_VERSION == 2
 PyMODINIT_FUNC initsaxsdocument(void) {
+#elif PY_MAJOR_VERSION == 3
+PyMODINIT_FUNC PyInit_saxsdocument(void) {
+#endif
   PySaxsDocument_Type.tp_name      = "saxsdocument.saxsdocument";
   PySaxsDocument_Type.tp_basicsize = sizeof(PySaxsDocumentObject);
   PySaxsDocument_Type.tp_dealloc   = (destructor)saxsdocument_dealloc;
@@ -242,16 +252,27 @@ PyMODINIT_FUNC initsaxsdocument(void) {
   PySaxsDocument_Type.tp_new       = saxsdocument_new;
   PySaxsDocument_Type.tp_init      = NULL;
   PySaxsDocument_Type.tp_base      = &PyBaseObject_Type;
-  if (PyType_Ready(&PySaxsDocument_Type) < 0)
-    return;
 
-  PyObject *saxsdocument_module = Py_InitModule3("saxsdocument",
-                                                 saxsdocument_functions,
-                                                 saxsdocument_module_doc);
-  if (saxsdocument_module == NULL)
-    return;
+  PyObject *saxsdocument_module = NULL;
 
-  Py_INCREF(&PySaxsDocument_Type);
-  PyModule_AddObject(saxsdocument_module, "saxsdocument",
-                     (PyObject*)&PySaxsDocument_Type);
+  if (PyType_Ready(&PySaxsDocument_Type) >= 0) {
+#if PY_MAJOR_VERSION == 2
+    saxsdocument_module = Py_InitModule3("saxsdocument",
+                                         saxsdocument_functions,
+                                         saxsdocument_module_doc);
+#elif PY_MAJOR_VERSION == 3
+    saxsdocument_module = PyModule_Create(&saxsdocument_module_def);
+#endif
+
+    if (saxsdocument_module) {
+      Py_INCREF(&PySaxsDocument_Type);
+      PyModule_AddObject(saxsdocument_module, "saxsdocument",
+                         (PyObject*)&PySaxsDocument_Type);
+    }
+  }
+
+#if PY_MAJOR_VERSION == 3
+  return saxsdocument_module;
+#endif
 }
+
