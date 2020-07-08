@@ -251,10 +251,10 @@ CONTAINS
   END SUBROUTINE
 
   SUBROUTINE saxs_document_data(doc, x, y, y_err, k, status)
-    TYPE(saxs_document), INTENT(inout)                :: doc
-    REAL(DBL), DIMENSION(:), ALLOCATABLE, INTENT(out) :: x, y, y_err
-    INTEGER, INTENT(in)                               :: k
-    INTEGER, INTENT(out)                              :: status
+    TYPE(saxs_document), INTENT(inout)  :: doc
+    REAL(DBL), INTENT(out), ALLOCATABLE :: x(:), y(:), y_err(:)
+    INTEGER, INTENT(in)                 :: k
+    INTEGER, INTENT(out)                :: status
 
     INTEGER :: i
 
@@ -353,20 +353,26 @@ CONTAINS
 
     IF (C_ASSOCIATED(curve)) THEN
       n = c_saxs_curve_data_count(curve)
-      ALLOCATE(x(n), y(n), y_err(n))
+      DEALLOCATE(x, STAT = status)
+      DEALLOCATE(y, STAT = status)
+      DEALLOCATE(y_err, STAT = status)
+      ALLOCATE(x(n), y(n), y_err(n), STAT = status)
 
-      n = 0
-      data = c_saxs_curve_data(curve)
-      DO WHILE (C_ASSOCIATED(data))
-        n        = n + 1
-        x(n)     = c_saxs_data_x(data)
-        y(n)     = c_saxs_data_y(data)
-        y_err(n) = c_saxs_data_y_err(data)
-        data     = c_saxs_data_next(data)
-      END DO
-      status = 0
+      IF (status == 0) THEN
+        n = 0
+        data = c_saxs_curve_data(curve)
+        DO WHILE (C_ASSOCIATED(data))
+          n        = n + 1
+          x(n)     = c_saxs_data_x(data)
+          y(n)     = c_saxs_data_y(data)
+          y_err(n) = c_saxs_data_y_err(data)
+          data     = c_saxs_data_next(data)
+        END DO
+      ELSE
+        status = 12  ! Corresponds to ENOMEM (Cannot allocate memory) in C
+      END IF
     ELSE
-      status = 99
+      status = 22  ! Corresponds to EINVAL (Invalid argument) in C
     END IF
   END SUBROUTINE
 
