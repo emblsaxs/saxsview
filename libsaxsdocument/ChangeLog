@@ -1,3 +1,8 @@
+2020-07-08  Daniel Franke  <franke@embl-hamburg.de>
+
+	* fortran/fsaxsdocument.f90 (saxs_document_data): Set status to ENOMEM
+	and EINVAL if out of memory or curve not found, respectively.
+
 2019-09-05  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/python/pysaxsdocument.cpp: Conditionally handle Python 2 and 3.
