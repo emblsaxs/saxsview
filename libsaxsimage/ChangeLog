@@ -1,3 +1,8 @@
+2021-03-29  Daniel Franke  <franke@embl-hamburg.de>
+
+	* * src/tiff.c (saxs_image_tiff_read): Allow reading of
+	double-precision TIFFs.
+
 2018-12-06  Daniel Franke <dfranke@users.sourceforge.net>
 
 	* src/tiff.c (saxs_image_tiff_read): Avoid incorrect memory allocation

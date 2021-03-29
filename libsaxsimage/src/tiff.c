@@ -243,6 +243,8 @@ int saxs_image_tiff_read(saxs_image *image, const char *filename, size_t frame) 
       SET_VALUE(int32);
     else if (format == SAMPLEFORMAT_IEEEFP && bpp == 32)
       SET_VALUE(float);
+    else if (format == SAMPLEFORMAT_IEEEFP && bpp == 64)
+      SET_VALUE(double);
     else
       return ENOENT;
 
