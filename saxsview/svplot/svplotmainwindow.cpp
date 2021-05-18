@@ -27,7 +27,7 @@
 #include "saxsview_config.h"
 #include "config.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 
 class SVPlotMainWindow::SVPlotMainWindowPrivate {

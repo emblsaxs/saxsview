@@ -24,7 +24,7 @@
 #include "saxsview_config.h"
 
 // global includes
-#include <QtGui>
+#include <QtWidgets>
 
 
 class ElidedTextLabel : public QLabel {

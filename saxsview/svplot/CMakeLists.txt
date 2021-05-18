@@ -20,10 +20,8 @@ set (svplot_sources main.cpp
                     svplotpropertydockwidget.cpp
                     svplotproject.cpp)
 
-qt4_wrap_cpp (svplot_moc ${svplot_headers})
-
 add_application (svplot
-                 SOURCES ${svplot_headers} ${svplot_moc} ${svplot_sources}
+                 SOURCES ${svplot_headers} ${svplot_sources}
                  LIBRARIES saxsview saxsdocument m
                  GUI)
 

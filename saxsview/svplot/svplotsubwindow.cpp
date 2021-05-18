@@ -39,7 +39,7 @@
 #include "qwt_scale_widget.h"
 
 // global
-#include <QtGui>
+#include <QtWidgets>
 
 
 class SVPlotSubWindow::Private {

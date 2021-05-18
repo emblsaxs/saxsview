@@ -17,7 +17,7 @@
  * along with saxsview. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtGui>
+#include <QtWidgets>
 
 #include "svplotmainwindow.h"
 #include "saxsview.h"

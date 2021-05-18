@@ -26,7 +26,7 @@
 SaxsviewPlotItem::SaxsviewPlotItem(SaxsviewPlot *plot, const QString& title)
  : QStandardItem(title) {
   setEditable(false);
-  setData(qVariantFromValue((void*)plot));
+  setData(QVariant::fromValue((void*)plot));
 }
 
 int SaxsviewPlotItem::type() const {
@@ -34,7 +34,7 @@ int SaxsviewPlotItem::type() const {
 }
 
 SaxsviewPlot* SaxsviewPlotItem::plot() const {
-  return (SaxsviewPlot*)qVariantValue<void*>(data());
+  return (SaxsviewPlot*)data().value<void*>();
 }
 
 
@@ -44,7 +44,7 @@ SaxsviewPlotCurveItem::SaxsviewPlotCurveItem(SaxsviewPlotCurve *curve)
   setEditable(false);
   setCheckable(true);
   setCheckState(Qt::Checked);
-  setData(qVariantFromValue((void*)curve));
+  setData(QVariant::fromValue((void*)curve));
 }
 
 int SaxsviewPlotCurveItem::type() const {
@@ -52,7 +52,7 @@ int SaxsviewPlotCurveItem::type() const {
 }
 
 SaxsviewPlotCurve* SaxsviewPlotCurveItem::curve() const {
-  return (SaxsviewPlotCurve*)qVariantValue<void*>(data());
+  return (SaxsviewPlotCurve*)data().value<void*>();
 }
 
 

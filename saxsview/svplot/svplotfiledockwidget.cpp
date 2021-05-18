@@ -24,7 +24,7 @@
 #include "saxsview.h"
 #include "saxsview_plot.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 
 class SVPlotFileDockWidget::Private {
