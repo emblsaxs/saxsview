@@ -1,5 +1,11 @@
 2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
 
+	* BundleUtilities.cmake: Removed.
+	* DeployQt4.cmake: Removed.
+	* GNUInstallDirs.cmake: Removed.
+
+2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
+
 	* macros.cmake (add_application): Enable Qt5 AUTOMOC and AUTORCC
 	for all targets.
 	(add_shared_library): Likewise.
