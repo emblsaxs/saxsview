@@ -20,9 +20,7 @@ set (HEADERS saxsview.h
              saxsview_scaledraw.h
              saxsview_transformation.h)
 
-qt4_wrap_cpp (MOC ${HEADERS})
-
-qt4_add_resources (RES resources/saxsview.qrc)
+set (RES resources/saxsview.qrc)
 
 # out-of-source builds need to include the ${CMAKE_CURRENT_*_DIR}
 include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
@@ -34,10 +32,10 @@ include_directories (${LIBSAXSDOCUMENT_SOURCE_DIR}
                      ${MUPARSER_SOURCE_DIR})
 
 add_shared_library (saxsview
-                    SOURCES ${SOURCES} ${HEADERS} ${MOC} ${RES}
+                    SOURCES ${SOURCES} ${HEADERS} ${RES}
                     LIBRARIES saxsdocument saxsimage muparser
-                              qwt qtpropertybrowser ${QT_LIBRARIES}
-                    VERSION 1)
+                              qwt qtpropertybrowser Qt5::Widgets Qt5::PrintSupport
+                    VERSION 5)
 
 install_library (TARGETS saxsview)
 

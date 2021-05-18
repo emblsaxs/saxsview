@@ -24,7 +24,8 @@
 #include "saxsview_scaledraw.h"
 #include "saxsview_transformation.h"
 
-#include <QtGui>
+#include <QtWidgets>
+#include <QtPrintSupport>
 
 #include "qwt_dyngrid_layout.h"
 #include "qwt_legend.h"
@@ -277,14 +278,14 @@ void SaxsviewPlot::exportAs(const QString& fileName, const QString& format) {
     renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
 
   } else
-    QPixmap::grabWidget(this).save(fileName, qPrintable(ext));
+    this->grab().save(fileName, qPrintable(ext));
 }
 
 void SaxsviewPlot::print() {
   QString printerName = config().recentPrinter();
 
   QPrinter printer(QPrinter::HighResolution);
-  printer.setOrientation(QPrinter::Landscape);
+  printer.setPageOrientation(QPageLayout::Landscape);
   if (!printerName.isEmpty())
     printer.setPrinterName(printerName);
 

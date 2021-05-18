@@ -1,3 +1,8 @@
+2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
+
+        * saxsview_*: Migrated to Qt5.
+	* CMakeLists.txt: Build and link with Qt5.
+
 2015-02-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* saxsview_image.cpp (SaxsviewFrameData): Updated set_size call.

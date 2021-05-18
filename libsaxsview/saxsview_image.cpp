@@ -41,7 +41,8 @@
 #include "qwt_scale_widget.h"
 #include "qwt_text_label.h"
 
-#include <QtGui>
+#include <QtWidgets>
+#include <QtprintSupport>
 
 class Log10ScaleEngine : public QwtLogScaleEngine {
 public:
@@ -262,11 +263,8 @@ void SaxsviewImage::setFrame(SaxsviewFrame *frame) {
   p->frame = frame;
   frame->attach(this);
 
-  if (frame->data()) {
-    const QwtInterval range = p->frame->data()->interval(Qt::ZAxis);
-    axisWidget(QwtPlot::yRight)->setColorBarInterval(range);
-    setAxisScale(QwtPlot::yRight, range.minValue(), range.maxValue());
-  }
+  if (frame->data())
+    p->updateScaleAndColor(this, p->scale, p->colorMap);
 
   setZoomBase(p->frame->boundingRect());
 
@@ -325,14 +323,14 @@ void SaxsviewImage::exportAs(const QString& fileName, const QString& format) {
     renderer.renderDocument(this, fileName, ext, size()*25.4/85, 600);
 
   } else
-    QPixmap::grabWidget(this).save(fileName, qPrintable(ext));
+    this->grab().save(fileName, qPrintable(ext));
 }
 
 void SaxsviewImage::print() {
   QString printerName = config().recentPrinter();
 
   QPrinter printer(QPrinter::HighResolution);
-  printer.setOrientation(QPrinter::Landscape);
+  printer.setPageOrientation(QPageLayout::Landscape);
   if (!printerName.isEmpty())
     printer.setPrinterName(printerName);
 
@@ -660,8 +658,9 @@ void SaxsviewFrame::setMinValue(double x) {
   if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
     d->setMinValue(x);
 
-    QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
-    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
+//    FIXME?
+//    QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
+//    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
 
     plot()->replot();
   }
@@ -675,8 +674,9 @@ void SaxsviewFrame::setMaxValue(double x) {
   if (SaxsviewFrameData *d = dynamic_cast<SaxsviewFrameData*>(data())) {
     d->setMaxValue(x);
 
-    QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
-    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
+//    FIXME?
+//    QwtScaleWidget *scale = plot()->axisWidget(QwtPlot::yRight);
+//    scale->setColorBarInterval(data()->interval(Qt::ZAxis));
 
     plot()->replot();
   }

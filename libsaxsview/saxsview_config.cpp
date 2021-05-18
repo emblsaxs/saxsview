@@ -23,7 +23,7 @@
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 SaxsviewConfig& config() {
   static SaxsviewConfig config;
@@ -312,14 +312,14 @@ void SaxsviewConfig::colors(QList<QColor>& lineColor,
   count = settings().beginReadArray("lineColors");
   for (int i = 0; i < count; ++i) {
     settings().setArrayIndex(i);
-    lineColor.push_back(qVariantValue<QColor>(settings().value("color", QColor())));
+    lineColor.push_back(settings().value("color", QColor()).value<QColor>());
   }
   settings().endArray();
 
   count = settings().beginReadArray("errorBarColors");
   for (int i = 0; i < count; ++i) {
     settings().setArrayIndex(i);
-    errorBarColor.push_back(qVariantValue<QColor>(settings().value("color", QColor())));
+    errorBarColor.push_back(settings().value("color", QColor()).value<QColor>());
   }
   settings().endArray();
   settings().endGroup();
