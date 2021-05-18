@@ -1,3 +1,7 @@
+2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
+
+	* qtpropertybrowser/: Migrated to Qt5.
+
 2012-04-11  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * qtpropertybrowser/CMakeLists.txt: Use saxsview-convenience macros.

@@ -59,10 +59,9 @@
 #ifndef QTPROPERTYBROWSERUTILS_H
 #define QTPROPERTYBROWSERUTILS_H
 
-#include <QtCore/QMap>
-#include <QtGui/QIcon>
-#include <QtGui/QWidget>
-#include <QtCore/QStringList>
+#include <QtCore>
+#include <QtGui>
+#include <QtWidgets>
 
 #if QT_VERSION >= 0x040400
 QT_BEGIN_NAMESPACE
