@@ -1,3 +1,9 @@
+2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
+
+	* macros.cmake (add_application): Enable Qt5 AUTOMOC and AUTORCC
+	for all targets.
+	(add_shared_library): Likewise.
+
 2015-04-31  Daniel Franke  <dfranke@users.sourceforge.net>
 
 	* macros.cmake (add_python_module): Define MS_WIN64 if on 64bit Windows.

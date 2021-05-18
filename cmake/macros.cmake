@@ -13,6 +13,10 @@ function (add_application)
 
   add_executable (${APP_NAME} ${APP_SOURCES})
 
+  set_target_properties(${APP_NAME} PROPERTIES
+                        AUTOMOC On
+                        AUTORCC On)
+
   if (APP_LIBRARIES)
     target_link_libraries (${APP_NAME} ${APP_LIBRARIES})
   endif (APP_LIBRARIES)
@@ -31,6 +35,10 @@ function (add_shared_library)
 
   add_library (${LIB_UNPARSED_ARGUMENTS} SHARED ${LIB_SOURCES})
 
+  set_target_properties(${LIB_UNPARSED_ARGUMENTS} PROPERTIES
+                        AUTOMOC On
+                        AUTORCC On)
+
   if (LIB_LIBRARIES)
     target_link_libraries(${LIB_UNPARSED_ARGUMENTS} ${LIB_LIBRARIES})
   endif (LIB_LIBRARIES)
@@ -39,9 +47,6 @@ function (add_shared_library)
     set_target_properties (${LIB_UNPARSED_ARGUMENTS} PROPERTIES
                                                      VERSION ${LIB_VERSION})
   endif (LIB_VERSION)
-
-  set_target_properties (${LIB_UNPARSED_ARGUMENTS} PROPERTIES
-                                                   FRAMEWORK TRUE)
 endfunction (add_shared_library)
 
 

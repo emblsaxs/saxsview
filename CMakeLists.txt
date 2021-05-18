@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8.3 FATAL_ERROR)
+cmake_minimum_required (VERSION 3.19 FATAL_ERROR)
 project (SAXSVIEW C CXX)
 
 set (CMAKE_VERBOSE_MAKEFILE         OFF)
@@ -15,9 +15,15 @@ include (macros)
 include (install)
 include (packaging)
 
-find_package (Qt4 4.4.0)
-set (QT_USE_QTSVG TRUE)
-include (${QT_USE_FILE})
+find_package (Qt5 5.12.0
+              COMPONENTS Core
+                         DBus          # platforms (cocoa, X) depend on DBus
+                         Gui
+                         Widgets
+                         PrintSupport  # Qwt
+                         Svg           # Qwt
+                         OpenGL        # Qwt
+              REQUIRED)
 
 configure_file (config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${SAXSVIEW_BINARY_DIR})
