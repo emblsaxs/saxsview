@@ -19,7 +19,7 @@
 
 #include "svimagemaskthresholdsdialog.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 class SVImageMaskThresholdsDialog::Private {
 public:

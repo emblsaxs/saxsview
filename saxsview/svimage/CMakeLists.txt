@@ -16,10 +16,8 @@ set (svimage_sources main.cpp
                      svimagepropertydockwidget.cpp
                      svimagemaskthresholdsdialog.cpp)
 
-qt4_wrap_cpp (svimage_moc ${svimage_headers})
-
 add_application (svimage
-                 SOURCES ${svimage_headers} ${svimage_sources} ${svimage_moc}
+                 SOURCES ${svimage_headers} ${svimage_sources}
                  LIBRARIES saxsview ${QT_LIBRARIES} m
                  GUI)
 

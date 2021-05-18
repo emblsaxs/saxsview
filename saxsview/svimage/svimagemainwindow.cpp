@@ -24,7 +24,7 @@
 #include "saxsview_config.h"
 #include "config.h"
 
-#include <QtGui>
+#include <QtWidgets>
 
 
 class SVImageMainWindow::SVImageMainWindowPrivate {
@@ -738,7 +738,8 @@ bool SVImageMainWindow::eventFilter(QObject *o, QEvent *e) {
   //
   // Luckily the event is available in Qt4 already ...
   //
-  if (QFileOpenEvent *open = dynamic_cast<QFileOpenEvent*>(e)) {
+  if (e->type() == QEvent::FileOpen) {
+    QFileOpenEvent *open = static_cast<QFileOpenEvent*>(e);
     load(open->file());
     return true;
 
