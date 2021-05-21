@@ -35,5 +35,7 @@ add_subdirectory (libsaxsimage)
 add_subdirectory (libsaxsview)
 add_subdirectory (saxsview)
 
+include (postinstall)
+
 ENABLE_TESTING()
 add_subdirectory (testsuite)
