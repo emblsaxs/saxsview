@@ -1,3 +1,11 @@
+2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
+
+	* Darwin/postinstall.cmake: New.
+	* Darwin/postinstall.sh: New.
+	* Linux/postinstall.cmake: New.
+	* Windows/postinstall.cmake: New.
+	* postinstall.cmake: New.
+
 2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
 
 	* BundleUtilities.cmake: Removed.
