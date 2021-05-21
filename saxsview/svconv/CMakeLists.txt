@@ -7,4 +7,3 @@ add_application (svconv
                  LIBRARIES saxsdocument saxsimage m)
 
 install_application (TARGETS svconv)
-install_dependencies (svconv)

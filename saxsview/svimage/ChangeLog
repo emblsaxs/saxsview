@@ -1,3 +1,7 @@
+2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
+
+	* CMakeLists.txt: Updated link libraries, removed unused macro call.
+
 2021-05-18  Daniel Franke  <franke@embl-hamburg.de>
 
         * svimage_*: Migrated to Qt5.

@@ -1,3 +1,7 @@
+2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
+
+	* CMakeLists.txt: Removed unused macro call.
+
 2012-09-27  Daniel Franke  <dfranke@users.sourceforge.net>
 
         * CMakeLists.txt: Explicitely link libm for those who need it.

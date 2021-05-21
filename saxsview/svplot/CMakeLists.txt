@@ -22,9 +22,7 @@ set (svplot_sources main.cpp
 
 add_application (svplot
                  SOURCES ${svplot_headers} ${svplot_sources}
-                 LIBRARIES saxsview saxsdocument m
+                 LIBRARIES saxsview
                  GUI)
 
 install_application (TARGETS svplot)
-install_dependencies (svplot)
-

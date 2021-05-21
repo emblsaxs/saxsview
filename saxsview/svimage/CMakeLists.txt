@@ -18,8 +18,7 @@ set (svimage_sources main.cpp
 
 add_application (svimage
                  SOURCES ${svimage_headers} ${svimage_sources}
-                 LIBRARIES saxsview ${QT_LIBRARIES} m
+                 LIBRARIES saxsview
                  GUI)
 
 install_application (TARGETS svimage)
-install_dependencies (svimage)
