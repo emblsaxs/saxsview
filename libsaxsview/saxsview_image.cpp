@@ -42,7 +42,7 @@
 #include "qwt_text_label.h"
 
 #include <QtWidgets>
-#include <QtprintSupport>
+#include <QtPrintSupport>
 
 class Log10ScaleEngine : public QwtLogScaleEngine {
 public:
