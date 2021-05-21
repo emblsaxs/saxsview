@@ -1,5 +1,11 @@
 2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
 
+	* cmake/Darwin/install.cmake: Removed unused 'install_dependencies' function.
+	* cmake/Linux/install.cmake: Likewise.
+	* cmake/Windows/install.cmake: Likewise.
+
+2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
+
 	* Darwin/postinstall.cmake: New.
 	* Darwin/postinstall.sh: New.
 	* Linux/postinstall.cmake: New.

@@ -23,9 +23,3 @@ endif ()
 
 set (SAXSVIEW_INSTALL_PYPKGDIR ${CMAKE_INSTALL_LIBDIR}/python${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}/${PYTHON_INSTALL_PACKAGEDIR})
 
-
-
-
-function (install_dependencies)
-  # do nothing, dependencies are handled in packaging.cmake
-endfunction (install_dependencies)
