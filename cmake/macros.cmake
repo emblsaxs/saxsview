@@ -1,9 +1,5 @@
-set(Python_ADDITIONAL_VERSIONS "2.7" "2.6")
 
-find_package (PythonLibs)
-find_package (PythonInterp)
-
-include (CMakeParseArguments)
+find_package (Python COMPONENTS Interpreter Development)
 
 
 function (add_application)
@@ -23,9 +19,7 @@ function (add_application)
 
   if (APP_GUI)
     set_target_properties(${APP_NAME} PROPERTIES
-                          WIN32_EXECUTABLE         TRUE
-                          MACOSX_BUNDLE            TRUE
-                          MACOSX_BUNDLE_INFO_PLIST ${SAXSVIEW_BINARY_DIR}/admin/Darwin/${APP_NAME}.plist)
+                          WIN32_EXECUTABLE         TRUE)
   endif (APP_GUI)
 endfunction (add_application)
 
@@ -60,36 +54,44 @@ function (add_static_library)
   endif (LIB_LIBRARIES)
 endfunction (add_static_library)
 
-
-# FindPythonInterpreter.cmake (python_add_module), is still incomplete as of cmake-2.8.7.
 function (add_python_module)
-  if (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
-    cmake_parse_arguments (MOD "" "" "SOURCES;LIBRARIES" ${ARGN})
+  if (Python_Interpreter_FOUND AND Python_Development_FOUND)
+    cmake_parse_arguments (MOD "" "COMPONENT;MODULE" "SOURCES;LIBRARIES" ${ARGN})
 
     set (PYTHON_MODULE_PREFIX "")
+    set (PYTHON_MODULE_SUFFIX "")
+    if (Python_VERSION_MAJOR EQUAL 3)
+      string (APPEND PYTHON_MODULE_SUFFIX ".${Python_SOABI}")
+    endif (Python_VERSION_MAJOR EQUAL 3)
+
     if (WIN32 AND NOT CYGWIN)
-      set (PYTHON_MODULE_SUFFIX ".pyd")    # default is .dll
+      string (APPEND PYTHON_MODULE_SUFFIX ".pyd")    # default is .dll
     elseif (APPLE)
-      set (PYTHON_MODULE_SUFFIX ".so")     # default is .dylib
+      string (APPEND PYTHON_MODULE_SUFFIX ".so")     # default is .dylib
     else ()
-      set (PYTHON_MODULE_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
+      string (APPEND PYTHON_MODULE_SUFFIX ${CMAKE_SHARED_LIBRARY_SUFFIX})
     endif (WIN32 AND NOT CYGWIN)
 
-    include_directories (${PYTHON_INCLUDE_DIR})
+    ## In theory this should be MODULE and not SHARED, but for
+    ## some reason SHARED works on Mac and Win and MODULE does not
+    add_library (${MOD_UNPARSED_ARGUMENTS} SHARED ${MOD_SOURCES})
 
-    add_library (${MOD_UNPARSED_ARGUMENTS} MODULE ${MOD_SOURCES})
+    target_include_directories(${MOD_UNPARSED_ARGUMENTS} PUBLIC
+                               "${Python_INCLUDE_DIRS}")
+
     if (MOD_LIBRARIES)
-      target_link_libraries (${MOD_UNPARSED_ARGUMENTS} ${MOD_LIBRARIES} ${PYTHON_LIBRARIES})
+      target_link_libraries (${MOD_UNPARSED_ARGUMENTS} ${MOD_LIBRARIES} ${Python_LIBRARIES})
     endif (MOD_LIBRARIES)
 
-	if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
-	  # Workaround for http://bugs.python.org/issue11722
+    if (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+      # Workaround for http://bugs.python.org/issue11722
       set_target_properties (${MOD_UNPARSED_ARGUMENTS} PROPERTIES
-	                                                   COMPILE_DEFINITIONS "MS_WIN64")
-	endif (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+                             COMPILE_DEFINITIONS "MS_WIN64")
+    endif (MINGW AND CMAKE_SIZEOF_VOID_P EQUAL 8)
 
-    set_target_properties(${MOD_UNPARSED_ARGUMENTS} PROPERTIES
-                                                    PREFIX "${PYTHON_MODULE_PREFIX}"
-                                                    SUFFIX "${PYTHON_MODULE_SUFFIX}")
-  endif (PYTHONINTERP_FOUND AND PYTHONLIBS_FOUND)
+    set_target_properties (${MOD_UNPARSED_ARGUMENTS} PROPERTIES
+                           PREFIX "${PYTHON_MODULE_PREFIX}"
+                           SUFFIX "${PYTHON_MODULE_SUFFIX}")
+
+  endif (Python_Interpreter_FOUND AND Python_Development_FOUND)
 endfunction (add_python_module)

@@ -1,8 +1,11 @@
 2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
 
-	* install.cmake: Use updated FindPython API.
-	(add_application): Removed Bundle.
-	(add_shared_library): Removed Framework.
+	* macros.cmake: Use updated FindPython API.
+	(add_application): Do not create an App bundle.
+	(add_python_module): Updated according to cmake API change.
+	* install.cmake (install_application): Removed Bundle location.
+	(install_shared_library): Removed Framework location.
+	(install_python_module): Updated according to cmake API change.
 
 2021-05-21  Daniel Franke  <franke@embl-hamburg.de>
 
