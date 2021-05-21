@@ -3,15 +3,13 @@
 # System specific settings ...
 #
 include (${CMAKE_SYSTEM_NAME}/install)
-include (CMakeParseArguments)
-include (GNUInstallDirs)
+
 
 function (install_application)
   cmake_parse_arguments (INSTALL "" "" "TARGETS" ${ARGN})
 
   install (TARGETS               ${INSTALL_TARGETS}
-           RUNTIME DESTINATION   ${SAXSVIEW_INSTALL_BINDIR}
-           BUNDLE DESTINATION    ".")
+           RUNTIME DESTINATION   ${CMAKE_INSTALL_BINDIR})
 endfunction (install_application)
 
 
@@ -19,17 +17,30 @@ function (install_library)
   cmake_parse_arguments (INSTALL "" "" "TARGETS" ${ARGN})
 
   install (TARGETS               ${INSTALL_TARGETS}
-           ARCHIVE DESTINATION   ${SAXSVIEW_INSTALL_LIBDIR}
-           LIBRARY DESTINATION   ${SAXSVIEW_INSTALL_LIBDIR}
-		   RUNTIME DESTINATION   ${SAXSVIEW_INSTALL_BINDIR})
+           ARCHIVE DESTINATION   ${CMAKE_INSTALL_LIBDIR}/saxsview
+           LIBRARY DESTINATION   ${CMAKE_INSTALL_LIBDIR}/saxsview
+		   RUNTIME DESTINATION   ${CMAKE_INSTALL_BINDIR})
 endfunction (install_library)
 
 
 function (install_python_module)
-  cmake_parse_arguments (INSTALL "" "" "TARGETS" ${ARGN})
+  cmake_parse_arguments (INSTALL "" "COMPONENT" "TARGETS;FILES" ${ARGN})
 
-  if (PYTHON_VERSION_MAJOR AND PYTHON_VERSION_MINOR)
+  #
+  # cmake provides '${Python_SITEARCH}' which would be a convenient
+  # install location, if it wouldn't break the package installation
+  # paths on Mac.
+  #
+
+  set (INSTALL_DIR ${CMAKE_INSTALL_LIBDIR}/python/${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages/${INSTALL_COMPONENT})  
+
+  if (INSTALL_TARGETS)
     install (TARGETS ${INSTALL_TARGETS}
-             DESTINATION ${SAXSVIEW_INSTALL_PYPKGDIR})
-  endif (PYTHON_VERSION_MAJOR AND PYTHON_VERSION_MINOR)
+             DESTINATION ${INSTALL_DIR})
+  endif (INSTALL_TARGETS)
+
+  if (INSTALL_FILES)
+    install (FILES ${INSTALL_FILES}
+             DESTINATION ${INSTALL_DIR})
+  endif (INSTALL_FILES)
 endfunction (install_python_module)
