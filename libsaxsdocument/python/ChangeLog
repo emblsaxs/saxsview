@@ -1,3 +1,8 @@
+2021-05-25  Daniel Franke  <franke@embl-hamburg.de>
+
+	* CMakeLists.txt: Update used Python-related variables.
+	* saxsdocument/CMakeLists.txt: Updated installation of files
+
 2021-02-22  Daniel Franke  <franke@embl-hamburg.de>
 
 	* saxsdocument/: New.
