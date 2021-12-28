@@ -36,6 +36,7 @@ void saxs_document_format_register_atsas_out();
 void saxs_document_format_register_csv();
 void saxs_document_format_register_maxlab_rad();
 void saxs_document_format_register_malvern_txt();
+void saxs_document_format_register_raw_dat();
 
 #ifdef HAVE_LIBXML2
 void saxs_document_format_register_cansas_xml();
@@ -93,6 +94,7 @@ saxs_document_format_init() {
 #endif
   saxs_document_format_register_malvern_txt();
   saxs_document_format_register_atsas_out();
+  saxs_document_format_register_raw_dat();
   saxs_document_format_register_atsas_int();
   saxs_document_format_register_atsas_fir_fit();
   saxs_document_format_register_atsas_dat();
