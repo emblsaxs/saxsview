@@ -1,3 +1,9 @@
+2021-12-28  Al Kikhney  <plmnnk@users.sourceforge.net>
+
+	* src/raw_dat.c: New.
+	* src/saxsdocument_format.c (saxs_document_format_init): Register new format.
+	* src/CMakeLists.txt: Added new file.
+
 2020-07-08  Daniel Franke  <franke@embl-hamburg.de>
 
 	* fortran/fsaxsdocument.f90 (saxs_document_data): Set status to ENOMEM
