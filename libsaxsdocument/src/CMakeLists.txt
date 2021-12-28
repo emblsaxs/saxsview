@@ -23,6 +23,7 @@ set (SOURCES saxsproperty.c
              atsas_int.c
              atsas_out.c
              maxlab_rad.c
+             raw_dat.c
              malvern_txt.c)
 
 set (HEADERS saxsproperty.h
