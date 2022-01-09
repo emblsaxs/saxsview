@@ -1,3 +1,7 @@
+2021-01-09  Daniel Franke  <franke@embl-hamburg.de>
+
+	* src/raw_dat.c: Fixed includes for clang on MacOS.
+
 2021-12-28  Al Kikhney  <plmnnk@users.sourceforge.net>
 
 	* src/raw_dat.c: New.

@@ -25,8 +25,10 @@
 #include "saxsdocument.h"
 #include "saxsdocument_format.h"
 
-#include <stdlib.h>
+#include <ctype.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 
 
 static int
