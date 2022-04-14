@@ -1,3 +1,8 @@
+2022-04-14  Daniel Franke  <franke@embl-hamburg.de>
+
+	* fortran/CMakeLists.txt: Set '-frecursive' to allow for parallel execution of
+	file reading.
+
 2021-01-09  Daniel Franke  <franke@embl-hamburg.de>
 
 	* src/raw_dat.c: Fixed includes for clang on MacOS.
