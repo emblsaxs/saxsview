@@ -1,3 +1,8 @@
+2022-05-23  Daniel Franke  <franke@embl-hamburg.de>
+
+	* python/saxsdocument/implementation.py: Fixed document type names
+	and pass a column of floats when writing .fir files.
+
 2021-05-25  Daniel Franke  <franke@embl-hamburg.de>
 
 	* CMakeLists.txt: Update used Python-related variables.
